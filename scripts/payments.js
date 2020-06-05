@@ -30,11 +30,24 @@ function SetupForPool(logger, poolOptions, setupFinished) {
     var logSystem = 'Payments';
     var logComponent = coin;
 
+    // Establish Payment Variables
+    var maxBlocksPerPayment =  Math.max(processingConfig.maxBlocksPerPayment || 3, 1);
+    var pplntEnabled = processingConfig.paymentMode === "pplnt" || false;
+    var pplntTimeQualify = processingConfig.pplnt || 0.51; // 51%
+
+    // Debug Pool Configuration
+    logger.debug(logSystem, logComponent, logComponent + ' maxBlocksPerPayment: ' + maxBlocksPerPayment);
+    logger.debug(logSystem, logComponent, logComponent + ' PPLNT: ' + pplntEnabled + ', time period: '+pplntTimeQualify);
+
     // Load Coin Daemon/Database from Config
     var redisClient = redis.createClient(poolOptions.redis.port, poolOptions.redis.host);
     var daemon = new Stratum.daemon.interface([processingConfig.daemon], function(severity, message) {
         logger[severity](logSystem, logComponent, message);
     });
+
+    if (poolOptions.redis.password) {
+        redisClient.auth(poolOptions.redis.password);
+    }
 
     // Establsh Helper Variables
     var magnitude;
@@ -51,6 +64,53 @@ function SetupForPool(logger, poolOptions, setupFinished) {
     var coinsToSatoshies = function(coins) {
         return coins * magnitude;
     };
+
+    // Round Coins to Nearest Value Given Precision
+    function coinsRound(number) {
+        return roundTo(number, coinPrecision);
+    }
+
+    // Check for Block Duplicates
+    function checkForDuplicateBlockHeight(rounds, height) {
+        var count = 0;
+        for (var i = 0; i < rounds.length; i++) {
+            if (rounds[i].height == height)
+                count++;
+        }
+        return count > 1;
+    }
+
+    // Return Unspent Balance
+    function listUnspent (addr, notAddr, minConf, displayBool, callback) {
+        if (addr !== null) {
+            var args = [minConf, 99999999, [addr]];
+        } else {
+            addr = 'Payout wallet';
+            var args = [minConf, 99999999];
+        }
+        daemon.cmd('listunspent', args, function (result) {
+            if (!result || result.error || result[0].error) {
+                logger.error(logSystem, logComponent, 'Error with RPC call listunspent ' + addr + ' ' + JSON.stringify(result[0].error));
+                callback = function () {};
+                callback(true);
+            }
+            else {
+                var balance = parseFloat(0);
+                if (result[0].response != null && result[0].response.length > 0) {
+                    for (var i = 0, len = result[0].response.length; i < len; i++) {
+                        if (result[0].response[i].address && result[0].response[i].address !== notAddr) {
+                            balance += parseFloat(result[0].response[i].amount || 0);
+                        }
+                    }
+                    balance = coinsRound(balance);
+                }
+                if (displayBool === true) {
+                    logger.special(logSystem, logComponent, addr+' balance of ' + balance);
+                }
+                callback(null, coinsToSatoshies(balance));
+            }
+        });
+    }
 
     // Manage Daemon Functionality
     async.parallel([
@@ -177,12 +237,79 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             blockHash: details[0],
                             txHash: details[1],
                             height: details[2],
+                            duplicate: false,
                             serialized: r
                         };
                     });
 
-                    // Return Workers/Rounds as Callback
-                    callback(null, workers, rounds);
+                    // Sort Rounds by Block Height
+                    rounds.sort(function(a, b) {
+                        return a.height - b.height;
+                    });
+
+                    // Check for Block Duplicates
+                    var duplicateFound = false;
+                    for (var i = 0; i < rounds.length; i++) {
+                        if (checkForDuplicateBlockHeight(rounds, rounds[i].height) === true) {
+                            rounds[i].duplicate = true;
+                            duplicateFound = true;
+                        }
+                    }
+
+                    // Manage ANY Duplicate Blocks Found
+                    if (duplicateFound) {
+                        var dups = rounds.filter(function(round) { return round.duplicate; });
+                        logger.warning(logSystem, logComponent, 'Duplicate pending blocks found: ' + JSON.stringify(dups));
+                        var rpcDupCheck = dups.map(function(r) {
+                            return ['getblock', [r.blockHash]];
+                        });
+                        startRPCTimer();
+                        daemon.batchCmd(rpcDupCheck, function(error, blocks) {
+                            endRPCTimer();
+                            if (error || !blocks) {
+                                logger.error(logSystem, logComponent, 'Error with duplicate block check rpc call getblock ' + JSON.stringify(error));
+                                return;
+                            }
+                            var validBlocks = {};
+                            var invalidBlocks = [];
+                            blocks.forEach(function(block, i) {
+                                if (block && block.result) {
+                                    if (block.result.confirmations < 0) {
+                                        logger.warning(logSystem, logComponent, 'Remove invalid duplicate block ' + block.result.height + ' > ' + block.result.hash);
+                                        invalidBlocks.push(['smove', coin + ':blocksPending', coin + ':blocksDuplicate', dups[i].serialized]);
+                                    }
+                                    else {
+                                        if (validBlocks.hasOwnProperty(dups[i].blockHash)) {
+                                            logger.warning(logSystem, logComponent, 'Remove non-unique duplicate block ' + block.result.height + ' > ' + block.result.hash);
+                                            invalidBlocks.push(['smove', coin + ':blocksPending', coin + ':blocksDuplicate', dups[i].serialized]);
+                                        }
+                                        else {
+                                            validBlocks[dups[i].blockHash] = dups[i].serialized;
+                                            logger.debug(logSystem, logComponent, 'Keep valid duplicate block ' + block.result.height + ' > ' + block.result.hash);
+                                        }
+                                    }
+                                }
+                            });
+                            rounds = rounds.filter(function(round) { return !round.duplicate; });
+                            if (invalidBlocks.length > 0) {
+                                startRedisTimer();
+                                redisClient.multi(invalidBlocks).exec(function(error, kicked) {
+                                    endRedisTimer();
+                                    if (error) {
+                                        logger.error(logSystem, logComponent, 'Error could not move invalid duplicate blocks in redis ' + JSON.stringify(error));
+                                    }
+                                    callback(null, workers, rounds);
+                                });
+                            }
+                            else {
+                                logger.error(logSystem, logComponent, 'Unable to detect invalid duplicate blocks, duplicate block payments on hold.');
+                                callback(null, workers, rounds);
+                            }
+                        });
+                    }
+                    else {
+                        callback(null, workers, rounds);
+                    }
                 });
             },
 
@@ -250,9 +377,8 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         // Update Round Category/Reward
                         round.category = generationTx.category;
                         if (round.category === 'generate') {
-                            round.reward = generationTx.amount || generationTx.value;
+                            round.reward = coinsRound(parseFloat(generationTx.amount || generationTx.value));
                         }
-
                     });
 
                     // Check for Shares to Delete
@@ -271,12 +397,19 @@ function SetupForPool(logger, poolOptions, setupFinished) {
 
 
                     // Manage Immagure Rounds
+                    var payingBlocks = 0;
                     rounds = rounds.filter(function(r) {
                         switch (r.category) {
                             case 'orphan':
                             case 'kicked':
                                 r.canDeleteShares = canDeleteShares(r);
+                            case 'immature':
+                                return true;
                             case 'generate':
+                                payingBlocks += 1;
+                                if (payingBlocks > maxBlocksPerPayment) {
+                                  r.category == "immature";
+                                }
                                 return true;
                             default:
                                 return false;
@@ -292,13 +425,13 @@ function SetupForPool(logger, poolOptions, setupFinished) {
             function(workers, rounds, addressAccount, callback) {
 
                 // Lookup Shares from Rounds
-                var shareLookups = rounds.map(function(r) {
-                    return ['hgetall', coin + ':shares:round' + r.height]
+                var timeLookups = rounds.map(function(r) {
+                    return ['hgetall', coin + ':shares:times' + r.height]
                 });
 
                 // Manage Redis Timer
                 startRedisTimer();
-                redisClient.multi(shareLookups).exec(function(err, allWorkerShares) {
+                redisClient.multi(timeLookups).exec(function(err, allWorkerTimes) {
                     endRedisTimer();
 
                     // Handle Errors
@@ -307,46 +440,211 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         return;
                     }
 
-                    // Manage Shares in each Round
-                    rounds.forEach(function(round, i) {
-                        var workerShares = allWorkerShares[i];
+                    // Lookup Shares from Rounds
+                    var shareLookups = rounds.map(function(r) {
+                        return ['hgetall', coin + ':shares:round' + r.height]
+                    });
 
-                        // Check if Shares Exist in Round
-                        if (!workerShares) {
-                            logger.error(logSystem, logComponent, 'No worker shares for round: '
-                                + round.height + ' blockHash: ' + round.blockHash);
+                    startRedisTimer();
+                    redisClient.multi(timeLookups).exec(function(err, allWorkerShares) {
+                        endRedisTimer();
+
+                        // Handle Errors
+                        if (err) {
+                            callback('Check finished - redis error with multi get rounds share');
                             return;
                         }
 
-                        // Find Type of Block Generated
-                        switch (round.category) {
+                        var errors = null;
+                        var performPayment = false;
+                        var notAddr = null;
 
-                            // No Block Found
-                            case 'kicked':
-                            case 'orphan':
-                                round.workerShares = workerShares;
-                                break;
-
-                            // Block Found and Confirmed
-                            case 'generate':
-                                var reward = parseInt(round.reward * magnitude);
-                                var totalShares = Object.keys(workerShares).reduce(function(p, c) {
-                                    return p + parseFloat(workerShares[c])
-                                }, 0);
-
-                                // Pay Each Miner who Contributed
-                                for (var workerAddress in workerShares) {
-                                    var percent = parseFloat(workerShares[workerAddress]) / totalShares;
-                                    var workerRewardTotal = Math.floor(reward * percent);
-                                    var worker = workers[workerAddress] = (workers[workerAddress] || {});
-                                    worker.reward = (worker.reward || 0) + workerRewardTotal;
-                                }
-                                break;
+                        var feeSatoshi = coinsToSatoshies(fee);
+                        var totalOwed = parseInt(0);
+                        for (var i = 0; i < rounds.length; i++) {
+                            if (rounds[i].category == 'generate') {
+                                totalOwed = totalOwed + coinsToSatoshies(rounds[i].reward) - feeSatoshi;
+                            }
                         }
-                    });
+                        for (var w in workers) {
+                            var worker = workers[w];
+                            totalOwed = totalOwed + (worker.balance||0);
+                        }
 
-                    // Return Workers/Rounds as Callback
-                    callback(null, workers, rounds, addressAccount);
+                        // Check For Funds before Payments Processed
+                        listUnspent(null, notAddr, minConfPayout, false, function (error, balance) {
+                            if (error) {
+                                logger.error(logSystem, logComponent, 'Error checking pool balance before processing payments.');
+                                return callback(true);
+                            } else if (balance < totalOwed) {
+                                logger.error(logSystem, logComponent,  'Insufficient funds (' + satoshisToCoins(balance) + ') to process payments (' + satoshisToCoins(totalOwed) + '); possibly waiting for txs.');
+                                performPayment = false;
+                            } else if (balance > totalOwed) {
+                                performPayment = true;
+                            }
+                            if (totalOwed <= 0) {
+                                performPayment = false;
+                            }
+                            if (performPayment === false) {
+                                rounds = rounds.filter(function(r) {
+                                    switch (r.category) {
+                                        case 'orphan':
+                                        case 'kicked':
+                                        case 'immature':
+                                            return true;
+                                        case 'generate':
+                                            r.category = 'immature';
+                                            return true;
+                                        default:
+                                            return false;
+                                    };
+                                });
+                            }
+
+                            // Manage Shares in each Round
+                            rounds.forEach(function(round, i) {
+                                var workerShares = allWorkerShares[i];
+
+                                // Check if Shares Exist in Round
+                                if (!workerShares) {
+                                    logger.error(logSystem, logComponent, 'No worker shares for round: ' + round.height + ' blockHash: ' + round.blockHash);
+                                    return;
+                                }
+
+                                var maxTime = 0;
+                                var workerTimesWithPoolIds = allWorkerTimes[i];
+                                var workerTimes = {};
+
+                                // Manage PPLNT Functionality
+                                if (pplntEnabled === true) {
+                                    for (var workerAddressWithPoolId in workerTimesWithPoolIds) {
+                                        var workerWithoutPoolId = workerAddressWithPoolId.split('.')[0];
+                                        var workerTimeFloat = parseFloat(workerTimesWithPoolIds[workerAddressWithPoolId]);
+                                        if (maxTime < workerTimeFloat) {
+                                            maxTime = workerTimeFloat;
+                                        }
+                                        if (!(workerWithoutPoolId in workerTimes)) {
+  	                                        workerTimes[workerWithoutPoolId] = workerTimeFloat;
+  	                                    }
+                                        else {
+                                            if (workerTimes[workerWithoutPoolId] < workerTimeFloat) {
+	                                              workerTimes[workerWithoutPoolId] = workerTimes[workerWithoutPoolId] * 0.5 + workerTimeFloat;
+	                                          } else {
+                                                workerTimes[workerWithoutPoolId] = workerTimes[workerWithoutPoolId] + workerTimeFloat * 0.5;
+                                            }
+                                            if (workerTimes[workerWithoutPoolId] > maxTime) {
+                                                workerTimes[workerWithoutPoolId] = maxTime;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Find Type of Block Generated
+                                switch (round.category) {
+
+                                    // No Block Found
+                                    case 'kicked':
+                                    case 'orphan':
+                                        round.workerShares = workerShares;
+                                        break;
+
+                                    // Block is Immature
+                                    case 'immature':
+                                        var feeSatoshi = coinsToSatoshies(fee);
+                                        var immature = coinsToSatoshies(round.reward);
+                                        var totalShares = parseFloat(0);
+                                        var sharesLost = parseFloat(0);
+
+                                        immature = Math.round(immature - feeSatoshi);
+                                        for (var workerAddress in workerShares) {
+                                            var worker = workers[workerAddress] = (workers[workerAddress] || {});
+                                            var shares = parseFloat((workerShares[workerAddress] || 0));
+                                            if (pplntEnabled === true && maxTime > 0) {
+                                                var lost = parseFloat(0);
+                                                var address = workerAddress.split('.')[0];
+                                                if (workerTimes[address] != null && parseFloat(workerTimes[address]) > 0) {
+                                                    var timePeriod = roundTo(parseFloat(workerTimes[address] || 1) / maxTime , 2);
+                                                    if (timePeriod > 0 && timePeriod < pplntTimeQualify) {
+                                                        var lost = shares - (shares * timePeriod);
+                                                        sharesLost += lost;
+                                                        shares = Math.max(shares - lost, 0);
+                                                    }
+                                                }
+                                            }
+                                            worker.roundShares = shares;
+                                            totalShares += shares;
+                                        }
+
+                                        var totalAmount = 0;
+                                        for (var workerAddress in workerShares) {
+                                            var worker = workers[workerAddress] = (workers[workerAddress] || {});
+                                            var percent = parseFloat(worker.roundShares) / totalShares;
+                                            var workerImmatureTotal = Math.round(immature * percent);
+                                            worker.immature = (worker.immature || 0) + workerImmatureTotal;
+                                            totalAmount += workerImmatureTotal;
+                                        }
+                                        break;
+
+                                    // Block Found and Confirmed
+                                    case 'generate':
+                                        var feeSatoshi = coinsToSatoshies(fee);
+                                        var reward = Math.round(coinsToSatoshies(round.reward) - feeSatoshi);
+                                        var totalShares = parseFloat(0);
+                                        var sharesLost = parseFloat(0);
+
+                                        for (var workerAddress in workerShares) {
+                                            var worker = workers[workerAddress] = (workers[workerAddress] || {});
+                                            var shares = parseFloat((workerShares[workerAddress] || 0));
+                                            if (pplntEnabled === true && maxTime > 0) {
+                                                var tshares = shares;
+                                                var lost = parseFloat(0);
+                                                var address = workerAddress.split('.')[0];
+                                                if (workerTimes[address] != null && parseFloat(workerTimes[address]) > 0) {
+                                                    var timePeriod = roundTo(parseFloat(workerTimes[address] || 1) / maxTime , 2);
+                                                    if (timePeriod > 0 && timePeriod < pplntTimeQualify) {
+                                                        var lost = shares - (shares * timePeriod);
+                                                        sharesLost += lost;
+                                                        shares = Math.max(shares - lost, 0);
+                                                        logger.warning(logSystem, logComponent, 'PPLNT: Reduced shares for ' + workerAddress + ' round:' + round.height + ' maxTime:' + maxTime + 'sec timePeriod:' + roundTo(timePeriod,6) + ' shares:' + tshares + ' lost:' + lost + ' new:' + shares);
+                                                    }
+                                                    if (timePeriod > 1.0) {
+                                                        err = true;
+                                                        logger.error(logSystem, logComponent, 'Time share period is greater than 1.0 for ' + workerAddress + ' round:' + round.height + ' blockHash:' + round.blockHash);
+                                                        return;
+                                                    }
+                                                    worker.timePeriod = timePeriod;
+                                                }
+                                            }
+                                            worker.roundShares = shares;
+                                            worker.totalShares = parseFloat(worker.totalShares || 0) + shares;
+                                            totalShares += shares;
+                                        }
+
+                                        var totalAmount = 0;
+                                        for (var workerAddress in workerShares) {
+                                            var worker = workers[workerAddress] = (workers[workerAddress] || {});
+                                            var percent = parseFloat(worker.roundShares) / totalShares;
+                                            if (percent > 1.0) {
+                                                errors = true;
+                                                logger.error(logSystem, logComponent, 'Share percent is greater than 1.0 for '+workerAddress+' round:' + round.height + ' blockHash:' + round.blockHash);
+                                                return;
+                                            }
+                                            var workerRewardTotal = Math.round(reward * percent);
+                                            worker.reward = (worker.reward || 0) + workerRewardTotal;
+                                            totalAmount += workerRewardTotal;
+                                        }
+                                        break;
+                                }
+                            });
+
+                            if (errors == null) {
+                                callback(null, workers, rounds, addressAccount);
+                            }
+                            else {
+                                callback(true);
+                            }
+                        });
+                    });
                 });
             },
 
@@ -354,23 +652,66 @@ function SetupForPool(logger, poolOptions, setupFinished) {
             function(workers, rounds, addressAccount, callback) {
 
                 // Get Worker Balances/Rewards
+                var tries = 0;
                 var trySend = function (withholdPercent) {
+
                     var addressAmounts = {};
+                    var balanceAmounts = {};
+                    var shareAmounts = {};
+                    var timePeriods = {};
+                    var minerTotals = {};
                     var totalSent = 0;
+                    var totalShares = 0;
+                    tries += 1
+
+                    for (var w in workers) {
+                        var worker = workers[w];
+                        totalShares += (worker.totalShares || 0)
+                        worker.balance = worker.balance || 0;
+                        worker.reward = worker.reward || 0;
+                        var toSendSatoshis = Math.round((worker.balance + worker.reward) * (1 - withholdPercent));
+                        var address = worker.address = (worker.address || getProperAddress(w.split('.')[0])).trim();
+                        if (minerTotals[address] != null && minerTotals[address] > 0) {
+                            minerTotals[address] += toSendSatoshis;
+                        } else {
+                            minerTotals[address] = toSendSatoshis;
+                        }
+                    }
+
                     for (var w in workers) {
                         var worker = workers[w];
                         worker.balance = worker.balance || 0;
                         worker.reward = worker.reward || 0;
-                        var toSend = (worker.balance + worker.reward) * (1 - withholdPercent);
-                        if (toSend >= minPaymentSatoshis) {
-                            totalSent += toSend;
-                            var address = worker.address = (worker.address || getProperAddress(w));
-                            worker.sent = addressAmounts[address] = satoshisToCoins(toSend);
-                            worker.balanceChange = Math.min(worker.balance, toSend) * -1;
+                        var toSendSatoshis = Math.round((worker.balance + worker.reward) * (1 - withholdPercent));
+                        var address = worker.address = (worker.address || getProperAddress(w.split('.')[0])).trim();
+                        if (minerTotals[address] >= minPaymentSatoshis) {
+                            totalSent += toSendSatoshis;
+                            worker.sent = satoshisToCoins(toSendSatoshis);
+                            worker.balanceChange = Math.min(worker.balance, toSendSatoshis) * -1;
+                            if (addressAmounts[address] != null && addressAmounts[address] > 0) {
+                                addressAmounts[address] = coinsRound(addressAmounts[address] + worker.sent);
+                            } else {
+                                addressAmounts[address] = worker.sent;
+                            }
                         }
                         else {
-                            worker.balanceChange = Math.max(toSend - worker.balance, 0);
                             worker.sent = 0;
+                            worker.balanceChange = Math.max(toSendSatoshis - worker.balance, 0);
+                            if (worker.balanceChange > 0) {
+                                if (balanceAmounts[address] != null && balanceAmounts[address] > 0) {
+                                    balanceAmounts[address] = coinsRound(balanceAmounts[address] + satoshisToCoins(worker.balanceChange));
+                                } else {
+                                    balanceAmounts[address] = satoshisToCoins(worker.balanceChange);
+                                }
+                            }
+                        }
+
+                        if (worker.totalShares > 0) {
+                            if (shareAmounts[address] != null && shareAmounts[address] > 0) {
+                                shareAmounts[address] += worker.totalShares;
+                            } else {
+                                shareAmounts[address] = worker.totalShares;
+                            }
                         }
                     }
 
@@ -380,49 +721,95 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         return;
                     }
 
+                    for (var a in addressAmounts) {
+                        addressAmounts[a] = coinsRound(addressAmounts[a]);
+                    }
+
                     // Send Payments Through Daemon
+                    var rpccallTracking = 'sendmany "" ' + JSON.stringify(addressAmounts);
                     daemon.cmd('sendmany', [addressAccount || '', addressAmounts], function (result) {
 
-                        // Check Payment Edge Cases
+                        // Check Payment Errors/Edge Cases
                         if (result.error && result.error.code === -6) {
-                            var higherPercent = withholdPercent + 0.01;
-                            logger.warning(logSystem, logComponent, 'Not enough funds to cover the tx fees for sending out payments, decreasing rewards by '
-                                + (higherPercent * 100) + '% and retrying');
-                            trySend(higherPercent);
+                            if (result.error.message && result.error.message.includes("insufficient funds")) {
+                                if (tries < 5) {
+                                    var higherPercent = withholdPercent + 0.001;
+                                    logger.warning(logSystem, logComponent, 'Insufficient funds (??) for payments (' + satoshisToCoins(totalSent) + '), decreasing rewards by ' + (higherPercent * 100).toFixed(1) + '% and retrying');
+                                    trySend(higherPercent);
+                                }
+                                else {
+                                    logger.warning(logSystem, logComponent, rpccallTracking);
+                                    logger.error(logSystem, logComponent, "Error sending payments, decreased rewards by too much!!!");
+                                    callback(true);
+                                }
+                            }
+                            else {
+                                logger.warning(logSystem, logComponent, rpccallTracking);
+                                logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
+                                callback(true);
+                            }
+                            return
+                        }
+                        else if (result.error && result.error.code === -5) {
+                            logger.warning(logSystem, logComponent, rpccallTracking);
+                            logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
+                            callback(true);
+                            return;
+                        }
+                        else if (result.error && result.error.message != null) {
+                            logger.warning(logSystem, logComponent, rpccallTracking);
+                            logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
+                            callback(true);
+                            return;
                         }
                         else if (result.error) {
-                            logger.error(logSystem, logComponent, 'Error trying to send payments with RPC sendmany '
-                                + JSON.stringify(result.error));
+                            logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
                             callback(true);
+                            return;
                         }
                         else {
-                            logger.debug(logSystem, logComponent, 'Sent out a total of ' + (totalSent / magnitude)
-                                + ' to ' + Object.keys(addressAmounts).length + ' workers');
-                            if (withholdPercent > 0) {
-                                logger.warning(logSystem, logComponent, 'Had to withhold ' + (withholdPercent * 100)
-                                    + '% of reward from miners to cover transaction fees. '
-                                    + 'Fund pool wallet with coins to prevent this from happening');
+                            var txid = null;
+                            if (result.response) {
+                                txid = result.response;
                             }
-                            callback(null, workers, rounds);
+                            if (txid != null) {
+                                logger.special(logSystem, logComponent, 'Sent ' + satoshisToCoins(totalSent) + ' to ' + Object.keys(addressAmounts).length + ' miners; txid: '+txid);
+                                if (withholdPercent > 0) {
+                                    logger.warning(logSystem, logComponent, 'Had to withhold ' + (withholdPercent * 100)
+                                        + '% of reward from miners to cover transaction fees. '
+                                        + 'Fund pool wallet with coins to prevent this from happening');
+                                }
+                                var paymentBlocks = rounds.filter(function(r){ return r.category == 'generate'; }).map(function(r){
+                                    return parseInt(r.height);
+                                });
+                                var paymentsUpdate = [];
+                                var paymentsData = {time:Date.now(), txid:txid, shares:totalShares, paid:satoshisToCoins(totalSent), miners:Object.keys(addressAmounts).length, blocks: paymentBlocks, amounts: addressAmounts, balances: balanceAmounts, work:shareAmounts};
+                                paymentsUpdate.push(['zadd', logComponent + ':payments', Date.now(), JSON.stringify(paymentsData)]);
+                                callback(null, workers, rounds, paymentsUpdate);
+                            }
+                            else {
+                                clearInterval(paymentInterval);
+                                logger.error(logSystem, logComponent, 'Error RPC sendmany did not return txid ' + JSON.stringify(result) + 'Disabling payment processing to prevent possible double-payouts.');
+                                callback(true);
+                                return;
+                            }
                         }
 
                     }, true, true);
                 };
 
-                // Send ALL Payments
+                // Send Any Owed Payments
                 trySend(0);
             },
 
             // Manage Sent Payments
-            function(workers, rounds, callback) {
+            function(workers, rounds, paymentsUpdate, callback) {
 
                 // Establish Payment Variables
                 var totalPaid = 0;
+                var immatureUpdateCommands = [];
                 var balanceUpdateCommands = [];
                 var workerPayoutsCommand = [];
-                var movePendingCommands = [];
-                var roundsToDelete = [];
-                var orphanMergeCommands = [];
 
                 // Update Worker Payouts/Balances
                 for (var w in workers) {
@@ -435,36 +822,56 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             satoshisToCoins(worker.balanceChange)
                         ]);
                     }
-                    if (worker.sent !== 0) {
-                        workerPayoutsCommand.push(['hincrbyfloat', coin + ':payouts', w, worker.sent]);
-                        totalPaid += worker.sent;
+                    if ((worker.sent || 0) > 0) {
+                        workerPayoutsCommand.push(['hincrbyfloat', coin + ':payouts', w, coinsRound(worker.sent)]);
+                        totalPaid = coinsRound(totalPaid + worker.sent);
+                    }
+                    if ((worker.immature || 0) > 0) {
+                        immatureUpdateCommands.push(['hset', coin + ':immature', w, worker.immature]);
+                    } else {
+                        immatureUpdateCommands.push(['hset', coin + ':immature', w, 0]);
                     }
                 }
+
+                var movePendingCommands = [];
+                var roundsToDelete = [];
+                var orphanMergeCommands = [];
+                var confirmsUpdate = [];
+                var confirmsToDelete = [];
 
                 // Update Worker Shares
                 var moveSharesToCurrent = function(r) {
                     var workerShares = r.workerShares;
-                    Object.keys(workerShares).forEach(function(worker) {
-                        orphanMergeCommands.push(['hincrby', coin + ':shares:roundCurrent',
-                            worker, workerShares[worker]]);
-                    });
+                    if (workerShares != null) {
+                        logger.warning(logSystem, logComponent, 'Moving shares from orphaned block '+r.height+' to current round.');
+                        Object.keys(workerShares).forEach(function(worker) {
+                            orphanMergeCommands.push(['hincrby', coin + ':shares:roundCurrent',
+                                worker, workerShares[worker]]);
+                        });
+                    }
                 };
 
                 // Update Worker Shares in Database
                 rounds.forEach(function(r) {
                     switch (r.category) {
                         case 'kicked':
-                            movePendingCommands.push(['smove', coin + ':blocksPending', coin + ':blocksKicked', r.serialized]);
                         case 'orphan':
-                            movePendingCommands.push(['smove', coin + ':blocksPending', coin + ':blocksOrphaned', r.serialized]);
+                            confirmsToDelete.push(['hdel', coin + ':blocksPendingConfirms', r.blockHash]);
+                            movePendingCommands.push(['smove', coin + ':blocksPending', coin + ':blocksKicked', r.serialized]);
                             if (r.canDeleteShares) {
                                 moveSharesToCurrent(r);
                                 roundsToDelete.push(coin + ':shares:round' + r.height);
+                                roundsToDelete.push(coin + ':shares:times' + r.height);
                             }
                             return;
+                        case 'immature':
+                            confirmsUpdate.push(['hset', coin + ':blocksPendingConfirms', r.blockHash, (r.confirmations || 0)]);
+                            return;
                         case 'generate':
+                            confirmsToDelete.push(['hdel', coin + ':blocksPendingConfirms', r.blockHash]);
                             movePendingCommands.push(['smove', coin + ':blocksPending', coin + ':blocksConfirmed', r.serialized]);
                             roundsToDelete.push(coin + ':shares:round' + r.height);
+                            roundsToDelete.push(coin + ':shares:times' + r.height);
                             return;
                     }
                 });
@@ -475,14 +882,23 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     finalRedisCommands = finalRedisCommands.concat(movePendingCommands);
                 if (orphanMergeCommands.length > 0)
                     finalRedisCommands = finalRedisCommands.concat(orphanMergeCommands);
+                if (immatureUpdateCommands.length > 0)
+                    finalRedisCommands = finalRedisCommands.concat(immatureUpdateCommands);
                 if (balanceUpdateCommands.length > 0)
                     finalRedisCommands = finalRedisCommands.concat(balanceUpdateCommands);
                 if (workerPayoutsCommand.length > 0)
                     finalRedisCommands = finalRedisCommands.concat(workerPayoutsCommand);
                 if (roundsToDelete.length > 0)
                     finalRedisCommands.push(['del'].concat(roundsToDelete));
+                if (confirmsUpdate.length > 0)
+                    finalRedisCommands = finalRedisCommands.concat(confirmsUpdate);
+                if (confirmsToDelete.length > 0)
+                    finalRedisCommands = finalRedisCommands.concat(confirmsToDelete);
+                if (paymentsUpdate.length > 0)
+                    finalRedisCommands = finalRedisCommands.concat(paymentsUpdate);
                 if (totalPaid !== 0)
                     finalRedisCommands.push(['hincrbyfloat', coin + ':stats', 'totalPaid', totalPaid]);
+
                 if (finalRedisCommands.length === 0) {
                     callback();
                     return;
@@ -516,7 +932,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
             logger.debug(logSystem, logComponent, 'Finished interval - time spent: '
                 + paymentProcessTime + 'ms total, ' + timeSpentRedis + 'ms redis, '
                 + timeSpentRPC + 'ms daemon RPC');
-
         });
     };
 }

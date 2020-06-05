@@ -8,6 +8,7 @@
 var fs = require('fs');
 var path = require('path');
 var os = require('os');
+var redis = require('redis');
 var cluster = require('cluster');
 var async = require('async');
 var extend = require('extend');
@@ -165,12 +166,23 @@ var buildPoolConfigs = function() {
 // Functionality for Pool Workers
 var startPoolWorkers = function() {
 
+    var redisConfig;
+    var connection;
+
     // Check if Daemons Configured
     Object.keys(poolConfigs).forEach(function(coin) {
         var p = poolConfigs[coin];
         if (!Array.isArray(p.daemons) || p.daemons.length < 1) {
             logger.error('Master', coin, 'No daemons configured so a pool cannot be started for this coin.');
             delete poolConfigs[coin];
+        }
+        else if (!connection) {
+            redisConfig = p.redis;
+            connection = redis.createClient(redisConfig.port, redisConfig.host);
+            connection.on('ready', function(){
+                logger.debug('PPLNT', coin, 'TimeShare processing setup with redis (' + redisConfig.host +
+                    ':' + redisConfig.port  + ')');
+            });
         }
     });
 
@@ -211,6 +223,7 @@ var startPoolWorkers = function() {
             }, 2000);
         }).on('message', function(msg) {
             switch (msg.type) {
+
                 case 'banIP':
                     Object.keys(cluster.workers).forEach(function(id) {
                         if (cluster.workers[id].type === 'pool') {
@@ -218,6 +231,53 @@ var startPoolWorkers = function() {
                         }
                     });
                     break;
+
+                case 'shareTrack':
+                    if (msg.isValidShare && !msg.isValidBlock) {
+
+                        var now = Date.now();
+                        var lastShareTime = now;
+                        var lastStartTime = now;
+                        var redisCommands = [];
+
+                        var workerAddress = msg.data.worker.split('.')[0];
+                        if (!_lastShareTimes[msg.coin]) {
+                            _lastShareTimes[msg.coin] = {};
+                        }
+                        if (!_lastStartTimes[msg.coin]) {
+                            _lastStartTimes[msg.coin] = {};
+                        }
+                        if (!_lastShareTimes[msg.coin][workerAddress] || !_lastStartTimes[msg.coin][workerAddress]) {
+                            _lastShareTimes[msg.coin][workerAddress] = now;
+                            _lastStartTimes[msg.coin][workerAddress] = now;
+                            logger.debug('PPLNT', msg.coin, 'Thread '+msg.thread, workerAddress+' joined.');
+                        }
+                        if (_lastShareTimes[msg.coin][workerAddress] != null && _lastShareTimes[msg.coin][workerAddress] > 0) {
+                            lastShareTime = _lastShareTimes[msg.coin][workerAddress];
+                            lastStartTime = _lastStartTimes[msg.coin][workerAddress];
+                        }
+
+                        var timeChangeSec = roundTo(Math.max(now - lastShareTime, 0) / 1000, 4);
+                        if (timeChangeSec < 900) {
+                            redisCommands.push(['hincrbyfloat', msg.coin + ':shares:timesCurrent', workerAddress + "." + poolConfigs[msg.coin].poolId, timeChangeSec]);
+                            connection.multi(redisCommands).exec(function(err, replies){
+                                if (err) {
+                                    logger.error('PPLNT', msg.coin, 'Thread '+msg.thread, 'Error with time share processor call to redis ' + JSON.stringify(err));
+                                }
+                            });
+                        } else {
+                            _lastStartTimes[workerAddress] = now;
+                            logger.debug('PPLNT', msg.coin, 'Thread '+msg.thread, workerAddress+' re-joined.');
+                        }
+                        _lastShareTimes[msg.coin][workerAddress] = now;
+                    }
+
+                    if (msg.isValidBlock) {
+                        _lastShareTimes[msg.coin] = {};
+                        _lastStartTimes[msg.coin] = {};
+                    }
+                    break;
+
             }
         });
     };
