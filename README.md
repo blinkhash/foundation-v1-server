@@ -1,24 +1,21 @@
 Blinkhash Stratum Pool
 -------
+
 This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written entirely in Node.js. Its main features include a stratum poolserver and reward/payment/share processor.
 
 #### Table of Contents
 * [Features](#features)
   * [Attack Mitigation](#attack-mitigation)
   * [Security](#security)
-* [Community Support](#community--support)
 * [Usage](#usage)
   * [Requirements](#requirements)
   * [Setting Up Coin Daemon](#0-setting-up-coin-daemon)
   * [Downloading & Installing](#1-downloading--installing)
   * [Configuration](#2-configuration)
-    * [Portal Config](#portal-config)
-    * [Coin Config](#coin-config)
-    * [Pool Config](#pool-config)
-    * [Setting Up Blocknotify](#optional-recommended-setting-up-blocknotify)
+    * [Portal Configuration](#portal-configuration)
+    * [Coin Configuration](#coin-configuration)
+    * [Pool Configuration](#pool-configuration)
   * [Starting the Portal](#3-start-the-portal)
-  * [Upgrading NOMP](#upgrading-nomp)
-* [Donations](#donations)
 * [Credits](#credits)
 * [License](#license)
 
@@ -47,7 +44,7 @@ The server has some implicit security advantages for pool operators and miners:
 * Miners can notice lack of automated payments as a possible early warning sign that an operator is about to run off with their coins.
 
 Usage
-=====
+-------
 
 #### Requirements
 * Coin daemon(s) (find the coin's repo and build latest version from source)
