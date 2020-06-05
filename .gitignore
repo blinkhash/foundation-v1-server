@@ -1,0 +1,5 @@
+node_modules/
+.idea/
+config.json
+configs/*.json
+!configs/litecoin_example.json
