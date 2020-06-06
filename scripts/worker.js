@@ -19,11 +19,16 @@ var PoolWorker = function (logger) {
     var forkId = process.env.forkId;
     var poolConfigs = JSON.parse(process.env.pools);
     var portalConfig = JSON.parse(process.env.portalConfig);
-    var redisClient = redis.createClient(portalConfig.redis.port, portalConfig.redis.host);
 
     // Establsh Helper Variables
     var _this = this;
     var pools = {};
+
+    // Load Database from Config
+    var redisClient = redis.createClient(portalConfig.redis.port, portalConfig.redis.host);
+    if (portalConfig.redis.password) {
+        redisClient.auth(portalConfig.redis.password);
+    }
 
     // Handle IPC Messages
     process.on('message', function(message) {
@@ -123,6 +128,7 @@ var PoolWorker = function (logger) {
 
             // Manage Share Data
             handlers.share(isValidShare, isValidBlock, data)
+            process.send({type: 'shareTrack', thread:(parseInt(forkId)+1), coin:poolOptions.coin.name, isValidShare:isValidShare, isValidBlock:isValidBlock, data:data});
 
         // Establish Pool Functionality
         }).on('difficultyUpdate', function(workerName, diff) {

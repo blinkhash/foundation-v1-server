@@ -23,27 +23,30 @@ var PoolShares = function (logger, poolConfig) {
     var logComponent = coin;
     var logSubCat = 'Thread ' + (parseInt(forkId) + 1);
 
-    // Establish Redis Connection
-    var connection = redis.createClient(redisConfig.port, redisConfig.host);
+    // Load Database from Config
+    var redisClient = redis.createClient(redisConfig.port, redisConfig.host);
+    if (redisConfig.password) {
+        redisClient.auth(redisConfig.password);
+    }
 
     // Manage Ready Endpoint
-    connection.on('ready', function() {
+    redisClient.on('ready', function() {
         logger.debug(logSystem, logComponent, logSubCat, 'Share processing setup with redis (' + redisConfig.host +
             ':' + redisConfig.port  + ')');
     });
 
     // Manage Error Endpoint
-    connection.on('error', function(err) {
+    redisClient.on('error', function(err) {
         logger.error(logSystem, logComponent, logSubCat, 'Redis client had an error: ' + JSON.stringify(err))
     });
 
     // Manage End Endpoint
-    connection.on('end', function() {
+    redisClient.on('end', function() {
         logger.error(logSystem, logComponent, logSubCat, 'Connection to redis database has been ended');
     });
 
     // Manage Information Endpoint
-    connection.info(function(err, response) {
+    redisClient.info(function(err, response) {
 
         // Handle Errors
         if (err) {
@@ -98,6 +101,7 @@ var PoolShares = function (logger, poolConfig) {
         // Push Block Data to Main Array
         if (isValidBlock) {
             redisCommands.push(['rename', coin + ':shares:roundCurrent', coin + ':shares:round' + shareData.height]);
+            redisCommands.push(['rename', coin + ':shares:timesCurrent', coin + ':shares:times' + shareData.height]);
             redisCommands.push(['sadd', coin + ':blocksPending', [shareData.blockHash, shareData.txHash, shareData.height].join(':')]);
             redisCommands.push(['hincrby', coin + ':stats', 'validBlocks', 1]);
         }
@@ -106,7 +110,7 @@ var PoolShares = function (logger, poolConfig) {
         }
 
         // Write Share Information to Redis Database
-        connection.multi(redisCommands).exec(function(err, replies) {
+        redisClient.multi(redisCommands).exec(function(err, replies) {
             if (err) {
                 logger.error(logSystem, logComponent, logSubCat, 'Error with share processor multi ' + JSON.stringify(err));
             }

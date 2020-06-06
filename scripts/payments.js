@@ -36,15 +36,16 @@ function SetupForPool(logger, poolOptions, setupFinished) {
     var pplntTimeQualify = processingConfig.pplnt || 0.51; // 51%
 
     // Debug Pool Configuration
-    logger.debug(logSystem, logComponent, logComponent + ' maxBlocksPerPayment: ' + maxBlocksPerPayment);
-    logger.debug(logSystem, logComponent, logComponent + ' PPLNT: ' + pplntEnabled + ', time period: '+pplntTimeQualify);
+    logger.debug(logSystem, logComponent, 'Current maxBlocksPerPayment: ' + maxBlocksPerPayment);
+    logger.debug(logSystem, logComponent, 'PPLNT enabled: ' + pplntEnabled + ', time period: '+pplntTimeQualify);
 
-    // Load Coin Daemon/Database from Config
-    var redisClient = redis.createClient(poolOptions.redis.port, poolOptions.redis.host);
+    // Load Coin Daemon from Config
     var daemon = new Stratum.daemon.interface([processingConfig.daemon], function(severity, message) {
         logger[severity](logSystem, logComponent, message);
     });
 
+    // Load Database from Config
+    var redisClient = redis.createClient(poolOptions.redis.port, poolOptions.redis.host);
     if (poolOptions.redis.password) {
         redisClient.auth(poolOptions.redis.password);
     }
@@ -55,14 +56,25 @@ function SetupForPool(logger, poolOptions, setupFinished) {
     var coinPrecision;
     var paymentInterval;
 
+    // Round to # of Digits Given
+    function roundTo(n, digits) {
+        if (digits === undefined) {
+            digits = 0;
+        }
+        var multiplicator = Math.pow(10, digits);
+        n = parseFloat((n * multiplicator).toFixed(11));
+        var test =(Math.round(n) / multiplicator);
+        return +(test.toFixed(digits));
+    }
+
     // Convert Satoshis to Coins
     var satoshisToCoins = function(satoshis) {
-        return parseFloat((satoshis / magnitude).toFixed(coinPrecision));
+        return roundTo((satoshis / magnitude), coinPrecision);
     };
 
     // Convert Coins to Satoshis
     var coinsToSatoshies = function(coins) {
-        return coins * magnitude;
+        return Math.round(coins * magnitude);
     };
 
     // Round Coins to Nearest Value Given Precision
