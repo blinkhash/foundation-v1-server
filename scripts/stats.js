@@ -29,24 +29,24 @@ function sortProperties(obj, sortedBy, isNumericSort, reverse) {
     reverse = reverse || false;
     var reversed = (reverse) ? -1 : 1;
     var sortable = [];
-  	for (var key in obj) {
+    for (var key in obj) {
         if (obj.hasOwnProperty(key)) {
-  	        sortable.push([key, obj[key]]);
-  		  }
-  	}
-  	if (isNumericSort) {
-        sortable.sort(function (a, b) {
-    			return reversed * (a[1][sortedBy] - b[1][sortedBy]);
-    		});
+            sortable.push([key, obj[key]]);
+        }
     }
-  	else {
+    if (isNumericSort) {
         sortable.sort(function (a, b) {
-          var x = a[1][sortedBy].toLowerCase(),
-            y = b[1][sortedBy].toLowerCase();
-          return x < y ? reversed * -1 : x > y ? reversed : 0;
+            return reversed * (a[1][sortedBy] - b[1][sortedBy]);
         });
     }
-  	return sortable;
+    else {
+        sortable.sort(function (a, b) {
+            var x = a[1][sortedBy].toLowerCase(),
+            y = b[1][sortedBy].toLowerCase();
+            return x < y ? reversed * -1 : x > y ? reversed : 0;
+        });
+    }
+    return sortable;
 }
 
 // Pool Stats Main Function
@@ -179,31 +179,31 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
         shares = [];
 
         var pindex = parseInt(0);
-  		  var totalShares = parseFloat(0);
-  		  async.each(_this.stats.pools, function(pool, pcb) {
+        var totalShares = parseFloat(0);
+        async.each(_this.stats.pools, function(pool, pcb) {
             pindex++;
-  			    var coin = String(_this.stats.pools[pool.name].name);
-  			    client.hscan(coin + ':shares:roundCurrent', 0, "match", a+"*", "count", 1000, function(err, result) {
+            var coin = String(_this.stats.pools[pool.name].name);
+            client.hscan(coin + ':shares:roundCurrent', 0, "match", a+"*", "count", 1000, function(err, result) {
                 if (err) {
                     pcb(err);
                     return;
                 }
-        				var workerName="";
-        				var shares = 0;
-        				for (var i in result[1]) {
-          					if (Math.abs(i % 2) != 1) {
-            						workerName = String(result[1][i]);
-          					}
+                var workerName = "";
+                var shares = 0;
+                for (var i in result[1]) {
+                    if (Math.abs(i % 2) != 1) {
+                        workerName = String(result[1][i]);
+                    }
                     else {
-            						shares += parseFloat(result[1][i]);
-          					}
-          			}
+                        shares += parseFloat(result[1][i]);
+                    }
+                }
                 if (shares > 0) {
                     totalShares = shares;
                 }
                 pcb();
-  			    });
-  		  }, function(err) {
+            });
+        }, function(err) {
             if (err) {
                 callback(0);
                 return;
@@ -212,11 +212,11 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                 callback(totalShares);
                 return;
             }
-    		});
-  	};
+        });
+    };
 
     this.getBalanceByAddress = function(address, callback) {
-  	    var a = address.split(".")[0];
+        var a = address.split(".")[0];
         var client = redisClients[0].client,
         coins = redisClients[0].coins,
         balances = [];
@@ -227,7 +227,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
 
         async.each(_this.stats.pools, function(pool, pcb) {
             var coin = String(_this.stats.pools[pool.name].name);
-			      client.hscan(coin + ':immature', 0, "match", a+"*", "count", 10000, function(error, pends) {
+            client.hscan(coin + ':immature', 0, "match", a+"*", "count", 10000, function(error, pends) {
                 client.hscan(coin + ':balances', 0, "match", a+"*", "count", 10000, function(error, bals) {
                     client.hscan(coin + ':payouts', 0, "match", a+"*", "count", 10000, function(error, pays) {
 
@@ -311,14 +311,14 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
 
     // Sort All Pools
     function sortPools(objects) {
-    		var newObject = {};
-    		var sortedArray = sortProperties(objects, 'name', false, false);
-    		for (var i = 0; i < sortedArray.length; i++) {
-    			var key = sortedArray[i][0];
-    			var value = sortedArray[i][1];
-    			newObject[key] = value;
-    		}
-    		return newObject;
+        var newObject = {};
+        var sortedArray = sortProperties(objects, 'name', false, false);
+        for (var i = 0; i < sortedArray.length; i++) {
+            var key = sortedArray[i][0];
+            var value = sortedArray[i][1];
+            newObject[key] = value;
+        }
+        return newObject;
     }
 
     // Sort All Blocks
