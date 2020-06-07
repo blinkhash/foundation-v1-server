@@ -38,7 +38,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
 
             // Block Statistics Endpoint
             case 'block-stats':
-                portalStats.getBlocks(function(data){
+                portalStats.getBlocks(function(data) {
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify(data));
                 });
@@ -74,7 +74,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                                     var totalShares = shares;
                                     for (var h in portalStats.statHistory) {
                                         for (var pool in portalStats.statHistory[h].pools) {
-                                            for (var w in portalStats.statHistory[h].pools[pool].workers){
+                                            for (var w in portalStats.statHistory[h].pools[pool].workers) {
                                                 if (w.startsWith(address)) {
                                                     if (history[w] == null) {
                                                         history[w] = [];
@@ -90,7 +90,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                                         }
                                     }
                                     for (var pool in portalStats.stats.pools) {
-                                        for(var w in portalStats.stats.pools[pool].workers){
+                                        for(var w in portalStats.stats.pools[pool].workers) {
                                             if (w.startsWith(address)) {
                                                 workers[w] = portalStats.stats.pools[pool].workers[w];
                                                 for (var b in balances.balances) {
@@ -133,22 +133,6 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({result: "error"}));
                 }
-                return;
-
-            // Live Statistics Endpoint
-            case 'live-stats':
-                res.writeHead(200, {
-                    'Content-Type': 'text/event-stream',
-                    'Cache-Control': 'no-cache',
-                    'Connection': 'keep-alive'
-                });
-                res.write('\n');
-                var uid = Math.random().toString();
-                _this.liveStatConnections[uid] = res;
-                res.flush();
-                req.on("close", function() {
-                    delete _this.liveStatConnections[uid];
-                });
                 return;
 
             default:

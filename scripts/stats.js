@@ -486,7 +486,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                             maxRoundTime: 0,
                             shareCount: 0
                         };
-                        for(var j = replies[i + 10].length; j > 0; j--){
+                        for(var j = replies[i + 10].length; j > 0; j--) {
                             var jsonObj;
                             try {
                                 jsonObj = JSON.parse(replies[i + 10][j-1]);
@@ -711,7 +711,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
 
             // Save only Historical Data
             var saveStats = JSON.parse(JSON.stringify(portalStats));
-            Object.keys(saveStats.pools).forEach(function(pool){
+            Object.keys(saveStats.pools).forEach(function(pool) {
                 delete saveStats.pools[pool].pending;
                 delete saveStats.pools[pool].confirmed;
                 delete saveStats.pools[pool].currentRoundShares;

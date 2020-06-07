@@ -128,7 +128,7 @@ var buildPoolConfigs = function() {
         }
         var coinProfile = JSON.parse(JSON.minify(fs.readFileSync(coinFilePath, {encoding: 'utf8'})));
         poolOptions.coin = coinProfile;
-        poolOptions.coin.name = poolOptions.coin.name.toLowerCase();
+        poolOptions.coin.name = poolOptions.coin.name;
 
         // Check for no Overlap in Configurations
         if (poolOptions.coin.name in configs) {
@@ -179,7 +179,7 @@ var startPoolWorkers = function() {
         else if (!connection) {
             redisConfig = p.redis;
             connection = redis.createClient(redisConfig.port, redisConfig.host);
-            connection.on('ready', function(){
+            connection.on('ready', function() {
                 logger.debug('PPLNT', coin, 'TimeShare processing setup with redis (' + redisConfig.host +
                     ':' + redisConfig.port  + ')');
             });
@@ -260,7 +260,7 @@ var startPoolWorkers = function() {
                         var timeChangeSec = roundTo(Math.max(now - lastShareTime, 0) / 1000, 4);
                         if (timeChangeSec < 900) {
                             redisCommands.push(['hincrbyfloat', msg.coin + ':shares:timesCurrent', workerAddress + "." + poolConfigs[msg.coin].poolId, timeChangeSec]);
-                            connection.multi(redisCommands).exec(function(err, replies){
+                            connection.multi(redisCommands).exec(function(err, replies) {
                                 if (err) {
                                     logger.error('PPLNT', msg.coin, 'Thread '+msg.thread, 'Error with time share processor call to redis ' + JSON.stringify(err));
                                 }

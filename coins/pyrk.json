@@ -1,0 +1,7 @@
+{
+    "name": "Pyrk",
+    "symbol": "PYRK",
+    "algorithm": "scrypt",
+    "peerMagic": "b00d6cbe",
+    "peerMagicTestnet": "cfe3cbf0"
+}

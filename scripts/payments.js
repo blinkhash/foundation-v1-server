@@ -33,7 +33,12 @@ function SetupForPool(logger, poolOptions, setupFinished) {
     // Establish Payment Variables
     var maxBlocksPerPayment =  Math.max(processingConfig.maxBlocksPerPayment || 3, 1);
     var pplntEnabled = processingConfig.paymentMode === "pplnt" || false;
-    var pplntTimeQualify = processingConfig.pplnt || 0.51; // 51%
+    var pplntTimeQualify = processingConfig.pplnt || 0.51;
+    var fee = parseFloat(poolOptions.coin.txfee) || parseFloat(0.0004);
+    var minConfPayout = Math.max((processingConfig.minConf || 10), 1);
+    if (minConfPayout  < 3) {
+        logger.warning(logSystem, logComponent, logComponent + ' minConf of 3 is recommended.');
+    }
 
     // Debug Pool Configuration
     logger.debug(logSystem, logComponent, 'Current maxBlocksPerPayment: ' + maxBlocksPerPayment);
@@ -791,7 +796,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                         + '% of reward from miners to cover transaction fees. '
                                         + 'Fund pool wallet with coins to prevent this from happening');
                                 }
-                                var paymentBlocks = rounds.filter(function(r){ return r.category == 'generate'; }).map(function(r){
+                                var paymentBlocks = rounds.filter(function(r) { return r.category == 'generate'; }).map(function(r) {
                                     return parseInt(r.height);
                                 });
                                 var paymentsUpdate = [];
@@ -912,7 +917,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     finalRedisCommands.push(['hincrbyfloat', coin + ':stats', 'totalPaid', totalPaid]);
 
                 if (finalRedisCommands.length === 0) {
-                    callback();
                     return;
                 }
 
@@ -932,7 +936,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             logger.error('Could not write finalRedisCommands.txt, you are fucked.');
                         });
                     }
-                    callback();
+                    return;
                 });
             }
 
