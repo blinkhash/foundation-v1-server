@@ -3,3 +3,4 @@ node_modules/
 config.json
 configs/*.json
 !configs/litecoin_example.json
+npm-debug.log

@@ -78,10 +78,8 @@ a good pool operator. For starters be sure to read:
 Clone the repository and run `npm update` for all the dependencies to be installed:
 
 ```bash
-git clone https://github.com/blinkhash/blinkhash-server blinkhash
-mkdir blinkhash/node_modules
-git clone https://github.com/blinkhash/blinkhash-stratum-pool blinkhash/node_modules/stratum-pool
-cd blinkhash
+git clone https://github.com/blinkhash/blinkhash-server blinkhash-server
+cd blinkhash-server
 npm update
 ```
 
