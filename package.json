@@ -47,7 +47,8 @@
     "nonce": "*",
     "bignum": "0.12.5",
     "extend": "*",
-    "nodemon": "~1.8.1"
+    "nodemon": "~1.8.1",
+    "redis-commander": "~0.6.0"
   },
   "engines": {
     "node": ">=0.10"

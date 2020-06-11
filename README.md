@@ -179,7 +179,7 @@ Inside the `coins` directory, ensure a json file exists for your coin. If it doe
 
 ````
 {
-    "name": "Litecoin",
+    "name": "Blinkhash",
     "symbol": "ltc",
     "algorithm": "scrypt",
 

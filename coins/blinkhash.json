@@ -1,0 +1,7 @@
+{
+    "name": "BlinkHash",
+    "symbol": "BHTC",
+    "algorithm": "scrypt",
+    "peerMagic": "ace4b9cd",
+    "peerMagicTestnet": "f01a6eef"
+}

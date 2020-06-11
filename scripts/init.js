@@ -64,6 +64,17 @@ catch(e) {
         logger.debug('POSIX', 'Connection Limit', '(Safe to ignore) POSIX module not installed and resource (connection) limit was not raised');
 }
 
+// Establish RoundTo Helper Function
+function roundTo(n, digits) {
+    if (digits === undefined) {
+        digits = 0;
+    }
+    var multiplicator = Math.pow(10, digits);
+    n = parseFloat((n * multiplicator).toFixed(11));
+    var test =(Math.round(n) / multiplicator);
+    return +(test.toFixed(digits));
+}
+
 // Establish Pool Worker Cases
 if (cluster.isWorker) {
     switch (process.env.workerType) {
@@ -180,8 +191,7 @@ var startPoolWorkers = function() {
             redisConfig = p.redis;
             connection = redis.createClient(redisConfig.port, redisConfig.host);
             connection.on('ready', function() {
-                logger.debug('PPLNT', coin, 'TimeShare processing setup with redis (' + redisConfig.host +
-                    ':' + redisConfig.port  + ')');
+                logger.debug('Master', coin, 'Processing setup with redis (' + redisConfig.host + ':' + redisConfig.port  + ')');
             });
         }
     });
@@ -230,52 +240,6 @@ var startPoolWorkers = function() {
                             cluster.workers[id].send({type: 'banIP', ip: msg.ip});
                         }
                     });
-                    break;
-
-                case 'shareTrack':
-                    if (msg.isValidShare && !msg.isValidBlock) {
-
-                        var now = Date.now();
-                        var lastShareTime = now;
-                        var lastStartTime = now;
-                        var redisCommands = [];
-
-                        var workerAddress = msg.data.worker.split('.')[0];
-                        if (!_lastShareTimes[msg.coin]) {
-                            _lastShareTimes[msg.coin] = {};
-                        }
-                        if (!_lastStartTimes[msg.coin]) {
-                            _lastStartTimes[msg.coin] = {};
-                        }
-                        if (!_lastShareTimes[msg.coin][workerAddress] || !_lastStartTimes[msg.coin][workerAddress]) {
-                            _lastShareTimes[msg.coin][workerAddress] = now;
-                            _lastStartTimes[msg.coin][workerAddress] = now;
-                            logger.debug('PPLNT', msg.coin, 'Thread '+msg.thread, workerAddress+' joined.');
-                        }
-                        if (_lastShareTimes[msg.coin][workerAddress] != null && _lastShareTimes[msg.coin][workerAddress] > 0) {
-                            lastShareTime = _lastShareTimes[msg.coin][workerAddress];
-                            lastStartTime = _lastStartTimes[msg.coin][workerAddress];
-                        }
-
-                        var timeChangeSec = roundTo(Math.max(now - lastShareTime, 0) / 1000, 4);
-                        if (timeChangeSec < 900) {
-                            redisCommands.push(['hincrbyfloat', msg.coin + ':shares:timesCurrent', workerAddress + "." + poolConfigs[msg.coin].poolId, timeChangeSec]);
-                            connection.multi(redisCommands).exec(function(err, replies) {
-                                if (err) {
-                                    logger.error('PPLNT', msg.coin, 'Thread '+msg.thread, 'Error with time share processor call to redis ' + JSON.stringify(err));
-                                }
-                            });
-                        } else {
-                            _lastStartTimes[workerAddress] = now;
-                            logger.debug('PPLNT', msg.coin, 'Thread '+msg.thread, workerAddress+' re-joined.');
-                        }
-                        _lastShareTimes[msg.coin][workerAddress] = now;
-                    }
-
-                    if (msg.isValidBlock) {
-                        _lastShareTimes[msg.coin] = {};
-                        _lastStartTimes[msg.coin] = {};
-                    }
                     break;
 
             }
