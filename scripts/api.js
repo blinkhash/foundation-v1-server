@@ -75,7 +75,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                                     for (var h in portalStats.statHistory) {
                                         for (var pool in portalStats.statHistory[h].pools) {
                                             for (var w in portalStats.statHistory[h].pools[pool].workers) {
-                                                if (w.startsWith(address)) {
+                                                if (w == address) {
                                                     if (history[w] == null) {
                                                         history[w] = [];
                                                     }
@@ -91,7 +91,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                                     }
                                     for (var pool in portalStats.stats.pools) {
                                         for(var w in portalStats.stats.pools[pool].workers) {
-                                            if (w.startsWith(address)) {
+                                            if (w == address) {
                                                 workers[w] = portalStats.stats.pools[pool].workers[w];
                                                 for (var b in balances.balances) {
                                                     if (w == balances.balances[b].worker) {
