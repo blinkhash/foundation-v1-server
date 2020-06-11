@@ -357,8 +357,12 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             return;
                         }
 
-                        // Check Daemon Edge Cases
+                        // Update Confirmations
                         var round = rounds[i];
+                        if (tx && tx.result)
+                            round.confirmations = parseInt((tx.result.confirmations || 0));
+
+                        // Check Daemon Edge Cases
                         if (tx.error && tx.error.code === -5) {
                             logger.warning(logSystem, logComponent, 'Daemon reports invalid transaction: ' + round.txHash);
                             round.category = 'kicked';
@@ -408,8 +412,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         }
                         return true;
                     };
-
-                    console.log(rounds);
 
                     // Manage Immagure Rounds
                     var payingBlocks = 0;
@@ -467,7 +469,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     }
                     for (var w in workers) {
                         var worker = workers[w];
-                        totalOwed = totalOwed + (worker.balance||0);
+                        totalOwed = totalOwed + (worker.balance || 0);
                     }
 
                     // Check For Funds before Payments Processed
