@@ -122,40 +122,6 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
         return roundTo(number, coinPrecision);
     }
 
-    // Convert Seconds to Readable String
-    function readableSeconds(t) {
-        var seconds = Math.round(t);
-        var minutes = Math.floor(seconds/60);
-        var hours = Math.floor(minutes/60);
-        var days = Math.floor(hours/24);
-        hours = hours-(days*24);
-        minutes = minutes-(days*24*60)-(hours*60);
-        seconds = seconds-(days*24*60*60)-(hours*60*60)-(minutes*60);
-        if (days > 0) { return (days + "d " + hours + "h " + minutes + "m " + seconds + "s"); }
-        if (hours > 0) { return (hours + "h " + minutes + "m " + seconds + "s"); }
-        if (minutes > 0) {return (minutes + "m " + seconds + "s"); }
-        return (seconds + "s");
-    }
-
-    // Get List of Coins by Client
-    this.getCoins = function(callback) {
-        _this.stats.coins = redisClients[0].coins;
-        callback();
-    };
-
-    // Get Current Payout Given Client Address
-    this.getPayout = function(address, callback) {
-        async.waterfall([
-            function(callback2) {
-                _this.getBalanceByAddress(address, function() {
-                    callback2(null, 'test');
-                });
-            }
-        ], function(err, total) {
-            callback(coinsRound(total).toFixed(8));
-        });
-    };
-
     // Get Block History
     this.getBlocks = function (callback) {
         var allBlocks = {};
@@ -171,49 +137,6 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
             callback(allBlocks);
         });
     }
-
-    this.getTotalSharesByAddress = function(address, callback) {
-        var a = address.split(".")[0];
-        var client = redisClients[0].client,
-        coins = redisClients[0].coins,
-        shares = [];
-
-        var pindex = parseInt(0);
-        var totalShares = parseFloat(0);
-        async.each(_this.stats.pools, function(pool, pcb) {
-            pindex++;
-            var coin = String(_this.stats.pools[pool.name].name);
-            client.hscan(coin + ':shares:roundCurrent', 0, "match", a+"*", "count", 1000, function(err, result) {
-                if (err) {
-                    pcb(err);
-                    return;
-                }
-                var workerName = "";
-                var shares = 0;
-                for (var i in result[1]) {
-                    if (Math.abs(i % 2) != 1) {
-                        workerName = String(result[1][i]);
-                    }
-                    else {
-                        shares += parseFloat(result[1][i]);
-                    }
-                }
-                if (shares > 0) {
-                    totalShares = shares;
-                }
-                pcb();
-            });
-        }, function(err) {
-            if (err) {
-                callback(0);
-                return;
-            }
-            if (totalShares > 0 || (pindex >= Object.keys(_this.stats.pools).length)) {
-                callback(totalShares);
-                return;
-            }
-        });
-    };
 
     this.getBalanceByAddress = function(address, callback) {
         var a = address.split(".")[0];
@@ -301,6 +224,49 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
         });
     };
 
+    this.getTotalSharesByAddress = function(address, callback) {
+        var a = address.split(".")[0];
+        var client = redisClients[0].client,
+        coins = redisClients[0].coins,
+        shares = [];
+
+        var pindex = parseInt(0);
+        var totalShares = parseFloat(0);
+        async.each(_this.stats.pools, function(pool, pcb) {
+            pindex++;
+            var coin = String(_this.stats.pools[pool.name].name);
+            client.hscan(coin + ':shares:roundCurrent', 0, "match", a+"*", "count", 1000, function(err, result) {
+                if (err) {
+                    pcb(err);
+                    return;
+                }
+                var workerName = "";
+                var shares = 0;
+                for (var i in result[1]) {
+                    if (Math.abs(i % 2) != 1) {
+                        workerName = String(result[1][i]);
+                    }
+                    else {
+                        shares += parseFloat(result[1][i]);
+                    }
+                }
+                if (shares > 0) {
+                    totalShares = shares;
+                }
+                pcb();
+            });
+        }, function(err) {
+            if (err) {
+                callback(0);
+                return;
+            }
+            if (totalShares > 0 || (pindex >= Object.keys(_this.stats.pools).length)) {
+                callback(totalShares);
+                return;
+            }
+        });
+    };
+
     // Connect to Redis Database
     function setupStatsRedis() {
         redisStats = redis.createClient(portalConfig.redis.port, portalConfig.redis.host);
@@ -340,16 +306,6 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
             newObject[key] = value;
         }
         return newObject;
-    }
-
-    // Sort All Workers by HashRate
-    function sortWorkersByHashrate(a, b) {
-        if (a.hashrate === b.hashrate) {
-            return 0;
-        }
-        else {
-            return (a.hashrate < b.hashrate) ? -1 : 1;
-        }
     }
 
     // Sort All Miners by HashRate

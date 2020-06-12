@@ -135,7 +135,6 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                                         hashrate: totalHash,
                                         hashrateString: totalHashString,
                                         shares: totalShares,
-                                        balance: balances.totalHeld,
                                         immature: balances.totalImmature,
                                         paid: balances.totalPaid,
                                         workers: workers,

@@ -241,7 +241,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     // Manage Individual Workers
                     var workers = {};
                     for (var w in results[0]) {
-                        workers[w] = {balance: coinsToSatoshies(parseFloat(results[0][w]))};
+                         workers[w] = {balance: coinsToSatoshies(parseFloat(results[0][w]))};
                     }
 
                     // Manage Individual Rounds
