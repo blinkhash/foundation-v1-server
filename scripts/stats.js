@@ -512,10 +512,9 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
 
             // Establish Client Statistics
             var portalStats = {
-                time: statGatherTime,
                 global:{
+                    time: statGatherTime,
                     workers: 0,
-                    hashrate: 0
                 },
                 pools: allCoinStats
             };
@@ -550,7 +549,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                                 hashrateString: null,
                             };
                         }
-                        if (miner in coinStats.miner) {
+                        if (miner in coinStats.miners) {
                             coinStats.miners[miner].shares += workerShares;
                         }
                         else {
