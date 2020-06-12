@@ -352,18 +352,6 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
         }
     }
 
-    // Sort All Miners by HashRate
-    function sortMinersByHashrate(objects) {
-        var newObject = {};
-        var sortedArray = sortProperties(objects, 'shares', true, true);
-        for (var i = 0; i < sortedArray.length; i++) {
-            var key = sortedArray[i][0];
-            var value = sortedArray[i][1];
-            newObject[key] = value;
-        }
-        return newObject;
-    }
-
     // Get Stat History
     function gatherStatHistory() {
         var retentionTime = (((Date.now() / 1000) - portalConfig.stats.historicalRetention) | 0).toString();
@@ -525,12 +513,10 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
 
                 var coinStats = allCoinStats[coin];
                 coinStats.workers = {};
-                coinStats.miners = {};
                 coinStats.shares = 0;
                 coinStats.hashrates.forEach(function(ins) {
                     var parts = ins.split(':');
                     var workerShares = parseFloat(parts[0]);
-                    var miner = parts[1].split('.')[0];
                     var worker = parts[1];
                     var diff = Math.round(parts[0] * 8192);
                     if (workerShares > 0) {
@@ -544,23 +530,8 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                                 name: worker,
                                 diff: diff,
                                 shares: workerShares,
-                                invalidshares: 0,
-                                currRoundShares: 0,
-                                hashrate: null,
-                                hashrateString: null,
-                                paid: 0,
-                                balance: 0
-                            };
-                        }
-                        if (miner in coinStats.miners) {
-                            coinStats.miners[miner].shares += workerShares;
-                        }
-                        else {
-                            coinStats.miners[miner] = {
-                                name: miner,
-                                shares: workerShares,
-                                invalidshares: 0,
-                                currRoundShares: 0,
+                                roundShares: 0,
+                                invalidShares: 0,
                                 hashrate: null,
                                 hashrateString: null,
                             };
@@ -568,7 +539,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                     }
                     else {
                         if (worker in coinStats.workers) {
-                            coinStats.workers[worker].invalidshares -= workerShares; // workerShares is negative number!
+                            coinStats.workers[worker].invalidShares -= workerShares; // workerShares is negative number!
                             coinStats.workers[worker].diff = diff;
                         }
                         else {
@@ -576,23 +547,8 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                                 name: worker,
                                 diff: diff,
                                 shares: 0,
-                                invalidshares: -workerShares,
-                                currRoundShares: 0,
-                                hashrate: null,
-                                hashrateString: null,
-                                paid: 0,
-                                balance: 0
-                            };
-                        }
-                        if (miner in coinStats.miners) {
-                            coinStats.miners[miner].invalidshares -= workerShares;
-                        }
-                        else {
-                            coinStats.miners[miner] = {
-                                name: miner,
-                                shares: 0,
-                                invalidshares: -workerShares,
-                                currRoundShares: 0,
+                                invalidShares: -workerShares,
+                                roundShares: 0,
                                 hashrate: null,
                                 hashrateString: null,
                             };
@@ -600,8 +556,6 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                     }
                 });
 
-                // Sort Miners by HashRate
-                coinStats.miners = sortMinersByHashrate(coinStats.miners);
 
                 // Finalize Client Statistics for Coins
                 var shareMultiplier = Math.pow(2, 32) / algos[coinStats.algorithm].multiplier;
@@ -613,17 +567,12 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                 var _networkHashRate = parseFloat(coinStats.poolStats.networkSols) * 1.2;
                 var _myHashRate = (coinStats.hashrate / 1000000) * 2;
 
-                coinStats.minerCount = Object.keys(coinStats.miners).length;
                 coinStats.workerCount = Object.keys(coinStats.workers).length;
                 portalStats.global.workers += coinStats.workerCount;
 
                 for (var worker in coinStats.currentRoundShares) {
-                    var miner = worker.split(".")[0];
-                    if (miner in coinStats.miners) {
-                        coinStats.miners[miner].currRoundShares += parseFloat(coinStats.currentRoundShares[worker]);
-                    }
                     if (worker in coinStats.workers) {
-                        coinStats.workers[worker].currRoundShares += parseFloat(coinStats.currentRoundShares[worker]);
+                        coinStats.workers[worker].roundShares += parseFloat(coinStats.currentRoundShares[worker]);
                     }
                     _shareTotal += parseFloat(coinStats.currentRoundShares[worker]);
                 }
@@ -635,14 +584,6 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                     var _wHashRate = (_workerRate / 1000000) * 2;
                     coinStats.workers[worker].hashrate = _workerRate;
                     coinStats.workers[worker].hashrateString = _this.getReadableHashRateString(_workerRate);
-                    var miner = worker.split('.')[0];
-                }
-
-                for (var miner in coinStats.miners) {
-                    var _workerRate = shareMultiplier * coinStats.miners[miner].shares / portalConfig.stats.hashrateWindow;
-                    var _wHashRate = (_workerRate / 1000000) * 2;
-                    coinStats.miners[miner].hashrate = _workerRate;
-                    coinStats.miners[miner].hashrateString = _this.getReadableHashRateString(_workerRate);
                 }
 
                 // Sort Workers by Name
@@ -660,7 +601,6 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                 delete saveStats.pools[pool].confirmed;
                 delete saveStats.pools[pool].currentRoundShares;
                 delete saveStats.pools[pool].payments;
-                delete saveStats.pools[pool].miners;
             });
 
             _this.stats = portalStats;

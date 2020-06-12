@@ -20,6 +20,17 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
     this.stats = portalStats
     this.liveStatConnections = {};
 
+    // Convert Hashrate into Readable String
+    this.getReadableHashRateString = function(hashrate) {
+        var i = -1;
+        var byteUnits = [ ' KH', ' MH', ' GH', ' TH', ' PH', ' EH' ];
+        do {
+            hashrate = hashrate / 1000;
+            i++;
+        } while (hashrate > 1000);
+        return hashrate.toFixed(2) + byteUnits[i];
+    };
+
     // Handle API Requests
     this.handleApiRequest = function(req, res, next) {
         switch (req.params.method) {
@@ -60,18 +71,25 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
 
             // Worker Statistics Endpoint
             case 'worker-stats':
+
+                // Check to Ensure URL is Formatted Properly
                 if (req.url.indexOf("?") > 0) {
                     var url_params = req.url.split("?");
                     if (url_params.length > 0) {
-                        var history = {};
-                        var workers = {};
                         var address = url_params[1] || null;
                         if (address != null && address.length > 0) {
                             address = address.split(".")[0];
+
                             portalStats.getBalanceByAddress(address, function(balances) {
                                 portalStats.getTotalSharesByAddress(address, function(shares) {
+
+                                    // Establish Worker Variables
+                                    var workers = {};
                                     var totalHash = parseFloat(0.0);
                                     var totalShares = shares;
+                                    var history = {};
+
+                                    // Get History of Worker
                                     for (var h in portalStats.statHistory) {
                                         for (var pool in portalStats.statHistory[h].pools) {
                                             for (var w in portalStats.statHistory[h].pools[pool].workers) {
@@ -89,6 +107,8 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                                             }
                                         }
                                     }
+
+                                    // Get Information of Established Worker
                                     for (var pool in portalStats.stats.pools) {
                                         for(var w in portalStats.stats.pools[pool].workers) {
                                             if (w == address) {
@@ -105,13 +125,18 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                                             }
                                         }
                                     }
+
+                                    var totalHashString = _this.getReadableHashRateString(totalHash);
                                     res.writeHead(200, { 'Content-Type': 'application/json' });
+
+                                    // Write Established Response Data
                                     res.end(JSON.stringify({
                                         miner: address,
-                                        totalHash: totalHash,
-                                        totalShares: totalShares,
-                                        immature: balances.totalImmature,
+                                        hashrate: totalHash,
+                                        hashrateString: totalHashString,
+                                        shares: totalShares,
                                         balance: balances.totalHeld,
+                                        immature: balances.totalImmature,
                                         paid: balances.totalPaid,
                                         workers: workers,
                                         history: history
