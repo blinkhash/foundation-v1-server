@@ -24,6 +24,11 @@ var PoolServer = function (logger) {
     var portalStats = portalApi.stats;
     var logSystem = 'Server';
 
+    // Establish Initial Global Statistics
+    portalStats.getGlobalStats(function() {
+        logger.debug(logSystem, 'History', 'Updated global statistics for API endpoints');
+    });
+
     // Establish Global Statistics Interval
     var globalInterval = setInterval(function() {
         portalStats.getGlobalStats(function() {

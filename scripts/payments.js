@@ -394,7 +394,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
 
                         // Update Round Category/Reward
                         round.category = generationTx.category;
-                        if (round.category === 'generate') {
+                        if ((round.category === 'generate') || (round.category === "immature")) {
                             round.reward = coinsRound(parseFloat(generationTx.amount || generationTx.value));
                         }
                     });
