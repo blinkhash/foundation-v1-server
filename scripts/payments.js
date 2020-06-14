@@ -57,6 +57,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
     var minPaymentSatoshis;
     var coinPrecision;
     var paymentInterval;
+    var checkInterval;
 
     // Round to # of Digits Given
     function roundTo(n, digits) {
@@ -188,6 +189,15 @@ function SetupForPool(logger, poolOptions, setupFinished) {
             return;
         }
 
+        // Process Main Checks
+        checkInterval = setInterval(function() {
+            try {
+                processChecks();
+            } catch(e) {
+                throw e;
+            }
+        }, processingConfig.checkInterval * 1000);
+
         // Process Main Payment
         paymentInterval = setInterval(function() {
             try {
@@ -196,10 +206,461 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                 throw e;
             }
         }, processingConfig.paymentInterval * 1000);
-        setTimeout(processPayments, 100);
+
+        // Finalize Setup
+        setTimeout(processChecks, 100);
         setupFinished(true);
 
     });
+
+    // Balance Functionality
+    var processChecks = function() {
+
+        // Establish Timing Variables
+        var timeSpentRPC = 0;
+        var timeSpentRedis = 0;
+        var startTimeRedis;
+        var startTimeRPC;
+
+        // Establish Database Timing Variables
+        var startCheckProcess = Date.now();
+        var startRedisTimer = function() { startTimeRedis = Date.now() };
+        var endRedisTimer = function() { timeSpentRedis += Date.now() - startTimeRedis };
+        var startRPCTimer = function() { startTimeRPC = Date.now(); };
+        var endRPCTimer = function() { timeSpentRPC += Date.now() - startTimeRedis };
+
+        // Manage Database Functionality
+        async.waterfall([
+
+            // Validate Shares/Blocks in Database
+            function(callback) {
+
+                // Manage Redis Timer
+                startRedisTimer();
+                redisClient.multi([
+                    ['hgetall', coin + ':balances'],
+                    ['smembers', coin + ':blocksPending']
+                ]).exec(function(err, results) {
+                    endRedisTimer();
+
+                    // Handle Errors
+                    if (err) {
+                        logger.error(logSystem, logComponent, 'Could not get Blocks from Database ' + JSON.stringify(error));
+                        callback(true);
+                        return;
+                    }
+
+                    // Manage Individual Workers
+                    var workers = {};
+                    for (var w in results[0]) {
+                         workers[w] = {balance: coinsToSatoshies(parseFloat(results[0][w]))};
+                    }
+
+                    // Manage Individual Rounds
+                    var rounds = results[1].map(function(r) {
+                        var details = r.split(':');
+                        return {
+                            blockHash: details[0],
+                            txHash: details[1],
+                            height: details[2],
+                            workerAddress: details[3],
+                            soloMined: details[4],
+                            duplicate: false,
+                            serialized: r
+                        };
+                    });
+
+                    // Sort Rounds by Block Height
+                    rounds.sort(function(a, b) {
+                        return a.height - b.height;
+                    });
+
+                    // Check for Block Duplicates
+                    var duplicateFound = false;
+                    for (var i = 0; i < rounds.length; i++) {
+                        if (checkForDuplicateBlockHeight(rounds, rounds[i].height) === true) {
+                            rounds[i].duplicate = true;
+                            duplicateFound = true;
+                        }
+                    }
+
+                    // Manage ANY Duplicate Blocks Found
+                    if (duplicateFound) {
+                        var dups = rounds.filter(function(round) { return round.duplicate; });
+                        logger.warning(logSystem, logComponent, 'Duplicate pending blocks found: ' + JSON.stringify(dups));
+                        var rpcDupCheck = dups.map(function(r) {
+                            return ['getblock', [r.blockHash]];
+                        });
+                        startRPCTimer();
+                        daemon.batchCmd(rpcDupCheck, function(error, blocks) {
+                            endRPCTimer();
+                            if (error || !blocks) {
+                                logger.error(logSystem, logComponent, 'Error with duplicate block check rpc call getblock ' + JSON.stringify(error));
+                                return;
+                            }
+                            var validBlocks = {};
+                            var invalidBlocks = [];
+                            blocks.forEach(function(block, i) {
+                                if (block && block.result) {
+                                    if (block.result.confirmations < 0) {
+                                        logger.warning(logSystem, logComponent, 'Remove invalid duplicate block ' + block.result.height + ' > ' + block.result.hash);
+                                        invalidBlocks.push(['smove', coin + ':blocksPending', coin + ':blocksDuplicate', dups[i].serialized]);
+                                    }
+                                    else {
+                                        if (validBlocks.hasOwnProperty(dups[i].blockHash)) {
+                                            logger.warning(logSystem, logComponent, 'Remove non-unique duplicate block ' + block.result.height + ' > ' + block.result.hash);
+                                            invalidBlocks.push(['smove', coin + ':blocksPending', coin + ':blocksDuplicate', dups[i].serialized]);
+                                        }
+                                        else {
+                                            validBlocks[dups[i].blockHash] = dups[i].serialized;
+                                            logger.debug(logSystem, logComponent, 'Keep valid duplicate block ' + block.result.height + ' > ' + block.result.hash);
+                                        }
+                                    }
+                                }
+                            });
+                            rounds = rounds.filter(function(round) { return !round.duplicate; });
+                            if (invalidBlocks.length > 0) {
+                                startRedisTimer();
+                                redisClient.multi(invalidBlocks).exec(function(error, kicked) {
+                                    endRedisTimer();
+                                    if (error) {
+                                        logger.error(logSystem, logComponent, 'Error could not move invalid duplicate blocks in redis ' + JSON.stringify(error));
+                                    }
+                                    callback(null, workers, rounds);
+                                });
+                            }
+                            else {
+                                logger.error(logSystem, logComponent, 'Unable to detect invalid duplicate blocks, duplicate block payments on hold.');
+                                callback(null, workers, rounds);
+                            }
+                        });
+                    }
+                    else {
+                        callback(null, workers, rounds);
+                    }
+                });
+            },
+
+            // Validate Transaction Hashes
+            function(workers, rounds, callback) {
+
+                // Get Hashes for Each Transaction
+                var batchRPCcommand = rounds.map(function(r) {
+                    return ['gettransaction', [r.txHash]];
+                });
+                batchRPCcommand.push(['getaccount', [poolOptions.address]]);
+
+                // Manage RPC Timer
+                startRPCTimer();
+                daemon.batchCmd(batchRPCcommand, function(error, txDetails) {
+                    endRPCTimer();
+
+                    // Handle Errors
+                    if (error || !txDetails) {
+                        logger.error(logSystem, logComponent, 'Check finished - daemon rpc error with batch gettransactions '
+                            + JSON.stringify(error));
+                        callback(true);
+                        return;
+                    }
+
+                    // Handle Individual Transactions
+                    txDetails.forEach(function(tx, i) {
+                        if (i === txDetails.length - 1) {
+                            return;
+                        }
+
+                        // Update Confirmations
+                        var round = rounds[i];
+                        if (tx && tx.result)
+                            round.confirmations = parseInt((tx.result.confirmations || 0));
+
+                        // Check Daemon Edge Cases
+                        if (tx.error && tx.error.code === -5) {
+                            logger.warning(logSystem, logComponent, 'Daemon reports invalid transaction: ' + round.txHash);
+                            round.category = 'kicked';
+                            return;
+                        }
+                        else if (!tx.result.details || (tx.result.details && tx.result.details.length === 0)) {
+                            logger.warning(logSystem, logComponent, 'Daemon reports no details for transaction: ' + round.txHash);
+                            round.category = 'kicked';
+                            return;
+                        }
+                        else if (tx.error || !tx.result) {
+                            logger.error(logSystem, logComponent, 'Odd error with gettransaction ' + round.txHash + ' '
+                                + JSON.stringify(tx));
+                            return;
+                        }
+
+                        // Check Transaction Edge Cases
+                        var generationTx = tx.result.details.filter(function(tx) {
+                            return tx.address === poolOptions.address;
+                        })[0];
+                        if (!generationTx && tx.result.details.length === 1) {
+                            generationTx = tx.result.details[0];
+                        }
+                        if (!generationTx) {
+                            logger.error(logSystem, logComponent, 'Missing output details to pool address for transaction '
+                                + round.txHash);
+                            return;
+                        }
+
+                        // Update Round Category/Reward
+                        round.category = generationTx.category;
+                        if ((round.category === 'generate') || (round.category === "immature")) {
+                            round.reward = coinsRound(parseFloat(generationTx.amount || generationTx.value));
+                        }
+                    });
+
+                    // Check for Shares to Delete
+                    var canDeleteShares = function(r) {
+                        for (var i = 0; i < rounds.length; i++) {
+                            var compareR = rounds[i];
+                            if ((compareR.height === r.height)
+                                && (compareR.category !== 'kicked')
+                                && (compareR.category !== 'orphan')
+                                && (compareR.serialized !== r.serialized)) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    };
+
+                    // Manage Immagure Rounds
+                    var payingBlocks = 0;
+                    rounds = rounds.filter(function(r) {
+                        switch (r.category) {
+                            case 'orphan':
+                            case 'kicked':
+                                r.canDeleteShares = canDeleteShares(r);
+                            case 'immature':
+                                return true;
+                            case 'generate':
+                                payingBlocks += 1;
+                                if (payingBlocks > maxBlocksPerPayment) {
+                                  r.category == "immature";
+                                }
+                                return true;
+                            default:
+                                return false;
+                        }
+                    });
+
+                    // Return Workers/Rounds as Callback
+                    callback(null, workers, rounds);
+                });
+            },
+
+            // Update Redis Database
+            function(workers, rounds, callback) {
+
+                // Lookup Shares from Rounds
+                var shareLookups = rounds.map(function(r) {
+                    return ['hgetall', coin + ':shares:round' + r.height]
+                });
+
+                startRedisTimer();
+                redisClient.multi(shareLookups).exec(function(err, results) {
+                    endRedisTimer();
+
+                    var allWorkerSharesSolo = []
+                    var allWorkerSharesShared = []
+                    results.forEach(function(round) {
+                        var roundSharesSolo = {}
+                        var roundSharesShared = {}
+                        Object.keys(round).forEach(function(entry) {
+                            var details = entry.split(':');
+                            if (details[1] === 'true') {
+                                roundSharesSolo[details[0]] = round[entry]
+                            }
+                            else {
+                                roundSharesShared[details[0]] = round[entry]
+                            }
+                        });
+                        allWorkerSharesSolo.push(roundSharesSolo)
+                        allWorkerSharesShared.push(roundSharesShared)
+                    });
+
+                    // Handle Errors
+                    if (err) {
+                        callback('Check finished - redis error with multi get rounds share');
+                        return;
+                    }
+
+                    var errors = null;
+                    var notAddr = null;
+
+                    // Manage Shares in each Round
+                    rounds.forEach(function(round, i) {
+                        var workerSharesSolo = allWorkerSharesSolo[i];
+                        var workerSharesShared = allWorkerSharesShared[i];
+
+                        // Check if Shares Exist in Round
+                        if (!workerSharesSolo && !workerSharesShared) {
+                            logger.error(logSystem, logComponent, 'No worker shares for round: ' + round.height + ' blockHash: ' + round.blockHash);
+                            return;
+                        }
+
+                        // Find Type of Block Generated
+                        switch (round.category) {
+
+                            // No Block Found
+                            case 'kicked':
+                            case 'orphan':
+                            case 'generate':
+                                break;
+
+                            // Block is Immature
+                            case 'immature':
+                                var feeSatoshi = coinsToSatoshies(fee);
+                                var immature = coinsToSatoshies(round.reward);
+                                var totalShares = parseFloat(0);
+                                var sharesLost = parseFloat(0);
+
+                                // Check if Solo Mined
+                                if (round.soloMined === 'true') {
+
+                                    immature = Math.round(immature - feeSatoshi);
+                                    var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
+                                    var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
+                                    worker.roundShares = shares;
+
+                                    var totalAmount = 0;
+                                    var workerImmatureTotal = Math.round(immature);
+                                    worker.immature = (worker.immature || 0) + workerImmatureTotal;
+                                    totalAmount += workerImmatureTotal;
+
+                                }
+
+                                // Otherwise, Payout Shared
+                                else {
+
+                                    immature = Math.round(immature - feeSatoshi);
+                                    for (var workerAddress in workerSharesShared) {
+                                        var worker = workers[workerAddress] = (workers[workerAddress] || {});
+                                        var shares = parseFloat((workerSharesShared[workerAddress] || 0));
+                                        worker.roundShares = shares;
+                                        totalShares += shares;
+                                    }
+
+                                    var totalAmount = 0;
+                                    for (var workerAddress in workerSharesShared) {
+                                        var worker = workers[workerAddress] = (workers[workerAddress] || {});
+                                        var percent = parseFloat(worker.roundShares) / totalShares;
+                                        var workerImmatureTotal = Math.round(immature * percent);
+                                        worker.immature = (worker.immature || 0) + workerImmatureTotal;
+                                        totalAmount += workerImmatureTotal;
+                                    }
+
+                                }
+                                break;
+
+                        }
+                    });
+
+                    if (errors == null) {
+                        callback(null, workers, rounds);
+                    }
+                    else {
+                        callback(true);
+                    }
+
+                });
+            },
+
+            // Finalize Redis Updates
+            function(workers, rounds, callback) {
+
+                // Establish Payment Variables
+                var immatureUpdateCommands = [];
+                for (var w in workers) {
+                    var worker = workers[w];
+                    if ((worker.immature || 0) > 0) {
+                        immatureUpdateCommands.push(['hset', coin + ':immature', w, worker.immature]);
+                    } else {
+                        immatureUpdateCommands.push(['hset', coin + ':immature', w, 0]);
+                    }
+                }
+
+                var movePendingCommands = [];
+                var roundsToDelete = [];
+                var orphanMergeCommands = [];
+                var confirmsUpdate = [];
+                var confirmsToDelete = [];
+
+                // Update Worker Shares
+                var moveSharesToCurrent = function(r) {
+                    var workerShares = r.workerShares;
+                    if (workerShares != null) {
+                        logger.warning(logSystem, logComponent, 'Moving shares from orphaned block '+r.height+' to current round.');
+                        Object.keys(workerShares).forEach(function(worker) {
+                            orphanMergeCommands.push(['hincrby', coin + ':shares:roundCurrent',
+                                worker, workerShares[worker]]);
+                        });
+                    }
+                };
+
+                // Update Worker Shares in Database
+                rounds.forEach(function(r) {
+                    switch (r.category) {
+                        case 'kicked':
+                        case 'orphan':
+                            confirmsToDelete.push(['hdel', coin + ':blocksPendingConfirms', r.blockHash]);
+                            movePendingCommands.push(['smove', coin + ':blocksPending', coin + ':blocksKicked', r.serialized]);
+                            if (r.canDeleteShares) {
+                                moveSharesToCurrent(r);
+                                roundsToDelete.push(coin + ':shares:round' + r.height);
+                            }
+                            return;
+                        case 'immature':
+                            confirmsUpdate.push(['hset', coin + ':blocksPendingConfirms', r.blockHash, (r.confirmations || 0)]);
+                            return;
+                        case 'generate':
+                            return;
+                    }
+                });
+
+                // Update Main Database
+                var finalRedisCommands = [];
+                if (movePendingCommands.length > 0)
+                    finalRedisCommands = finalRedisCommands.concat(movePendingCommands);
+                if (orphanMergeCommands.length > 0)
+                    finalRedisCommands = finalRedisCommands.concat(orphanMergeCommands);
+                if (immatureUpdateCommands.length > 0)
+                    finalRedisCommands = finalRedisCommands.concat(immatureUpdateCommands);
+                if (roundsToDelete.length > 0)
+                    finalRedisCommands.push(['del'].concat(roundsToDelete));
+                if (confirmsUpdate.length > 0)
+                    finalRedisCommands = finalRedisCommands.concat(confirmsUpdate);
+                if (confirmsToDelete.length > 0)
+                    finalRedisCommands = finalRedisCommands.concat(confirmsToDelete);
+
+                if (finalRedisCommands.length === 0) {
+                    return;
+                }
+
+                // Manage Redis Timer
+                startRedisTimer();
+                redisClient.multi(finalRedisCommands).exec(function(err, results) {
+                    endRedisTimer();
+
+                    // Handle Errors
+                    if (err) {
+                        clearInterval(checkInterval);
+                        clearInterval(paymentInterval);
+                    }
+                    callback()
+                });
+            }
+
+        // Record Time of Payments
+        ], function() {
+
+            // Send Message to Pool Logger
+            var checkProcessTime = Date.now() - startCheckProcess;
+            logger.debug(logSystem, logComponent, 'Finished running status checks for payment processing');
+        });
+
+    }
 
     // Payment Functionality
     var processPayments = function() {
@@ -918,7 +1379,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             logger.error('Could not write finalRedisCommands.txt, you are fucked.');
                         });
                     }
-                    return;
+                    callback()
                 });
             }
 
@@ -927,9 +1388,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
 
             // Send Message to Pool Logger
             var paymentProcessTime = Date.now() - startPaymentProcess;
-            logger.debug(logSystem, logComponent, 'Finished interval - time spent: '
-                + paymentProcessTime + 'ms total, ' + timeSpentRedis + 'ms redis, '
-                + timeSpentRPC + 'ms daemon RPC');
+            logger.debug(logSystem, logComponent, 'Finished sending all confirmed payments to users');
         });
     };
 }
