@@ -251,6 +251,8 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             blockHash: details[0],
                             txHash: details[1],
                             height: details[2],
+                            workerAddress: details[3],
+                            soloMined: details[4],
                             duplicate: false,
                             serialized: r
                         };
@@ -447,8 +449,26 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                 });
 
                 startRedisTimer();
-                redisClient.multi(shareLookups).exec(function(err, allWorkerShares) {
+                redisClient.multi(shareLookups).exec(function(err, results) {
                     endRedisTimer();
+
+                    var allWorkerSharesSolo = []
+                    var allWorkerSharesShared = []
+                    results.forEach(function(round) {
+                        var roundSharesSolo = {}
+                        var roundSharesShared = {}
+                        Object.keys(round).forEach(function(entry) {
+                            var details = entry.split(':');
+                            if (details[1] === 'true') {
+                                roundSharesSolo[details[0]] = round[entry]
+                            }
+                            else {
+                                roundSharesShared[details[0]] = round[entry]
+                            }
+                        });
+                        allWorkerSharesSolo.push(roundSharesSolo)
+                        allWorkerSharesShared.push(roundSharesShared)
+                    });
 
                     // Handle Errors
                     if (err) {
@@ -504,10 +524,11 @@ function SetupForPool(logger, poolOptions, setupFinished) {
 
                         // Manage Shares in each Round
                         rounds.forEach(function(round, i) {
-                            var workerShares = allWorkerShares[i];
+                            var workerSharesSolo = allWorkerSharesSolo[i];
+                            var workerSharesShared = allWorkerSharesShared[i];
 
                             // Check if Shares Exist in Round
-                            if (!workerShares) {
+                            if (!workerSharesSolo && !workerSharesShared) {
                                 logger.error(logSystem, logComponent, 'No worker shares for round: ' + round.height + ' blockHash: ' + round.blockHash);
                                 return;
                             }
@@ -518,7 +539,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                 // No Block Found
                                 case 'kicked':
                                 case 'orphan':
-                                    round.workerShares = workerShares;
                                     break;
 
                                 // Block is Immature
@@ -528,21 +548,41 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     var totalShares = parseFloat(0);
                                     var sharesLost = parseFloat(0);
 
-                                    immature = Math.round(immature - feeSatoshi);
-                                    for (var workerAddress in workerShares) {
-                                        var worker = workers[workerAddress] = (workers[workerAddress] || {});
-                                        var shares = parseFloat((workerShares[workerAddress] || 0));
-                                        worker.roundShares = shares;
-                                        totalShares += shares;
-                                    }
+                                    // Check if Solo Mined
+                                    if (round.soloMined === 'true') {
 
-                                    var totalAmount = 0;
-                                    for (var workerAddress in workerShares) {
-                                        var worker = workers[workerAddress] = (workers[workerAddress] || {});
-                                        var percent = parseFloat(worker.roundShares) / totalShares;
-                                        var workerImmatureTotal = Math.round(immature * percent);
+                                        immature = Math.round(immature - feeSatoshi);
+                                        var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
+                                        var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
+                                        worker.roundShares = shares;
+
+                                        var totalAmount = 0;
+                                        var workerImmatureTotal = Math.round(immature);
                                         worker.immature = (worker.immature || 0) + workerImmatureTotal;
                                         totalAmount += workerImmatureTotal;
+
+                                    }
+
+                                    // Otherwise, Payout Shared
+                                    else {
+
+                                        immature = Math.round(immature - feeSatoshi);
+                                        for (var workerAddress in workerSharesShared) {
+                                            var worker = workers[workerAddress] = (workers[workerAddress] || {});
+                                            var shares = parseFloat((workerSharesShared[workerAddress] || 0));
+                                            worker.roundShares = shares;
+                                            totalShares += shares;
+                                        }
+
+                                        var totalAmount = 0;
+                                        for (var workerAddress in workerSharesShared) {
+                                            var worker = workers[workerAddress] = (workers[workerAddress] || {});
+                                            var percent = parseFloat(worker.roundShares) / totalShares;
+                                            var workerImmatureTotal = Math.round(immature * percent);
+                                            worker.immature = (worker.immature || 0) + workerImmatureTotal;
+                                            totalAmount += workerImmatureTotal;
+                                        }
+
                                     }
                                     break;
 
@@ -553,26 +593,46 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     var totalShares = parseFloat(0);
                                     var sharesLost = parseFloat(0);
 
-                                    for (var workerAddress in workerShares) {
-                                        var worker = workers[workerAddress] = (workers[workerAddress] || {});
-                                        var shares = parseFloat((workerShares[workerAddress] || 0));
+                                    // Check if Solo Mined
+                                    if (round.soloMined === 'true') {
+
+                                        var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
+                                        var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
                                         worker.roundShares = shares;
                                         worker.totalShares = parseFloat(worker.totalShares || 0) + shares;
-                                        totalShares += shares;
-                                    }
 
-                                    var totalAmount = 0;
-                                    for (var workerAddress in workerShares) {
-                                        var worker = workers[workerAddress] = (workers[workerAddress] || {});
-                                        var percent = parseFloat(worker.roundShares) / totalShares;
-                                        if (percent > 1.0) {
-                                            errors = true;
-                                            logger.error(logSystem, logComponent, 'Share percent is greater than 1.0 for '+workerAddress+' round:' + round.height + ' blockHash:' + round.blockHash);
-                                            return;
-                                        }
-                                        var workerRewardTotal = Math.round(reward * percent);
+                                        var totalAmount = 0;
+                                        var workerRewardTotal = Math.round(reward);
                                         worker.reward = (worker.reward || 0) + workerRewardTotal;
                                         totalAmount += workerRewardTotal;
+
+                                    }
+
+                                    // Otherwise, Payout Shared
+                                    else {
+
+                                        for (var workerAddress in workerSharesShared) {
+                                            var worker = workers[workerAddress] = (workers[workerAddress] || {});
+                                            var shares = parseFloat((workerSharesShared[workerAddress] || 0));
+                                            worker.roundShares = shares;
+                                            worker.totalShares = parseFloat(worker.totalShares || 0) + shares;
+                                            totalShares += shares;
+                                        }
+
+                                        var totalAmount = 0;
+                                        for (var workerAddress in workerSharesShared) {
+                                            var worker = workers[workerAddress] = (workers[workerAddress] || {});
+                                            var percent = parseFloat(worker.roundShares) / totalShares;
+                                            if (percent > 1.0) {
+                                                errors = true;
+                                                logger.error(logSystem, logComponent, 'Share percent is greater than 1.0 for '+workerAddress+' round:' + round.height + ' blockHash:' + round.blockHash);
+                                                return;
+                                            }
+                                            var workerRewardTotal = Math.round(reward * percent);
+                                            worker.reward = (worker.reward || 0) + workerRewardTotal;
+                                            totalAmount += workerRewardTotal;
+                                        }
+
                                     }
                                     break;
 

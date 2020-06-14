@@ -83,10 +83,17 @@ var PoolShares = function (logger, poolConfig) {
     // Manage Individual Shares
     this.handleShare = function(isValidShare, isValidBlock, shareData) {
 
+        // Check to see if Solo Mining
+        var isSoloMining = false;
+        if (poolConfig.ports[shareData.port].enableSoloMining === true) {
+            isSoloMining = true;
+        }
+
         // Push Share Data to Main Array
         var redisCommands = [];
         if (isValidShare) {
-            redisCommands.push(['hincrbyfloat', coin + ':shares:roundCurrent', shareData.worker, shareData.difficulty]);
+            var combinedShare = [shareData.worker, isSoloMining].join(':');
+            redisCommands.push(['hincrby', coin + ':shares:roundCurrent', combinedShare, shareData.difficulty]);
             redisCommands.push(['hincrby', coin + ':stats', 'validShares', 1]);
         }
         else {
@@ -95,13 +102,14 @@ var PoolShares = function (logger, poolConfig) {
 
         // Push Hashrate Data to Main Array
         var dateNow = Date.now();
-        var hashrateData = [ isValidShare ? shareData.difficulty : -shareData.difficulty, shareData.worker, dateNow];
-        redisCommands.push(['zadd', coin + ':hashrate', dateNow / 1000 | 0, hashrateData.join(':')]);
+        var combinedHashrate = [ isValidShare ? shareData.difficulty : -shareData.difficulty, shareData.worker, dateNow].join(':');
+        redisCommands.push(['zadd', coin + ':hashrate', dateNow / 1000 | 0, combinedHashrate]);
 
         // Push Block Data to Main Array
         if (isValidBlock) {
+            var combinedBlock = [shareData.blockHash, shareData.txHash, shareData.height, shareData.worker, isSoloMining].join(':');
             redisCommands.push(['rename', coin + ':shares:roundCurrent', coin + ':shares:round' + shareData.height]);
-            redisCommands.push(['sadd', coin + ':blocksPending', [shareData.blockHash, shareData.txHash, shareData.height].join(':')]);
+            redisCommands.push(['sadd', coin + ':blocksPending', combinedBlock]);
             redisCommands.push(['hincrby', coin + ':stats', 'validBlocks', 1]);
         }
         else if (shareData.blockHash) {
