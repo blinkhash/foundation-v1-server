@@ -648,18 +648,12 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         clearInterval(checkInterval);
                         clearInterval(paymentInterval);
                     }
-                    callback()
+                    var checkProcessTime = Date.now() - startCheckProcess;
+                    logger.debug(logSystem, logComponent, 'Finished running status checks for payment processing');
+                    return;
                 });
             }
-
-        // Record Time of Payments
-        ], function() {
-
-            // Send Message to Pool Logger
-            var checkProcessTime = Date.now() - startCheckProcess;
-            logger.debug(logSystem, logComponent, 'Finished running status checks for payment processing');
-        });
-
+        ]);
     }
 
     // Payment Functionality
@@ -1379,17 +1373,12 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             logger.error('Could not write finalRedisCommands.txt, you are fucked.');
                         });
                     }
-                    callback()
+                    var paymentProcessTime = Date.now() - startPaymentProcess;
+                    logger.debug(logSystem, logComponent, 'Finished sending all confirmed payments to users');
+                    return
                 });
             }
-
-        // Record Time of Payments
-        ], function() {
-
-            // Send Message to Pool Logger
-            var paymentProcessTime = Date.now() - startPaymentProcess;
-            logger.debug(logSystem, logComponent, 'Finished sending all confirmed payments to users');
-        });
+        ]);
     };
 }
 
