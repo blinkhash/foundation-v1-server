@@ -109,7 +109,7 @@ var PoolShares = function (logger, poolConfig) {
         if (isValidBlock) {
             var combinedBlock = [shareData.blockHash, shareData.txHash, shareData.height, shareData.worker, isSoloMining].join(':');
             redisCommands.push(['rename', coin + ':shares:roundCurrent', coin + ':shares:round' + shareData.height]);
-            redisCommands.push(['sadd', coin + ':blocksPending', combinedBlock]);
+            redisCommands.push(['sadd', coin + ':blocks:pending', combinedBlock]);
             redisCommands.push(['hincrby', coin + ':stats', 'validBlocks', 1]);
         }
         else if (shareData.blockHash) {

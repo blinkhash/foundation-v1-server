@@ -239,7 +239,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                 startRedisTimer();
                 redisClient.multi([
                     ['hgetall', coin + ':balances'],
-                    ['smembers', coin + ':blocksPending']
+                    ['smembers', coin + ':blocks:pending']
                 ]).exec(function(err, results) {
                     endRedisTimer();
 
@@ -304,12 +304,12 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                 if (block && block.result) {
                                     if (block.result.confirmations < 0) {
                                         logger.warning(logSystem, logComponent, 'Remove invalid duplicate block ' + block.result.height + ' > ' + block.result.hash);
-                                        invalidBlocks.push(['smove', coin + ':blocksPending', coin + ':blocksDuplicate', dups[i].serialized]);
+                                        invalidBlocks.push(['smove', coin + ':blocks:pending', coin + ':blocksDuplicate', dups[i].serialized]);
                                     }
                                     else {
                                         if (validBlocks.hasOwnProperty(dups[i].blockHash)) {
                                             logger.warning(logSystem, logComponent, 'Remove non-unique duplicate block ' + block.result.height + ' > ' + block.result.hash);
-                                            invalidBlocks.push(['smove', coin + ':blocksPending', coin + ':blocksDuplicate', dups[i].serialized]);
+                                            invalidBlocks.push(['smove', coin + ':blocks:pending', coin + ':blocksDuplicate', dups[i].serialized]);
                                         }
                                         else {
                                             validBlocks[dups[i].blockHash] = dups[i].serialized;
@@ -604,16 +604,13 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     switch (r.category) {
                         case 'kicked':
                         case 'orphan':
-                            confirmsToDelete.push(['hdel', coin + ':blocksPendingConfirms', r.blockHash]);
-                            movePendingCommands.push(['smove', coin + ':blocksPending', coin + ':blocksKicked', r.serialized]);
+                            movePendingCommands.push(['smove', coin + ':blocks:pending', coin + ':blocksKicked', r.serialized]);
                             if (r.canDeleteShares) {
                                 moveSharesToCurrent(r);
                                 roundsToDelete.push(coin + ':shares:round' + r.height);
                             }
                             return;
                         case 'immature':
-                            confirmsUpdate.push(['hset', coin + ':blocksPendingConfirms', r.blockHash, (r.confirmations || 0)]);
-                            return;
                         case 'generate':
                             return;
                     }
@@ -682,7 +679,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                 startRedisTimer();
                 redisClient.multi([
                     ['hgetall', coin + ':balances'],
-                    ['smembers', coin + ':blocksPending']
+                    ['smembers', coin + ':blocks:pending']
                 ]).exec(function(err, results) {
                     endRedisTimer();
 
@@ -747,12 +744,12 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                 if (block && block.result) {
                                     if (block.result.confirmations < 0) {
                                         logger.warning(logSystem, logComponent, 'Remove invalid duplicate block ' + block.result.height + ' > ' + block.result.hash);
-                                        invalidBlocks.push(['smove', coin + ':blocksPending', coin + ':blocksDuplicate', dups[i].serialized]);
+                                        invalidBlocks.push(['smove', coin + ':blocks:pending', coin + ':blocksDuplicate', dups[i].serialized]);
                                     }
                                     else {
                                         if (validBlocks.hasOwnProperty(dups[i].blockHash)) {
                                             logger.warning(logSystem, logComponent, 'Remove non-unique duplicate block ' + block.result.height + ' > ' + block.result.hash);
-                                            invalidBlocks.push(['smove', coin + ':blocksPending', coin + ':blocksDuplicate', dups[i].serialized]);
+                                            invalidBlocks.push(['smove', coin + ':blocks:pending', coin + ':blocksDuplicate', dups[i].serialized]);
                                         }
                                         else {
                                             validBlocks[dups[i].blockHash] = dups[i].serialized;
@@ -1312,19 +1309,16 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     switch (r.category) {
                         case 'kicked':
                         case 'orphan':
-                            confirmsToDelete.push(['hdel', coin + ':blocksPendingConfirms', r.blockHash]);
-                            movePendingCommands.push(['smove', coin + ':blocksPending', coin + ':blocksKicked', r.serialized]);
+                            movePendingCommands.push(['smove', coin + ':blocks:pending', coin + ':blocksKicked', r.serialized]);
                             if (r.canDeleteShares) {
                                 moveSharesToCurrent(r);
                                 roundsToDelete.push(coin + ':shares:round' + r.height);
                             }
                             return;
                         case 'immature':
-                            confirmsUpdate.push(['hset', coin + ':blocksPendingConfirms', r.blockHash, (r.confirmations || 0)]);
                             return;
                         case 'generate':
-                            confirmsToDelete.push(['hdel', coin + ':blocksPendingConfirms', r.blockHash]);
-                            movePendingCommands.push(['smove', coin + ':blocksPending', coin + ':blocksConfirmed', r.serialized]);
+                            movePendingCommands.push(['smove', coin + ':blocks:pending', coin + ':blocks:confirmed', r.serialized]);
                             roundsToDelete.push(coin + ':shares:round' + r.height);
                             return;
                     }

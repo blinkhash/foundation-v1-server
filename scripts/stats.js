@@ -383,13 +383,12 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                 ['zremrangebyscore', ':hashrate', '-inf', '(' + windowTime],
                 ['zrangebyscore', ':hashrate', windowTime, '+inf'],
                 ['hgetall', ':stats'],
-                ['scard', ':blocksPending'],
-                ['scard', ':blocksConfirmed'],
+                ['scard', ':blocks:pending'],
+                ['scard', ':blocks:confirmed'],
                 ['scard', ':blocksKicked'],
-                ['smembers', ':blocksPending'],
-                ['smembers', ':blocksConfirmed'],
+                ['smembers', ':blocks:pending'],
+                ['smembers', ':blocks:confirmed'],
                 ['hgetall', ':shares:roundCurrent'],
-                ['hgetall', ':blocksPendingConfirms'],
                 ['zrange', ':payments', -100, -1],
             ];
 
@@ -428,21 +427,16 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                                 confirmed: replies[i + 4],
                                 orphaned: replies[i + 5]
                             },
-                            pending: {
-                                blocks: replies[i + 6].sort(sortBlocks),
-                                confirms: (replies[i + 9] || {})
-                            },
-                            confirmed: {
-                                blocks: replies[i + 7].sort(sortBlocks).slice(0,50)
-                            },
-                            payments: [],
+                            pending: replies[i + 6].sort(sortBlocks),
+                            confirmed: replies[i + 7].sort(sortBlocks).slice(0,50),
                             currentRoundShares: (replies[i + 8] || {}),
+                            payments: [],
                             shareCount: 0
                         };
-                        for(var j = replies[i + 10].length; j > 0; j--) {
+                        for(var j = replies[i + 9].length; j > 0; j--) {
                             var jsonObj;
                             try {
-                                jsonObj = JSON.parse(replies[i + 10][j-1]);
+                                jsonObj = JSON.parse(replies[i + 9][j-1]);
                             }
                             catch(e) {
                                 jsonObj = null;
