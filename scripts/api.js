@@ -7,6 +7,7 @@
 // Import Required Modules
 var redis = require('redis');
 var async = require('async');
+var url = require('url');
 
 // Import Pool Functionality
 var PoolStats = require('./stats.js');
@@ -35,128 +36,126 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
     this.handleApiRequest = function(req, res, next) {
         switch (req.params.method) {
 
-            // Global Statistics Endpoint
-            case 'global-stats':
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(portalStats.statsString);
-                return;
-
-            // Historical Statistics Endpoint
-            case 'historical-stats':
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(portalStats.statPoolHistory));
-                return;
-
-            // Block Statistics Endpoint
-            case 'block-stats':
-                portalStats.getBlocks(function(data) {
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify(data));
-                });
-                return;
-
-            // Payment Statistics Endpoint
-            case 'payment-stats':
-                var poolBlocks = [];
-                for(var pool in portalStats.stats.pools) {
-                    poolBlocks.push({
-                        name: pool,
-                        pending: portalStats.stats.pools[pool].pending,
-                        payments: portalStats.stats.pools[pool].payments
-                    });
-                }
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(poolBlocks));
-                return;
-
-            // Worker Statistics Endpoint
-            case 'worker-stats':
+            // Wallet Endpoint
+            case 'wallet':
 
                 // Check to Ensure URL is Formatted Properly
-                if (req.url.indexOf("?") > 0) {
-                    var url_params = req.url.split("?");
-                    if (url_params.length > 0) {
-                        var address = url_params[1] || null;
-                        if (address != null && address.length > 0) {
-                            address = address.split(".")[0];
+                var url_queries = req.query;
+                var address = url_queries.address || null;
+                if (address != null && address.length > 0) {
 
-                            portalStats.getBalanceByAddress(address, function(balances) {
-                                portalStats.getTotalSharesByAddress(address, function(shares) {
+                    // Output Balance of Address
+                    portalStats.getBalanceByAddress(address, function(balances) {
 
-                                    // Establish Worker Variables
-                                    var workers = {};
-                                    var totalHash = parseFloat(0.0);
-                                    var totalShares = shares;
-                                    var history = {};
-
-                                    // Get History of Worker
-                                    for (var h in portalStats.statHistory) {
-                                        for (var pool in portalStats.statHistory[h].pools) {
-                                            for (var w in portalStats.statHistory[h].pools[pool].workers) {
-                                                if (w == address) {
-                                                    if (history[w] == null) {
-                                                        history[w] = [];
-                                                    }
-                                                    if (portalStats.statHistory[h].pools[pool].workers[w].hashrate) {
-                                                        history[w].push({
-                                                            time: portalStats.statHistory[h].time,
-                                                            hashrate: portalStats.statHistory[h].pools[pool].workers[w].hashrate
-                                                        });
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    // Get Information of Established Worker
-                                    for (var pool in portalStats.stats.pools) {
-                                        for(var w in portalStats.stats.pools[pool].workers) {
-                                            if (w == address) {
-                                                workers[w] = portalStats.stats.pools[pool].workers[w];
-                                                for (var b in balances.balances) {
-                                                    if (w == balances.balances[b].worker) {
-                                                        workers[w].paid = balances.balances[b].paid;
-                                                        workers[w].balance = balances.balances[b].balance;
-                                                    }
-                                                }
-                                                workers[w].balance = (workers[w].balance || 0);
-                                                workers[w].paid = (workers[w].paid || 0);
-                                                totalHash += portalStats.stats.pools[pool].workers[w].hashrate;
-                                            }
-                                        }
-                                    }
-
-                                    var totalHashString = _this.getReadableHashRateString(totalHash);
-                                    res.writeHead(200, { 'Content-Type': 'application/json' });
-
-                                    // Write Established Response Data
-                                    res.end(JSON.stringify({
-                                        miner: address,
-                                        hashrate: totalHash,
-                                        hashrateString: totalHashString,
-                                        shares: totalShares,
-                                        immature: balances.totalImmature,
-                                        paid: balances.totalPaid,
-                                        workers: workers,
-                                        history: history
-                                    }));
-                                });
-                            });
-                        }
-                        else {
-                            res.writeHead(200, { 'Content-Type': 'application/json' });
-                            res.end(JSON.stringify({result: "error"}));
-                        }
-                    }
-                    else {
+                        // Finalize Endpoint Information
                         res.writeHead(200, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({result: "error"}));
-                    }
+                        res.end(JSON.stringify({
+                            address: address,
+                            balance: balances.totalBalance.toFixed(8),
+                            immature: balances.totalImmature.toFixed(8),
+                            paid: balances.totalPaid.toFixed(8),
+                            unpaid: balances.totalUnpaid.toFixed(8),
+                            total: (balances.totalBalance + balances.totalImmature + balances.totalPaid + balances.totalUnpaid).toFixed(8),
+                        }));
+                    });
                 }
+
                 else {
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({result: "error"}));
                 }
+
+                return;
+
+            case 'walletEx':
+
+                // Check to Ensure URL is Formatted Properly
+                var url_queries = req.query;
+                var address = url_queries.address || null;
+                if (address != null && address.length > 0) {
+
+                    // Output Balance of Address
+                    portalStats.getBalanceByAddress(address, function(balances) {
+
+                        // Establish Address Variables
+                        var worker = []
+                        var payments = []
+                        var blocks = []
+
+                        // Get Worker Information
+                        for (var pool in portalStats.stats.pools) {
+                            for (var w in portalStats.stats.pools[pool].workers) {
+                                if (w == address) {
+                                    worker.push(portalStats.stats.pools[pool].workers[w]);
+                                }
+                            }
+                        }
+
+                        // Get Payout Information
+                        for (var pool in portalStats.stats.pools) {
+                            for (var w in portalStats.stats.pools[pool].payments) {
+                                for (var x in portalStats.stats.pools[pool].payments[w].amounts) {
+                                    if (x == address) {
+                                        var paymentData = {
+                                            time: portalStats.stats.pools[pool].payments[w].time,
+                                            amount: portalStats.stats.pools[pool].payments[w].amounts[x],
+                                            txid: portalStats.stats.pools[pool].payments[w].txid
+                                        }
+                                        payments.push(paymentData)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Get Block Information
+                        for (var pool in portalStats.stats.pools) {
+                            for (var w in portalStats.stats.pools[pool].pending) {
+                                blockInformation = portalStats.stats.pools[pool].pending[w].split(':');
+                                if (blockInformation[3] == address) {
+                                    var blockData = {
+                                        height: blockInformation[2],
+                                        blockHash: blockInformation[0],
+                                        soloMining: blockInformation[4] == 'true',
+                                        confirmed: false,
+                                    }
+                                    blocks.push(blockData);
+                                }
+                            }
+                            for (var w in portalStats.stats.pools[pool].confirmed) {
+                                blockInformation = portalStats.stats.pools[pool].confirmed[w].split(':');
+                                if (blockInformation[3] == address) {
+                                    var blockData = {
+                                        height: blockInformation[2],
+                                        blockHash: blockInformation[0],
+                                        soloMining: blockInformation[4] == 'true',
+                                        confirmed: true,
+                                    }
+                                    blocks.push(blockData);
+                                }
+                            }
+                        }
+
+                        // Finalize Endpoint Information
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            address: address,
+                            balance: balances.totalBalance.toFixed(8),
+                            immature: balances.totalImmature.toFixed(8),
+                            paid: balances.totalPaid.toFixed(8),
+                            unpaid: balances.totalUnpaid.toFixed(8),
+                            total: (balances.totalBalance + balances.totalImmature + balances.totalPaid + balances.totalUnpaid).toFixed(8),
+                            worker: worker,
+                            payments: payments,
+                            blocks: blocks,
+                        }));
+                    });
+                }
+
+                else {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({result: "error"}));
+                }
+
                 return;
 
             default:

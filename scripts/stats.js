@@ -144,67 +144,84 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
         coins = redisClients[0].coins,
         balances = [];
 
-        var totalHeld = parseFloat(0);
-        var totalPaid = parseFloat(0);
+        var totalBalance = parseFloat(0);
         var totalImmature = parseFloat(0);
+        var totalPaid = parseFloat(0);
+        var totalUnpaid = parseFloat(0);
 
         async.each(_this.stats.pools, function(pool, pcb) {
             var coin = String(_this.stats.pools[pool.name].name);
-            client.hscan(coin + ':immature', 0, "match", a+"*", "count", 10000, function(error, pends) {
-                client.hscan(coin + ':balances', 0, "match", a+"*", "count", 10000, function(error, bals) {
+            client.hscan(coin + ':balances', 0, "match", a+"*", "count", 10000, function(error, bals) {
+                client.hscan(coin + ':immature', 0, "match", a+"*", "count", 10000, function(error, pends) {
                     client.hscan(coin + ':payouts', 0, "match", a+"*", "count", 10000, function(error, pays) {
+                        client.hscan(coin + ':unpaid', 0, "match", a+"*", "count", 10000, function(error, unpays) {
 
-                        var workerName = "";
-                        var balAmount = 0;
-                        var paidAmount = 0;
-                        var pendingAmount = 0;
-                        var workers = {};
+                            var workerName = "";
+                            var balanceAmount = 0;
+                            var immatureAmount = 0;
+                            var paidAmount = 0;
+                            var unpaidAmount = 0;
+                            var workers = {};
 
-                        for (var i in pays[1]) {
-                            if (Math.abs(i % 2) != 1) {
-                                workerName = String(pays[1][i]);
-                                workers[workerName] = (workers[workerName] || {});
+                            for (var b in bals[1]) {
+                                if (Math.abs(b % 2) != 1) {
+                                    workerName = String(bals[1][b]);
+                                    workers[workerName] = (workers[workerName] || {});
+                                }
+                                else {
+                                    balanceAmount = parseFloat(bals[1][b]);
+                                    workers[workerName].balance = coinsRound(balanceAmount);
+                                    totalBalance += balanceAmount;
+                                }
                             }
-                            else {
-                                paidAmount = parseFloat(pays[1][i]);
-                                workers[workerName].paid = coinsRound(paidAmount);
-                                totalPaid += paidAmount;
-                            }
-                        }
 
-                        for (var b in bals[1]) {
-                            if (Math.abs(b % 2) != 1) {
-                                workerName = String(bals[1][b]);
-                                workers[workerName] = (workers[workerName] || {});
+                            for (var b in pends[1]) {
+                                if (Math.abs(b % 2) != 1) {
+                                    workerName = String(pends[1][b]);
+                                    workers[workerName] = (workers[workerName] || {});
+                                }
+                                else {
+                                    immatureAmount = parseFloat(pends[1][b]);
+                                    workers[workerName].immature = coinsRound(immatureAmount);
+                                    totalImmature += immatureAmount;
+                                }
                             }
-                            else {
-                                balAmount = parseFloat(bals[1][b]);
-                                workers[workerName].balance = coinsRound(balAmount);
-                                totalHeld += balAmount;
-                            }
-                        }
 
-                        for (var b in pends[1]) {
-                            if (Math.abs(b % 2) != 1) {
-                                workerName = String(pends[1][b]);
-                                workers[workerName] = (workers[workerName] || {});
+                            for (var i in pays[1]) {
+                                if (Math.abs(i % 2) != 1) {
+                                    workerName = String(pays[1][i]);
+                                    workers[workerName] = (workers[workerName] || {});
+                                }
+                                else {
+                                    paidAmount = parseFloat(pays[1][i]);
+                                    workers[workerName].paid = coinsRound(paidAmount);
+                                    totalPaid += paidAmount;
+                                }
                             }
-                            else {
-                                pendingAmount = parseFloat(pends[1][b]);
-                                workers[workerName].immature = coinsRound(pendingAmount);
-                                totalImmature += pendingAmount;
-                            }
-                        }
 
-                        for (var w in workers) {
-                            balances.push({
-                                worker: String(w),
-                                balance: workers[w].balance,
-                                paid: workers[w].paid,
-                                immature: workers[w].immature
-                            });
-                        }
-                        pcb();
+                            for (var i in unpays[1]) {
+                                if (Math.abs(i % 2) != 1) {
+                                    workerName = String(unpays[1][i]);
+                                    workers[workerName] = (workers[workerName] || {});
+                                }
+                                else {
+                                    unpaidAmount = parseFloat(unpays[1][i]);
+                                    workers[workerName].unpaid = coinsRound(unpaidAmount);
+                                    totalUnpaid += unpaidAmount;
+                                }
+                            }
+
+                            for (var w in workers) {
+                                balances.push({
+                                    worker: String(w),
+                                    balance: workers[w].balance,
+                                    immature: workers[w].immature,
+                                    paid: workers[w].paid,
+                                    unpaid: workers[w].unpaid,
+                                });
+                            }
+                            pcb();
+                        });
                     });
                 });
             });
@@ -216,9 +233,10 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
             _this.stats.balances = balances;
             _this.stats.address = address;
             callback({
-                totalHeld: coinsRound(totalHeld),
+                totalBalance: coinsRound(totalBalance),
+                totalImmature: coinsRound(totalImmature),
                 totalPaid: coinsRound(totalPaid),
-                totalImmature: satoshisToCoins(totalImmature),
+                totalUnpaid: coinsRound(totalUnpaid),
                 balances: balances
             });
         });
@@ -271,7 +289,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
     function setupStatsRedis() {
         redisStats = redis.createClient(portalConfig.redis.port, portalConfig.redis.host);
         redisStats.on('error', function(err) {
-            logger.error(logSystem, 'Historics', 'Redis for stats had an error ' + JSON.stringify(err));
+            logger.error(logSystem, 'History', 'Redis for stats had an error ' + JSON.stringify(err));
         });
     }
 
@@ -308,25 +326,13 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
         return newObject;
     }
 
-    // Sort All Miners by HashRate
-    function sortMinersByHashrate(objects) {
-        var newObject = {};
-        var sortedArray = sortProperties(objects, 'shares', true, true);
-        for (var i = 0; i < sortedArray.length; i++) {
-            var key = sortedArray[i][0];
-            var value = sortedArray[i][1];
-            newObject[key] = value;
-        }
-        return newObject;
-    }
-
     // Get Stat History
     function gatherStatHistory() {
         var retentionTime = (((Date.now() / 1000) - portalConfig.stats.historicalRetention) | 0).toString();
         logger.debug(logSystem, 'History', 'Gathering statistics for website API');
         redisStats.zrangebyscore(['statHistory', retentionTime, '+inf'], function(err, replies) {
             if (err) {
-                logger.error(logSystem, 'Historics', 'Error when trying to grab historical stats ' + JSON.stringify(err));
+                logger.error(logSystem, 'History', 'Error when trying to grab historical stats ' + JSON.stringify(err));
                 return;
             }
             for (var i = 0; i < replies.length; i++) {
@@ -429,14 +435,13 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                             },
                             pending: replies[i + 6].sort(sortBlocks),
                             confirmed: replies[i + 7].sort(sortBlocks).slice(0,50),
-                            currentRoundShares: (replies[i + 8] || {}),
+                            roundShares: (replies[i + 8] || {}),
                             payments: [],
-                            shareCount: 0
                         };
-                        for(var j = replies[i + 9].length; j > 0; j--) {
+                        for (var j = replies[i + 9].length; j > 0; j--) {
                             var jsonObj;
                             try {
-                                jsonObj = JSON.parse(replies[i + 9][j-1]);
+                                jsonObj = JSON.parse(replies[i + 9][j - 1]);
                             }
                             catch(e) {
                                 jsonObj = null;
@@ -474,40 +479,28 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
 
                 var coinStats = allCoinStats[coin];
                 coinStats.workers = {};
-                coinStats.miners = {};
                 coinStats.shares = 0;
                 coinStats.hashrates.forEach(function(ins) {
+
                     var parts = ins.split(':');
                     var workerShares = parseFloat(parts[0]);
-                    var miner = parts[1].split('.')[0];
                     var worker = parts[1];
-                    var diff = Math.round(parts[0] * 8192);
+                    var difficulty = Math.round(parts[0]);
+                    var soloMining = parts[3];
+
                     if (workerShares > 0) {
                         coinStats.shares += workerShares;
                         if (worker in coinStats.workers) {
-                            coinStats.workers[worker].shares += workerShares;
-                            coinStats.workers[worker].diff = diff;
+                            coinStats.workers[worker].validShares += workerShares;
+                            coinStats.workers[worker].difficulty = difficulty;
                         }
                         else {
                             coinStats.workers[worker] = {
-                                name: worker,
-                                diff: diff,
-                                shares: workerShares,
-                                roundShares: 0,
+                                difficulty: difficulty,
+                                validShares: workerShares,
                                 invalidShares: 0,
-                                hashrate: null,
-                                hashrateString: null,
-                            };
-                        }
-                        if (miner in coinStats.miners) {
-                            coinStats.miners[miner].shares += workerShares;
-                        }
-                        else {
-                            coinStats.miners[miner] = {
-                                name: miner,
-                                shares: workerShares,
-                                roundShares: 0,
-                                invalidShares: 0,
+                                algorithm: coinStats.algorithm,
+                                soloMining: soloMining,
                                 hashrate: null,
                                 hashrateString: null,
                             };
@@ -516,37 +509,21 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                     else {
                         if (worker in coinStats.workers) {
                             coinStats.workers[worker].invalidShares -= workerShares;
-                            coinStats.workers[worker].diff = diff;
+                            coinStats.workers[worker].difficulty = difficulty;
                         }
                         else {
                             coinStats.workers[worker] = {
-                                name: worker,
-                                diff: diff,
-                                shares: 0,
-                                roundShares: 0,
+                                difficulty: difficulty,
+                                validShares: 0,
                                 invalidShares: -workerShares,
-                                hashrate: null,
-                                hashrateString: null,
-                            };
-                        }
-                        if (miner in coinStats.miners) {
-                            coinStats.miners[miner].invalidShares -= workerShares;
-                        }
-                        else {
-                            coinStats.miners[miner] = {
-                                name: miner,
-                                shares: 0,
-                                roundShares: 0,
-                                invalidShares: -workerShares,
+                                algorithm: coinStats.algorithm,
+                                soloMining: soloMining,
                                 hashrate: null,
                                 hashrateString: null,
                             };
                         }
                     }
                 });
-
-                // Sort Miners by HashRate
-                coinStats.miners = sortMinersByHashrate(coinStats.miners);
 
                 // Finalize Client Statistics for Coins
                 var shareMultiplier = Math.pow(2, 32) / algos[coinStats.algorithm].multiplier;
@@ -558,32 +535,21 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                 var _networkHashRate = parseFloat(coinStats.poolStats.networkSols) * 1.2;
                 var _myHashRate = (coinStats.hashrate / 1000000) * 2;
 
-                coinStats.minerCount = Object.keys(coinStats.miners).length;
                 coinStats.workerCount = Object.keys(coinStats.workers).length;
                 portalStats.global.workers += coinStats.workerCount;
 
-                for (var worker in coinStats.currentRoundShares) {
-                    var miner = worker.split(".")[0];
+                for (var worker in coinStats.roundShares) {
                     if (worker in coinStats.workers) {
-                        coinStats.workers[worker].roundShares += parseFloat(coinStats.currentRoundShares[worker]);
+                        coinStats.workers[worker].roundShares += parseFloat(coinStats.roundShares[worker]);
                     }
-                    if (miner in coinStats.miners) {
-                        coinStats.miners[miner].roundShares += parseFloat(coinStats.currentRoundShares[worker]);
-                    }
-                    _shareTotal += parseFloat(coinStats.currentRoundShares[worker]);
+                    _shareTotal += parseFloat(coinStats.roundShares[worker]);
                 }
 
-                coinStats.shareCount = _shareTotal;
-                for (var miner in coinStats.miners) {
-                    var _workerRate = shareMultiplier * coinStats.miners[miner].shares / portalConfig.stats.hashrateWindow;
-                    var _wHashRate = (_workerRate / 1000000) * 2;
-                    coinStats.miners[miner].hashrate = _workerRate;
-                    coinStats.miners[miner].hashrateString = _this.getReadableHashRateString(_workerRate);
-                }
                 for (var worker in coinStats.workers) {
-                    var _workerRate = shareMultiplier * coinStats.workers[worker].shares / portalConfig.stats.hashrateWindow;
+                    var _workerRate = shareMultiplier * coinStats.workers[worker].validShares / portalConfig.stats.hashrateWindow;
                     var _wHashRate = (_workerRate / 1000000) * 2;
                     coinStats.workers[worker].hashrate = _workerRate;
+                    console.log(coinStats.workers[worker])
                     coinStats.workers[worker].hashrateString = _this.getReadableHashRateString(_workerRate);
                 }
 
@@ -600,8 +566,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
             Object.keys(saveStats.pools).forEach(function(pool) {
                 delete saveStats.pools[pool].pending;
                 delete saveStats.pools[pool].confirmed;
-                delete saveStats.pools[pool].currentRoundShares;
-                delete saveStats.pools[pool].miners;
+                delete saveStats.pools[pool].roundShares;
                 delete saveStats.pools[pool].payments;
             });
 
@@ -628,7 +593,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                 ['zremrangebyscore', 'statHistory', '-inf', '(' + retentionTime]
             ]).exec(function(err, replies) {
                 if (err)
-                    logger.error(logSystem, 'Historics', 'Error adding stats to historics ' + JSON.stringify(err));
+                    logger.error(logSystem, 'History', 'Error adding stats to history ' + JSON.stringify(err));
             });
             callback();
         });

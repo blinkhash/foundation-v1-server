@@ -102,7 +102,7 @@ var PoolShares = function (logger, poolConfig) {
 
         // Push Hashrate Data to Main Array
         var dateNow = Date.now();
-        var combinedHashrate = [ isValidShare ? shareData.difficulty : -shareData.difficulty, shareData.worker, dateNow].join(':');
+        var combinedHashrate = [ isValidShare ? shareData.difficulty : -shareData.difficulty, shareData.worker, dateNow, isSoloMining].join(':');
         redisCommands.push(['zadd', coin + ':hashrate', dateNow / 1000 | 0, combinedHashrate]);
 
         // Push Block Data to Main Array

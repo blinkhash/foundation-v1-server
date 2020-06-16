@@ -1,7 +1,7 @@
 Blinkhash Stratum Pool
 -------
 
-This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written entirely in Node.js. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed as the Blinkhash Mining Pool uses a custom-built front-end and design
+This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written entirely in Node.js. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed as the Blinkhash Mining Pool uses a custom-built front-end design
 
 #### Table of Contents
 * [Features](#features)
@@ -230,7 +230,11 @@ Description of options:
         /* Every this many seconds get submitted blocks from redis, use daemon RPC to check
            their confirmation status, if confirmed then get shares from redis that contributed
            to block and send out payments. */
-        "paymentInterval": 30,
+        "paymentInterval": 1200,
+
+        /* Every this many seconds perform checks and update specific fields in API, such as
+           balances and the like */
+        "checkInterval": 60,
 
         /* Minimum number of coins that a miner must earn before sending payment. Typically,
            a higher minimum means less transactions fees (you profit more) but miners see

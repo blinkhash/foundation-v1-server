@@ -14,6 +14,7 @@ var async = require('async');
 var extend = require('extend');
 
 // Import Pool Functionality
+var PoolChecks = require('./checks.js');
 var PoolListener = require('./listener.js');
 var PoolLogger = require('./logger.js');
 var PoolPayments = require('./payments.js');
@@ -78,14 +79,17 @@ function roundTo(n, digits) {
 // Establish Pool Worker Cases
 if (cluster.isWorker) {
     switch (process.env.workerType) {
-        case 'pool':
-            new PoolWorker(logger);
+        case 'checks':
+            new PoolChecks(logger);
             break;
-        case 'paymentProcessor':
+        case 'payments':
             new PoolPayments(logger);
             break;
         case 'server':
             new PoolServer(logger);
+            break;
+        case 'worker':
+            new PoolWorker(logger);
             break;
     }
     return;
@@ -174,91 +178,6 @@ var buildPoolConfigs = function() {
     return configs;
 };
 
-// Functionality for Pool Workers
-var startPoolWorkers = function() {
-
-    var redisConfig;
-    var connection;
-
-    // Check if Daemons Configured
-    Object.keys(poolConfigs).forEach(function(coin) {
-        var p = poolConfigs[coin];
-        if (!Array.isArray(p.daemons) || p.daemons.length < 1) {
-            logger.error('Master', coin, 'No daemons configured so a pool cannot be started for this coin.');
-            delete poolConfigs[coin];
-        }
-        else if (!connection) {
-            redisConfig = p.redis;
-            connection = redis.createClient(redisConfig.port, redisConfig.host);
-            connection.on('ready', function() {
-                logger.debug('Master', coin, 'Processing setup with redis (' + redisConfig.host + ':' + redisConfig.port  + ')');
-            });
-        }
-    });
-
-    // Check if No Configurations Exist
-    if (Object.keys(poolConfigs).length === 0) {
-        logger.warning('Master', 'PoolStarter', 'No pool configs exists or are enabled in configs folder. No pools started.');
-        return;
-    }
-
-    // Establish Forking/Clustering
-    var serializedConfigs = JSON.stringify(poolConfigs);
-    var numForks = (function() {
-        if (!portalConfig.clustering || !portalConfig.clustering.enabled)
-            return 1;
-        if (portalConfig.clustering.forks === 'auto')
-            return os.cpus().length;
-        if (!portalConfig.clustering.forks || isNaN(portalConfig.clustering.forks))
-            return 1;
-        return portalConfig.clustering.forks;
-    })();
-
-    // Establish Pool Workers
-    var poolWorkers = {};
-    var createPoolWorker = function(forkId) {
-        var worker = cluster.fork({
-            workerType: 'pool',
-            forkId: forkId,
-            pools: serializedConfigs,
-            portalConfig: JSON.stringify(portalConfig)
-        });
-        worker.forkId = forkId;
-        worker.type = 'pool';
-        poolWorkers[forkId] = worker;
-        worker.on('exit', function(code, signal) {
-            logger.error('Master', 'PoolStarter', 'Fork ' + forkId + ' died, starting replacement worker...');
-            setTimeout(function() {
-                createPoolWorker(forkId);
-            }, 2000);
-        }).on('message', function(msg) {
-            switch (msg.type) {
-
-                case 'banIP':
-                    Object.keys(cluster.workers).forEach(function(id) {
-                        if (cluster.workers[id].type === 'pool') {
-                            cluster.workers[id].send({type: 'banIP', ip: msg.ip});
-                        }
-                    });
-                    break;
-
-            }
-        });
-    };
-
-    // Create Pool Workers
-    var i = 0;
-    var startInterval = setInterval(function() {
-        createPoolWorker(i);
-        i++;
-        if (i === numForks) {
-            clearInterval(startInterval);
-            logger.debug('Master', 'PoolStarter', 'Started ' + Object.keys(poolConfigs).length + ' pool(s) on ' + numForks + ' thread(s)');
-        }
-    }, 250);
-
-};
-
 // Functionality for Pool Listener
 var startPoolListener = function() {
 
@@ -287,9 +206,9 @@ var startPoolListener = function() {
 };
 
 // Functionality for Pool Payments
-var startPoolPayments = function() {
+var startPoolChecks = function() {
 
-    // Check if Anyone Needs Payments
+    // Check if Pool Enabled Payments
     var enabledForAny = false;
     for (var pool in poolConfigs) {
         var p = poolConfigs[pool];
@@ -306,11 +225,42 @@ var startPoolPayments = function() {
 
     // Establish Pool Payments
     var worker = cluster.fork({
-        workerType: 'paymentProcessor',
+        workerType: 'checks',
         pools: JSON.stringify(poolConfigs)
     });
     worker.on('exit', function(code, signal) {
-        logger.error('Master', 'Payment Processor', 'Payment processor died, starting replacement...');
+        logger.error('Master', 'Checks', 'Payment checks died, starting replacement...');
+        setTimeout(function() {
+            startPoolPayments(poolConfigs);
+        }, 2000);
+    });
+};
+
+// Functionality for Pool Payments
+var startPoolPayments = function() {
+
+    // Check if Pool Enabled Payments
+    var enabledForAny = false;
+    for (var pool in poolConfigs) {
+        var p = poolConfigs[pool];
+        var enabled = p.enabled && p.paymentProcessing && p.paymentProcessing.enabled;
+        if (enabled) {
+            enabledForAny = true;
+            break;
+        }
+    }
+
+    // Return if No One Needs Payments
+    if (!enabledForAny)
+        return;
+
+    // Establish Pool Payments
+    var worker = cluster.fork({
+        workerType: 'payments',
+        pools: JSON.stringify(poolConfigs)
+    });
+    worker.on('exit', function(code, signal) {
+        logger.error('Master', 'Payments', 'Payment process died, starting replacement...');
         setTimeout(function() {
             startPoolPayments(poolConfigs);
         }, 2000);
@@ -325,11 +275,94 @@ var startPoolServer = function() {
         portalConfig: JSON.stringify(portalConfig)
     });
     worker.on('exit', function(code, signal) {
-        logger.error('Master', 'Server', 'Server process died, spawning replacement...');
+        logger.error('Master', 'Server', 'Server process died, starting replacement...');
         setTimeout(function() {
             startPoolServer(portalConfig, poolConfigs);
         }, 2000);
     });
+};
+
+// Functionality for Pool Workers
+var startPoolWorkers = function() {
+
+    var redisConfig;
+    var connection;
+
+    // Check if Daemons Configured
+    Object.keys(poolConfigs).forEach(function(coin) {
+        var p = poolConfigs[coin];
+        if (!Array.isArray(p.daemons) || p.daemons.length < 1) {
+            logger.error('Master', coin, 'No daemons configured so a pool cannot be started for this coin.');
+            delete poolConfigs[coin];
+        }
+        else if (!connection) {
+            redisConfig = p.redis;
+            connection = redis.createClient(redisConfig.port, redisConfig.host);
+            connection.on('ready', function() {
+                logger.debug('Master', coin, 'Processing setup with redis (' + redisConfig.host + ':' + redisConfig.port  + ')');
+            });
+        }
+    });
+
+    // Check if No Configurations Exist
+    if (Object.keys(poolConfigs).length === 0) {
+        logger.warning('Master', 'Workers', 'No pool configs exists or are enabled in configs folder. No pools started.');
+        return;
+    }
+
+    // Establish Forking/Clustering
+    var serializedConfigs = JSON.stringify(poolConfigs);
+    var numForks = (function() {
+        if (!portalConfig.clustering || !portalConfig.clustering.enabled)
+            return 1;
+        if (portalConfig.clustering.forks === 'auto')
+            return os.cpus().length;
+        if (!portalConfig.clustering.forks || isNaN(portalConfig.clustering.forks))
+            return 1;
+        return portalConfig.clustering.forks;
+    })();
+
+    // Establish Pool Workers
+    var poolWorkers = {};
+    var createPoolWorker = function(forkId) {
+        var worker = cluster.fork({
+            workerType: 'worker',
+            forkId: forkId,
+            pools: serializedConfigs,
+            portalConfig: JSON.stringify(portalConfig)
+        });
+        worker.forkId = forkId;
+        worker.type = 'worker';
+        poolWorkers[forkId] = worker;
+        worker.on('exit', function(code, signal) {
+            logger.error('Master', 'Workers', 'Fork ' + forkId + ' died, starting replacement worker...');
+            setTimeout(function() {
+                createPoolWorker(forkId);
+            }, 2000);
+        }).on('message', function(msg) {
+            switch (msg.type) {
+                case 'banIP':
+                    Object.keys(cluster.workers).forEach(function(id) {
+                        if (cluster.workers[id].type === 'worker') {
+                            cluster.workers[id].send({type: 'banIP', ip: msg.ip});
+                        }
+                    });
+                    break;
+            }
+        });
+    };
+
+    // Create Pool Workers
+    var i = 0;
+    var startInterval = setInterval(function() {
+        createPoolWorker(i);
+        i++;
+        if (i === numForks) {
+            clearInterval(startInterval);
+            logger.debug('Master', 'Workers', 'Started ' + Object.keys(poolConfigs).length + ' pool(s) on ' + numForks + ' thread(s)');
+        }
+    }, 250);
+
 };
 
 // Initialize Server
@@ -339,6 +372,7 @@ var PoolInit = function() {
     poolConfigs = buildPoolConfigs();
 
     // Start Pool Workers
+    startPoolChecks();
     startPoolListener();
     startPoolWorkers();
     startPoolPayments();
