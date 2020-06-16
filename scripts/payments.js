@@ -188,22 +188,32 @@ function SetupForPool(logger, poolOptions, setupFinished) {
             return;
         }
 
+        // Process Main Checks
+        checkInterval = setInterval(function() {
+            try {
+                processPayments("check");
+            } catch(e) {
+                throw e;
+            }
+        }, processingConfig.checkInterval * 1000);
+
         // Process Main Payment
         paymentInterval = setInterval(function() {
             try {
-                processPayments();
+                processPayments("payment");
             } catch(e) {
                 throw e;
             }
         }, processingConfig.paymentInterval * 1000);
 
         // Finalize Setup
+        setTimeout(processPayments("check"), 100);
         setupFinished(true);
 
     });
 
     // Payment Functionality
-    var processPayments = function() {
+    var processPayments = function(paymentMode) {
 
         // Establish Timing Variables
         var timeSpentRPC = 0;
@@ -234,7 +244,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
 
                     // Handle Errors
                     if (err) {
-                        logger.error(logSystem, logComponent, 'Could not get Blocks from Database ' + JSON.stringify(error));
+                        logger.error(logSystem, logComponent, 'Could not get blocks from database: ' + JSON.stringify(error));
                         callback(true);
                         return;
                     }
@@ -242,7 +252,9 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     // Manage Individual Workers
                     var workers = {};
                     for (var w in results[0]) {
-                         workers[w] = {balance: coinsToSatoshies(parseFloat(results[0][w]))};
+                        workers[w] = {
+                            balance: coinsToSatoshies(parseFloat(results[0][w]))
+                        };
                     }
 
                     // Manage Individual Rounds
@@ -253,7 +265,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             txHash: details[1],
                             height: details[2],
                             workerAddress: details[3],
-                            soloMining: details[4],
+                            soloMined: details[4],
                             duplicate: false,
                             serialized: r
                         };
@@ -550,7 +562,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     var sharesLost = parseFloat(0);
 
                                     // Check if Solo Mined
-                                    if (round.soloMining === 'true') {
+                                    if (round.soloMined === 'true') {
 
                                         immature = Math.round(immature - feeSatoshi);
                                         var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
@@ -595,7 +607,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     var sharesLost = parseFloat(0);
 
                                     // Check if Solo Mined
-                                    if (round.soloMining === 'true') {
+                                    if (round.soloMined === 'true') {
 
                                         var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
                                         var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
@@ -653,165 +665,174 @@ function SetupForPool(logger, poolOptions, setupFinished) {
             // Calculate Payments
             function(workers, rounds, addressAccount, callback) {
 
-                // Get Worker Balances/Rewards
-                var tries = 0;
-                var trySend = function (withholdPercent) {
+                // Check to Ensure Payments are Being Made
+                if (paymentMode === "payment") {
 
-                    var addressAmounts = {};
-                    var balanceAmounts = {};
-                    var shareAmounts = {};
-                    var timePeriods = {};
-                    var workerTotals = {};
-                    var totalSent = 0;
-                    var totalShares = 0;
-                    tries += 1
+                    // Get Worker Balances/Rewards
+                    var tries = 0;
+                    var trySend = function (withholdPercent) {
 
-                    for (var w in workers) {
-                        var worker = workers[w];
-                        totalShares += (worker.totalShares || 0)
-                        worker.balance = worker.balance || 0;
-                        worker.reward = worker.reward || 0;
-                        var toSendSatoshis = Math.round((worker.balance + worker.reward) * (1 - withholdPercent));
-                        var address = worker.address = (worker.address || getProperAddress(w.split('.')[0])).trim();
-                        if (workerTotals[address] != null && workerTotals[address] > 0) {
-                            workerTotals[address] += toSendSatoshis;
-                        } else {
-                            workerTotals[address] = toSendSatoshis;
-                        }
-                    }
+                        var addressAmounts = {};
+                        var balanceAmounts = {};
+                        var shareAmounts = {};
+                        var timePeriods = {};
+                        var workerTotals = {};
+                        var totalSent = 0;
+                        var totalShares = 0;
+                        tries += 1
 
-                    for (var w in workers) {
-                        var worker = workers[w];
-                        worker.balance = worker.balance || 0;
-                        worker.reward = worker.reward || 0;
-                        var toSendSatoshis = Math.round((worker.balance + worker.reward) * (1 - withholdPercent));
-                        var address = worker.address = (worker.address || getProperAddress(w.split('.')[0])).trim();
-                        if (workerTotals[address] >= minPaymentSatoshis) {
-                            totalSent += toSendSatoshis;
-                            worker.sent = satoshisToCoins(toSendSatoshis);
-                            worker.balanceChange = Math.min(worker.balance, toSendSatoshis) * -1;
-                            if (addressAmounts[address] != null && addressAmounts[address] > 0) {
-                                addressAmounts[address] = coinsRound(addressAmounts[address] + worker.sent);
+                        for (var w in workers) {
+                            var worker = workers[w];
+                            totalShares += (worker.totalShares || 0)
+                            worker.balance = worker.balance || 0;
+                            worker.reward = worker.reward || 0;
+                            var toSendSatoshis = Math.round((worker.balance + worker.reward) * (1 - withholdPercent));
+                            var address = worker.address = (worker.address || getProperAddress(w.split('.')[0])).trim();
+                            if (workerTotals[address] != null && workerTotals[address] > 0) {
+                                workerTotals[address] += toSendSatoshis;
                             } else {
-                                addressAmounts[address] = worker.sent;
+                                workerTotals[address] = toSendSatoshis;
                             }
                         }
-                        else {
-                            worker.sent = 0;
-                            worker.balanceChange = Math.max(toSendSatoshis - worker.balance, 0);
-                            if (worker.balanceChange > 0) {
-                                if (balanceAmounts[address] != null && balanceAmounts[address] > 0) {
-                                    balanceAmounts[address] = coinsRound(balanceAmounts[address] + satoshisToCoins(worker.balanceChange));
+
+                        for (var w in workers) {
+                            var worker = workers[w];
+                            worker.balance = worker.balance || 0;
+                            worker.reward = worker.reward || 0;
+                            var toSendSatoshis = Math.round((worker.balance + worker.reward) * (1 - withholdPercent));
+                            var address = worker.address = (worker.address || getProperAddress(w.split('.')[0])).trim();
+                            if (workerTotals[address] >= minPaymentSatoshis) {
+                                totalSent += toSendSatoshis;
+                                worker.sent = satoshisToCoins(toSendSatoshis);
+                                worker.balanceChange = Math.min(worker.balance, toSendSatoshis) * -1;
+                                if (addressAmounts[address] != null && addressAmounts[address] > 0) {
+                                    addressAmounts[address] = coinsRound(addressAmounts[address] + worker.sent);
                                 } else {
-                                    balanceAmounts[address] = satoshisToCoins(worker.balanceChange);
+                                    addressAmounts[address] = worker.sent;
+                                }
+                            }
+                            else {
+                                worker.sent = 0;
+                                worker.balanceChange = Math.max(toSendSatoshis - worker.balance, 0);
+                                if (worker.balanceChange > 0) {
+                                    if (balanceAmounts[address] != null && balanceAmounts[address] > 0) {
+                                        balanceAmounts[address] = coinsRound(balanceAmounts[address] + satoshisToCoins(worker.balanceChange));
+                                    } else {
+                                        balanceAmounts[address] = satoshisToCoins(worker.balanceChange);
+                                    }
+                                }
+                            }
+
+                            if (worker.totalShares > 0) {
+                                if (shareAmounts[address] != null && shareAmounts[address] > 0) {
+                                    shareAmounts[address] += worker.totalShares;
+                                } else {
+                                    shareAmounts[address] = worker.totalShares;
                                 }
                             }
                         }
 
-                        if (worker.totalShares > 0) {
-                            if (shareAmounts[address] != null && shareAmounts[address] > 0) {
-                                shareAmounts[address] += worker.totalShares;
-                            } else {
-                                shareAmounts[address] = worker.totalShares;
-                            }
+                        // Check if No Workers/Rounds
+                        if (Object.keys(addressAmounts).length === 0) {
+                            callback(null, workers, rounds);
+                            return;
                         }
-                    }
 
-                    // Check if No Workers/Rounds
-                    if (Object.keys(addressAmounts).length === 0) {
-                        callback(null, workers, rounds);
-                        return;
-                    }
+                        for (var a in addressAmounts) {
+                            addressAmounts[a] = coinsRound(addressAmounts[a]);
+                        }
 
-                    for (var a in addressAmounts) {
-                        addressAmounts[a] = coinsRound(addressAmounts[a]);
-                    }
+                        // Send Payments Through Daemon
+                        var rpccallTracking = 'sendmany "" ' + JSON.stringify(addressAmounts);
+                        daemon.cmd('sendmany', [addressAccount || '', addressAmounts], function (result) {
 
-                    // Send Payments Through Daemon
-                    var rpccallTracking = 'sendmany "" ' + JSON.stringify(addressAmounts);
-                    daemon.cmd('sendmany', [addressAccount || '', addressAmounts], function (result) {
-
-                        // Check Payment Errors/Edge Cases
-                        if (result.error && result.error.code === -6) {
-                            if (result.error.message && result.error.message.includes("insufficient funds")) {
-                                if (tries < 5) {
-                                    var higherPercent = withholdPercent + 0.001;
-                                    logger.warning(logSystem, logComponent, 'Insufficient funds (??) for payments (' + satoshisToCoins(totalSent) + '), decreasing rewards by ' + (higherPercent * 100).toFixed(1) + '% and retrying');
-                                    trySend(higherPercent);
+                            // Check Payment Errors/Edge Cases
+                            if (result.error && result.error.code === -6) {
+                                if (result.error.message && result.error.message.includes("insufficient funds")) {
+                                    if (tries < 5) {
+                                        var higherPercent = withholdPercent + 0.001;
+                                        logger.warning(logSystem, logComponent, 'Insufficient funds (??) for payments (' + satoshisToCoins(totalSent) + '), decreasing rewards by ' + (higherPercent * 100).toFixed(1) + '% and retrying');
+                                        trySend(higherPercent);
+                                    }
+                                    else {
+                                        logger.warning(logSystem, logComponent, rpccallTracking);
+                                        logger.error(logSystem, logComponent, "Error sending payments, decreased rewards by too much!!!");
+                                        callback(true);
+                                    }
                                 }
                                 else {
                                     logger.warning(logSystem, logComponent, rpccallTracking);
-                                    logger.error(logSystem, logComponent, "Error sending payments, decreased rewards by too much!!!");
+                                    logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
                                     callback(true);
                                 }
+                                return
                             }
-                            else {
+                            else if (result.error && result.error.code === -5) {
                                 logger.warning(logSystem, logComponent, rpccallTracking);
                                 logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
                                 callback(true);
+                                return;
                             }
-                            return
-                        }
-                        else if (result.error && result.error.code === -5) {
-                            logger.warning(logSystem, logComponent, rpccallTracking);
-                            logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
-                            callback(true);
-                            return;
-                        }
-                        else if (result.error && result.error.message != null) {
-                            logger.warning(logSystem, logComponent, rpccallTracking);
-                            logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
-                            callback(true);
-                            return;
-                        }
-                        else if (result.error) {
-                            logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
-                            callback(true);
-                            return;
-                        }
-                        else {
-                            var txid = null;
-                            if (result.response) {
-                                txid = result.response;
-                            }
-                            if (txid != null) {
-                                logger.special(logSystem, logComponent, 'Sent ' + satoshisToCoins(totalSent) + ' to ' + Object.keys(addressAmounts).length + ' workers; txid: '+txid);
-                                if (withholdPercent > 0) {
-                                    logger.warning(logSystem, logComponent, 'Had to withhold ' + (withholdPercent * 100)
-                                        + '% of reward from workers to cover transaction fees. '
-                                        + 'Fund pool wallet with coins to prevent this from happening');
-                                }
-                                var paymentBlocks = rounds.filter(function(r) { return r.category == 'generate'; }).map(function(r) {
-                                    return parseInt(r.height);
-                                });
-                                var paymentsUpdate = [];
-                                var paymentsData = {
-                                    time: Date.now(),
-                                    txid: txid,
-                                    shares: totalShares,
-                                    paid: satoshisToCoins(totalSent),
-                                    workers: Object.keys(addressAmounts).length,
-                                    blocks: paymentBlocks,
-                                    amounts: addressAmounts,
-                                    unpaid: balanceAmounts,
-                                    work: shareAmounts
-                                };
-                                paymentsUpdate.push(['zadd', logComponent + ':payments', Date.now(), JSON.stringify(paymentsData)]);
-                                callback(null, workers, rounds, paymentsUpdate);
-                            }
-                            else {
-                                clearInterval(paymentInterval);
-                                logger.error(logSystem, logComponent, 'Error RPC sendmany did not return txid ' + JSON.stringify(result) + 'Disabling payment processing to prevent possible double-payouts.');
+                            else if (result.error && result.error.message != null) {
+                                logger.warning(logSystem, logComponent, rpccallTracking);
+                                logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
                                 callback(true);
                                 return;
                             }
-                        }
+                            else if (result.error) {
+                                logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
+                                callback(true);
+                                return;
+                            }
+                            else {
+                                var txid = null;
+                                if (result.response) {
+                                    txid = result.response;
+                                }
+                                if (txid != null) {
+                                    logger.special(logSystem, logComponent, 'Sent ' + satoshisToCoins(totalSent) + ' to ' + Object.keys(addressAmounts).length + ' workers; txid: '+txid);
+                                    if (withholdPercent > 0) {
+                                        logger.warning(logSystem, logComponent, 'Had to withhold ' + (withholdPercent * 100)
+                                            + '% of reward from workers to cover transaction fees. '
+                                            + 'Fund pool wallet with coins to prevent this from happening');
+                                    }
+                                    var paymentBlocks = rounds.filter(function(r) { return r.category == 'generate'; }).map(function(r) {
+                                        return parseInt(r.height);
+                                    });
+                                    var paymentsUpdate = [];
+                                    var paymentsData = {
+                                        time: Date.now(),
+                                        txid: txid,
+                                        shares: totalShares,
+                                        paid: satoshisToCoins(totalSent),
+                                        workers: Object.keys(addressAmounts).length,
+                                        blocks: paymentBlocks,
+                                        amounts: addressAmounts,
+                                        unpaid: balanceAmounts,
+                                        work: shareAmounts
+                                    };
+                                    paymentsUpdate.push(['zadd', logComponent + ':payments', Date.now(), JSON.stringify(paymentsData)]);
+                                    callback(null, workers, rounds, paymentsUpdate);
+                                }
+                                else {
+                                    clearInterval(paymentInterval);
+                                    logger.error(logSystem, logComponent, 'Error RPC sendmany did not return txid ' + JSON.stringify(result) + 'Disabling payment processing to prevent possible double-payouts.');
+                                    callback(true);
+                                    return;
+                                }
+                            }
 
-                    }, true, true);
-                };
+                        }, true, true);
+                    };
 
-                // Send Any Owed Payments
-                trySend(0);
+                    // Send Any Owed Payments
+                    trySend(0);
+                }
+
+                else {
+                    // If No Payments, Send Callback
+                    callback(null, workers, rounds, []);
+                }
             },
 
             // Manage Sent Payments
@@ -819,38 +840,52 @@ function SetupForPool(logger, poolOptions, setupFinished) {
 
                 // Establish Payment Variables
                 var totalPaid = 0;
+                var movePendingCommands = [];
+                var orphanMergeCommands = [];
                 var immatureUpdateCommands = [];
                 var balanceUpdateCommands = [];
                 var workerPayoutsCommand = [];
+                var roundsToDelete = [];
+                var confirmsUpdate = [];
+                var confirmsToDelete = [];
 
                 // Update Worker Payouts/Balances
                 for (var w in workers) {
                     var worker = workers[w];
-                    if (worker.balanceChange !== 0) {
-                        balanceUpdateCommands.push([
-                            'hincrbyfloat',
-                            coin + ':unpaid',
-                            w,
-                            satoshisToCoins(worker.balanceChange)
-                        ]);
+
+                    if (paymentMode === "payment") {
+                        if (worker.balanceChange !== 0) {
+                            balanceUpdateCommands.push([
+                                'hincrbyfloat',
+                                coin + ':unpaid',
+                                w,
+                                satoshisToCoins(worker.balanceChange)
+                            ]);
+                        }
+                        if ((worker.sent || 0) > 0) {
+                            workerPayoutsCommand.push(['hincrbyfloat', coin + ':payouts', w, coinsRound(worker.sent)]);
+                            totalPaid = coinsRound(totalPaid + worker.sent);
+                        }
                     }
-                    if ((worker.sent || 0) > 0) {
-                        workerPayoutsCommand.push(['hincrbyfloat', coin + ':payouts', w, coinsRound(worker.sent)]);
-                        totalPaid = coinsRound(totalPaid + worker.sent);
+                    else {
+                        if ((worker.reward || 0) > 0) {
+                            worker.reward = satoshisToCoins(worker.reward);
+                            balanceUpdateCommands.push(['hset', coin + ':balances', w, coinsRound(worker.reward)]);
+                        }
+                        else {
+                            balanceUpdateCommands.push(['hset', coin + ':balances', w, 0]);
+                        }
                     }
+
                     if ((worker.immature || 0) > 0) {
                         worker.immature = satoshisToCoins(worker.immature);
                         immatureUpdateCommands.push(['hset', coin + ':immature', w, coinsRound(worker.immature)]);
-                    } else {
+                    }
+                    else {
                         immatureUpdateCommands.push(['hset', coin + ':immature', w, 0]);
                     }
-                }
 
-                var movePendingCommands = [];
-                var roundsToDelete = [];
-                var orphanMergeCommands = [];
-                var confirmsUpdate = [];
-                var confirmsToDelete = [];
+                }
 
                 // Update Worker Shares
                 var moveSharesToCurrent = function(r) {
@@ -878,8 +913,10 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         case 'immature':
                             return;
                         case 'generate':
-                            movePendingCommands.push(['smove', coin + ':blocks:pending', coin + ':blocks:confirmed', r.serialized]);
-                            roundsToDelete.push(coin + ':shares:round' + r.height);
+                            if (paymentMode === "payment") {
+                                movePendingCommands.push(['smove', coin + ':blocks:pending', coin + ':blocks:confirmed', r.serialized]);
+                                roundsToDelete.push(coin + ':shares:round' + r.height);
+                            }
                             return;
                     }
                 });
@@ -927,10 +964,20 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             logger.error('Could not write finalRedisCommands.txt, you are fucked.');
                         });
                     }
-                    var paymentProcessTime = Date.now() - startPaymentProcess;
-                    logger.debug(logSystem, logComponent, 'Finished sending all confirmed payments to users');
-                    return
+
+                    // Send Final Message
+                    if (paymentMode === "payment") {
+                        var paymentProcessTime = Date.now() - startPaymentProcess;
+                        logger.debug(logSystem, logComponent, 'Finished sending all confirmed payments to users');
+                        return;
+                    }
+                    else {
+                        var paymentProcessTime = Date.now() - startPaymentProcess;
+                        logger.debug(logSystem, logComponent, 'Finished running status checks for payment processing');
+                        return;
+                    }
                 });
+
             }
         ]);
     };

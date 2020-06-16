@@ -122,20 +122,82 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
         return roundTo(number, coinPrecision);
     }
 
-    // Get Block History
-    this.getBlocks = function (callback) {
-        var allBlocks = {};
-        async.each(_this.stats.pools, function(pool, pcb) {
-            if (_this.stats.pools[pool.name].pending && _this.stats.pools[pool.name].pending.blocks)
-                for (var i=0; i<_this.stats.pools[pool.name].pending.blocks.length; i++)
-                    allBlocks[pool.name+"-"+_this.stats.pools[pool.name].pending.blocks[i].split(':')[2]] = _this.stats.pools[pool.name].pending.blocks[i];
-            if (_this.stats.pools[pool.name].confirmed && _this.stats.pools[pool.name].confirmed.blocks)
-                for (var i=0; i<_this.stats.pools[pool.name].confirmed.blocks.length; i++)
-                    allBlocks[pool.name+"-"+_this.stats.pools[pool.name].confirmed.blocks[i].split(':')[2]] = _this.stats.pools[pool.name].confirmed.blocks[i];
-            pcb();
-        }, function(err) {
-            callback(allBlocks);
+    // Connect to Redis Database
+    function setupStatsRedis() {
+        redisStats = redis.createClient(portalConfig.redis.port, portalConfig.redis.host);
+        redisStats.on('error', function(err) {
+            logger.error(logSystem, 'History', 'Redis for stats had an error ' + JSON.stringify(err));
         });
+    }
+
+    // Sort All Pools
+    function sortPools(objects) {
+        var newObject = {};
+        var sortedArray = sortProperties(objects, 'name', false, false);
+        for (var i = 0; i < sortedArray.length; i++) {
+            var key = sortedArray[i][0];
+            var value = sortedArray[i][1];
+            newObject[key] = value;
+        }
+        return newObject;
+    }
+
+    // Sort All Blocks
+    function sortBlocks(a, b) {
+        var as = parseInt(a.split(":")[2]);
+        var bs = parseInt(b.split(":")[2]);
+        if (as > bs) return -1;
+        if (as < bs) return 1;
+        return 0;
+    }
+
+    // Sort All Workers by Name
+    function sortWorkersByName(objects) {
+        var newObject = {};
+        var sortedArray = sortProperties(objects, 'name', false, false);
+        for (var i = 0; i < sortedArray.length; i++) {
+            var key = sortedArray[i][0];
+            var value = sortedArray[i][1];
+            newObject[key] = value;
+        }
+        return newObject;
+    }
+
+    // Get Stat History
+    function gatherStatHistory() {
+        var retentionTime = (((Date.now() / 1000) - portalConfig.stats.historicalRetention) | 0).toString();
+        logger.debug(logSystem, 'History', 'Gathering statistics for website API');
+        redisStats.zrangebyscore(['statHistory', retentionTime, '+inf'], function(err, replies) {
+            if (err) {
+                logger.error(logSystem, 'History', 'Error when trying to grab historical stats ' + JSON.stringify(err));
+                return;
+            }
+            for (var i = 0; i < replies.length; i++) {
+                _this.statHistory.push(JSON.parse(replies[i]));
+            }
+            _this.statHistory = _this.statHistory.sort(function(a, b) {
+                return a.time - b.time;
+            });
+            _this.statHistory.forEach(function(stats) {
+                addStatPoolHistory(stats);
+            });
+        });
+    }
+
+    // Append to Stat History
+    function addStatPoolHistory(stats) {
+        var data = {
+            time: stats.time,
+            pools: {}
+        };
+        for (var pool in stats.pools) {
+            data.pools[pool] = {
+                hashrate: stats.pools[pool].hashrate,
+                workerCount: stats.pools[pool].workerCount,
+                blocks: stats.pools[pool].blocks
+            }
+        }
+        _this.statPoolHistory.push(data);
     }
 
     this.getBalanceByAddress = function(address, callback) {
@@ -284,84 +346,6 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
             }
         });
     };
-
-    // Connect to Redis Database
-    function setupStatsRedis() {
-        redisStats = redis.createClient(portalConfig.redis.port, portalConfig.redis.host);
-        redisStats.on('error', function(err) {
-            logger.error(logSystem, 'History', 'Redis for stats had an error ' + JSON.stringify(err));
-        });
-    }
-
-    // Sort All Pools
-    function sortPools(objects) {
-        var newObject = {};
-        var sortedArray = sortProperties(objects, 'name', false, false);
-        for (var i = 0; i < sortedArray.length; i++) {
-            var key = sortedArray[i][0];
-            var value = sortedArray[i][1];
-            newObject[key] = value;
-        }
-        return newObject;
-    }
-
-    // Sort All Blocks
-    function sortBlocks(a, b) {
-        var as = parseInt(a.split(":")[2]);
-        var bs = parseInt(b.split(":")[2]);
-        if (as > bs) return -1;
-        if (as < bs) return 1;
-        return 0;
-    }
-
-    // Sort All Workers by Name
-    function sortWorkersByName(objects) {
-        var newObject = {};
-        var sortedArray = sortProperties(objects, 'name', false, false);
-        for (var i = 0; i < sortedArray.length; i++) {
-            var key = sortedArray[i][0];
-            var value = sortedArray[i][1];
-            newObject[key] = value;
-        }
-        return newObject;
-    }
-
-    // Get Stat History
-    function gatherStatHistory() {
-        var retentionTime = (((Date.now() / 1000) - portalConfig.stats.historicalRetention) | 0).toString();
-        logger.debug(logSystem, 'History', 'Gathering statistics for website API');
-        redisStats.zrangebyscore(['statHistory', retentionTime, '+inf'], function(err, replies) {
-            if (err) {
-                logger.error(logSystem, 'History', 'Error when trying to grab historical stats ' + JSON.stringify(err));
-                return;
-            }
-            for (var i = 0; i < replies.length; i++) {
-                _this.statHistory.push(JSON.parse(replies[i]));
-            }
-            _this.statHistory = _this.statHistory.sort(function(a, b) {
-                return a.time - b.time;
-            });
-            _this.statHistory.forEach(function(stats) {
-                addStatPoolHistory(stats);
-            });
-        });
-    }
-
-    // Append to Stat History
-    function addStatPoolHistory(stats) {
-        var data = {
-            time: stats.time,
-            pools: {}
-        };
-        for (var pool in stats.pools) {
-            data.pools[pool] = {
-                hashrate: stats.pools[pool].hashrate,
-                workerCount: stats.pools[pool].workerCount,
-                blocks: stats.pools[pool].blocks
-            }
-        }
-        _this.statPoolHistory.push(data);
-    }
 
     // Convert Hashrate into Readable String
     this.getReadableHashRateString = function(hashrate) {

@@ -14,7 +14,6 @@ var async = require('async');
 var extend = require('extend');
 
 // Import Pool Functionality
-var PoolChecks = require('./checks.js');
 var PoolListener = require('./listener.js');
 var PoolLogger = require('./logger.js');
 var PoolPayments = require('./payments.js');
@@ -79,9 +78,6 @@ function roundTo(n, digits) {
 // Establish Pool Worker Cases
 if (cluster.isWorker) {
     switch (process.env.workerType) {
-        case 'checks':
-            new PoolChecks(logger);
-            break;
         case 'payments':
             new PoolPayments(logger);
             break;
@@ -203,37 +199,6 @@ var startPoolListener = function() {
                 break;
         }
     }).start();
-};
-
-// Functionality for Pool Payments
-var startPoolChecks = function() {
-
-    // Check if Pool Enabled Payments
-    var enabledForAny = false;
-    for (var pool in poolConfigs) {
-        var p = poolConfigs[pool];
-        var enabled = p.enabled && p.paymentProcessing && p.paymentProcessing.enabled;
-        if (enabled) {
-            enabledForAny = true;
-            break;
-        }
-    }
-
-    // Return if No One Needs Payments
-    if (!enabledForAny)
-        return;
-
-    // Establish Pool Payments
-    var worker = cluster.fork({
-        workerType: 'checks',
-        pools: JSON.stringify(poolConfigs)
-    });
-    worker.on('exit', function(code, signal) {
-        logger.error('Master', 'Checks', 'Payment checks died, starting replacement...');
-        setTimeout(function() {
-            startPoolPayments(poolConfigs);
-        }, 2000);
-    });
 };
 
 // Functionality for Pool Payments
@@ -372,7 +337,6 @@ var PoolInit = function() {
     poolConfigs = buildPoolConfigs();
 
     // Start Pool Workers
-    startPoolChecks();
     startPoolListener();
     startPoolWorkers();
     startPoolPayments();

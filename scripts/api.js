@@ -67,6 +67,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
 
                 return;
 
+            // Wallet Endpoint (Extended)
             case 'walletEx':
 
                 // Check to Ensure URL is Formatted Properly
@@ -115,7 +116,8 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                                     var blockData = {
                                         height: blockInformation[2],
                                         blockHash: blockInformation[0],
-                                        soloMining: blockInformation[4] == 'true',
+                                        worker: blockInformation[3],
+                                        soloMined: blockInformation[4] == 'true',
                                         confirmed: false,
                                     }
                                     blocks.push(blockData);
@@ -127,7 +129,8 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                                     var blockData = {
                                         height: blockInformation[2],
                                         blockHash: blockInformation[0],
-                                        soloMining: blockInformation[4] == 'true',
+                                        worker: blockInformation[3],
+                                        soloMined: blockInformation[4] == 'true',
                                         confirmed: true,
                                     }
                                     blocks.push(blockData);
@@ -157,6 +160,57 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                 }
 
                 return;
+
+            // Block Endpoint
+            case 'blocks':
+
+                // Get Block Information
+                var blocks = {}
+                for (var pool in portalStats.stats.pools) {
+
+                    // Establish Block Variables
+                    pending = []
+                    confirmed = []
+
+                    // Get Pending Block Information
+                    for (var w in portalStats.stats.pools[pool].pending) {
+                        blockInformation = portalStats.stats.pools[pool].pending[w].split(':');
+                        var blockData = {
+                            symbol: portalStats.stats.pools[pool].symbol,
+                            height: blockInformation[2],
+                            blockHash: blockInformation[0],
+                            worker: blockInformation[3],
+                            soloMined: blockInformation[4] == 'true',
+                            confirmed: false,
+                        }
+                        pending.push(blockData);
+                    }
+
+                    // Get Confirmed Block Information
+                    for (var w in portalStats.stats.pools[pool].confirmed) {
+                        blockInformation = portalStats.stats.pools[pool].confirmed[w].split(':');
+                        var blockData = {
+                            symbol: portalStats.stats.pools[pool].symbol,
+                            height: blockInformation[2],
+                            blockHash: blockInformation[0],
+                            worker: blockInformation[3],
+                            soloMined: blockInformation[4] == 'true',
+                            confirmed: true,
+                        }
+                        confirmed.push(blockData);
+                    }
+
+                    // Add Block Information to Endpoint
+                    blocks[portalStats.stats.pools[pool].name] = {
+                        pending: pending,
+                        confirmed: confirmed
+                    }
+
+                    // Finalize Endpoint Information
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(blocks));
+
+                }
 
             default:
                 next();

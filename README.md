@@ -258,7 +258,7 @@ Description of options:
     "ports": {
         "3032": { //A port for your miners to connect to
             "enabled": true, //the desired state of the port
-            "enableSoloMining": false, //solo vs shared mining on this port
+            "useForSoloMining": false, //solo vs shared mining on this port
             "diff": 32, //the pool difficulty for this port
 
             /* Variable difficulty is a feature that will automatically adjust difficulty for
@@ -273,7 +273,7 @@ Description of options:
         },
         "3256": { //Another port for your miners to connect to, this port does not use varDiff
             "enabled": true, //the desired state of the port
-            "enableSoloMining": false, //solo vs shared mining on this port
+            "useForSoloMining": false, //solo vs shared mining on this port
             "diff": 256 //The pool difficulty
         }
     },
