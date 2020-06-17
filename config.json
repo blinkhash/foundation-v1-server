@@ -1,0 +1,41 @@
+{
+    "cliPort": 42320,
+    "clustering": {
+        "enabled": true,
+        "forks": "auto"
+    },
+    "defaultPoolConfigs": {
+        "blockRefreshInterval": 1000,
+        "jobRebroadcastTimeout": 55,
+        "connectionTimeout": 600,
+        "emitInvalidBlockHashes": false,
+        "validateWorkerUsername": true,
+        "tcpProxyProtocol": false,
+        "banning": {
+            "enabled": true,
+            "time": 600,
+            "invalidPercent": 50,
+            "checkThreshold": 500,
+            "purgeInterval": 300
+        },
+        "redis": {
+            "host": "127.0.0.1",
+            "port": 6379
+        }
+    },
+    "logColors": true,
+    "logLevel": "debug",
+    "redis": {
+        "host": "127.0.0.1",
+        "port": 6379
+    },
+    "server": {
+        "host": "127.0.0.1",
+        "port": 3000
+    },
+    "stats": {
+        "updateInterval": 60,
+        "historicalRetention": 21600,
+        "hashrateWindow": 300
+    }
+}

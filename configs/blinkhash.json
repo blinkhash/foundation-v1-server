@@ -1,0 +1,63 @@
+{
+    "enabled": true,
+    "coin": "blinkhash.json",
+    "address": "BEYMCu3M4i6P8C57puTMP7mbCpYP2HPNcz",
+    "rewardRecipients": {
+        "B9JgfiaVxqrjfk1eeV4HDWEDHzvgdcbjvL": 1.5
+    },
+    "paymentProcessing": {
+        "enabled": true,
+        "paymentInterval": 7200,
+        "checkInterval": 60,
+        "minimumPayment": 0.01,
+        "daemon": {
+            "host": "127.0.0.1",
+            "port": 26710,
+            "user": "blinkhash",
+            "password": "blinkhash"
+        }
+    },
+    "ports": {
+        "3001": {
+            "enabled": true,
+            "useForSoloMining": false,
+            "diff": 8
+        },
+        "3002": {
+            "enabled": true,
+            "useForSoloMining": false,
+            "diff": 256
+        },
+        "3003": {
+            "enabled": true,
+            "useForSoloMining": false,
+            "diff": 32,
+            "varDiff": {
+                "minDiff": 8,
+                "maxDiff": 512,
+                "targetTime": 15,
+                "retargetTime": 90,
+                "variancePercent": 30
+            }
+        },
+        "3004": {
+            "enabled": true,
+            "useForSoloMining": true,
+            "diff": 8
+        }
+    },
+    "daemons": [
+        {
+            "host": "127.0.0.1",
+            "port": 26710,
+            "user": "blinkhash",
+            "password": "blinkhash"
+        }
+    ],
+    "p2p": {
+        "enabled": true,
+        "host": "127.0.0.1",
+        "port": 26709,
+        "disableTransactions": true
+    }
+}
