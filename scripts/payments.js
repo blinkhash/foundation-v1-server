@@ -191,7 +191,8 @@ function SetupForPool(logger, poolOptions, setupFinished) {
         // Process Main Checks
         checkInterval = setInterval(function() {
             try {
-                processPayments("check");
+                var lastInterval = Date.now();
+                processPayments("check", lastInterval);
             } catch(e) {
                 throw e;
             }
@@ -200,20 +201,22 @@ function SetupForPool(logger, poolOptions, setupFinished) {
         // Process Main Payment
         paymentInterval = setInterval(function() {
             try {
-                processPayments("payment");
+                var lastInterval = Date.now();
+                processPayments("payment", lastInterval);
             } catch(e) {
                 throw e;
             }
         }, processingConfig.paymentInterval * 1000);
 
         // Finalize Setup
-        setTimeout(processPayments("check"), 100);
+        var lastInterval = Date.now();
+        setTimeout(processPayments("start", lastInterval), 100);
         setupFinished(true);
 
     });
 
     // Payment Functionality
-    var processPayments = function(paymentMode) {
+    var processPayments = function(paymentMode, lastInterval) {
 
         // Establish Timing Variables
         var timeSpentRPC = 0;
@@ -259,13 +262,13 @@ function SetupForPool(logger, poolOptions, setupFinished) {
 
                     // Manage Individual Rounds
                     var rounds = results[1].map(function(r) {
-                        var details = r.split(':');
+                        var details = JSON.parse(r);
                         return {
-                            blockHash: details[0],
-                            txHash: details[1],
-                            height: details[2],
-                            workerAddress: details[3],
-                            soloMined: details[4],
+                            blockHash: details.blockHash,
+                            txHash: details.txHash,
+                            height: details.height,
+                            workerAddress: details.worker,
+                            soloMined: details.soloMined,
                             duplicate: false,
                             serialized: r
                         };
@@ -471,12 +474,12 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         var roundSharesSolo = {}
                         var roundSharesShared = {}
                         Object.keys(round).forEach(function(entry) {
-                            var details = entry.split(':');
-                            if (details[1] === 'true') {
-                                roundSharesSolo[details[0]] = round[entry]
+                            var details = JSON.parse(entry);
+                            if (details.soloMined === true) {
+                                roundSharesSolo[details.worker] = round[entry]
                             }
                             else {
-                                roundSharesShared[details[0]] = round[entry]
+                                roundSharesShared[details.worker] = round[entry]
                             }
                         });
                         allWorkerSharesSolo.push(roundSharesSolo)
@@ -562,7 +565,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     var sharesLost = parseFloat(0);
 
                                     // Check if Solo Mined
-                                    if (round.soloMined === 'true') {
+                                    if (round.soloMined === true) {
 
                                         immature = Math.round(immature - feeSatoshi);
                                         var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
@@ -607,7 +610,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     var sharesLost = parseFloat(0);
 
                                     // Check if Solo Mined
-                                    if (round.soloMined === 'true') {
+                                    if (round.soloMined === true) {
 
                                         var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
                                         var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
@@ -904,6 +907,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     switch (r.category) {
                         case 'kicked':
                         case 'orphan':
+                            confirmsToDelete.push(['hdel', coin + ':blocks:pendingConfirms', r.blockHash]);
                             movePendingCommands.push(['smove', coin + ':blocks:pending', coin + ':blocksKicked', r.serialized]);
                             if (r.canDeleteShares) {
                                 moveSharesToCurrent(r);
@@ -911,9 +915,11 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             }
                             return;
                         case 'immature':
+                            confirmsUpdate.push(['hset', coin + ':blocks:pendingConfirms', r.blockHash, (r.confirmations || 0)]);
                             return;
                         case 'generate':
                             if (paymentMode === "payment") {
+                                confirmsToDelete.push(['hdel', coin + ':blocks:pendingConfirms', r.blockHash]);
                                 movePendingCommands.push(['smove', coin + ':blocks:pending', coin + ':blocks:confirmed', r.serialized]);
                                 roundsToDelete.push(coin + ':shares:round' + r.height);
                             }
@@ -943,6 +949,8 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     finalRedisCommands = finalRedisCommands.concat(paymentsUpdate);
                 if (totalPaid !== 0)
                     finalRedisCommands.push(['hincrbyfloat', coin + ':stats', 'totalPaid', totalPaid]);
+                if ((paymentMode === "start") || (paymentMode === "payment"))
+                    finalRedisCommands.push(['hset', coin + ':stats', 'lastPaid', lastInterval]);
 
                 if (finalRedisCommands.length === 0) {
                     return;

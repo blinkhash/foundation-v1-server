@@ -8,7 +8,7 @@
     "paymentProcessing": {
         "enabled": true,
         "paymentInterval": 7200,
-        "checkInterval": 60,
+        "checkInterval": 20,
         "minimumPayment": 0.01,
         "daemon": {
             "host": "127.0.0.1",

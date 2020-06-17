@@ -89,27 +89,46 @@ var PoolShares = function (logger, poolConfig) {
             isSoloMining = true;
         }
 
-        // Push Share Data to Main Array
+        // Establish Redis Variables
+        var dateNow = Date.now();
         var redisCommands = [];
+
+        // Push Share Data to Main Array
         if (isValidShare) {
-            var combinedShare = [shareData.worker, isSoloMining].join(':');
-            redisCommands.push(['hincrby', coin + ':shares:roundCurrent', combinedShare, shareData.difficulty]);
+            var combinedShare = {
+                time: dateNow,
+                worker: shareData.worker,
+                soloMined: isSoloMining,
+            }
+            redisCommands.push(['hincrby', coin + ':shares:roundCurrent', JSON.stringify(combinedShare), shareData.difficulty]);
             redisCommands.push(['hincrby', coin + ':stats', 'validShares', 1]);
         }
         else {
             redisCommands.push(['hincrby', coin + ':stats', 'invalidShares', 1]);
         }
 
-        // Push Hashrate Data to Main Array
-        var dateNow = Date.now();
-        var combinedHashrate = [ isValidShare ? shareData.difficulty : -shareData.difficulty, shareData.worker, dateNow, isSoloMining].join(':');
-        redisCommands.push(['zadd', coin + ':hashrate', dateNow / 1000 | 0, combinedHashrate]);
+        // Push Hashrate Data to Database
+        var difficulty = (isValidShare ? shareData.difficulty : -shareData.difficulty)
+        var hashrateData = {
+            time: dateNow,
+            difficulty: difficulty,
+            worker: shareData.worker,
+            soloMined: isSoloMining,
+        }
+        redisCommands.push(['zadd', coin + ':hashrate', dateNow / 1000 | 0, JSON.stringify(hashrateData)])
 
         // Push Block Data to Main Array
         if (isValidBlock) {
-            var combinedBlock = [shareData.blockHash, shareData.txHash, shareData.height, shareData.worker, isSoloMining].join(':');
+            var blockData = {
+                time: dateNow,
+                blockHash: shareData.blockHash,
+                txHash: shareData.txHash,
+                height: shareData.height,
+                worker: shareData.worker,
+                soloMined: isSoloMining,
+            }
             redisCommands.push(['rename', coin + ':shares:roundCurrent', coin + ':shares:round' + shareData.height]);
-            redisCommands.push(['sadd', coin + ':blocks:pending', combinedBlock]);
+            redisCommands.push(['sadd', coin + ':blocks:pending', JSON.stringify(blockData)])
             redisCommands.push(['hincrby', coin + ':stats', 'validBlocks', 1]);
         }
         else if (shareData.blockHash) {

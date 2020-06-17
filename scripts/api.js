@@ -111,26 +111,28 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                         // Get Block Information
                         for (var pool in portalStats.stats.pools) {
                             for (var w in portalStats.stats.pools[pool].pending) {
-                                blockInformation = portalStats.stats.pools[pool].pending[w].split(':');
+                                blockInformation = JSON.parse(portalStats.stats.pools[pool].pending[w]);
                                 if (blockInformation[3] == addressQuery) {
                                     var blockData = {
-                                        height: blockInformation[2],
-                                        blockHash: blockInformation[0],
-                                        worker: blockInformation[3],
-                                        soloMined: blockInformation[4] == 'true',
+                                        height: blockInformation.height,
+                                        blockHash: blockInformation.blockHash,
+                                        txHash: blockInformation.txHash,
+                                        worker: blockInformation.worker,
+                                        soloMined: blockInformation.soloMined,
                                         confirmed: false,
                                     }
                                     blocks.push(blockData);
                                 }
                             }
                             for (var w in portalStats.stats.pools[pool].confirmed) {
-                                blockInformation = portalStats.stats.pools[pool].confirmed[w].split(':');
+                                blockInformation = JSON.parse(portalStats.stats.pools[pool].confirmed[w]);
                                 if (blockInformation[3] == addressQuery) {
                                     var blockData = {
-                                        height: blockInformation[2],
-                                        blockHash: blockInformation[0],
-                                        worker: blockInformation[3],
-                                        soloMined: blockInformation[4] == 'true',
+                                        height: blockInformation.height,
+                                        blockHash: blockInformation.blockHash,
+                                        txHash: blockInformation.txHash,
+                                        worker: blockInformation.worker,
+                                        soloMined: blockInformation.soloMined,
                                         confirmed: true,
                                     }
                                     blocks.push(blockData);
@@ -183,28 +185,33 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
 
                         // Get Pending Block Information
                         for (var w in portalStats.stats.pools[pool].pending) {
-                            blockInformation = portalStats.stats.pools[pool].pending[w].split(':');
+                            blockInformation = JSON.parse(portalStats.stats.pools[pool].pending[w]);
+                            blockConfirms = portalStats.stats.pools[pool].pendingConfirms;
                             var blockData = {
                                 symbol: portalStats.stats.pools[pool].symbol,
-                                height: blockInformation[2],
-                                blockHash: blockInformation[0],
-                                worker: blockInformation[3],
-                                soloMined: blockInformation[4] == 'true',
+                                height: blockInformation.height,
+                                blockHash: blockInformation.blockHash,
+                                txHash: blockInformation.txHash,
+                                worker: blockInformation.worker,
+                                soloMined: blockInformation.soloMined,
                                 confirmed: false,
+                                confirmations: blockConfirms[blockInformation.blockHash],
                             }
                             pending.push(blockData);
                         }
 
                         // Get Confirmed Block Information
                         for (var w in portalStats.stats.pools[pool].confirmed) {
-                            blockInformation = portalStats.stats.pools[pool].confirmed[w].split(':');
+                            blockInformation = JSON.parse(portalStats.stats.pools[pool].confirmed[w]);
                             var blockData = {
                                 symbol: portalStats.stats.pools[pool].symbol,
-                                height: blockInformation[2],
-                                blockHash: blockInformation[0],
-                                worker: blockInformation[3],
-                                soloMined: blockInformation[4] == 'true',
+                                height: blockInformation.height,
+                                blockHash: blockInformation.blockHash,
+                                txHash: blockInformation.txHash,
+                                worker: blockInformation.worker,
+                                soloMined: blockInformation.soloMined,
                                 confirmed: true,
+                                confirmations: 100,
                             }
                             confirmed.push(blockData);
                         }

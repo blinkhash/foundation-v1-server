@@ -144,23 +144,11 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
 
     // Sort All Blocks
     function sortBlocks(a, b) {
-        var as = parseInt(a.split(":")[2]);
-        var bs = parseInt(b.split(":")[2]);
+        var as = parseInt(JSON.parse(a).height);
+        var bs = parseInt(JSON.parse(b).height);
         if (as > bs) return -1;
         if (as < bs) return 1;
         return 0;
-    }
-
-    // Sort All Workers by Name
-    function sortWorkersByName(objects) {
-        var newObject = {};
-        var sortedArray = sortProperties(objects, 'name', false, false);
-        for (var i = 0; i < sortedArray.length; i++) {
-            var key = sortedArray[i][0];
-            var value = sortedArray[i][1];
-            newObject[key] = value;
-        }
-        return newObject;
     }
 
     // Get Stat History
@@ -378,6 +366,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                 ['scard', ':blocksKicked'],
                 ['smembers', ':blocks:pending'],
                 ['smembers', ':blocks:confirmed'],
+                ['hgetall', ':blocks:pendingConfirms'],
                 ['hgetall', ':shares:roundCurrent'],
                 ['zrange', ':payments', -100, -1],
             ];
@@ -419,13 +408,14 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                             },
                             pending: replies[i + 6].sort(sortBlocks),
                             confirmed: replies[i + 7].sort(sortBlocks).slice(0,50),
-                            roundShares: (replies[i + 8] || {}),
+                            pendingConfirms: replies[i + 8],
+                            roundShares: (replies[i + 9] || {}),
                             payments: [],
                         };
-                        for (var j = replies[i + 9].length; j > 0; j--) {
+                        for (var j = replies[i + 10].length; j > 0; j--) {
                             var jsonObj;
                             try {
-                                jsonObj = JSON.parse(replies[i + 9][j - 1]);
+                                jsonObj = JSON.parse(replies[i + 10][j - 1]);
                             }
                             catch(e) {
                                 jsonObj = null;
@@ -466,11 +456,11 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                 coinStats.shares = 0;
                 coinStats.hashrates.forEach(function(ins) {
 
-                    var parts = ins.split(':');
-                    var workerShares = parseFloat(parts[0]);
-                    var worker = parts[1];
-                    var difficulty = Math.round(parts[0]);
-                    var soloMining = parts[3];
+                    var parts = JSON.parse(ins);
+                    var workerShares = parseFloat(parts.difficulty);
+                    var worker = parts.worker;
+                    var difficulty = Math.round(parts.difficulty);
+                    var soloMining = parts.soloMined;
 
                     if (workerShares > 0) {
                         coinStats.shares += workerShares;
@@ -533,12 +523,8 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                     var _workerRate = shareMultiplier * coinStats.workers[worker].validShares / portalConfig.stats.hashrateWindow;
                     var _wHashRate = (_workerRate / 1000000) * 2;
                     coinStats.workers[worker].hashrate = _workerRate;
-                    console.log(coinStats.workers[worker])
                     coinStats.workers[worker].hashrateString = _this.getReadableHashRateString(_workerRate);
                 }
-
-                // Sort Workers by Name
-                coinStats.workers = sortWorkersByName(coinStats.workers);
 
                 // Clean Up Information
                 delete coinStats.hashrates;
