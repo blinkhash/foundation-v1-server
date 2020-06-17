@@ -40,17 +40,17 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
             case 'wallet':
 
                 // Check to Ensure URL is Formatted Properly
-                var url_queries = req.query;
-                var address = url_queries.address || null;
-                if (address != null && address.length > 0) {
+                var urlQueries = req.query;
+                var addressQuery = urlQueries.address || null;
+                if (addressQuery != null && addressQuery.length > 0) {
 
                     // Output Balance of Address
-                    portalStats.getBalanceByAddress(address, function(balances) {
+                    portalStats.getBalanceByAddress(addressQuery, function(balances) {
 
                         // Finalize Endpoint Information
                         res.writeHead(200, { 'Content-Type': 'application/json' });
                         res.end(JSON.stringify({
-                            address: address,
+                            address: addressQuery,
                             balance: balances.totalBalance.toFixed(8),
                             immature: balances.totalImmature.toFixed(8),
                             paid: balances.totalPaid.toFixed(8),
@@ -71,12 +71,12 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
             case 'walletEx':
 
                 // Check to Ensure URL is Formatted Properly
-                var url_queries = req.query;
-                var address = url_queries.address || null;
-                if (address != null && address.length > 0) {
+                var urlQueries = req.query;
+                var addressQuery = urlQueries.address || null;
+                if (addressQuery != null && addressQuery.length > 0) {
 
                     // Output Balance of Address
-                    portalStats.getBalanceByAddress(address, function(balances) {
+                    portalStats.getBalanceByAddress(addressQuery, function(balances) {
 
                         // Establish Address Variables
                         var worker = []
@@ -86,7 +86,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                         // Get Worker Information
                         for (var pool in portalStats.stats.pools) {
                             for (var w in portalStats.stats.pools[pool].workers) {
-                                if (w == address) {
+                                if (w == addressQuery) {
                                     worker.push(portalStats.stats.pools[pool].workers[w]);
                                 }
                             }
@@ -96,7 +96,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                         for (var pool in portalStats.stats.pools) {
                             for (var w in portalStats.stats.pools[pool].payments) {
                                 for (var x in portalStats.stats.pools[pool].payments[w].amounts) {
-                                    if (x == address) {
+                                    if (x == addressQuery) {
                                         var paymentData = {
                                             time: portalStats.stats.pools[pool].payments[w].time,
                                             amount: portalStats.stats.pools[pool].payments[w].amounts[x],
@@ -112,7 +112,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                         for (var pool in portalStats.stats.pools) {
                             for (var w in portalStats.stats.pools[pool].pending) {
                                 blockInformation = portalStats.stats.pools[pool].pending[w].split(':');
-                                if (blockInformation[3] == address) {
+                                if (blockInformation[3] == addressQuery) {
                                     var blockData = {
                                         height: blockInformation[2],
                                         blockHash: blockInformation[0],
@@ -125,7 +125,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                             }
                             for (var w in portalStats.stats.pools[pool].confirmed) {
                                 blockInformation = portalStats.stats.pools[pool].confirmed[w].split(':');
-                                if (blockInformation[3] == address) {
+                                if (blockInformation[3] == addressQuery) {
                                     var blockData = {
                                         height: blockInformation[2],
                                         blockHash: blockInformation[0],
@@ -141,7 +141,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                         // Finalize Endpoint Information
                         res.writeHead(200, { 'Content-Type': 'application/json' });
                         res.end(JSON.stringify({
-                            address: address,
+                            address: addressQuery,
                             balance: balances.totalBalance.toFixed(8),
                             immature: balances.totalImmature.toFixed(8),
                             paid: balances.totalPaid.toFixed(8),
@@ -164,53 +164,72 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
             // Block Endpoint
             case 'blocks':
 
+                // Check to Ensure URL is Formatted Properly
+                var urlQueries = req.query;
+                var poolQuery = urlQueries.pool || null;
+                var workerQuery = urlQueries.worker || null;
+
                 // Get Block Information
                 var blocks = {}
                 for (var pool in portalStats.stats.pools) {
 
-                    // Establish Block Variables
-                    pending = []
-                    confirmed = []
+                    var formattedPool = (poolQuery != null ? poolQuery.toLowerCase() : null)
+                    var currentPool = portalStats.stats.pools[pool].name.toLowerCase()
+                    if ((formattedPool === null) || (formattedPool === currentPool)) {
 
-                    // Get Pending Block Information
-                    for (var w in portalStats.stats.pools[pool].pending) {
-                        blockInformation = portalStats.stats.pools[pool].pending[w].split(':');
-                        var blockData = {
-                            symbol: portalStats.stats.pools[pool].symbol,
-                            height: blockInformation[2],
-                            blockHash: blockInformation[0],
-                            worker: blockInformation[3],
-                            soloMined: blockInformation[4] == 'true',
-                            confirmed: false,
+                        // Establish Block Variables
+                        pending = []
+                        confirmed = []
+
+                        // Get Pending Block Information
+                        for (var w in portalStats.stats.pools[pool].pending) {
+                            blockInformation = portalStats.stats.pools[pool].pending[w].split(':');
+                            var blockData = {
+                                symbol: portalStats.stats.pools[pool].symbol,
+                                height: blockInformation[2],
+                                blockHash: blockInformation[0],
+                                worker: blockInformation[3],
+                                soloMined: blockInformation[4] == 'true',
+                                confirmed: false,
+                            }
+                            pending.push(blockData);
                         }
-                        pending.push(blockData);
-                    }
 
-                    // Get Confirmed Block Information
-                    for (var w in portalStats.stats.pools[pool].confirmed) {
-                        blockInformation = portalStats.stats.pools[pool].confirmed[w].split(':');
-                        var blockData = {
-                            symbol: portalStats.stats.pools[pool].symbol,
-                            height: blockInformation[2],
-                            blockHash: blockInformation[0],
-                            worker: blockInformation[3],
-                            soloMined: blockInformation[4] == 'true',
-                            confirmed: true,
+                        // Get Confirmed Block Information
+                        for (var w in portalStats.stats.pools[pool].confirmed) {
+                            blockInformation = portalStats.stats.pools[pool].confirmed[w].split(':');
+                            var blockData = {
+                                symbol: portalStats.stats.pools[pool].symbol,
+                                height: blockInformation[2],
+                                blockHash: blockInformation[0],
+                                worker: blockInformation[3],
+                                soloMined: blockInformation[4] == 'true',
+                                confirmed: true,
+                            }
+                            confirmed.push(blockData);
                         }
-                        confirmed.push(blockData);
+
+                        // Filter for Provided Pool Worker
+                        if (workerQuery != null && workerQuery.length > 0) {
+                            pending = pending.filter(function(block) {
+                                return block.worker === workerQuery;
+                            });
+                            confirmed = confirmed.filter(function(block) {
+                                return block.worker === workerQuery;
+                            })
+                        }
+
+                        // Add Block Information to Endpoint
+                        blocks[portalStats.stats.pools[pool].name] = {
+                            pending: pending,
+                            confirmed: confirmed
+                        }
                     }
-
-                    // Add Block Information to Endpoint
-                    blocks[portalStats.stats.pools[pool].name] = {
-                        pending: pending,
-                        confirmed: confirmed
-                    }
-
-                    // Finalize Endpoint Information
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify(blocks));
-
                 }
+
+                // Finalize Endpoint Information
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(blocks));
 
             default:
                 next();
