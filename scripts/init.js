@@ -141,6 +141,18 @@ var buildPoolConfigs = function() {
         poolOptions.coin = coinProfile;
         poolOptions.coin.name = poolOptions.coin.name;
 
+        // Establish Mainnet/Testnet
+        if (coinProfile.mainnet) {
+            poolOptions.coin.mainnet.bip32.public = new Buffer(coinProfile.mainnet.bip32.public, 'hex').readUInt32LE(0);
+            poolOptions.coin.mainnet.pubKeyHash = new Buffer(coinProfile.mainnet.pubKeyHash, 'hex').readUInt8(0);
+            poolOptions.coin.mainnet.scriptHash = new Buffer(coinProfile.mainnet.scriptHash, 'hex').readUInt8(0);
+        }
+        if (coinProfile.testnet) {
+            poolOptions.coin.testnet.bip32.public = new Buffer(coinProfile.testnet.bip32.public, 'hex').readUInt32LE(0);
+            poolOptions.coin.testnet.pubKeyHash = new Buffer(coinProfile.testnet.pubKeyHash, 'hex').readUInt8(0);
+            poolOptions.coin.testnet.scriptHash = new Buffer(coinProfile.testnet.scriptHash, 'hex').readUInt8(0);
+        }
+
         // Check for no Overlap in Configurations
         if (poolOptions.coin.name in configs) {
             logger.error('Master', poolOptions.fileName, 'coins/' + poolOptions.coinFileName

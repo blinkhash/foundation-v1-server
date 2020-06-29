@@ -3,5 +3,21 @@
     "symbol": "BHTC",
     "algorithm": "scrypt",
     "peerMagic": "ace4b9cd",
-    "peerMagicTestnet": "f01a6eef"
-}
+    "peerMagicTestnet": "f01a6eef",
+    "mainnet": {
+        "bech32": "bhtc",
+        "bip32": {
+            "public": "0488B21E"
+        },
+        "pubKeyHash": "32",
+        "scriptHash": "05"
+    },
+    "testnet": {
+        "bech32": "tbhtc",
+        "bip32": {
+            "public": "043587CF"
+        },
+        "pubKeyHash": "32",
+        "scriptHash": "C4"
+    }
+  }

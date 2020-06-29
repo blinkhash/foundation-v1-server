@@ -443,7 +443,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             case 'generate':
                                 payingBlocks += 1;
                                 if (payingBlocks > maxBlocksPerPayment) {
-                                  r.category == "immature";
+                                    r.category == "immature";
                                 }
                                 return true;
                             default:
