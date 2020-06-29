@@ -9,15 +9,15 @@
         "bip32": {
             "public": "0488B21E"
         },
-        "pubKeyHash": "32",
-        "scriptHash": "05"
+        "pubKeyHash": "19",
+        "scriptHash": "32"
     },
     "testnet": {
         "bech32": "tbhtc",
         "bip32": {
             "public": "043587CF"
         },
-        "pubKeyHash": "32",
+        "pubKeyHash": "19",
         "scriptHash": "C4"
     }
   }
