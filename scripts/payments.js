@@ -242,7 +242,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                 // Manage Redis Timer
                 startRedisTimer();
                 redisClient.multi([
-                    ['hgetall', coin + ':unpaid'],
+                    ['hgetall', coin + ':payments:unpaid'],
                     ['smembers', coin + ':blocks:pending']
                 ]).exec(function(err, results) {
                     endRedisTimer();
@@ -310,12 +310,12 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                 if (block && block.result) {
                                     if (block.result.confirmations < 0) {
                                         logger.warning(logSystem, logComponent, 'Remove invalid duplicate block ' + block.result.height + ' > ' + block.result.hash);
-                                        invalidBlocks.push(['smove', coin + ':blocks:pending', coin + ':blocksDuplicate', dups[i].serialized]);
+                                        invalidBlocks.push(['smove', coin + ':blocks:pending', coin + ':blocks:duplicate', dups[i].serialized]);
                                     }
                                     else {
                                         if (validBlocks.hasOwnProperty(dups[i].blockHash)) {
                                             logger.warning(logSystem, logComponent, 'Remove non-unique duplicate block ' + block.result.height + ' > ' + block.result.hash);
-                                            invalidBlocks.push(['smove', coin + ':blocks:pending', coin + ':blocksDuplicate', dups[i].serialized]);
+                                            invalidBlocks.push(['smove', coin + ':blocks:pending', coin + ':blocks:duplicate', dups[i].serialized]);
                                         }
                                         else {
                                             validBlocks[dups[i].blockHash] = dups[i].serialized;
@@ -816,7 +816,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                         unpaid: balanceAmounts,
                                         work: shareAmounts
                                     };
-                                    paymentsUpdate.push(['zadd', logComponent + ':payments', Date.now(), JSON.stringify(paymentsData)]);
+                                    paymentsUpdate.push(['zadd', logComponent + ':payments:payments', Date.now(), JSON.stringify(paymentsData)]);
                                     callback(null, workers, rounds, paymentsUpdate);
                                 }
                                 else {
@@ -862,32 +862,32 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         if (worker.balanceChange !== 0) {
                             balanceUpdateCommands.push([
                                 'hincrbyfloat',
-                                coin + ':unpaid',
+                                coin + ':payments:unpaid',
                                 w,
                                 satoshisToCoins(worker.balanceChange)
                             ]);
                         }
                         if ((worker.sent || 0) > 0) {
-                            workerPayoutsCommand.push(['hincrbyfloat', coin + ':payouts', w, coinsRound(worker.sent)]);
+                            workerPayoutsCommand.push(['hincrbyfloat', coin + ':payments:payouts', w, coinsRound(worker.sent)]);
                             totalPaid = coinsRound(totalPaid + worker.sent);
                         }
                     }
                     else {
                         if ((worker.reward || 0) > 0) {
                             worker.reward = satoshisToCoins(worker.reward);
-                            balanceUpdateCommands.push(['hset', coin + ':balances', w, coinsRound(worker.reward)]);
+                            balanceUpdateCommands.push(['hset', coin + ':payments:balances', w, coinsRound(worker.reward)]);
                         }
                         else {
-                            balanceUpdateCommands.push(['hset', coin + ':balances', w, 0]);
+                            balanceUpdateCommands.push(['hset', coin + ':payments:balances', w, 0]);
                         }
                     }
 
                     if ((worker.immature || 0) > 0) {
                         worker.immature = satoshisToCoins(worker.immature);
-                        immatureUpdateCommands.push(['hset', coin + ':immature', w, coinsRound(worker.immature)]);
+                        immatureUpdateCommands.push(['hset', coin + ':payments:immature', w, coinsRound(worker.immature)]);
                     }
                     else {
-                        immatureUpdateCommands.push(['hset', coin + ':immature', w, 0]);
+                        immatureUpdateCommands.push(['hset', coin + ':payments:immature', w, 0]);
                     }
 
                 }
@@ -910,7 +910,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         case 'kicked':
                         case 'orphan':
                             confirmsToDelete.push(['hdel', coin + ':blocks:pendingConfirms', r.blockHash]);
-                            movePendingCommands.push(['smove', coin + ':blocks:pending', coin + ':blocksKicked', r.serialized]);
+                            movePendingCommands.push(['smove', coin + ':blocks:pending', coin + ':blocks:kicked', r.serialized]);
                             if (r.canDeleteShares) {
                                 moveSharesToCurrent(r);
                                 roundsToDelete.push(coin + ':shares:round' + r.height);
@@ -950,9 +950,9 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                 if (paymentsUpdate.length > 0)
                     finalRedisCommands = finalRedisCommands.concat(paymentsUpdate);
                 if (totalPaid !== 0)
-                    finalRedisCommands.push(['hincrbyfloat', coin + ':stats', 'totalPaid', totalPaid]);
+                    finalRedisCommands.push(['hincrbyfloat', coin + ':statistics:basic', 'totalPaid', totalPaid]);
                 if ((paymentMode === "start") || (paymentMode === "payment"))
-                    finalRedisCommands.push(['hset', coin + ':stats', 'lastPaid', lastInterval]);
+                    finalRedisCommands.push(['hset', coin + ':statistics:basic', 'lastPaid', lastInterval]);
 
                 if (finalRedisCommands.length === 0) {
                     return;

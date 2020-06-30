@@ -101,10 +101,10 @@ var PoolShares = function (logger, poolConfig) {
                 soloMined: isSoloMining,
             }
             redisCommands.push(['hincrby', coin + ':shares:roundCurrent', JSON.stringify(combinedShare), shareData.difficulty]);
-            redisCommands.push(['hincrby', coin + ':stats', 'validShares', 1]);
+            redisCommands.push(['hincrby', coin + ':statistics:basic', 'validShares', 1]);
         }
         else {
-            redisCommands.push(['hincrby', coin + ':stats', 'invalidShares', 1]);
+            redisCommands.push(['hincrby', coin + ':statistics:basic', 'invalidShares', 1]);
         }
 
         // Push Hashrate Data to Database
@@ -115,7 +115,7 @@ var PoolShares = function (logger, poolConfig) {
             worker: shareData.worker,
             soloMined: isSoloMining,
         }
-        redisCommands.push(['zadd', coin + ':hashrate', dateNow / 1000 | 0, JSON.stringify(hashrateData)])
+        redisCommands.push(['zadd', coin + ':statistics:hashrate', dateNow / 1000 | 0, JSON.stringify(hashrateData)])
 
         // Push Block Data to Main Array
         if (isValidBlock) {
@@ -129,10 +129,10 @@ var PoolShares = function (logger, poolConfig) {
             }
             redisCommands.push(['rename', coin + ':shares:roundCurrent', coin + ':shares:round' + shareData.height]);
             redisCommands.push(['sadd', coin + ':blocks:pending', JSON.stringify(blockData)])
-            redisCommands.push(['hincrby', coin + ':stats', 'validBlocks', 1]);
+            redisCommands.push(['hincrby', coin + ':statistics:basic', 'validBlocks', 1]);
         }
         else if (shareData.blockHash) {
-            redisCommands.push(['hincrby', coin + ':stats', 'invalidBlocks', 1]);
+            redisCommands.push(['hincrby', coin + ':statistics:basic', 'invalidBlocks', 1]);
         }
 
         // Write Share Information to Redis Database

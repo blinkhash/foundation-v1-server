@@ -201,10 +201,10 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
 
         async.each(_this.stats.pools, function(pool, pcb) {
             var coin = String(_this.stats.pools[pool.name].name);
-            client.hscan(coin + ':balances', 0, "match", a+"*", "count", 10000, function(error, bals) {
-                client.hscan(coin + ':immature', 0, "match", a+"*", "count", 10000, function(error, pends) {
-                    client.hscan(coin + ':payouts', 0, "match", a+"*", "count", 10000, function(error, pays) {
-                        client.hscan(coin + ':unpaid', 0, "match", a+"*", "count", 10000, function(error, unpays) {
+            client.hscan(coin + ':payments:balances', 0, "match", a+"*", "count", 10000, function(error, bals) {
+                client.hscan(coin + ':payments:immature', 0, "match", a+"*", "count", 10000, function(error, pends) {
+                    client.hscan(coin + ':payments:payouts', 0, "match", a+"*", "count", 10000, function(error, pays) {
+                        client.hscan(coin + ':payments:unpaid', 0, "match", a+"*", "count", 10000, function(error, unpays) {
 
                             var workerName = "";
                             var balanceAmount = 0;
@@ -358,12 +358,12 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
             var windowTime = (((Date.now() / 1000) - portalConfig.stats.hashrateWindow) | 0).toString();
             var redisCommands = [];
             var redisCommandTemplates = [
-                ['zremrangebyscore', ':hashrate', '-inf', '(' + windowTime],
-                ['zrangebyscore', ':hashrate', windowTime, '+inf'],
-                ['hgetall', ':stats'],
+                ['zremrangebyscore', ':statistics:hashrate', '-inf', '(' + windowTime],
+                ['zrangebyscore', ':statistics:hashrate', windowTime, '+inf'],
+                ['hgetall', ':statistics:basic'],
                 ['scard', ':blocks:pending'],
                 ['scard', ':blocks:confirmed'],
-                ['scard', ':blocksKicked'],
+                ['scard', ':blocks:kicked'],
                 ['smembers', ':blocks:pending'],
                 ['smembers', ':blocks:confirmed'],
                 ['hgetall', ':blocks:pendingConfirms'],
