@@ -36,7 +36,6 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
 
                 // Define Individual Variables
                 var blocks = {}
-                var recent = []
 
                 // Get Block Information
                 for (var pool in portalStats.stats) {
@@ -50,9 +49,9 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                         var confirmed = []
 
                         // Get Pending Block Information
-                        for (var w in portalStats.stats[pool].pending) {
-                            blockInformation = JSON.parse(portalStats.stats[pool].pending[w]);
-                            blockConfirms = portalStats.stats[pool].pendingConfirms;
+                        for (var w in portalStats.stats[pool].blocks.pending) {
+                            blockInformation = JSON.parse(portalStats.stats[pool].blocks.pending[w]);
+                            blockConfirms = portalStats.stats[pool].blocks.confirmations;
                             var blockData = {
                                 pool: portalStats.stats[pool].name,
                                 symbol: portalStats.stats[pool].symbol,
@@ -67,12 +66,11 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                                 confirmations: blockConfirms[blockInformation.blockHash],
                             }
                             pending.push(blockData);
-                            recent.push(blockData);
                         }
 
                         // Get Confirmed Block Information
-                        for (var w in portalStats.stats[pool].confirmed) {
-                            blockInformation = JSON.parse(portalStats.stats[pool].confirmed[w]);
+                        for (var w in portalStats.stats[pool].blocks.confirmed) {
+                            blockInformation = JSON.parse(portalStats.stats[pool].blocks.confirmed[w]);
                             var blockData = {
                                 pool: portalStats.stats[pool].name,
                                 symbol: portalStats.stats[pool].symbol,
@@ -87,7 +85,6 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                                 confirmations: 100,
                             }
                             confirmed.push(blockData);
-                            recent.push(blockData);
                         }
 
                         // Filter for Provided Pool Worker
@@ -98,9 +95,6 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                             confirmed = confirmed.filter(function(block) {
                                 return block.worker === workerQuery;
                             })
-                            recent = recent.filter(function(block) {
-                                return block.worker === workerQuery;
-                            });
                         }
 
                         // Add Block Information to Endpoint
@@ -112,23 +106,19 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                 }
 
                 // Finalize Endpoint Information
-                recent = recent.sort(function(a, b) { return b.time - a.time }).slice(0, 10);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    pools: blocks,
-                    recent: recent,
-                }));
+                res.end(JSON.stringify(blocks));
 
                 return;
 
-            // Pools Endpoint
+            // Pools Endpoint (Done)
             case 'pools':
 
                 // Check to Ensure URL is Formatted Properly
                 var urlQueries = req.query;
 
                 // Define Individual Variables
-                var currencies = {}
+                var pools = {}
 
                 // Get Block Information
                 for (var pool in portalStats.stats) {
@@ -136,27 +126,102 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                         pool: portalStats.stats[pool].name,
                         symbol: portalStats.stats[pool].symbol,
                         algorithm: portalStats.stats[pool].algorithm,
-                        hashrate: portalStats.stats[pool].hashrate,
-                        workers: portalStats.stats[pool].workerCount,
-                        validShares: portalStats.stats[pool].poolStats.validShares,
-                        invalidShares: portalStats.stats[pool].poolStats.invalidShares,
-                        pendingBlocks: portalStats.stats[pool].blocks.pending,
-                        confirmedBlocks: portalStats.stats[pool].blocks.confirmed,
-                        orphanedBlocks: portalStats.stats[pool].blocks.orphaned,
-                        lastPaid: portalStats.stats[pool].poolStats.lastPaid,
-                        totalPaid: portalStats.stats[pool].poolStats.totalPaid,
+                        ports: portalStats.stats[pool].ports,
+                        hashrate: {
+                            hashrate: portalStats.stats[pool].hashrate.hashrate,
+                            hashrateShared: portalStats.stats[pool].hashrate.hashrateShared,
+                            hashrateSolo: portalStats.stats[pool].hashrate.hashrateSolo,
+                        },
+                        payments: portalStats.stats[pool].payments,
+                        statistics: {
+                            validShares: portalStats.stats[pool].statistics.validShares,
+                            validBlocks: portalStats.stats[pool].statistics.validBlocks,
+                            invalidShares: portalStats.stats[pool].statistics.invalidShares,
+                            lastPaid: portalStats.stats[pool].statistics.lastPaid,
+                            totalPaid: portalStats.stats[pool].statistics.totalPaid,
+                        },
+                        workers: {
+                            workers: portalStats.stats[pool].workers.workersCount,
+                            workersShared: portalStats.stats[pool].workers.workersSharedCount,
+                            workersSolo: portalStats.stats[pool].workers.workersSoloCount,
+                        }
                     }
-                    currencies[pool] = currencyData;
+                    pools[pool] = currencyData;
                 }
 
                 // Finalize Endpoint Information
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(currencies));
+                res.end(JSON.stringify(pools));
 
                 return;
 
-            // Wallets Endpoint (Done)
-            case 'wallets':
+            // Recent Endpoint (Done)
+            case 'recent':
+
+                // Check to Ensure URL is Formatted Properly
+                var urlQueries = req.query;
+                var poolQuery = urlQueries.pool || null;
+
+                // Define Individual Variables
+                var recent = []
+
+                // Get Block Information
+                for (var pool in portalStats.stats) {
+
+                    var formattedPool = (poolQuery != null ? poolQuery.toLowerCase() : null)
+                    var currentPool = portalStats.stats[pool].name.toLowerCase()
+                    if ((formattedPool === null) || (formattedPool === currentPool)) {
+
+                        // Get Pending Block Information
+                        for (var w in portalStats.stats[pool].blocks.pending) {
+                            blockInformation = JSON.parse(portalStats.stats[pool].blocks.pending[w]);
+                            blockConfirms = portalStats.stats[pool].blocks.confirmations;
+                            var blockData = {
+                                pool: portalStats.stats[pool].name,
+                                symbol: portalStats.stats[pool].symbol,
+                                algorithm: portalStats.stats[pool].algorithm,
+                                time: blockInformation.time,
+                                height: blockInformation.height,
+                                blockHash: blockInformation.blockHash,
+                                txHash: blockInformation.txHash,
+                                worker: blockInformation.worker,
+                                soloMined: blockInformation.soloMined,
+                                confirmed: false,
+                                confirmations: blockConfirms[blockInformation.blockHash],
+                            }
+                            recent.push(blockData);
+                        }
+
+                        // Get Confirmed Block Information
+                        for (var w in portalStats.stats[pool].blocks.confirmed) {
+                            blockInformation = JSON.parse(portalStats.stats[pool].blocks.confirmed[w]);
+                            var blockData = {
+                                pool: portalStats.stats[pool].name,
+                                symbol: portalStats.stats[pool].symbol,
+                                algorithm: portalStats.stats[pool].algorithm,
+                                time: blockInformation.time,
+                                height: blockInformation.height,
+                                blockHash: blockInformation.blockHash,
+                                txHash: blockInformation.txHash,
+                                worker: blockInformation.worker,
+                                soloMined: blockInformation.soloMined,
+                                confirmed: true,
+                                confirmations: 100,
+                            }
+                            recent.push(blockData);
+                        }
+                    }
+                }
+
+                // Finalize Endpoint Information
+                recent = recent.sort(function(a, b) { return b.time - a.time }).slice(0, 10);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(recent));
+
+                return;
+
+            // Wallet Endpoint (Done)
+            case 'wallet':
 
                 // Check to Ensure URL is Formatted Properly
                 var urlQueries = req.query;
@@ -198,9 +263,9 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
 
                         // Get Block Information
                         for (var pool in portalStats.stats) {
-                            for (var w in portalStats.stats[pool].pending) {
-                                blockInformation = JSON.parse(portalStats.stats[pool].pending[w]);
-                                blockConfirms = portalStats.stats[pool].pendingConfirms;
+                            for (var w in portalStats.stats[pool].blocks.pending) {
+                                blockInformation = JSON.parse(portalStats.stats[pool].blocks.pending[w]);
+                                blockConfirms = portalStats.stats[pool].blocks.confirmations;
                                 if (blockInformation.worker == addressQuery) {
                                     var blockData = {
                                         pool: portalStats.stats[pool].name,
@@ -217,8 +282,8 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                                     blocks.push(blockData);
                                 }
                             }
-                            for (var w in portalStats.stats[pool].confirmed) {
-                                blockInformation = JSON.parse(portalStats.stats[pool].confirmed[w]);
+                            for (var w in portalStats.stats[pool].blocks.confirmed) {
+                                blockInformation = JSON.parse(portalStats.stats[pool].blocks.confirmed[w]);
                                 if (blockInformation.worker == addressQuery) {
                                     var blockData = {
                                         pool: portalStats.stats[pool].name,
@@ -260,7 +325,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
 
                 return;
 
-            // Workers Endpoint (Done)
+            // Workers Endpoint
             case 'workers':
 
                 return;

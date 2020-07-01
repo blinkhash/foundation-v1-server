@@ -20,17 +20,17 @@
     "ports": {
         "3001": {
             "enabled": true,
-            "useForSoloMining": false,
+            "soloMining": false,
             "diff": 8
         },
         "3002": {
             "enabled": true,
-            "useForSoloMining": false,
+            "soloMining": false,
             "diff": 256
         },
         "3003": {
             "enabled": true,
-            "useForSoloMining": false,
+            "soloMining": false,
             "diff": 32,
             "varDiff": {
                 "minDiff": 8,
@@ -42,7 +42,7 @@
         },
         "3004": {
             "enabled": true,
-            "useForSoloMining": true,
+            "soloMining": true,
             "diff": 8
         }
     },
