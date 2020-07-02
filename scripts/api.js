@@ -104,9 +104,17 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                     }
                 }
 
+                // Finalize Payload
+                var payload = {
+                    status: 200,
+                    errors: "",
+                    endpoint: "blocks",
+                    data: blocks,
+                }
+
                 // Finalize Endpoint Information
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(blocks));
+                res.end(JSON.stringify(payload));
 
                 return;
 
@@ -155,9 +163,17 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                     }
                 }
 
+                // Finalize Payload
+                var payload = {
+                    status: 200,
+                    errors: "",
+                    endpoint: "pools",
+                    data: pools,
+                }
+
                 // Finalize Endpoint Information
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(pools));
+                res.end(JSON.stringify(payload));
 
                 return;
 
@@ -219,15 +235,25 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                     }
                 }
 
-                // Finalize Endpoint Information
+                // Sort Recent Block Data
                 recent = recent.sort(function(a, b) { return b.time - a.time }).slice(0, 10);
+
+                // Finalize Payload
+                var payload = {
+                    status: 200,
+                    errors: "",
+                    endpoint: "recent",
+                    data: recent,
+                }
+
+                // Finalize Endpoint Information
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(recent));
+                res.end(JSON.stringify(payload));
 
                 return;
 
             // Wallet Endpoint (Done)
-            case 'wallet':
+            case 'wallets':
 
                 // Check to Ensure URL is Formatted Properly
                 var urlQueries = req.query;
@@ -308,9 +334,8 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                             }
                         }
 
-                        // Finalize Endpoint Information
-                        res.writeHead(200, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({
+                        // Structure Wallet Output
+                        const wallets = {
                             address: addressQuery,
                             balance: balances.totalBalance.toFixed(8),
                             immature: balances.totalImmature.toFixed(8),
@@ -320,7 +345,19 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                             blocks: blocks,
                             payments: payments,
                             workers: workers,
-                        }));
+                        }
+
+                        // Finalize Payload
+                        var payload = {
+                            status: 200,
+                            errors: "",
+                            endpoint: "wallets",
+                            data: wallets,
+                        }
+
+                        // Finalize Endpoint Information
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify(payload));
                     });
                 }
 
@@ -331,7 +368,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
 
                 return;
 
-            // Workers Endpoint
+            // Workers Endpoint (Done)
             case 'workers':
 
                 // Check to Ensure URL is Formatted Properly
@@ -388,9 +425,17 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                     }
                 }
 
+                // Finalize Payload
+                var payload = {
+                    status: 200,
+                    errors: "",
+                    endpoint: "wallets",
+                    data: workers,
+                }
+
                 // Finalize Endpoint Information
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify(workers));
+                res.end(JSON.stringify(payload));
 
                 return;
 
