@@ -31,23 +31,24 @@
     "start": "nodemon scripts/init.js"
   },
   "dependencies": {
-    "stratum-pool": "git://github.com/blinkhash/blinkhash-stratum-pool.git",
-    "dateformat": "1.0.12",
-    "node-json-minify": "*",
-    "redis": "0.12.1",
-    "mysql": "*",
+    "apicache": "^1.5.3",
     "async": "1.5.2",
-    "express": "*",
-    "body-parser": "*",
-    "compression": "*",
-    "dot": "*",
-    "colors": "*",
-    "node-watch": "0.5.9",
-    "request": "2.69.0",
-    "nonce": "*",
     "bignum": "0.12.5",
+    "body-parser": "*",
+    "colors": "*",
+    "compression": "*",
+    "dateformat": "1.0.12",
+    "dot": "*",
+    "express": "*",
     "extend": "*",
-    "nodemon": "~1.8.1"
+    "mysql": "*",
+    "node-json-minify": "*",
+    "node-watch": "0.5.9",
+    "nodemon": "~1.8.1",
+    "nonce": "*",
+    "redis": "0.12.1",
+    "request": "2.69.0",
+    "stratum-pool": "git://github.com/blinkhash/blinkhash-stratum-pool.git"
   },
   "engines": {
     "node": ">=0.10"

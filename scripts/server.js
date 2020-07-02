@@ -8,6 +8,7 @@
 var express = require('express');
 var compress = require('compression');
 var bodyParser = require('body-parser');
+var apicache = require('apicache');
 
 // Import Pool Functionality
 var PoolAPI = require('./api.js');
@@ -38,8 +39,10 @@ var PoolServer = function (logger) {
 
     // Build Main Server
     var app = express();
+    var cache = apicache.middleware;
     app.use(bodyParser.json());
     app.use(compress());
+    app.use(cache('5 minutes'));
     app.get('/api/:method', function(req, res, next) {
         portalApi.handleApiRequest(req, res, next);
     });

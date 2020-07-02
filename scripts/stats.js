@@ -415,9 +415,8 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                                 difficulty: difficulty,
                                 validShares: workerShares,
                                 invalidShares: 0,
-                                algorithm: coinStats.algorithm,
-                                soloMining: soloMining,
                                 hashrate: null,
+                                soloMining: soloMining,
                             };
                         }
                     }
@@ -431,9 +430,8 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                                 difficulty: difficulty,
                                 validShares: 0,
                                 invalidShares: -workerShares,
-                                algorithm: coinStats.algorithm,
-                                soloMining: soloMining,
                                 hashrate: null,
+                                soloMining: soloMining,
                             };
                         }
                     }
