@@ -143,14 +143,14 @@ var buildPoolConfigs = function() {
 
         // Establish Mainnet/Testnet
         if (coinProfile.mainnet) {
-            poolOptions.coin.mainnet.bip32.public = new Buffer(coinProfile.mainnet.bip32.public, 'hex').readUInt32LE(0);
-            poolOptions.coin.mainnet.pubKeyHash = new Buffer(coinProfile.mainnet.pubKeyHash, 'hex').readUInt8(0);
-            poolOptions.coin.mainnet.scriptHash = new Buffer(coinProfile.mainnet.scriptHash, 'hex').readUInt8(0);
+            poolOptions.coin.mainnet.bip32.public = Buffer.from(coinProfile.mainnet.bip32.public, 'hex').readUInt32LE(0);
+            poolOptions.coin.mainnet.pubKeyHash = Buffer.from(coinProfile.mainnet.pubKeyHash, 'hex').readUInt8(0);
+            poolOptions.coin.mainnet.scriptHash = Buffer.from(coinProfile.mainnet.scriptHash, 'hex').readUInt8(0);
         }
         if (coinProfile.testnet) {
-            poolOptions.coin.testnet.bip32.public = new Buffer(coinProfile.testnet.bip32.public, 'hex').readUInt32LE(0);
-            poolOptions.coin.testnet.pubKeyHash = new Buffer(coinProfile.testnet.pubKeyHash, 'hex').readUInt8(0);
-            poolOptions.coin.testnet.scriptHash = new Buffer(coinProfile.testnet.scriptHash, 'hex').readUInt8(0);
+            poolOptions.coin.testnet.bip32.public = Buffer.from(coinProfile.testnet.bip32.public, 'hex').readUInt32LE(0);
+            poolOptions.coin.testnet.pubKeyHash = Buffer.from(coinProfile.testnet.pubKeyHash, 'hex').readUInt8(0);
+            poolOptions.coin.testnet.scriptHash = Buffer.from(coinProfile.testnet.scriptHash, 'hex').readUInt8(0);
         }
 
         // Check for no Overlap in Configurations

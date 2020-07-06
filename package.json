@@ -28,17 +28,23 @@
     "url": "https://github.com/zone117x/node-open-mining-portal.git"
   },
   "scripts": {
-    "start": "nodemon scripts/init.js"
+    "start": "nodemon scripts/init.js",
+    "clean": "eslint . --ext .js --ignore-pattern node_modules/",
+    "format": "prettier --write \"**/*.+(js|jsx|json|yml|yaml|css|md|vue)\""
   },
   "dependencies": {
     "apicache": "^1.5.3",
     "async": "1.5.2",
-    "bignum": "0.12.5",
+    "babel-eslint": "^10.1.0",
+    "bignum": "0.13.1",
     "body-parser": "*",
     "colors": "*",
     "compression": "*",
     "dateformat": "1.0.12",
     "dot": "*",
+    "eslint": "^7.4.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.4",
     "express": "*",
     "extend": "*",
     "mysql": "*",
@@ -46,6 +52,7 @@
     "node-watch": "0.5.9",
     "nodemon": "~1.8.1",
     "nonce": "*",
+    "prettier": "^2.0.5",
     "redis": "0.12.1",
     "request": "2.69.0",
     "stratum-pool": "git://github.com/blinkhash/blinkhash-stratum-pool.git"
