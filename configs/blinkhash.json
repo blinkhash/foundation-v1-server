@@ -18,17 +18,17 @@
         }
     },
     "ports": {
-        "3001": {
+        "3010": {
             "enabled": true,
             "soloMining": false,
             "diff": 8
         },
-        "3002": {
+        "3011": {
             "enabled": true,
             "soloMining": false,
             "diff": 256
         },
-        "3003": {
+        "3012": {
             "enabled": true,
             "soloMining": false,
             "diff": 32,
@@ -40,7 +40,7 @@
                 "variancePercent": 30
             }
         },
-        "3004": {
+        "3013": {
             "enabled": true,
             "soloMining": true,
             "diff": 8

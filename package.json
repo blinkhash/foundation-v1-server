@@ -50,7 +50,7 @@
     "mysql": "*",
     "node-json-minify": "*",
     "node-watch": "0.5.9",
-    "nodemon": "~1.8.1",
+    "nodemon": "*",
     "nonce": "*",
     "prettier": "^2.0.5",
     "redis": "0.12.1",
