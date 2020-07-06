@@ -4,6 +4,7 @@
         "enabled": true,
         "forks": "auto"
     },
+    "debug": false,
     "defaultPoolConfigs": {
         "blockRefreshInterval": 1000,
         "jobRebroadcastTimeout": 55,

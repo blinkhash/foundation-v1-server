@@ -85,7 +85,7 @@ var PoolShares = function (logger, poolConfig) {
 
         // Check to see if Solo Mining
         var isSoloMining = false;
-        if (poolConfig.ports[shareData.port].soloMining === true) {
+        if (poolConfig.ports[shareData.port].soloMining) {
             isSoloMining = true;
         }
 

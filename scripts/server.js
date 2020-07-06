@@ -33,7 +33,9 @@ var PoolServer = function (logger) {
     // Establish Global Statistics Interval
     var globalInterval = setInterval(function() {
         portalStats.getGlobalStats(function() {
-            logger.debug(logSystem, 'History', 'Updated global statistics for API endpoints');
+            if (portalConfig.debug) {
+                logger.debug(logSystem, 'History', 'Updated global statistics for API endpoints');
+            }
         });
     }, portalConfig.stats.updateInterval * 1000);
 

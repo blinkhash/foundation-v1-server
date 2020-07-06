@@ -118,7 +118,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     }
                     balance = coinsRound(balance);
                 }
-                if (displayBool === true) {
+                if (displayBool) {
                     logger.special(logSystem, logComponent, addr+' balance of ' + balance);
                 }
                 callback(null, coinsToSatoshies(balance));
@@ -284,7 +284,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     // Check for Block Duplicates
                     var duplicateFound = false;
                     for (var i = 0; i < rounds.length; i++) {
-                        if (checkForDuplicateBlockHeight(rounds, rounds[i].height) === true) {
+                        if (checkForDuplicateBlockHeight(rounds, rounds[i].height)) {
                             rounds[i].duplicate = true;
                             duplicateFound = true;
                         }
@@ -477,7 +477,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         var roundSharesShared = {}
                         Object.keys(round).forEach(function(entry) {
                             var details = JSON.parse(entry);
-                            if (details.soloMined === true) {
+                            if (details.soloMined) {
                                 roundSharesSolo[details.worker] = round[entry]
                             }
                             else {
@@ -524,7 +524,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         if (totalOwed <= 0) {
                             performPayment = false;
                         }
-                        if (performPayment === false) {
+                        if (!performPayment) {
                             rounds = rounds.filter(function(r) {
                                 switch (r.category) {
                                     case 'orphan':
@@ -567,7 +567,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     var sharesLost = parseFloat(0);
 
                                     // Check if Solo Mined
-                                    if (round.soloMined === true) {
+                                    if (round.soloMined) {
 
                                         immature = Math.round(immature - feeSatoshi);
                                         var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
@@ -612,7 +612,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     var sharesLost = parseFloat(0);
 
                                     // Check if Solo Mined
-                                    if (round.soloMined === true) {
+                                    if (round.soloMined) {
 
                                         var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
                                         var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
@@ -975,19 +975,18 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         });
                     }
 
-                    // Send Final Message
+                    // Send Final Messages
                     if (paymentMode === "payment") {
-                        var paymentProcessTime = Date.now() - startPaymentProcess;
                         logger.debug(logSystem, logComponent, 'Finished sending all confirmed payments to users');
-                        return;
                     }
                     else {
-                        var paymentProcessTime = Date.now() - startPaymentProcess;
-                        logger.debug(logSystem, logComponent, 'Finished running status checks for payment processing');
-                        return;
+                        if (poolOptions.debug) {
+                            logger.debug(logSystem, logComponent, 'Finished running status checks for payment processing');
+                        }
                     }
-                });
 
+                    return;
+                });
             }
         ]);
     };
