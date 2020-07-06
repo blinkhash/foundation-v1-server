@@ -45,7 +45,7 @@ try {
     var posix = require('posix');
     try {
         posix.setrlimit('nofile', { soft: 100000, hard: 100000 });
-        logger.debug('POSIX', 'Connection Limit', 'Raised to 100K concurrent connections, now running as non-root user: ' + process.getuid());
+        logger.debug('POSIX', 'Connection Limit', `Raised to 100K concurrent connections, now running as non-root user: ${  process.getuid()}`);
     }
     catch(e) {
         if (cluster.isMaster)
@@ -55,7 +55,7 @@ try {
         var uid = parseInt(process.env.SUDO_UID);
         if (uid) {
             process.setuid(uid);
-            logger.debug('POSIX', 'Connection Limit', 'Raised to 100K concurrent connections, now running as non-root user: ' + process.getuid());
+            logger.debug('POSIX', 'Connection Limit', `Raised to 100K concurrent connections, now running as non-root user: ${  process.getuid()}`);
         }
     }
 }
@@ -114,13 +114,13 @@ var buildPoolConfigs = function() {
             var portsF = Object.keys(poolConfigFiles[f].ports);
             for (var g = 0; g < portsF.length; g++) {
                 if (ports.indexOf(portsF[g]) !== -1) {
-                    logger.error('Master', poolConfigFiles[f].fileName, 'Has same configured port of ' + portsF[g] + ' as ' + poolConfigFiles[i].fileName);
+                    logger.error('Master', poolConfigFiles[f].fileName, `Has same configured port of ${  portsF[g]  } as ${  poolConfigFiles[i].fileName}`);
                     process.exit(1);
                     return;
                 }
             }
             if (poolConfigFiles[f].coin === poolConfigFiles[i].coin) {
-                logger.error('Master', poolConfigFiles[f].fileName, 'Pool has same configured coin file coins/' + poolConfigFiles[f].coin + ' as ' + poolConfigFiles[i].fileName + ' pool');
+                logger.error('Master', poolConfigFiles[f].fileName, `Pool has same configured coin file coins/${  poolConfigFiles[f].coin  } as ${  poolConfigFiles[i].fileName  } pool`);
                 process.exit(1);
                 return;
             }
@@ -132,9 +132,9 @@ var buildPoolConfigs = function() {
         poolOptions.coinFileName = poolOptions.coin;
 
         // Get Coin File From Configurations
-        var coinFilePath = 'coins/' + poolOptions.coinFileName;
+        var coinFilePath = `coins/${  poolOptions.coinFileName}`;
         if (!fs.existsSync(coinFilePath)) {
-            logger.error('Master', poolOptions.coinFileName, 'could not find file: ' + coinFilePath);
+            logger.error('Master', poolOptions.coinFileName, `could not find file: ${  coinFilePath}`);
             return;
         }
         var coinProfile = JSON.parse(JSON.minify(fs.readFileSync(coinFilePath, {encoding: 'utf8'})));
@@ -155,10 +155,10 @@ var buildPoolConfigs = function() {
 
         // Check for no Overlap in Configurations
         if (poolOptions.coin.name in configs) {
-            logger.error('Master', poolOptions.fileName, 'coins/' + poolOptions.coinFileName
-                + ' has same configured coin name ' + poolOptions.coin.name + ' as coins/'
-                + configs[poolOptions.coin.name].coinFileName + ' used by pool config '
-                + configs[poolOptions.coin.name].fileName);
+            logger.error('Master', poolOptions.fileName, `coins/${  poolOptions.coinFileName
+                 } has same configured coin name ${  poolOptions.coin.name  } as coins/${
+                 configs[poolOptions.coin.name].coinFileName  } used by pool config ${
+                 configs[poolOptions.coin.name].fileName}`);
             process.exit(1);
             return;
         }
@@ -179,7 +179,7 @@ var buildPoolConfigs = function() {
 
         // Check to Ensure Algorithm is Supported
         if (!(coinProfile.algorithm in algos)) {
-            logger.error('Master', coinProfile.name, 'Cannot run a pool for unsupported algorithm "' + coinProfile.algorithm + '"');
+            logger.error('Master', coinProfile.name, `Cannot run a pool for unsupported algorithm "${  coinProfile.algorithm  }"`);
             delete configs[poolOptions.coin.name];
         }
     });
@@ -204,10 +204,10 @@ var startPoolListener = function() {
                 Object.keys(cluster.workers).forEach(function(id) {
                     cluster.workers[id].send({type: 'reloadpool', coin: params[0] });
                 });
-                reply('reloaded pool ' + params[0]);
+                reply(`reloaded pool ${  params[0]}`);
                 break;
             default:
-                reply('unrecognized command "' + command + '"');
+                reply(`unrecognized command "${  command  }"`);
                 break;
         }
     }).start();
@@ -276,7 +276,7 @@ var startPoolWorkers = function() {
             redisConfig = p.redis;
             connection = redis.createClient(redisConfig.port, redisConfig.host);
             connection.on('ready', function() {
-                logger.debug('Master', coin, 'Processing setup with redis (' + redisConfig.host + ':' + redisConfig.port  + ')');
+                logger.debug('Master', coin, `Processing setup with redis (${  redisConfig.host  }:${  redisConfig.port   })`);
             });
         }
     });
@@ -312,7 +312,7 @@ var startPoolWorkers = function() {
         worker.type = 'worker';
         poolWorkers[forkId] = worker;
         worker.on('exit', function(code, signal) {
-            logger.error('Master', 'Workers', 'Fork ' + forkId + ' died, starting replacement worker...');
+            logger.error('Master', 'Workers', `Fork ${  forkId  } died, starting replacement worker...`);
             setTimeout(function() {
                 createPoolWorker(forkId);
             }, 2000);
@@ -336,7 +336,7 @@ var startPoolWorkers = function() {
         i++;
         if (i === numForks) {
             clearInterval(startInterval);
-            logger.debug('Master', 'Workers', 'Started ' + Object.keys(poolConfigs).length + ' pool(s) on ' + numForks + ' thread(s)');
+            logger.debug('Master', 'Workers', `Started ${  Object.keys(poolConfigs).length  } pool(s) on ${  numForks  } thread(s)`);
         }
     }, 250);
 

@@ -51,7 +51,7 @@ var PoolWorker = function (logger) {
         // Establish Log Variables
         var logSystem = 'Pool';
         var logComponent = coin;
-        var logSubCat = 'Thread ' + (parseInt(forkId) + 1);
+        var logSubCat = `Thread ${  parseInt(forkId) + 1}`;
 
         // Establish Pool Variables
         var poolOptions = poolConfigs[coin];
@@ -96,7 +96,7 @@ var PoolWorker = function (logger) {
         var authorizeFN = function (ip, port, workerName, password, callback) {
             handlers.auth(port, workerName, password, function(authorized) {
                 var authString = authorized ? 'Authorized' : 'Unauthorized ';
-                logger.debug(logSystem, logComponent, logSubCat, authString + ' ' + workerName + ':' + password + ' [' + ip + ']');
+                logger.debug(logSystem, logComponent, logSubCat, `${authString  } ${  workerName  }:${  password  } [${  ip  }]`);
                 callback({
                     error: null,
                     authorized: authorized,
@@ -112,9 +112,9 @@ var PoolWorker = function (logger) {
             // Checks for Block Data
             var shareData = JSON.stringify(data);
             if (data.blockHash && !isValidBlock)
-                logger.debug(logSystem, logComponent, logSubCat, 'We thought a block was found but it was rejected by the daemon, share data: ' + shareData);
+                logger.debug(logSystem, logComponent, logSubCat, `We thought a block was found but it was rejected by the daemon, share data: ${  shareData}`);
             else if (isValidBlock)
-                logger.debug(logSystem, logComponent, logSubCat, 'Block found: ' + data.blockHash + ' by ' + data.worker);
+                logger.debug(logSystem, logComponent, logSubCat, `Block found: ${  data.blockHash  } by ${  data.worker}`);
 
             // Checks for Share Data
             if (isValidShare) {
@@ -122,10 +122,10 @@ var PoolWorker = function (logger) {
                     logger.debug(logSystem, logComponent, logSubCat, 'Share was found with diff higher than 1.000.000.000!');
                 else if (data.shareDiff > 1000000)
                     logger.debug(logSystem, logComponent, logSubCat, 'Share was found with diff higher than 1.000.000!');
-                logger.debug(logSystem, logComponent, logSubCat, 'Share accepted at diff ' + data.difficulty + '/' + data.shareDiff + ' by ' + data.worker + ' [' + data.ip + ']' );
+                logger.debug(logSystem, logComponent, logSubCat, `Share accepted at diff ${  data.difficulty  }/${  data.shareDiff  } by ${  data.worker  } [${  data.ip  }]` );
             }
             else {
-                logger.debug(logSystem, logComponent, logSubCat, 'Share rejected: ' + shareData);
+                logger.debug(logSystem, logComponent, logSubCat, `Share rejected: ${  shareData}`);
             }
 
             // Manage Share Data
@@ -133,7 +133,7 @@ var PoolWorker = function (logger) {
 
         // Establish Pool Functionality
         }).on('difficultyUpdate', function(workerName, diff) {
-            logger.debug(logSystem, logComponent, logSubCat, 'Difficulty update to diff ' + diff + ' workerName=' + JSON.stringify(workerName));
+            logger.debug(logSystem, logComponent, logSubCat, `Difficulty update to diff ${  diff  } workerName=${  JSON.stringify(workerName)}`);
             handlers.diff(workerName, diff);
         }).on('log', function(severity, text) {
             logger[severity](logSystem, logComponent, logSubCat, text);

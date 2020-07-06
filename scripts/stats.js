@@ -123,7 +123,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
     function setupStatsRedis() {
         redisStats = redis.createClient(portalConfig.redis.port, portalConfig.redis.host);
         redisStats.on('error', function(err) {
-            logger.error(logSystem, 'History', 'Redis for stats had an error ' + JSON.stringify(err));
+            logger.error(logSystem, 'History', `Redis for stats had an error ${  JSON.stringify(err)}`);
         });
     }
 
@@ -159,10 +159,10 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
 
         async.each(_this.stats, function(pool, pcb) {
             var coin = String(_this.stats[pool.name].name);
-            client.hscan(coin + ':payments:balances', 0, "match", a+"*", "count", 10000, function(error, bals) {
-                client.hscan(coin + ':payments:immature', 0, "match", a+"*", "count", 10000, function(error, pends) {
-                    client.hscan(coin + ':payments:payouts', 0, "match", a+"*", "count", 10000, function(error, pays) {
-                        client.hscan(coin + ':payments:unpaid', 0, "match", a+"*", "count", 10000, function(error, unpays) {
+            client.hscan(`${coin  }:payments:balances`, 0, "match", `${a}*`, "count", 10000, function(error, bals) {
+                client.hscan(`${coin  }:payments:immature`, 0, "match", `${a}*`, "count", 10000, function(error, pends) {
+                    client.hscan(`${coin  }:payments:payouts`, 0, "match", `${a}*`, "count", 10000, function(error, pays) {
+                        client.hscan(`${coin  }:payments:unpaid`, 0, "match", `${a}*`, "count", 10000, function(error, unpays) {
 
                             var workerName = "";
                             var balanceAmount = 0;
@@ -248,7 +248,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
         async.each(_this.stats, function(pool, pcb) {
             pindex++;
             var coin = String(_this.stats[pool.name].name);
-            client.hscan(coin + ':shares:roundCurrent', 0, "match", a+"*", "count", 1000, function(err, result) {
+            client.hscan(`${coin  }:shares:roundCurrent`, 0, "match", `${a}*`, "count", 1000, function(err, result) {
                 if (err) {
                     pcb(err);
                     return;
@@ -292,7 +292,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
             var windowTime = (((Date.now() / 1000) - portalConfig.stats.hashrateWindow) | 0).toString();
             var redisCommands = [];
             var redisCommandTemplates = [
-                ['zremrangebyscore', ':statistics:hashrate', '-inf', '(' + windowTime],
+                ['zremrangebyscore', ':statistics:hashrate', '-inf', `(${  windowTime}`],
                 ['zrangebyscore', ':statistics:hashrate', windowTime, '+inf'],
                 ['hgetall', ':statistics:basic'],
                 ['scard', ':blocks:pending'],
@@ -319,7 +319,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
             // Get Global Statistics for Each Coin
             client.client.multi(redisCommands).exec(function(err, replies) {
                 if (err) {
-                    logger.error(logSystem, 'Global', 'error with getting global stats ' + JSON.stringify(err));
+                    logger.error(logSystem, 'Global', `error with getting global stats ${  JSON.stringify(err)}`);
                     callback(err);
                 }
                 else {
@@ -387,7 +387,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
 
             // Handle Errors
             if (err) {
-                logger.error(logSystem, 'Global', 'error getting all stats' + JSON.stringify(err));
+                logger.error(logSystem, 'Global', `error getting all stats${  JSON.stringify(err)}`);
                 callback();
                 return;
             }

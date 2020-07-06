@@ -19,7 +19,7 @@ function getProperAddress(address) {
         return util.addressFromEx(poolOptions.address, address);
     }
     else return address;
-};
+}
 
 // Setup Payments for Individual Pools
 function SetupForPool(logger, poolOptions, setupFinished) {
@@ -35,11 +35,11 @@ function SetupForPool(logger, poolOptions, setupFinished) {
     var fee = parseFloat(poolOptions.coin.txfee) || parseFloat(0.0004);
     var minConfPayout = Math.max((processingConfig.minConf || 10), 1);
     if (minConfPayout  < 3) {
-        logger.warning(logSystem, logComponent, logComponent + ' minConf of 3 is recommended.');
+        logger.warning(logSystem, logComponent, `${logComponent  } minConf of 3 is recommended.`);
     }
 
     // Debug Pool Configuration
-    logger.debug(logSystem, logComponent, 'Current maxBlocksPerPayment: ' + maxBlocksPerPayment);
+    logger.debug(logSystem, logComponent, `Current maxBlocksPerPayment: ${  maxBlocksPerPayment}`);
 
     // Load Coin Daemon from Config
     var daemon = new Stratum.daemon.interface([processingConfig.daemon], function(severity, message) {
@@ -104,7 +104,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
         }
         daemon.cmd('listunspent', args, function (result) {
             if (!result || result.error || result[0].error) {
-                logger.error(logSystem, logComponent, 'Error with RPC call listunspent ' + addr + ' ' + JSON.stringify(result[0].error));
+                logger.error(logSystem, logComponent, `Error with RPC call listunspent ${  addr  } ${  JSON.stringify(result[0].error)}`);
                 callback = function () {};
                 callback(true);
             }
@@ -119,7 +119,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     balance = coinsRound(balance);
                 }
                 if (displayBool) {
-                    logger.special(logSystem, logComponent, addr+' balance of ' + balance);
+                    logger.special(logSystem, logComponent, `${addr} balance of ${  balance}`);
                 }
                 callback(null, coinsToSatoshies(balance));
             }
@@ -133,19 +133,19 @@ function SetupForPool(logger, poolOptions, setupFinished) {
         function(callback) {
             daemon.cmd('validateaddress', [poolOptions.address], function(result) {
                 if (result.error) {
-                    logger.error(logSystem, logComponent, 'Error with payment processing daemon ' + JSON.stringify(result.error));
+                    logger.error(logSystem, logComponent, `Error with payment processing daemon ${  JSON.stringify(result.error)}`);
                     callback(true);
                 }
                 else if (!result.response || !result.response.ismine) {
                     daemon.cmd('getaddressinfo', [poolOptions.address], function(result) {
                         if (result.error) {
-                            logger.error(logSystem, logComponent, 'Error with payment processing daemon, getaddressinfo failed ... ' + JSON.stringify(result.error));
+                            logger.error(logSystem, logComponent, `Error with payment processing daemon, getaddressinfo failed ... ${  JSON.stringify(result.error)}`);
                             callback(true);
                         }
                         else if (!result.response || !result.response.ismine) {
                             logger.error(logSystem, logComponent,
-                                'Daemon does not own pool address - payment processing can not be done with this daemon, '
-                                + JSON.stringify(result.response));
+                                `Daemon does not own pool address - payment processing can not be done with this daemon, ${
+                                 JSON.stringify(result.response)}`);
                             callback(true);
                         }
                         else {
@@ -168,13 +168,13 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                 }
                 try {
                     var d = result.data.split('result":')[1].split(',')[0].split('.')[1];
-                    magnitude = parseInt('10' + new Array(d.length).join('0'));
+                    magnitude = parseInt(`10${  new Array(d.length).join('0')}`);
                     minPaymentSatoshis = parseInt(processingConfig.minimumPayment * magnitude);
                     coinPrecision = magnitude.toString().length - 1;
                     callback();
                 }
                 catch(e) {
-                    logger.error(logSystem, logComponent, 'Error detecting number of satoshis in a coin, cannot do payment processing. Tried parsing: ' + result.data);
+                    logger.error(logSystem, logComponent, `Error detecting number of satoshis in a coin, cannot do payment processing. Tried parsing: ${  result.data}`);
                     callback(true);
                 }
             }, true, true);
@@ -242,14 +242,14 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                 // Manage Redis Timer
                 startRedisTimer();
                 redisClient.multi([
-                    ['hgetall', coin + ':payments:unpaid'],
-                    ['smembers', coin + ':blocks:pending']
+                    ['hgetall', `${coin  }:payments:unpaid`],
+                    ['smembers', `${coin  }:blocks:pending`]
                 ]).exec(function(err, results) {
                     endRedisTimer();
 
                     // Handle Errors
                     if (err) {
-                        logger.error(logSystem, logComponent, 'Could not get blocks from database: ' + JSON.stringify(error));
+                        logger.error(logSystem, logComponent, `Could not get blocks from database: ${  JSON.stringify(error)}`);
                         callback(true);
                         return;
                     }
@@ -293,7 +293,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     // Manage ANY Duplicate Blocks Found
                     if (duplicateFound) {
                         var dups = rounds.filter(function(round) { return round.duplicate; });
-                        logger.warning(logSystem, logComponent, 'Duplicate pending blocks found: ' + JSON.stringify(dups));
+                        logger.warning(logSystem, logComponent, `Duplicate pending blocks found: ${  JSON.stringify(dups)}`);
                         var rpcDupCheck = dups.map(function(r) {
                             return ['getblock', [r.blockHash]];
                         });
@@ -301,7 +301,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         daemon.batchCmd(rpcDupCheck, function(error, blocks) {
                             endRPCTimer();
                             if (error || !blocks) {
-                                logger.error(logSystem, logComponent, 'Error with duplicate block check rpc call getblock ' + JSON.stringify(error));
+                                logger.error(logSystem, logComponent, `Error with duplicate block check rpc call getblock ${  JSON.stringify(error)}`);
                                 return;
                             }
                             var validBlocks = {};
@@ -309,17 +309,17 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             blocks.forEach(function(block, i) {
                                 if (block && block.result) {
                                     if (block.result.confirmations < 0) {
-                                        logger.warning(logSystem, logComponent, 'Remove invalid duplicate block ' + block.result.height + ' > ' + block.result.hash);
-                                        invalidBlocks.push(['smove', coin + ':blocks:pending', coin + ':blocks:duplicate', dups[i].serialized]);
+                                        logger.warning(logSystem, logComponent, `Remove invalid duplicate block ${  block.result.height  } > ${  block.result.hash}`);
+                                        invalidBlocks.push(['smove', `${coin  }:blocks:pending`, `${coin  }:blocks:duplicate`, dups[i].serialized]);
                                     }
                                     else {
                                         if (validBlocks.hasOwnProperty(dups[i].blockHash)) {
-                                            logger.warning(logSystem, logComponent, 'Remove non-unique duplicate block ' + block.result.height + ' > ' + block.result.hash);
-                                            invalidBlocks.push(['smove', coin + ':blocks:pending', coin + ':blocks:duplicate', dups[i].serialized]);
+                                            logger.warning(logSystem, logComponent, `Remove non-unique duplicate block ${  block.result.height  } > ${  block.result.hash}`);
+                                            invalidBlocks.push(['smove', `${coin  }:blocks:pending`, `${coin  }:blocks:duplicate`, dups[i].serialized]);
                                         }
                                         else {
                                             validBlocks[dups[i].blockHash] = dups[i].serialized;
-                                            logger.debug(logSystem, logComponent, 'Keep valid duplicate block ' + block.result.height + ' > ' + block.result.hash);
+                                            logger.debug(logSystem, logComponent, `Keep valid duplicate block ${  block.result.height  } > ${  block.result.hash}`);
                                         }
                                     }
                                 }
@@ -330,7 +330,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                 redisClient.multi(invalidBlocks).exec(function(error, kicked) {
                                     endRedisTimer();
                                     if (error) {
-                                        logger.error(logSystem, logComponent, 'Error could not move invalid duplicate blocks in redis ' + JSON.stringify(error));
+                                        logger.error(logSystem, logComponent, `Error could not move invalid duplicate blocks in redis ${  JSON.stringify(error)}`);
                                     }
                                     callback(null, workers, rounds);
                                 });
@@ -363,8 +363,8 @@ function SetupForPool(logger, poolOptions, setupFinished) {
 
                     // Handle Errors
                     if (error || !txDetails) {
-                        logger.error(logSystem, logComponent, 'Check finished - daemon rpc error with batch gettransactions '
-                            + JSON.stringify(error));
+                        logger.error(logSystem, logComponent, `Check finished - daemon rpc error with batch gettransactions ${
+                             JSON.stringify(error)}`);
                         callback(true);
                         return;
                     }
@@ -384,18 +384,18 @@ function SetupForPool(logger, poolOptions, setupFinished) {
 
                         // Check Daemon Edge Cases
                         if (tx.error && tx.error.code === -5) {
-                            logger.warning(logSystem, logComponent, 'Daemon reports invalid transaction: ' + round.txHash);
+                            logger.warning(logSystem, logComponent, `Daemon reports invalid transaction: ${  round.txHash}`);
                             round.category = 'kicked';
                             return;
                         }
                         else if (!tx.result.details || (tx.result.details && tx.result.details.length === 0)) {
-                            logger.warning(logSystem, logComponent, 'Daemon reports no details for transaction: ' + round.txHash);
+                            logger.warning(logSystem, logComponent, `Daemon reports no details for transaction: ${  round.txHash}`);
                             round.category = 'kicked';
                             return;
                         }
                         else if (tx.error || !tx.result) {
-                            logger.error(logSystem, logComponent, 'Odd error with gettransaction ' + round.txHash + ' '
-                                + JSON.stringify(tx));
+                            logger.error(logSystem, logComponent, `Odd error with gettransaction ${  round.txHash  } ${
+                                 JSON.stringify(tx)}`);
                             return;
                         }
 
@@ -407,8 +407,8 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             generationTx = tx.result.details[0];
                         }
                         if (!generationTx) {
-                            logger.error(logSystem, logComponent, 'Missing output details to pool address for transaction '
-                                + round.txHash);
+                            logger.error(logSystem, logComponent, `Missing output details to pool address for transaction ${
+                                 round.txHash}`);
                             return;
                         }
 
@@ -463,7 +463,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
 
                 // Lookup Shares from Rounds
                 var shareLookups = rounds.map(function(r) {
-                    return ['hgetall', coin + ':shares:round' + r.height]
+                    return ['hgetall', `${coin  }:shares:round${  r.height}`]
                 });
 
                 startRedisTimer();
@@ -516,7 +516,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             logger.error(logSystem, logComponent, 'Error checking pool balance before processing payments.');
                             return callback(true);
                         } else if (balance < totalOwed) {
-                            logger.error(logSystem, logComponent,  'Insufficient funds (' + satoshisToCoins(balance) + ') to process payments (' + satoshisToCoins(totalOwed) + '); possibly waiting for txs.');
+                            logger.error(logSystem, logComponent,  `Insufficient funds (${  satoshisToCoins(balance)  }) to process payments (${  satoshisToCoins(totalOwed)  }); possibly waiting for txs.`);
                             performPayment = false;
                         } else if (balance > totalOwed) {
                             performPayment = true;
@@ -536,7 +536,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                         return true;
                                     default:
                                         return false;
-                                };
+                                }
                             });
                         }
 
@@ -547,7 +547,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
 
                             // Check if Shares Exist in Round
                             if (!workerSharesSolo && !workerSharesShared) {
-                                logger.error(logSystem, logComponent, 'No worker shares for round: ' + round.height + ' blockHash: ' + round.blockHash);
+                                logger.error(logSystem, logComponent, `No worker shares for round: ${  round.height  } blockHash: ${  round.blockHash}`);
                                 return;
                             }
 
@@ -643,7 +643,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                             var percent = parseFloat(worker.roundShares) / totalShares;
                                             if (percent > 1.0) {
                                                 errors = true;
-                                                logger.error(logSystem, logComponent, 'Share percent is greater than 1.0 for '+workerAddress+' round:' + round.height + ' blockHash:' + round.blockHash);
+                                                logger.error(logSystem, logComponent, `Share percent is greater than 1.0 for ${workerAddress} round:${  round.height  } blockHash:${  round.blockHash}`);
                                                 return;
                                             }
                                             var workerRewardTotal = Math.round(reward * percent);
@@ -748,7 +748,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         }
 
                         // Send Payments Through Daemon
-                        var rpccallTracking = 'sendmany "" ' + JSON.stringify(addressAmounts);
+                        var rpccallTracking = `sendmany "" ${  JSON.stringify(addressAmounts)}`;
                         daemon.cmd('sendmany', [addressAccount || '', addressAmounts], function (result) {
 
                             // Check Payment Errors/Edge Cases
@@ -756,7 +756,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                 if (result.error.message && result.error.message.includes("insufficient funds")) {
                                     if (tries < 5) {
                                         var higherPercent = withholdPercent + 0.001;
-                                        logger.warning(logSystem, logComponent, 'Insufficient funds (??) for payments (' + satoshisToCoins(totalSent) + '), decreasing rewards by ' + (higherPercent * 100).toFixed(1) + '% and retrying');
+                                        logger.warning(logSystem, logComponent, `Insufficient funds (??) for payments (${  satoshisToCoins(totalSent)  }), decreasing rewards by ${  (higherPercent * 100).toFixed(1)  }% and retrying`);
                                         trySend(higherPercent);
                                     }
                                     else {
@@ -767,25 +767,25 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                 }
                                 else {
                                     logger.warning(logSystem, logComponent, rpccallTracking);
-                                    logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
+                                    logger.error(logSystem, logComponent, `Error sending payments ${  JSON.stringify(result.error)}`);
                                     callback(true);
                                 }
                                 return
                             }
                             else if (result.error && result.error.code === -5) {
                                 logger.warning(logSystem, logComponent, rpccallTracking);
-                                logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
+                                logger.error(logSystem, logComponent, `Error sending payments ${  JSON.stringify(result.error)}`);
                                 callback(true);
                                 return;
                             }
                             else if (result.error && result.error.message != null) {
                                 logger.warning(logSystem, logComponent, rpccallTracking);
-                                logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
+                                logger.error(logSystem, logComponent, `Error sending payments ${  JSON.stringify(result.error)}`);
                                 callback(true);
                                 return;
                             }
                             else if (result.error) {
-                                logger.error(logSystem, logComponent, 'Error sending payments ' + JSON.stringify(result.error));
+                                logger.error(logSystem, logComponent, `Error sending payments ${  JSON.stringify(result.error)}`);
                                 callback(true);
                                 return;
                             }
@@ -795,11 +795,11 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     txid = result.response;
                                 }
                                 if (txid != null) {
-                                    logger.special(logSystem, logComponent, 'Sent ' + satoshisToCoins(totalSent) + ' to ' + Object.keys(addressAmounts).length + ' workers; txid: '+txid);
+                                    logger.special(logSystem, logComponent, `Sent ${  satoshisToCoins(totalSent)  } to ${  Object.keys(addressAmounts).length  } workers; txid: ${txid}`);
                                     if (withholdPercent > 0) {
-                                        logger.warning(logSystem, logComponent, 'Had to withhold ' + (withholdPercent * 100)
-                                            + '% of reward from workers to cover transaction fees. '
-                                            + 'Fund pool wallet with coins to prevent this from happening');
+                                        logger.warning(logSystem, logComponent, `Had to withhold ${  withholdPercent * 100
+                                             }% of reward from workers to cover transaction fees. `
+                                            + `Fund pool wallet with coins to prevent this from happening`);
                                     }
                                     var paymentBlocks = rounds.filter(function(r) { return r.category == 'generate'; }).map(function(r) {
                                         return parseInt(r.height);
@@ -816,12 +816,12 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                         unpaid: balanceAmounts,
                                         work: shareAmounts
                                     };
-                                    paymentsUpdate.push(['zadd', logComponent + ':payments:payments', Date.now(), JSON.stringify(paymentsData)]);
+                                    paymentsUpdate.push(['zadd', `${logComponent  }:payments:payments`, Date.now(), JSON.stringify(paymentsData)]);
                                     callback(null, workers, rounds, paymentsUpdate);
                                 }
                                 else {
                                     clearInterval(paymentInterval);
-                                    logger.error(logSystem, logComponent, 'Error RPC sendmany did not return txid ' + JSON.stringify(result) + 'Disabling payment processing to prevent possible double-payouts.');
+                                    logger.error(logSystem, logComponent, `Error RPC sendmany did not return txid ${  JSON.stringify(result)  }Disabling payment processing to prevent possible double-payouts.`);
                                     callback(true);
                                     return;
                                 }
@@ -862,32 +862,32 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         if (worker.balanceChange !== 0) {
                             balanceUpdateCommands.push([
                                 'hincrbyfloat',
-                                coin + ':payments:unpaid',
+                                `${coin  }:payments:unpaid`,
                                 w,
                                 satoshisToCoins(worker.balanceChange)
                             ]);
                         }
                         if ((worker.sent || 0) > 0) {
-                            workerPayoutsCommand.push(['hincrbyfloat', coin + ':payments:payouts', w, coinsRound(worker.sent)]);
+                            workerPayoutsCommand.push(['hincrbyfloat', `${coin  }:payments:payouts`, w, coinsRound(worker.sent)]);
                             totalPaid = coinsRound(totalPaid + worker.sent);
                         }
                     }
                     else {
                         if ((worker.reward || 0) > 0) {
                             worker.reward = satoshisToCoins(worker.reward);
-                            balanceUpdateCommands.push(['hset', coin + ':payments:balances', w, coinsRound(worker.reward)]);
+                            balanceUpdateCommands.push(['hset', `${coin  }:payments:balances`, w, coinsRound(worker.reward)]);
                         }
                         else {
-                            balanceUpdateCommands.push(['hset', coin + ':payments:balances', w, 0]);
+                            balanceUpdateCommands.push(['hset', `${coin  }:payments:balances`, w, 0]);
                         }
                     }
 
                     if ((worker.immature || 0) > 0) {
                         worker.immature = satoshisToCoins(worker.immature);
-                        immatureUpdateCommands.push(['hset', coin + ':payments:immature', w, coinsRound(worker.immature)]);
+                        immatureUpdateCommands.push(['hset', `${coin  }:payments:immature`, w, coinsRound(worker.immature)]);
                     }
                     else {
-                        immatureUpdateCommands.push(['hset', coin + ':payments:immature', w, 0]);
+                        immatureUpdateCommands.push(['hset', `${coin  }:payments:immature`, w, 0]);
                     }
 
                 }
@@ -896,9 +896,9 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                 var moveSharesToCurrent = function(r) {
                     var workerShares = r.workerShares;
                     if (workerShares != null) {
-                        logger.warning(logSystem, logComponent, 'Moving shares from orphaned block '+r.height+' to current round.');
+                        logger.warning(logSystem, logComponent, `Moving shares from orphaned block ${r.height} to current round.`);
                         Object.keys(workerShares).forEach(function(worker) {
-                            orphanMergeCommands.push(['hincrby', coin + ':shares:roundCurrent',
+                            orphanMergeCommands.push(['hincrby', `${coin  }:shares:roundCurrent`,
                                 worker, workerShares[worker]]);
                         });
                     }
@@ -909,21 +909,21 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     switch (r.category) {
                         case 'kicked':
                         case 'orphan':
-                            confirmsToDelete.push(['hdel', coin + ':blocks:pendingConfirms', r.blockHash]);
-                            movePendingCommands.push(['smove', coin + ':blocks:pending', coin + ':blocks:kicked', r.serialized]);
+                            confirmsToDelete.push(['hdel', `${coin  }:blocks:pendingConfirms`, r.blockHash]);
+                            movePendingCommands.push(['smove', `${coin  }:blocks:pending`, `${coin  }:blocks:kicked`, r.serialized]);
                             if (r.canDeleteShares) {
                                 moveSharesToCurrent(r);
-                                roundsToDelete.push(coin + ':shares:round' + r.height);
+                                roundsToDelete.push(`${coin  }:shares:round${  r.height}`);
                             }
                             return;
                         case 'immature':
-                            confirmsUpdate.push(['hset', coin + ':blocks:pendingConfirms', r.blockHash, (r.confirmations || 0)]);
+                            confirmsUpdate.push(['hset', `${coin  }:blocks:pendingConfirms`, r.blockHash, (r.confirmations || 0)]);
                             return;
                         case 'generate':
                             if (paymentMode === "payment") {
-                                confirmsToDelete.push(['hdel', coin + ':blocks:pendingConfirms', r.blockHash]);
-                                movePendingCommands.push(['smove', coin + ':blocks:pending', coin + ':blocks:confirmed', r.serialized]);
-                                roundsToDelete.push(coin + ':shares:round' + r.height);
+                                confirmsToDelete.push(['hdel', `${coin  }:blocks:pendingConfirms`, r.blockHash]);
+                                movePendingCommands.push(['smove', `${coin  }:blocks:pending`, `${coin  }:blocks:confirmed`, r.serialized]);
+                                roundsToDelete.push(`${coin  }:shares:round${  r.height}`);
                             }
                             return;
                     }
@@ -950,9 +950,9 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                 if (paymentsUpdate.length > 0)
                     finalRedisCommands = finalRedisCommands.concat(paymentsUpdate);
                 if (totalPaid !== 0)
-                    finalRedisCommands.push(['hincrbyfloat', coin + ':statistics:basic', 'totalPaid', totalPaid]);
+                    finalRedisCommands.push(['hincrbyfloat', `${coin  }:statistics:basic`, 'totalPaid', totalPaid]);
                 if ((paymentMode === "start") || (paymentMode === "payment"))
-                    finalRedisCommands.push(['hset', coin + ':statistics:basic', 'lastPaid', lastInterval]);
+                    finalRedisCommands.push(['hset', `${coin  }:statistics:basic`, 'lastPaid', lastInterval]);
 
                 if (finalRedisCommands.length === 0) {
                     return;
@@ -967,10 +967,10 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     if (err) {
                         clearInterval(paymentInterval);
                         logger.error(logSystem, logComponent,
-                                'Payments sent but could not update redis. ' + JSON.stringify(error)
-                                + ' Disabling payment processing to prevent possible double-payouts. The redis commands in '
-                                + coin + '_finalRedisCommands.txt must be ran manually');
-                        fs.writeFile(coin + '_finalRedisCommands.txt', JSON.stringify(finalRedisCommands), function(err) {
+                                `Payments sent but could not update redis. ${  JSON.stringify(error)
+                                 } Disabling payment processing to prevent possible double-payouts. The redis commands in ${
+                                 coin  }_finalRedisCommands.txt must be ran manually`);
+                        fs.writeFile(`${coin  }_finalRedisCommands.txt`, JSON.stringify(finalRedisCommands), function(err) {
                             logger.error('Could not write finalRedisCommands.txt, you are fucked.');
                         });
                     }
@@ -1022,10 +1022,10 @@ var PoolPayments = function (logger) {
             var logComponent = coin;
 
             // Send Message to Pool Logger
-            logger.debug(logSystem, logComponent, 'Payment processing setup to run every '
-                + processingConfig.paymentInterval + ' second(s) with daemon ('
-                + processingConfig.daemon.user + '@' + processingConfig.daemon.host + ':' + processingConfig.daemon.port
-                + ') and redis (' + poolOptions.redis.host + ':' + poolOptions.redis.port + ')');
+            logger.debug(logSystem, logComponent, `Payment processing setup to run every ${
+                 processingConfig.paymentInterval  } second(s) with daemon (${
+                 processingConfig.daemon.user  }@${  processingConfig.daemon.host  }:${  processingConfig.daemon.port
+                 }) and redis (${  poolOptions.redis.host  }:${  poolOptions.redis.port  })`);
         });
     });
 };

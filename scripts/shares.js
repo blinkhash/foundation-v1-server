@@ -21,7 +21,7 @@ var PoolShares = function (logger, poolConfig) {
     // Establish Log Variables
     var logSystem = 'Pool';
     var logComponent = coin;
-    var logSubCat = 'Thread ' + (parseInt(forkId) + 1);
+    var logSubCat = `Thread ${  parseInt(forkId) + 1}`;
 
     // Load Database from Config
     var redisClient = redis.createClient(redisConfig.port, redisConfig.host);
@@ -31,13 +31,13 @@ var PoolShares = function (logger, poolConfig) {
 
     // Manage Ready Endpoint
     redisClient.on('ready', function() {
-        logger.debug(logSystem, logComponent, logSubCat, 'Share processing setup with redis (' + redisConfig.host +
-            ':' + redisConfig.port  + ')');
+        logger.debug(logSystem, logComponent, logSubCat, `Share processing setup with redis (${  redisConfig.host 
+            }:${  redisConfig.port   })`);
     });
 
     // Manage Error Endpoint
     redisClient.on('error', function(err) {
-        logger.error(logSystem, logComponent, logSubCat, 'Redis client had an error: ' + JSON.stringify(err))
+        logger.error(logSystem, logComponent, logSubCat, `Redis client had an error: ${  JSON.stringify(err)}`)
     });
 
     // Manage End Endpoint
@@ -75,7 +75,7 @@ var PoolShares = function (logger, poolConfig) {
 
         // Check if Version < 2.6
         else if (version < 2.6) {
-            logger.error(logSystem, logComponent, logSubCat, "You're using redis version " + versionString + " the minimum required version is 2.6. Follow the damn usage instructions...");
+            logger.error(logSystem, logComponent, logSubCat, `You're using redis version ${  versionString  } the minimum required version is 2.6. Follow the damn usage instructions...`);
         }
 
     });
@@ -100,11 +100,11 @@ var PoolShares = function (logger, poolConfig) {
                 worker: shareData.worker,
                 soloMined: isSoloMining,
             }
-            redisCommands.push(['hincrby', coin + ':shares:roundCurrent', JSON.stringify(combinedShare), shareData.difficulty]);
-            redisCommands.push(['hincrby', coin + ':statistics:basic', 'validShares', 1]);
+            redisCommands.push(['hincrby', `${coin  }:shares:roundCurrent`, JSON.stringify(combinedShare), shareData.difficulty]);
+            redisCommands.push(['hincrby', `${coin  }:statistics:basic`, 'validShares', 1]);
         }
         else {
-            redisCommands.push(['hincrby', coin + ':statistics:basic', 'invalidShares', 1]);
+            redisCommands.push(['hincrby', `${coin  }:statistics:basic`, 'invalidShares', 1]);
         }
 
         // Push Hashrate Data to Database
@@ -115,7 +115,7 @@ var PoolShares = function (logger, poolConfig) {
             worker: shareData.worker,
             soloMined: isSoloMining,
         }
-        redisCommands.push(['zadd', coin + ':statistics:hashrate', dateNow / 1000 | 0, JSON.stringify(hashrateData)])
+        redisCommands.push(['zadd', `${coin  }:statistics:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateData)])
 
         // Push Block Data to Main Array
         if (isValidBlock) {
@@ -127,18 +127,18 @@ var PoolShares = function (logger, poolConfig) {
                 worker: shareData.worker,
                 soloMined: isSoloMining,
             }
-            redisCommands.push(['rename', coin + ':shares:roundCurrent', coin + ':shares:round' + shareData.height]);
-            redisCommands.push(['sadd', coin + ':blocks:pending', JSON.stringify(blockData)])
-            redisCommands.push(['hincrby', coin + ':statistics:basic', 'validBlocks', 1]);
+            redisCommands.push(['rename', `${coin  }:shares:roundCurrent`, `${coin  }:shares:round${  shareData.height}`]);
+            redisCommands.push(['sadd', `${coin  }:blocks:pending`, JSON.stringify(blockData)])
+            redisCommands.push(['hincrby', `${coin  }:statistics:basic`, 'validBlocks', 1]);
         }
         else if (shareData.blockHash) {
-            redisCommands.push(['hincrby', coin + ':statistics:basic', 'invalidBlocks', 1]);
+            redisCommands.push(['hincrby', `${coin  }:statistics:basic`, 'invalidBlocks', 1]);
         }
 
         // Write Share Information to Redis Database
         redisClient.multi(redisCommands).exec(function(err, replies) {
             if (err) {
-                logger.error(logSystem, logComponent, logSubCat, 'Error with share processor multi ' + JSON.stringify(err));
+                logger.error(logSystem, logComponent, logSubCat, `Error with share processor multi ${  JSON.stringify(err)}`);
             }
         });
     };

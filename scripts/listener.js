@@ -35,10 +35,10 @@ var PoolListener = function (port) {
                 c.on('error', function () {});
             }
             catch(e) {
-                emitLog('CLI listener failed to parse message ' + data);
+                emitLog(`CLI listener failed to parse message ${  data}`);
             }
         }).listen(port, '127.0.0.1', function() {
-            emitLog('CLI listening on port ' + port)
+            emitLog(`CLI listening on port ${  port}`)
         });
     }
 };
