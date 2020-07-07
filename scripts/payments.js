@@ -33,15 +33,11 @@ function SetupForPool(logger, poolOptions, setupFinished) {
     var logComponent = coin;
 
     // Establish Payment Variables
-    var maxBlocksPerPayment =  Math.max(processingConfig.maxBlocksPerPayment || 3, 1);
     var fee = parseFloat(poolOptions.coin.txfee) || parseFloat(0.0004);
     var minConfPayout = Math.max((processingConfig.minConf || 10), 1);
     if (minConfPayout  < 3) {
         logger.warning(logSystem, logComponent, `${logComponent  } minConf of 3 is recommended.`);
     }
-
-    // Debug Pool Configuration
-    logger.debug(logSystem, logComponent, `Current maxBlocksPerPayment: ${  maxBlocksPerPayment}`);
 
     // Load Coin Daemon from Config
     var daemon = new Stratum.daemon.interface([processingConfig.daemon], function(severity, message) {
@@ -410,7 +406,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     };
 
                     // Manage Immagure Rounds
-                    var payingBlocks = 0;
                     rounds = rounds.filter(function(r) {
                         switch (r.category) {
                             case 'orphan':
@@ -418,12 +413,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                 r.canDeleteShares = canDeleteShares(r);
                                 return false;
                             case 'immature':
-                                return true;
                             case 'generate':
-                                payingBlocks += 1;
-                                if (payingBlocks > maxBlocksPerPayment) {
-                                    r.category == "immature";
-                                }
                                 return true;
                             default:
                                 return false;
