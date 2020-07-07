@@ -1,6 +1,3 @@
-const fs = require('fs');
-const path = require('path');
-
 module.exports = {
   parser: 'babel-eslint',
   extends: ['eslint:recommended'],
@@ -21,6 +18,7 @@ module.exports = {
     'arrow-body-style': [2, 'as-needed'],
     'no-console': 1,
     'no-unused-vars': 2,
+    'no-redeclare': 0,
     'prefer-template': 2,
   },
 };

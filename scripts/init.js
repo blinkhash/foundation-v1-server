@@ -10,7 +10,6 @@ var path = require('path');
 var os = require('os');
 var redis = require('redis');
 var cluster = require('cluster');
-var async = require('async');
 var extend = require('extend');
 
 // Import Pool Functionality
@@ -27,6 +26,7 @@ var algos = require('stratum-pool/lib/algoProperties.js');
 JSON.minify = JSON.minify || require("node-json-minify");
 
 // Check to Ensure Config Exists
+/* eslint-disable no-console */
 if (!fs.existsSync('config.json')) {
     console.log('config.json file does not exist. Read the installation/setup instructions.');
     return;
@@ -62,17 +62,6 @@ try {
 catch(e) {
     if (cluster.isMaster)
         logger.debug('POSIX', 'Connection Limit', '(Safe to ignore) POSIX module not installed and resource (connection) limit was not raised');
-}
-
-// Establish RoundTo Helper Function
-function roundTo(n, digits) {
-    if (digits === undefined) {
-        digits = 0;
-    }
-    var multiplicator = Math.pow(10, digits);
-    n = parseFloat((n * multiplicator).toFixed(11));
-    var test =(Math.round(n) / multiplicator);
-    return +(test.toFixed(digits));
 }
 
 // Establish Pool Worker Cases
@@ -139,7 +128,6 @@ var buildPoolConfigs = function() {
         }
         var coinProfile = JSON.parse(JSON.minify(fs.readFileSync(coinFilePath, {encoding: 'utf8'})));
         poolOptions.coin = coinProfile;
-        poolOptions.coin.name = poolOptions.coin.name;
 
         // Establish Mainnet/Testnet
         if (coinProfile.mainnet) {
@@ -236,6 +224,8 @@ var startPoolPayments = function() {
         workerType: 'payments',
         pools: JSON.stringify(poolConfigs)
     });
+
+    /* eslint-disable no-unused-vars */
     worker.on('exit', function(code, signal) {
         logger.error('Master', 'Payments', 'Payment process died, starting replacement...');
         setTimeout(function() {
@@ -251,6 +241,8 @@ var startPoolServer = function() {
         pools: JSON.stringify(poolConfigs),
         portalConfig: JSON.stringify(portalConfig)
     });
+
+    /* eslint-disable no-unused-vars */
     worker.on('exit', function(code, signal) {
         logger.error('Master', 'Server', 'Server process died, starting replacement...');
         setTimeout(function() {
@@ -311,6 +303,8 @@ var startPoolWorkers = function() {
         worker.forkId = forkId;
         worker.type = 'worker';
         poolWorkers[forkId] = worker;
+
+        /* eslint-disable no-unused-vars */
         worker.on('exit', function(code, signal) {
             logger.error('Master', 'Workers', `Fork ${  forkId  } died, starting replacement worker...`);
             setTimeout(function() {

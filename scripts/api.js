@@ -4,11 +4,6 @@
  *
  */
 
-// Import Required Modules
-var redis = require('redis');
-var async = require('async');
-var url = require('url');
-
 // Import Pool Functionality
 var PoolStats = require('./stats.js');
 
@@ -16,7 +11,6 @@ var PoolStats = require('./stats.js');
 var PoolAPI = function (logger, portalConfig, poolConfigs) {
 
     // Establish API Variables
-    var _this = this;
     var portalStats = new PoolStats(logger, portalConfig, poolConfigs);
     this.stats = portalStats
     this.liveStatConnections = {};
@@ -33,7 +27,6 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
 
             // Blocks Endpoint (Done)
             case 'blocks':
-
                 try {
 
                     // Check to Ensure URL is Formatted Properly
@@ -57,8 +50,8 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
 
                             // Get Pending Block Information
                             for (var w in portalStats.stats[pool].blocks.pending) {
-                                blockInformation = JSON.parse(portalStats.stats[pool].blocks.pending[w]);
-                                blockConfirms = portalStats.stats[pool].blocks.confirmations;
+                                var blockInformation = JSON.parse(portalStats.stats[pool].blocks.pending[w]);
+                                var blockConfirms = portalStats.stats[pool].blocks.confirmations;
                                 var blockData = {
                                     pool: portalStats.stats[pool].name,
                                     symbol: portalStats.stats[pool].symbol,
@@ -77,7 +70,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
 
                             // Get Confirmed Block Information
                             for (var w in portalStats.stats[pool].blocks.confirmed) {
-                                blockInformation = JSON.parse(portalStats.stats[pool].blocks.confirmed[w]);
+                                var blockInformation = JSON.parse(portalStats.stats[pool].blocks.confirmed[w]);
                                 var blockData = {
                                     pool: portalStats.stats[pool].name,
                                     symbol: portalStats.stats[pool].symbol,
@@ -142,12 +135,10 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                     res.end(JSON.stringify(payload));
 
                     return;
-
                 }
 
             // Pools Endpoint (Done)
             case 'pools':
-
                 try {
 
                     // Check to Ensure URL is Formatted Properly
@@ -222,12 +213,10 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                     res.end(JSON.stringify(payload));
 
                     return;
-
                 }
 
             // Recent Endpoint (Done)
             case 'recent':
-
                 try {
 
                     // Check to Ensure URL is Formatted Properly
@@ -318,12 +307,10 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                     res.end(JSON.stringify(payload));
 
                     return;
-
                 }
 
             // Wallet Endpoint (Done)
             case 'wallets':
-
                 try {
 
                     // Check to Ensure URL is Formatted Properly
@@ -468,12 +455,10 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                     res.end(JSON.stringify(payload));
 
                     return;
-
                 }
 
             // Workers Endpoint (Done)
             case 'workers':
-
                 try {
 
                     // Check to Ensure URL is Formatted Properly
@@ -496,7 +481,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
 
                             // Get Shared Worker Information
                             for (var w in portalStats.stats[pool].workers.workersShared) {
-                                workerInformation = portalStats.stats[pool].workers.workersShared[w];
+                                var workerInformation = portalStats.stats[pool].workers.workersShared[w];
                                 var workerData = {
                                     address: w,
                                     difficulty: workerInformation.difficulty,
@@ -510,7 +495,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
 
                             // Get Solo Worker Information
                             for (var w in portalStats.stats[pool].workers.workersSolo) {
-                              workerInformation = portalStats.stats[pool].workers.workersSolo[w];
+                                var workerInformation = portalStats.stats[pool].workers.workersSolo[w];
                                 var workerData = {
                                     address: w,
                                     difficulty: workerInformation.difficulty,
@@ -560,7 +545,6 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                     res.end(JSON.stringify(payload));
 
                     return;
-
                 }
 
             default:

@@ -6,13 +6,13 @@
 
 // Import Required Modules
 var redis = require('redis');
-var net = require('net');
 
 // Import Stratum/PoolShares Modules
 var PoolShares = require('./shares.js');
 var Stratum = require('stratum-pool');
 
 // Pool Worker Main Function
+/* eslint no-unused-vars: ["error", { "args": "none" }] */
 var PoolWorker = function (logger) {
 
     // Load Useful Data from Process
@@ -21,7 +21,6 @@ var PoolWorker = function (logger) {
     var portalConfig = JSON.parse(process.env.portalConfig);
 
     // Establsh Helper Variables
-    var _this = this;
     var pools = {};
 
     // Load Database from Config

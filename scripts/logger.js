@@ -5,6 +5,7 @@
  */
 
 // Import Required Modules
+/* eslint-disable no-unused-vars */
 var dateFormat = require('dateformat');
 var colors = require('colors');
 
@@ -17,6 +18,7 @@ var severityValues = {
 };
 
 // Indicate Severity By Colors
+/* eslint-disable no-console */
 var severityColors = function(severity, text) {
     switch (severity) {
         case 'special':
@@ -34,6 +36,7 @@ var severityColors = function(severity, text) {
 };
 
 // Pool Logger Main Function
+/* eslint-disable no-console */
 var PoolLogger = function (configuration) {
 
     // Establish Initial Severity

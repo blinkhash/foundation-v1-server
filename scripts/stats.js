@@ -5,24 +5,14 @@
  */
 
 // Import Required Modules
-var zlib = require('zlib');
 var redis = require('redis');
 var async = require('async');
-var os = require('os');
 
 // Import Stratum Algorithms
 var algos = require('stratum-pool/lib/algoProperties.js');
 
-// Create Client Given Redis Info
-function createClient(port, host, pass) {
-    var redisClient = redis.createClient(port, host);
-    if (pass) {
-        redisClient.auth(pass);
-    }
-    return client;
-}
-
 // Sort Object Properties Given Info
+/* eslint-disable no-prototype-builtins */
 function sortProperties(obj, sortedBy, isNumericSort, reverse) {
     sortedBy = sortedBy || 1;
     isNumericSort = isNumericSort || false;
@@ -104,16 +94,6 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
         return +(test.toFixed(digits));
     }
 
-    // Convert Satoshis to Coins
-    var satoshisToCoins = function(satoshis) {
-        return roundTo((satoshis / magnitude), coinPrecision);
-    };
-
-    // Convert Coins to Satoshis
-    var coinsToSatoshies = function(coins) {
-        return Math.round(coins * magnitude);
-    };
-
     // Round Coins to Nearest Value Given Precision
     function coinsRound(number) {
         return roundTo(number, coinPrecision);
@@ -137,7 +117,8 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
             newObject[key] = value;
         }
         return newObject;
-    }
+    }/* eslint-disable no-prototype-builtins */
+
 
     // Sort All Blocks
     function sortBlocks(a, b) {
@@ -159,10 +140,10 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
 
         async.each(_this.stats, function(pool, pcb) {
             var coin = String(_this.stats[pool.name].name);
-            client.hscan(`${coin  }:payments:balances`, 0, "match", `${a}*`, "count", 10000, function(error, bals) {
-                client.hscan(`${coin  }:payments:immature`, 0, "match", `${a}*`, "count", 10000, function(error, pends) {
-                    client.hscan(`${coin  }:payments:payouts`, 0, "match", `${a}*`, "count", 10000, function(error, pays) {
-                        client.hscan(`${coin  }:payments:unpaid`, 0, "match", `${a}*`, "count", 10000, function(error, unpays) {
+            client.hscan(`${coin}:payments:balances`, 0, "match", `${a}*`, "count", 10000, function(error, bals) {
+                client.hscan(`${coin}:payments:immature`, 0, "match", `${a}*`, "count", 10000, function(error, pends) {
+                    client.hscan(`${coin}:payments:payouts`, 0, "match", `${a}*`, "count", 10000, function(error, pays) {
+                        client.hscan(`${coin}:payments:unpaid`, 0, "match", `${a}*`, "count", 10000, function(error, unpays) {
 
                             var workerName = "";
                             var balanceAmount = 0;
@@ -240,8 +221,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
 
     this.getTotalSharesByAddress = function(address, callback) {
         var a = address.split(".")[0];
-        var client = redisClients[0].client,
-        shares = [];
+        var client = redisClients[0].client;
 
         var pindex = parseInt(0);
         var totalShares = parseFloat(0);
@@ -253,13 +233,9 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                     pcb(err);
                     return;
                 }
-                var workerName = "";
                 var shares = 0;
                 for (var i in result[1]) {
-                    if (Math.abs(i % 2) != 1) {
-                        workerName = String(result[1][i]);
-                    }
-                    else {
+                    if (Math.abs(i % 2) == 1) {
                         shares += parseFloat(result[1][i]);
                     }
                 }
@@ -284,8 +260,6 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
     this.getGlobalStats = function(callback) {
 
         var allCoinStats = {};
-        var statGatherTime = Date.now() / 1000 | 0;
-
         async.each(redisClients, function(client, callback) {
 
             // Establish Redis Variables

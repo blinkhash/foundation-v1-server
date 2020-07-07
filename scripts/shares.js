@@ -7,10 +7,8 @@
 // Import Required Modules
 var redis = require('redis');
 
-// Import Stratum Module
-var Stratum = require('stratum-pool');
-
 // Pool Payments Main Function
+/* eslint no-unused-vars: ["error", { "args": "none" }] */
 var PoolShares = function (logger, poolConfig) {
 
     // Establish Shares Variables
@@ -31,7 +29,7 @@ var PoolShares = function (logger, poolConfig) {
 
     // Manage Ready Endpoint
     redisClient.on('ready', function() {
-        logger.debug(logSystem, logComponent, logSubCat, `Share processing setup with redis (${  redisConfig.host 
+        logger.debug(logSystem, logComponent, logSubCat, `Share processing setup with redis (${  redisConfig.host
             }:${  redisConfig.port   })`);
     });
 

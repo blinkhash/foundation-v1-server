@@ -14,7 +14,7 @@ var util = require('stratum-pool/lib/util.js');
 var Stratum = require('stratum-pool');
 
 // Derive Main Address from Given
-function getProperAddress(address) {
+function getProperAddress(poolOptions, address) {
     if (address.length === 40) {
         return util.addressFromEx(poolOptions.address, address);
     }
@@ -22,6 +22,8 @@ function getProperAddress(address) {
 }
 
 // Setup Payments for Individual Pools
+/* eslint no-unused-vars: ["error", { "args": "none" }] */
+/* eslint-disable no-useless-catch, no-prototype-builtins */
 function SetupForPool(logger, poolOptions, setupFinished) {
 
     // Establish Payment Variables
@@ -56,6 +58,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
     var magnitude;
     var minPaymentSatoshis;
     var coinPrecision;
+    var checkInterval;
     var paymentInterval;
 
     // Round to # of Digits Given
@@ -180,10 +183,10 @@ function SetupForPool(logger, poolOptions, setupFinished) {
             }, true, true);
         }
 
-    ], function(err) {
+    ], function(error) {
 
         // Handle Errors
-        if (err) {
+        if (error) {
             setupFinished(false);
             return;
         }
@@ -220,35 +223,16 @@ function SetupForPool(logger, poolOptions, setupFinished) {
     // Payment Functionality
     var processPayments = function(paymentMode, lastInterval) {
 
-        // Establish Timing Variables
-        var timeSpentRPC = 0;
-        var timeSpentRedis = 0;
-        var startTimeRedis;
-        var startTimeRPC;
-
-        // Establish Database Timing Variables
-        var startPaymentProcess = Date.now();
-        var startRedisTimer = function() { startTimeRedis = Date.now() };
-        var endRedisTimer = function() { timeSpentRedis += Date.now() - startTimeRedis };
-        var startRPCTimer = function() { startTimeRPC = Date.now(); };
-        var endRPCTimer = function() { timeSpentRPC += Date.now() - startTimeRedis };
-
         // Manage Database Functionality
         async.waterfall([
 
             // Validate Shares/Blocks in Database
             function(callback) {
-
-                // Manage Redis Timer
-                startRedisTimer();
                 redisClient.multi([
                     ['hgetall', `${coin  }:payments:unpaid`],
                     ['smembers', `${coin  }:blocks:pending`]
-                ]).exec(function(err, results) {
-                    endRedisTimer();
-
-                    // Handle Errors
-                    if (err) {
+                ]).exec(function(error, results) {
+                    if (error) {
                         logger.error(logSystem, logComponent, `Could not get blocks from database: ${  JSON.stringify(error)}`);
                         callback(true);
                         return;
@@ -297,9 +281,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         var rpcDupCheck = dups.map(function(r) {
                             return ['getblock', [r.blockHash]];
                         });
-                        startRPCTimer();
                         daemon.batchCmd(rpcDupCheck, function(error, blocks) {
-                            endRPCTimer();
                             if (error || !blocks) {
                                 logger.error(logSystem, logComponent, `Error with duplicate block check rpc call getblock ${  JSON.stringify(error)}`);
                                 return;
@@ -326,9 +308,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             });
                             rounds = rounds.filter(function(round) { return !round.duplicate; });
                             if (invalidBlocks.length > 0) {
-                                startRedisTimer();
                                 redisClient.multi(invalidBlocks).exec(function(error, kicked) {
-                                    endRedisTimer();
                                     if (error) {
                                         logger.error(logSystem, logComponent, `Error could not move invalid duplicate blocks in redis ${  JSON.stringify(error)}`);
                                     }
@@ -356,12 +336,8 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                 });
                 batchRPCcommand.push(['getaccount', [poolOptions.address]]);
 
-                // Manage RPC Timer
-                startRPCTimer();
+                // Manage RPC Batches
                 daemon.batchCmd(batchRPCcommand, function(error, txDetails) {
-                    endRPCTimer();
-
-                    // Handle Errors
                     if (error || !txDetails) {
                         logger.error(logSystem, logComponent, `Check finished - daemon rpc error with batch gettransactions ${
                              JSON.stringify(error)}`);
@@ -440,6 +416,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             case 'orphan':
                             case 'kicked':
                                 r.canDeleteShares = canDeleteShares(r);
+                                return false;
                             case 'immature':
                                 return true;
                             case 'generate':
@@ -466,10 +443,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     return ['hgetall', `${coin  }:shares:round${  r.height}`]
                 });
 
-                startRedisTimer();
-                redisClient.multi(shareLookups).exec(function(err, results) {
-                    endRedisTimer();
-
+                redisClient.multi(shareLookups).exec(function(error, results) {
                     var allWorkerSharesSolo = []
                     var allWorkerSharesShared = []
                     results.forEach(function(round) {
@@ -489,7 +463,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     });
 
                     // Handle Errors
-                    if (err) {
+                    if (error) {
                         callback('Check finished - redis error with multi get rounds share');
                         return;
                     }
@@ -564,7 +538,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     var feeSatoshi = coinsToSatoshies(fee);
                                     var immature = coinsToSatoshies(round.reward);
                                     var totalShares = parseFloat(0);
-                                    var sharesLost = parseFloat(0);
 
                                     // Check if Solo Mined
                                     if (round.soloMined) {
@@ -573,11 +546,8 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                         var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
                                         var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
                                         worker.roundShares = shares;
-
-                                        var totalAmount = 0;
                                         var workerImmatureTotal = Math.round(immature);
                                         worker.immature = (worker.immature || 0) + workerImmatureTotal;
-                                        totalAmount += workerImmatureTotal;
 
                                     }
 
@@ -592,13 +562,11 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                             totalShares += shares;
                                         }
 
-                                        var totalAmount = 0;
                                         for (var workerAddress in workerSharesShared) {
                                             var worker = workers[workerAddress] = (workers[workerAddress] || {});
                                             var percent = parseFloat(worker.roundShares) / totalShares;
                                             var workerImmatureTotal = Math.round(immature * percent);
                                             worker.immature = (worker.immature || 0) + workerImmatureTotal;
-                                            totalAmount += workerImmatureTotal;
                                         }
 
                                     }
@@ -609,7 +577,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     var feeSatoshi = coinsToSatoshies(fee);
                                     var reward = Math.round(coinsToSatoshies(round.reward) - feeSatoshi);
                                     var totalShares = parseFloat(0);
-                                    var sharesLost = parseFloat(0);
 
                                     // Check if Solo Mined
                                     if (round.soloMined) {
@@ -619,10 +586,8 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                         worker.roundShares = shares;
                                         worker.totalShares = parseFloat(worker.totalShares || 0) + shares;
 
-                                        var totalAmount = 0;
                                         var workerRewardTotal = Math.round(reward);
                                         worker.reward = (worker.reward || 0) + workerRewardTotal;
-                                        totalAmount += workerRewardTotal;
 
                                     }
 
@@ -637,7 +602,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                             totalShares += shares;
                                         }
 
-                                        var totalAmount = 0;
                                         for (var workerAddress in workerSharesShared) {
                                             var worker = workers[workerAddress] = (workers[workerAddress] || {});
                                             var percent = parseFloat(worker.roundShares) / totalShares;
@@ -648,7 +612,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                             }
                                             var workerRewardTotal = Math.round(reward * percent);
                                             worker.reward = (worker.reward || 0) + workerRewardTotal;
-                                            totalAmount += workerRewardTotal;
                                         }
 
                                     }
@@ -680,7 +643,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         var addressAmounts = {};
                         var balanceAmounts = {};
                         var shareAmounts = {};
-                        var timePeriods = {};
                         var workerTotals = {};
                         var totalSent = 0;
                         var totalShares = 0;
@@ -692,7 +654,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             worker.balance = worker.balance || 0;
                             worker.reward = worker.reward || 0;
                             var toSendSatoshis = Math.round((worker.balance + worker.reward) * (1 - withholdPercent));
-                            var address = worker.address = (worker.address || getProperAddress(w.split('.')[0])).trim();
+                            var address = worker.address = (worker.address || getProperAddress(poolOptions, w.split('.')[0])).trim();
                             if (workerTotals[address] != null && workerTotals[address] > 0) {
                                 workerTotals[address] += toSendSatoshis;
                             } else {
@@ -705,7 +667,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             worker.balance = worker.balance || 0;
                             worker.reward = worker.reward || 0;
                             var toSendSatoshis = Math.round((worker.balance + worker.reward) * (1 - withholdPercent));
-                            var address = worker.address = (worker.address || getProperAddress(w.split('.')[0])).trim();
+                            var address = worker.address = (worker.address || getProperAddress(poolOptions, w.split('.')[0])).trim();
                             if (workerTotals[address] >= minPaymentSatoshis) {
                                 totalSent += toSendSatoshis;
                                 worker.sent = satoshisToCoins(toSendSatoshis);
@@ -820,6 +782,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     callback(null, workers, rounds, paymentsUpdate);
                                 }
                                 else {
+                                    clearInterval(checkInterval);
                                     clearInterval(paymentInterval);
                                     logger.error(logSystem, logComponent, `Error RPC sendmany did not return txid ${  JSON.stringify(result)  }Disabling payment processing to prevent possible double-payouts.`);
                                     callback(true);
@@ -958,19 +921,16 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     return;
                 }
 
-                // Manage Redis Timer
-                startRedisTimer();
-                redisClient.multi(finalRedisCommands).exec(function(err, results) {
-                    endRedisTimer();
-
-                    // Handle Errors
-                    if (err) {
+                // Manage Redis Commands
+                redisClient.multi(finalRedisCommands).exec(function(error, results) {
+                    if (error) {
+                        clearInterval(checkInterval);
                         clearInterval(paymentInterval);
                         logger.error(logSystem, logComponent,
-                                `Payments sent but could not update redis. ${  JSON.stringify(error)
-                                 } Disabling payment processing to prevent possible double-payouts. The redis commands in ${
-                                 coin  }_finalRedisCommands.txt must be ran manually`);
-                        fs.writeFile(`${coin  }_finalRedisCommands.txt`, JSON.stringify(finalRedisCommands), function(err) {
+                           `Payments sent but could not update redis. ${JSON.stringify(error)}
+                            Disabling payment processing to prevent possible double-payouts. The redis commands
+                            in ${coin}_finalRedisCommands.txt must be ran manually`);
+                        fs.writeFile(`${coin}_finalRedisCommands.txt`, JSON.stringify(finalRedisCommands), function(error) {
                             logger.error('Could not write finalRedisCommands.txt, you are fucked.');
                         });
                     }

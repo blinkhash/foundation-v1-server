@@ -14,6 +14,8 @@ var apicache = require('apicache');
 var PoolAPI = require('./api.js');
 
 // Pool Server Main Function
+/* eslint no-unused-vars: ["error", { "args": "none" }] */
+/* eslint-disable no-console */
 var PoolServer = function (logger) {
 
     // Load Useful Data from Process
@@ -56,14 +58,15 @@ var PoolServer = function (logger) {
     try {
         // Main Server is Running
         app.listen(portalConfig.server.port, portalConfig.server.host, function () {
-            logger.debug(logSystem, 'Server', `Website started on ${ 
+            logger.debug(logSystem, 'Server', `Website started on ${
             portalConfig.server.host  }:${  portalConfig.server.port}`);
         });
     }
     catch(e) {
         // Error Starting Main Server
-        logger.error(logSystem, 'Server', `Could not start website on ${ 
-        portalConfig.server.host  }:${  portalConfig.server.port 
+        clearInterval(globalInterval);
+        logger.error(logSystem, 'Server', `Could not start website on ${
+        portalConfig.server.host  }:${  portalConfig.server.port
         } - its either in use or you do not have permission`);
     }
 }
