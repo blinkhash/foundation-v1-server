@@ -5,10 +5,11 @@
  */
 
 // Import Network Modules
-var express = require('express');
-var compress = require('compression');
-var bodyParser = require('body-parser');
 var apicache = require('apicache');
+var bodyParser = require('body-parser');
+var compress = require('compression');
+var cors = require('cors')
+var express = require('express');
 
 // Import Pool Functionality
 var PoolAPI = require('./api.js');
@@ -44,9 +45,10 @@ var PoolServer = function (logger) {
     var app = express();
     var cache = apicache.middleware;
     app.use(bodyParser.json());
-    app.use(compress());
     app.use(cache('5 minutes'));
-    app.get('/api/:method', function(req, res, next) {
+    app.use(compress());
+    app.use(cors());
+    app.get('/api/v1/:method', function(req, res, next) {
         portalApi.handleApiRequest(req, res, next);
     });
     app.use(function(err, req, res, next) {

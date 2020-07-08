@@ -39,6 +39,7 @@
     "body-parser": "*",
     "colors": "*",
     "compression": "*",
+    "cors": "^2.8.5",
     "dateformat": "1.0.12",
     "dot": "*",
     "eslint": "^7.4.0",
