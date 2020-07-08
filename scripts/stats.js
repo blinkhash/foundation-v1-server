@@ -327,7 +327,8 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                                 validBlocks: replies[i + 2] ? (replies[i + 2].validBlocks || 0) : 0,
                                 invalidShares: replies[i + 2] ? (replies[i + 2].invalidShares || 0) : 0,
                                 lastPaid: replies[i + 2] ? (replies[i + 2].lastPaid || 0) : 0,
-                                totalPaid: replies[i + 2] ? (replies[i + 2].totalPaid || 0) : 0
+                                totalPaid: replies[i + 2] ? (replies[i + 2].totalPaid || 0) : 0,
+                                paymentTime: poolConfigs[coinName].paymentProcessing.paymentInterval
                             },
                             payments: [],
                             workers: {

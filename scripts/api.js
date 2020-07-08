@@ -172,6 +172,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                                     invalidShares: portalStats.stats[pool].statistics.invalidShares,
                                     lastPaid: portalStats.stats[pool].statistics.lastPaid,
                                     totalPaid: portalStats.stats[pool].statistics.totalPaid,
+                                    paymentTime: portalStats.stats[pool].statistics.paymentTime,
                                 },
                                 workers: {
                                     workers: portalStats.stats[pool].workers.workersCount,
