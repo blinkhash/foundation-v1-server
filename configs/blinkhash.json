@@ -10,7 +10,7 @@
         "enabled": true,
         "paymentInterval": 7200,
         "checkInterval": 20,
-        "minimumPayment": 0.01,
+        "minimumPayment": 0.05,
         "daemon": {
             "host": "127.0.0.1",
             "port": 26710,

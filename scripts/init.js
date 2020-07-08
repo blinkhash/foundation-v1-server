@@ -26,7 +26,6 @@ var algos = require('stratum-pool/lib/algoProperties.js');
 JSON.minify = JSON.minify || require("node-json-minify");
 
 // Check to Ensure Config Exists
-/* eslint-disable no-console */
 if (!fs.existsSync('config.json')) {
     console.log('config.json file does not exist. Read the installation/setup instructions.');
     return;

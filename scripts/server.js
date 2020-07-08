@@ -15,7 +15,6 @@ var PoolAPI = require('./api.js');
 
 // Pool Server Main Function
 /* eslint no-unused-vars: ["error", { "args": "none" }] */
-/* eslint-disable no-console */
 var PoolServer = function (logger) {
 
     // Load Useful Data from Process

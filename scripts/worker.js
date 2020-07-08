@@ -32,15 +32,12 @@ var PoolWorker = function (logger) {
     // Handle IPC Messages
     process.on('message', function(message) {
         switch (message.type) {
-
-            // Handle IP Banning
             case 'banIP':
                 for (var p in pools) {
                     if (pools[p].stratumServer)
                         pools[p].stratumServer.addBannedIP(message.ip);
                 }
                 break;
-
         }
     });
 
