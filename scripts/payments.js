@@ -210,7 +210,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
         // Finalize Setup
         var lastInterval = Date.now();
         setTimeout(function() {
-          processPayments("check", lastInterval)
+            processPayments("start", lastInterval)
         }, 100);
         setupFinished(true);
 
