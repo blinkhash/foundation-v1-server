@@ -303,6 +303,7 @@ var PoolStats = function (logger, portalConfig, poolConfigs) {
                             name: coinName,
                             symbol: poolConfigs[coinName].coin.symbol.toUpperCase(),
                             algorithm: poolConfigs[coinName].coin.algorithm,
+                            featured: poolConfigs[coinName].featured,
                             ports: poolConfigs[coinName].ports,
                             blocks: {
                                 pending: replies[i + 6].sort(sortBlocks),

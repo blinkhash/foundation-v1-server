@@ -159,6 +159,7 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                                 pool: portalStats.stats[pool].name,
                                 symbol: portalStats.stats[pool].symbol,
                                 algorithm: portalStats.stats[pool].algorithm,
+                                featured: portalStats.stats[pool].featured,
                                 ports: portalStats.stats[pool].ports,
                                 hashrate: {
                                     hashrate: portalStats.stats[pool].hashrate.hashrate,
