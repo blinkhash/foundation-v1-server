@@ -33,6 +33,7 @@ if (!fs.existsSync('config.json')) {
 
 // Establish Pool Variables
 var poolConfigs;
+var partnerConfigs;
 var portalConfig = JSON.parse(JSON.minify(fs.readFileSync("config.json", {encoding: 'utf8'})));
 var logger = new PoolLogger({
     logLevel: portalConfig.logLevel,
@@ -170,8 +171,26 @@ var buildPoolConfigs = function() {
             delete configs[poolOptions.coin.name];
         }
     });
+
     return configs;
 };
+
+// Read and Combine ALL Partner Configurations
+var buildPartnerConfigs = function() {
+    var configs = {};
+    var configDir = 'partners/';
+
+    // Get FileNames of Partner Configurations
+    fs.readdirSync(configDir).forEach(function(file) {
+        const currentDate = new Date()
+        if (!fs.existsSync(configDir + file) || path.extname(configDir + file) !== '.json') return;
+        var partnerOptions = JSON.parse(JSON.minify(fs.readFileSync(configDir + file, {encoding: 'utf8'})));
+        if (new Date(partnerOptions.subscription.endDate) < currentDate) return;
+        configs[partnerOptions.name] = partnerOptions;
+    });
+
+    return configs;
+}
 
 // Functionality for Pool Listener
 var startPoolListener = function() {
@@ -228,7 +247,7 @@ var startPoolPayments = function() {
     worker.on('exit', function(code, signal) {
         logger.error('Master', 'Payments', 'Payment process died, starting replacement...');
         setTimeout(function() {
-            startPoolPayments(poolConfigs);
+            startPoolPayments();
         }, 2000);
     });
 };
@@ -237,6 +256,7 @@ var startPoolServer = function() {
 
     var worker = cluster.fork({
         workerType: 'server',
+        partners: JSON.stringify(partnerConfigs),
         pools: JSON.stringify(poolConfigs),
         portalConfig: JSON.stringify(portalConfig)
     });
@@ -245,7 +265,7 @@ var startPoolServer = function() {
     worker.on('exit', function(code, signal) {
         logger.error('Master', 'Server', 'Server process died, starting replacement...');
         setTimeout(function() {
-            startPoolServer(portalConfig, poolConfigs);
+            startPoolServer();
         }, 2000);
     });
 };
@@ -338,8 +358,9 @@ var startPoolWorkers = function() {
 // Initialize Server
 var PoolInit = function() {
 
-    // Build Pool Configuration
+    // Build Configurations
     poolConfigs = buildPoolConfigs();
+    partnerConfigs = buildPartnerConfigs();
 
     // Start Pool Workers
     startPoolListener();

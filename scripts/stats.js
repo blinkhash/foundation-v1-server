@@ -40,7 +40,7 @@ function sortProperties(obj, sortedBy, isNumericSort, reverse) {
 }
 
 // Pool Stats Main Function
-var PoolStats = function (logger, portalConfig, poolConfigs) {
+var PoolStats = function (logger, poolConfigs, portalConfig) {
 
     // Establsh Helper Variables
     var _this = this;

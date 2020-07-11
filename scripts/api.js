@@ -8,10 +8,10 @@
 var PoolStats = require('./stats.js');
 
 // Pool Stats Main Function
-var PoolAPI = function (logger, portalConfig, poolConfigs) {
+var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
     // Establish API Variables
-    var portalStats = new PoolStats(logger, portalConfig, poolConfigs);
+    var portalStats = new PoolStats(logger, poolConfigs, portalConfig);
     this.stats = portalStats
     this.liveStatConnections = {};
 
@@ -127,6 +127,54 @@ var PoolAPI = function (logger, portalConfig, poolConfigs) {
                         status: 400,
                         errors: messages["invalid"],
                         endpoint: "blocks",
+                        data: {},
+                    }
+
+                    // Finalize Endpoint Information
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(payload));
+
+                    return;
+                }
+
+            // Partners Endpoint (Done)
+            case 'partners':
+                try {
+
+                    // Check to Ensure URL is Formatted Properly
+                    var urlQueries = req.query;
+
+                    // Define Individual Variables
+                    var partners = {}
+
+                    // Get Pool Information
+                    for (var partner in partnerConfigs) {
+                        const currentPartner = partnerConfigs[partner];
+                        partners[currentPartner.name] = currentPartner;
+                    }
+
+                    // Finalize Payload
+                    var payload = {
+                        status: 200,
+                        errors: "",
+                        endpoint: "partners",
+                        data: partners,
+                    }
+
+                    // Finalize Endpoint Information
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(payload));
+
+                    return;
+
+                }
+                catch(err) {
+
+                    // Finalize Payload
+                    var payload = {
+                        status: 400,
+                        errors: messages["invalid"],
+                        endpoint: "partners",
                         data: {},
                     }
 

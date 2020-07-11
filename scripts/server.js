@@ -18,11 +18,12 @@ var PoolAPI = require('./api.js');
 var PoolServer = function (logger) {
 
     // Load Useful Data from Process
-    var portalConfig = JSON.parse(process.env.portalConfig);
+    var partnerConfigs = JSON.parse(process.env.partners);
     var poolConfigs = JSON.parse(process.env.pools);
+    var portalConfig = JSON.parse(process.env.portalConfig);
 
     // Establish Server Variables
-    var portalApi = new PoolAPI(logger, portalConfig, poolConfigs);
+    var portalApi = new PoolAPI(logger, partnerConfigs, poolConfigs, portalConfig);
     var portalStats = portalApi.stats;
     var logSystem = 'Server';
 
