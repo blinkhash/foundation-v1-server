@@ -83,8 +83,10 @@ var PoolShares = function (logger, poolConfig) {
 
         // Check to see if Solo Mining
         var isSoloMining = false;
-        if (poolConfig.ports[shareData.port].soloMining) {
-            isSoloMining = true;
+        if (typeof poolConfig.ports[shareData.port] !== "undefined") {
+            if (poolConfig.ports[shareData.port].soloMining) {
+                isSoloMining = true;
+            }
         }
 
         // Establish Redis Variables
