@@ -27,6 +27,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
         // Establish Block Variables
         var pending = []
         var confirmed = []
+        var statistics = {}
 
         // Get Pending Block Information
         for (var w in portalStats.stats[pool].blocks.pending) {
@@ -77,10 +78,42 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
             })
         }
 
+        // Calculate Blocks Found in Last "X" Hours/Days
+        const lastHourPending = pending.filter(function(block) {
+            var currentDate = new Date()
+            return block.time > currentDate.setHours(currentDate.getHours() - 1);
+        }).length
+        const lastHourConfirmed = confirmed.filter(function(block) {
+            var currentDate = new Date()
+            return block.time > currentDate.setHours(currentDate.getHours() - 1);
+        }).length
+        const last24HoursPending = pending.filter(function(block) {
+            var currentDate = new Date()
+            return block.time > currentDate.setDate(currentDate.getDate() - 1);
+        }).length
+        const last24HoursConfirmed = confirmed.filter(function(block) {
+            var currentDate = new Date()
+            return block.time > currentDate.setDate(currentDate.getDate() - 1);
+        }).length
+        const last7DaysPending = pending.filter(function(block) {
+            var currentDate = new Date()
+            return block.time > currentDate.setDate(currentDate.getDate() - 7);
+        }).length
+        const last7DaysConfirmed = confirmed.filter(function(block) {
+            var currentDate = new Date()
+            return block.time > currentDate.setDate(currentDate.getDate() - 7);
+        }).length
+
+        // Append to Block Statistics
+        statistics.lastHour = lastHourPending + lastHourConfirmed
+        statistics.last24Hours = last24HoursPending + last24HoursConfirmed
+        statistics.last7Days = last7DaysPending + last7DaysConfirmed
+
         // Define Output Payload
         const payload = {
             pending: pending,
             confirmed: confirmed,
+            statistics: statistics,
         }
 
         // Return Output
@@ -254,19 +287,22 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     var pools = {}
                     var partners = {}
 
-
                     // Get Pool Information
                     for (var pool in portalStats.stats) {
                         var formattedPool = (poolQuery != null ? poolQuery.toLowerCase() : null)
                         var currentPool = portalStats.stats[pool].name.toLowerCase()
                         if ((formattedPool === null) || (formattedPool === currentPool)) {
+                            const blockData = getBlocksData(portalStats, pool, null)
                             var poolsData = {
                                 pool: portalStats.stats[pool].name,
                                 symbol: portalStats.stats[pool].symbol,
                                 algorithm: portalStats.stats[pool].algorithm,
                                 featured: portalStats.stats[pool].featured,
                                 ports: portalStats.stats[pool].ports,
-                                blocks: getBlocksData(portalStats, pool, null),
+                                blocks: {
+                                    pending: blockData.pending,
+                                    confirmed: blockData.confirmed
+                                },
                                 payments: getPaymentsData(portalStats, pool, null),
                                 statistics: {
                                     invalidShares: portalStats.stats[pool].statistics.invalidShares,
@@ -276,6 +312,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                                     totalPaid: portalStats.stats[pool].statistics.totalPaid,
                                     validShares: portalStats.stats[pool].statistics.validShares,
                                     validBlocks: portalStats.stats[pool].statistics.validBlocks,
+                                    blocks: blockData.statistics,
                                     hashrate: {
                                         hashrate: portalStats.stats[pool].hashrate.hashrate,
                                         hashrateShared: portalStats.stats[pool].hashrate.hashrateShared,
@@ -516,6 +553,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                         var formattedPool = (poolQuery != null ? poolQuery.toLowerCase() : null)
                         var currentPool = portalStats.stats[pool].name.toLowerCase()
                         if ((formattedPool === null) || (formattedPool === currentPool)) {
+                            const blockData = getBlocksData(portalStats, pool, null)
                             var statisticsData = {
                                 pool: portalStats.stats[pool].name,
                                 symbol: portalStats.stats[pool].symbol,
@@ -530,6 +568,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                                     totalPaid: portalStats.stats[pool].statistics.totalPaid,
                                     validShares: portalStats.stats[pool].statistics.validShares,
                                     validBlocks: portalStats.stats[pool].statistics.validBlocks,
+                                    blocks: blockData.statistics,
                                     hashrate: {
                                         hashrate: portalStats.stats[pool].hashrate.hashrate,
                                         hashrateShared: portalStats.stats[pool].hashrate.hashrateShared,
