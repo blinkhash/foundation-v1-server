@@ -23,16 +23,6 @@
         "3010": {
             "enabled": true,
             "soloMining": false,
-            "diff": 8
-        },
-        "3011": {
-            "enabled": true,
-            "soloMining": false,
-            "diff": 256
-        },
-        "3012": {
-            "enabled": true,
-            "soloMining": false,
             "diff": 32,
             "varDiff": {
                 "minDiff": 8,
@@ -42,10 +32,17 @@
                 "variancePercent": 30
             }
         },
-        "3013": {
+        "3011": {
             "enabled": true,
             "soloMining": true,
-            "diff": 8
+            "diff": 8,
+            "varDiff": {
+                "minDiff": 8,
+                "maxDiff": 512,
+                "targetTime": 15,
+                "retargetTime": 90,
+                "variancePercent": 30
+            }
         }
     },
     "daemons": [

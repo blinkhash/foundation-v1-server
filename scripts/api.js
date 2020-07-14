@@ -21,6 +21,164 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
         parameters: "Your request is missing parameters. Verify your input and try again."
     }
 
+    // Collect Current Blocks Data
+    function getBlocksData(portalStats, pool, address) {
+
+        // Establish Block Variables
+        var pending = []
+        var confirmed = []
+
+        // Get Pending Block Information
+        for (var w in portalStats.stats[pool].blocks.pending) {
+            var blockInformation = JSON.parse(portalStats.stats[pool].blocks.pending[w]);
+            var blockConfirms = portalStats.stats[pool].blocks.confirmations;
+            var blocksData = {
+                pool: portalStats.stats[pool].name,
+                symbol: portalStats.stats[pool].symbol,
+                algorithm: portalStats.stats[pool].algorithm,
+                time: blockInformation.time,
+                height: blockInformation.height,
+                blockHash: blockInformation.blockHash,
+                txHash: blockInformation.txHash,
+                worker: blockInformation.worker,
+                soloMined: blockInformation.soloMined,
+                confirmed: false,
+                confirmations: blockConfirms[blockInformation.blockHash],
+            }
+            pending.push(blocksData);
+        }
+
+        // Get Confirmed Block Information
+        for (var w in portalStats.stats[pool].blocks.confirmed) {
+            var blockInformation = JSON.parse(portalStats.stats[pool].blocks.confirmed[w]);
+            var blocksData = {
+                pool: portalStats.stats[pool].name,
+                symbol: portalStats.stats[pool].symbol,
+                algorithm: portalStats.stats[pool].algorithm,
+                time: blockInformation.time,
+                height: blockInformation.height,
+                blockHash: blockInformation.blockHash,
+                txHash: blockInformation.txHash,
+                worker: blockInformation.worker,
+                soloMined: blockInformation.soloMined,
+                confirmed: true,
+                confirmations: 100,
+            }
+            confirmed.push(blocksData);
+        }
+
+        // Filter by Worker Passed
+        if (address != null && address.length > 0) {
+            pending = pending.filter(function(block) {
+                return block.worker === address;
+            });
+            confirmed = confirmed.filter(function(block) {
+                return block.worker === address;
+            })
+        }
+
+        // Define Output Payload
+        const payload = {
+            pending: pending,
+            confirmed: confirmed,
+        }
+
+        // Return Output
+        return payload
+    }
+
+    // Collect Current Payments Data
+    function getPaymentsData(portalStats, pool, address) {
+
+        // Establish Payment Variables
+        var payments = []
+
+        for (var w in portalStats.stats[pool].payments) {
+            var paymentInformation = portalStats.stats[pool].payments[w];
+            var paymentsData = {
+                time: paymentInformation.time,
+                txid: paymentInformation.txid,
+                shares: paymentInformation.shares,
+                paid: paymentInformation.paid,
+                blocks: paymentInformation.blocks,
+                amounts: paymentInformation.amounts,
+                unpaid: paymentInformation.unpaid,
+                work: paymentInformation.work
+            }
+            payments.push(paymentsData);
+        }
+
+        // Filter by Worker Passed
+        if (address != null && address.length > 0) {
+            payments = payments.filter(function(payment) {
+                return Object.keys(payment.amounts).includes(address);
+            });
+        }
+
+        // Define Output Payload
+        const payload = {
+            payments: payments,
+        }
+
+        // Return Output
+        return payload
+    }
+
+    // Collect Current Workers Data
+    function getWorkersData(portalStats, pool, address) {
+
+        // Establish Worker Variables
+        var shared = []
+        var solo = []
+
+        // Get Shared Worker Information
+        for (var w in portalStats.stats[pool].workers.workersShared) {
+            var workerInformation = portalStats.stats[pool].workers.workersShared[w];
+            var workerData = {
+                address: w,
+                difficulty: workerInformation.difficulty,
+                validShares: workerInformation.validShares,
+                invalidShares: workerInformation.invalidShares,
+                hashrate: workerInformation.hashrate,
+                soloMining: workerInformation.soloMining,
+            }
+            shared.push(workerData);
+        }
+
+        // Get Solo Worker Information
+        for (var w in portalStats.stats[pool].workers.workersSolo) {
+            var workerInformation = portalStats.stats[pool].workers.workersSolo[w];
+            var workerData = {
+                address: w,
+                difficulty: workerInformation.difficulty,
+                validShares: workerInformation.validShares,
+                invalidShares: workerInformation.invalidShares,
+                hashrate: workerInformation.hashrate,
+                soloMining: workerInformation.soloMining,
+            }
+            solo.push(workerData);
+        }
+
+        // Filter by Worker Passed
+        if (address != null && address.length > 0) {
+            shared = shared.filter(function(worker) {
+                return worker.address === address;
+            });
+            solo = solo.filter(function(worker) {
+                return worker.address === address;
+            })
+        }
+
+        // Define Output Payload
+        const payload = {
+            shared: shared,
+            solo: solo,
+        }
+
+        // Return Output
+        return payload
+    }
+
     // Handle API Requests
     this.handleApiRequest = function(req, res, next) {
         switch (req.params.method) {
@@ -39,68 +197,15 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Get Block Information
                     for (var pool in portalStats.stats) {
-
                         var formattedPool = (poolQuery != null ? poolQuery.toLowerCase() : null)
                         var currentPool = portalStats.stats[pool].name.toLowerCase()
                         if ((formattedPool === null) || (formattedPool === currentPool)) {
-
-                            // Establish Block Variables
-                            var pending = []
-                            var confirmed = []
-
-                            // Get Pending Block Information
-                            for (var w in portalStats.stats[pool].blocks.pending) {
-                                var blockInformation = JSON.parse(portalStats.stats[pool].blocks.pending[w]);
-                                var blockConfirms = portalStats.stats[pool].blocks.confirmations;
-                                var blockData = {
-                                    pool: portalStats.stats[pool].name,
-                                    symbol: portalStats.stats[pool].symbol,
-                                    algorithm: portalStats.stats[pool].algorithm,
-                                    time: blockInformation.time,
-                                    height: blockInformation.height,
-                                    blockHash: blockInformation.blockHash,
-                                    txHash: blockInformation.txHash,
-                                    worker: blockInformation.worker,
-                                    soloMined: blockInformation.soloMined,
-                                    confirmed: false,
-                                    confirmations: blockConfirms[blockInformation.blockHash],
+                            var blocksData = getBlocksData(portalStats, pool, workerQuery)
+                            if ((blocksData.pending.length >= 1) || (blocksData.confirmed.length >= 1)) {
+                                blocks[portalStats.stats[pool].name] = {
+                                    pending: blocksData.pending,
+                                    confirmed: blocksData.confirmed,
                                 }
-                                pending.push(blockData);
-                            }
-
-                            // Get Confirmed Block Information
-                            for (var w in portalStats.stats[pool].blocks.confirmed) {
-                                var blockInformation = JSON.parse(portalStats.stats[pool].blocks.confirmed[w]);
-                                var blockData = {
-                                    pool: portalStats.stats[pool].name,
-                                    symbol: portalStats.stats[pool].symbol,
-                                    algorithm: portalStats.stats[pool].algorithm,
-                                    time: blockInformation.time,
-                                    height: blockInformation.height,
-                                    blockHash: blockInformation.blockHash,
-                                    txHash: blockInformation.txHash,
-                                    worker: blockInformation.worker,
-                                    soloMined: blockInformation.soloMined,
-                                    confirmed: true,
-                                    confirmations: 100,
-                                }
-                                confirmed.push(blockData);
-                            }
-
-                            // Filter for Provided Pool Worker
-                            if (workerQuery != null && workerQuery.length > 0) {
-                                pending = pending.filter(function(block) {
-                                    return block.worker === workerQuery;
-                                });
-                                confirmed = confirmed.filter(function(block) {
-                                    return block.worker === workerQuery;
-                                })
-                            }
-
-                            // Add Block Information to Endpoint
-                            blocks[portalStats.stats[pool].name] = {
-                                pending: pending,
-                                confirmed: confirmed,
                             }
                         }
                     }
@@ -127,6 +232,86 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                         status: 400,
                         errors: messages["invalid"],
                         endpoint: "blocks",
+                        data: {},
+                    }
+
+                    // Finalize Endpoint Information
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(payload));
+
+                    return;
+                }
+
+            // Combined Endpoint (Done)
+            case 'combined':
+                try {
+
+                    // Check to Ensure URL is Formatted Properly
+                    var urlQueries = req.query;
+                    var poolQuery = urlQueries.pool || null;
+
+                    // Define Individual Variables
+                    var combined = {}
+
+                    // Get Pool Information
+                    for (var pool in portalStats.stats) {
+                        var formattedPool = (poolQuery != null ? poolQuery.toLowerCase() : null)
+                        var currentPool = portalStats.stats[pool].name.toLowerCase()
+                        if ((formattedPool === null) || (formattedPool === currentPool)) {
+                            var combinedData = {
+                                pool: portalStats.stats[pool].name,
+                                symbol: portalStats.stats[pool].symbol,
+                                algorithm: portalStats.stats[pool].algorithm,
+                                featured: portalStats.stats[pool].featured,
+                                ports: portalStats.stats[pool].ports,
+                                blocks: getBlocksData(portalStats, pool, null),
+                                payments: getPaymentsData(portalStats, pool, null),
+                                statistics: {
+                                    invalidShares: portalStats.stats[pool].statistics.invalidShares,
+                                    lastPaid: portalStats.stats[pool].statistics.lastPaid,
+                                    paymentTime: portalStats.stats[pool].statistics.paymentTime,
+                                    totalPaid: portalStats.stats[pool].statistics.totalPaid,
+                                    validShares: portalStats.stats[pool].statistics.validShares,
+                                    validBlocks: portalStats.stats[pool].statistics.validBlocks,
+                                    hashrate: {
+                                        hashrate: portalStats.stats[pool].hashrate.hashrate,
+                                        hashrateShared: portalStats.stats[pool].hashrate.hashrateShared,
+                                        hashrateSolo: portalStats.stats[pool].hashrate.hashrateSolo,
+                                    },
+                                    workers: {
+                                        workers: portalStats.stats[pool].workers.workersCount,
+                                        workersShared: portalStats.stats[pool].workers.workersSharedCount,
+                                        workersSolo: portalStats.stats[pool].workers.workersSoloCount,
+                                    }
+                                },
+                                workers: getWorkersData(portalStats, pool, null),
+                            }
+                            combined[pool] = combinedData;
+                        }
+                    }
+
+                    // Finalize Payload
+                    var payload = {
+                        status: 200,
+                        errors: "",
+                        endpoint: "combined",
+                        data: combined,
+                    }
+
+                    // Finalize Endpoint Information
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(payload));
+
+                    return;
+
+                }
+                catch(err) {
+
+                    // Finalize Payload
+                    var payload = {
+                        status: 400,
+                        errors: messages["invalid"],
+                        endpoint: "combined",
                         data: {},
                     }
 
@@ -185,51 +370,29 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     return;
                 }
 
-            // Pools Endpoint (Done)
-            case 'pools':
+            // Payments Endpoint (Done)
+            case 'payments':
                 try {
 
                     // Check to Ensure URL is Formatted Properly
                     var urlQueries = req.query;
                     var poolQuery = urlQueries.pool || null;
+                    var workerQuery = urlQueries.worker || null;
 
                     // Define Individual Variables
-                    var pools = {}
+                    var payments = {}
 
-                    // Get Pool Information
+                    // Get Block Information
                     for (var pool in portalStats.stats) {
-
                         var formattedPool = (poolQuery != null ? poolQuery.toLowerCase() : null)
                         var currentPool = portalStats.stats[pool].name.toLowerCase()
                         if ((formattedPool === null) || (formattedPool === currentPool)) {
-
-                            var currencyData = {
-                                pool: portalStats.stats[pool].name,
-                                symbol: portalStats.stats[pool].symbol,
-                                algorithm: portalStats.stats[pool].algorithm,
-                                featured: portalStats.stats[pool].featured,
-                                ports: portalStats.stats[pool].ports,
-                                hashrate: {
-                                    hashrate: portalStats.stats[pool].hashrate.hashrate,
-                                    hashrateShared: portalStats.stats[pool].hashrate.hashrateShared,
-                                    hashrateSolo: portalStats.stats[pool].hashrate.hashrateSolo,
-                                },
-                                payments: portalStats.stats[pool].payments,
-                                statistics: {
-                                    validShares: portalStats.stats[pool].statistics.validShares,
-                                    validBlocks: portalStats.stats[pool].statistics.validBlocks,
-                                    invalidShares: portalStats.stats[pool].statistics.invalidShares,
-                                    lastPaid: portalStats.stats[pool].statistics.lastPaid,
-                                    totalPaid: portalStats.stats[pool].statistics.totalPaid,
-                                    paymentTime: portalStats.stats[pool].statistics.paymentTime,
-                                },
-                                workers: {
-                                    workers: portalStats.stats[pool].workers.workersCount,
-                                    workersShared: portalStats.stats[pool].workers.workersSharedCount,
-                                    workersSolo: portalStats.stats[pool].workers.workersSoloCount,
+                            var paymentsData = getPaymentsData(portalStats, pool, workerQuery)
+                            if (paymentsData.payments.length >= 1) {
+                                payments[portalStats.stats[pool].name] = {
+                                    payments: paymentsData.payments,
                                 }
                             }
-                            pools[pool] = currencyData;
                         }
                     }
 
@@ -237,8 +400,8 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     var payload = {
                         status: 200,
                         errors: "",
-                        endpoint: "pools",
-                        data: pools,
+                        endpoint: "payments",
+                        data: payments,
                     }
 
                     // Finalize Endpoint Information
@@ -254,7 +417,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     var payload = {
                         status: 400,
                         errors: messages["invalid"],
-                        endpoint: "pools",
+                        endpoint: "payments",
                         data: {},
                     }
 
@@ -272,55 +435,18 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     // Check to Ensure URL is Formatted Properly
                     var urlQueries = req.query;
                     var poolQuery = urlQueries.pool || null;
+                    var workerQuery = urlQueries.worker || null;
 
                     // Define Individual Variables
                     var recent = []
 
                     // Get Block Information
                     for (var pool in portalStats.stats) {
-
                         var formattedPool = (poolQuery != null ? poolQuery.toLowerCase() : null)
                         var currentPool = portalStats.stats[pool].name.toLowerCase()
                         if ((formattedPool === null) || (formattedPool === currentPool)) {
-
-                            // Get Pending Block Information
-                            for (var w in portalStats.stats[pool].blocks.pending) {
-                                blockInformation = JSON.parse(portalStats.stats[pool].blocks.pending[w]);
-                                blockConfirms = portalStats.stats[pool].blocks.confirmations;
-                                var blockData = {
-                                    pool: portalStats.stats[pool].name,
-                                    symbol: portalStats.stats[pool].symbol,
-                                    algorithm: portalStats.stats[pool].algorithm,
-                                    time: blockInformation.time,
-                                    height: blockInformation.height,
-                                    blockHash: blockInformation.blockHash,
-                                    txHash: blockInformation.txHash,
-                                    worker: blockInformation.worker,
-                                    soloMined: blockInformation.soloMined,
-                                    confirmed: false,
-                                    confirmations: blockConfirms[blockInformation.blockHash],
-                                }
-                                recent.push(blockData);
-                            }
-
-                            // Get Confirmed Block Information
-                            for (var w in portalStats.stats[pool].blocks.confirmed) {
-                                blockInformation = JSON.parse(portalStats.stats[pool].blocks.confirmed[w]);
-                                var blockData = {
-                                    pool: portalStats.stats[pool].name,
-                                    symbol: portalStats.stats[pool].symbol,
-                                    algorithm: portalStats.stats[pool].algorithm,
-                                    time: blockInformation.time,
-                                    height: blockInformation.height,
-                                    blockHash: blockInformation.blockHash,
-                                    txHash: blockInformation.txHash,
-                                    worker: blockInformation.worker,
-                                    soloMined: blockInformation.soloMined,
-                                    confirmed: true,
-                                    confirmations: 100,
-                                }
-                                recent.push(blockData);
-                            }
+                            var blocksData = getBlocksData(portalStats, pool, workerQuery)
+                            recent = recent.concat(blocksData.pending, blocksData.confirmed);
                         }
                     }
 
@@ -359,96 +485,127 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     return;
                 }
 
-            // Wallet Endpoint (Done)
+            // Statistics Endpoint (Done)
+            case 'statistics':
+                try {
+
+                    // Check to Ensure URL is Formatted Properly
+                    var urlQueries = req.query;
+                    var poolQuery = urlQueries.pool || null;
+
+                    // Define Individual Variables
+                    var pools = {}
+
+                    // Get Pool Information
+                    for (var pool in portalStats.stats) {
+                        var formattedPool = (poolQuery != null ? poolQuery.toLowerCase() : null)
+                        var currentPool = portalStats.stats[pool].name.toLowerCase()
+                        if ((formattedPool === null) || (formattedPool === currentPool)) {
+                            var statisticsData = {
+                                pool: portalStats.stats[pool].name,
+                                symbol: portalStats.stats[pool].symbol,
+                                algorithm: portalStats.stats[pool].algorithm,
+                                featured: portalStats.stats[pool].featured,
+                                ports: portalStats.stats[pool].ports,
+                                statistics: {
+                                    invalidShares: portalStats.stats[pool].statistics.invalidShares,
+                                    lastPaid: portalStats.stats[pool].statistics.lastPaid,
+                                    paymentTime: portalStats.stats[pool].statistics.paymentTime,
+                                    totalPaid: portalStats.stats[pool].statistics.totalPaid,
+                                    validShares: portalStats.stats[pool].statistics.validShares,
+                                    validBlocks: portalStats.stats[pool].statistics.validBlocks,
+                                    hashrate: {
+                                        hashrate: portalStats.stats[pool].hashrate.hashrate,
+                                        hashrateShared: portalStats.stats[pool].hashrate.hashrateShared,
+                                        hashrateSolo: portalStats.stats[pool].hashrate.hashrateSolo,
+                                    },
+                                    workers: {
+                                        workers: portalStats.stats[pool].workers.workersCount,
+                                        workersShared: portalStats.stats[pool].workers.workersSharedCount,
+                                        workersSolo: portalStats.stats[pool].workers.workersSoloCount,
+                                    }
+                                },
+                            }
+                            pools[pool] = statisticsData;
+                        }
+                    }
+
+                    // Finalize Payload
+                    var payload = {
+                        status: 200,
+                        errors: "",
+                        endpoint: "pools",
+                        data: pools,
+                    }
+
+                    // Finalize Endpoint Information
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(payload));
+
+                    return;
+
+                }
+                catch(err) {
+
+                    // Finalize Payload
+                    var payload = {
+                        status: 400,
+                        errors: messages["invalid"],
+                        endpoint: "pools",
+                        data: {},
+                    }
+
+                    // Finalize Endpoint Information
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(payload));
+
+                    return;
+                }
+
+            // Wallets Endpoint (Done)
             case 'wallets':
                 try {
 
                     // Check to Ensure URL is Formatted Properly
                     var urlQueries = req.query;
-                    var addressQuery = urlQueries.address || null;
-                    if (addressQuery != null && addressQuery.length > 0) {
+                    var workerQuery = urlQueries.worker || null;
+                    if (workerQuery != null && workerQuery.length > 0) {
 
                         // Output Balance of Address
-                        portalStats.getBalanceByAddress(addressQuery, function(balances) {
+                        portalStats.getBalanceByAddress(workerQuery, function(balances) {
 
-                            // Establish Address Variables
-                            var blocks = []
-                            var payments = []
-                            var workers = []
+                            // Define Individual Variables
+                            var blocks = {}
+                            var payments = {}
+                            var workers = {}
 
                             // Get Block Information
                             for (var pool in portalStats.stats) {
-
-                                // Get Pending Block Information
-                                for (var w in portalStats.stats[pool].blocks.pending) {
-                                    blockInformation = JSON.parse(portalStats.stats[pool].blocks.pending[w]);
-                                    blockConfirms = portalStats.stats[pool].blocks.confirmations;
-                                    if (blockInformation.worker == addressQuery) {
-                                        var blockData = {
-                                            pool: portalStats.stats[pool].name,
-                                            symbol: portalStats.stats[pool].symbol,
-                                            time: blockInformation.time,
-                                            height: blockInformation.height,
-                                            blockHash: blockInformation.blockHash,
-                                            txHash: blockInformation.txHash,
-                                            worker: blockInformation.worker,
-                                            soloMined: blockInformation.soloMined,
-                                            confirmed: false,
-                                            confirmations: blockConfirms[blockInformation.blockHash],
-                                        }
-                                        blocks.push(blockData);
+                                var blocksData = getBlocksData(portalStats, pool, workerQuery)
+                                if ((blocksData.pending.length >= 1) || (blocksData.confirmed.length >= 1)) {
+                                    blocks[portalStats.stats[pool].name] = {
+                                        pending: blocksData.pending,
+                                        confirmed: blocksData.confirmed,
                                     }
                                 }
-
-                                // Get Confirmed Block Information
-                                for (var w in portalStats.stats[pool].blocks.confirmed) {
-                                    blockInformation = JSON.parse(portalStats.stats[pool].blocks.confirmed[w]);
-                                    if (blockInformation.worker == addressQuery) {
-                                        var blockData = {
-                                            pool: portalStats.stats[pool].name,
-                                            symbol: portalStats.stats[pool].symbol,
-                                            time: blockInformation.time,
-                                            height: blockInformation.height,
-                                            blockHash: blockInformation.blockHash,
-                                            txHash: blockInformation.txHash,
-                                            worker: blockInformation.worker,
-                                            soloMined: blockInformation.soloMined,
-                                            confirmed: true,
-                                            confirmations: 100,
-                                        }
-                                        blocks.push(blockData);
+                                var paymentsData = getPaymentsData(portalStats, pool, workerQuery)
+                                if (paymentsData.payments.length >= 1) {
+                                    payments[portalStats.stats[pool].name] = {
+                                        payments: paymentsData.payments,
                                     }
                                 }
-
-                                // Get Payout Information
-                                for (var pool in portalStats.stats) {
-                                    for (var w in portalStats.stats[pool].payments) {
-                                        for (var x in portalStats.stats[pool].payments[w].amounts) {
-                                            if (x == addressQuery) {
-                                                var paymentData = {
-                                                    time: portalStats.stats[pool].payments[w].time,
-                                                    amount: portalStats.stats[pool].payments[w].amounts[x],
-                                                    txid: portalStats.stats[pool].payments[w].txid
-                                                }
-                                                payments.push(paymentData)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // Get Worker Information
-                                for (var pool in portalStats.stats) {
-                                    for (var w in portalStats.stats[pool].workers.workers) {
-                                        if (w == addressQuery) {
-                                            workers.push(portalStats.stats[pool].workers.workers[w]);
-                                        }
+                                var workerData = getWorkersData(portalStats, pool, workerQuery)
+                                if ((workerData.shared.length >= 1) || (workerData.solo.length >= 1)) {
+                                    workers[portalStats.stats[pool].name] = {
+                                        shared: workerData.shared,
+                                        solo: workerData.solo,
                                     }
                                 }
                             }
 
                             // Structure Wallet Output
                             const wallets = {
-                                address: addressQuery,
+                                worker: workerQuery,
                                 balance: balances.totalBalance.toFixed(8),
                                 immature: balances.totalImmature.toFixed(8),
                                 paid: balances.totalPaid.toFixed(8),
@@ -507,7 +664,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     return;
                 }
 
-            // Workers Endpoint (Done)
+            // Workers Endpoint
             case 'workers':
                 try {
 
@@ -520,47 +677,15 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Get Block Information
                     for (var pool in portalStats.stats) {
-
                         var formattedPool = (poolQuery != null ? poolQuery.toLowerCase() : null)
                         var currentPool = portalStats.stats[pool].name.toLowerCase()
                         if ((formattedPool === null) || (formattedPool === currentPool)) {
-
-                          // Establish Worker Variables
-                            var shared = []
-                            var solo = []
-
-                            // Get Shared Worker Information
-                            for (var w in portalStats.stats[pool].workers.workersShared) {
-                                var workerInformation = portalStats.stats[pool].workers.workersShared[w];
-                                var workerData = {
-                                    address: w,
-                                    difficulty: workerInformation.difficulty,
-                                    validShares: workerInformation.validShares,
-                                    invalidShares: workerInformation.invalidShares,
-                                    hashrate: workerInformation.hashrate,
-                                    soloMining: workerInformation.soloMining,
+                            var workerData = getWorkersData(portalStats, pool)
+                            if ((workerData.shared.length >= 1) || (workerData.solo.length >= 1)) {
+                                workers[portalStats.stats[pool].name] = {
+                                    shared: workerData.shared,
+                                    solo: workerData.solo,
                                 }
-                                shared.push(workerData);
-                            }
-
-                            // Get Solo Worker Information
-                            for (var w in portalStats.stats[pool].workers.workersSolo) {
-                                var workerInformation = portalStats.stats[pool].workers.workersSolo[w];
-                                var workerData = {
-                                    address: w,
-                                    difficulty: workerInformation.difficulty,
-                                    validShares: workerInformation.validShares,
-                                    invalidShares: workerInformation.invalidShares,
-                                    hashrate: workerInformation.hashrate,
-                                    soloMining: workerInformation.soloMining,
-                                }
-                                solo.push(workerData);
-                            }
-
-                            // Add Worker Information to Endpoint
-                            workers[portalStats.stats[pool].name] = {
-                                shared: shared,
-                                solo: solo,
                             }
                         }
                     }
