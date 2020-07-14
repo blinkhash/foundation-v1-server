@@ -251,14 +251,15 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     var poolQuery = urlQueries.pool || null;
 
                     // Define Individual Variables
-                    var combined = {}
+                    var pools = {}
+                    var partners = {}
 
                     // Get Pool Information
                     for (var pool in portalStats.stats) {
                         var formattedPool = (poolQuery != null ? poolQuery.toLowerCase() : null)
                         var currentPool = portalStats.stats[pool].name.toLowerCase()
                         if ((formattedPool === null) || (formattedPool === currentPool)) {
-                            var combinedData = {
+                            var poolsData = {
                                 pool: portalStats.stats[pool].name,
                                 symbol: portalStats.stats[pool].symbol,
                                 algorithm: portalStats.stats[pool].algorithm,
@@ -286,8 +287,20 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                                 },
                                 workers: getWorkersData(portalStats, pool, null),
                             }
-                            combined[pool] = combinedData;
+                            pools[pool] = poolsData;
                         }
+                    }
+
+                    // Get Partner Information
+                    for (var partner in partnerConfigs) {
+                        const currentPartner = partnerConfigs[partner];
+                        partners[currentPartner.name] = currentPartner;
+                    }
+
+                    // Combine All Data
+                    var combined = {
+                        partners: partners,
+                        pools: pools
                     }
 
                     // Finalize Payload
@@ -332,7 +345,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     // Define Individual Variables
                     var partners = {}
 
-                    // Get Pool Information
+                    // Get Partner Information
                     for (var partner in partnerConfigs) {
                         const currentPartner = partnerConfigs[partner];
                         partners[currentPartner.name] = currentPartner;
@@ -494,7 +507,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     var poolQuery = urlQueries.pool || null;
 
                     // Define Individual Variables
-                    var pools = {}
+                    var statistics = {}
 
                     // Get Pool Information
                     for (var pool in portalStats.stats) {
@@ -526,7 +539,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                                     }
                                 },
                             }
-                            pools[pool] = statisticsData;
+                            statistics[pool] = statisticsData;
                         }
                     }
 
@@ -534,8 +547,8 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     var payload = {
                         status: 200,
                         errors: "",
-                        endpoint: "pools",
-                        data: pools,
+                        endpoint: "statistics",
+                        data: statistics,
                     }
 
                     // Finalize Endpoint Information
@@ -551,7 +564,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     var payload = {
                         status: 400,
                         errors: messages["invalid"],
-                        endpoint: "pools",
+                        endpoint: "statistics",
                         data: {},
                     }
 
