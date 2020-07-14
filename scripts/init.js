@@ -108,47 +108,22 @@ var buildPoolConfigs = function() {
                     return;
                 }
             }
-            if (poolConfigFiles[f].coin === poolConfigFiles[i].coin) {
-                logger.error('Master', poolConfigFiles[f].fileName, `Pool has same configured coin file coins/${  poolConfigFiles[f].coin  } as ${  poolConfigFiles[i].fileName  } pool`);
-                process.exit(1);
-                return;
-            }
         }
     }
 
     // Iterate Through Each Configuration File
     poolConfigFiles.forEach(function(poolOptions) {
-        poolOptions.coinFileName = poolOptions.coin;
-
-        // Get Coin File From Configurations
-        var coinFilePath = `coins/${  poolOptions.coinFileName}`;
-        if (!fs.existsSync(coinFilePath)) {
-            logger.error('Master', poolOptions.coinFileName, `could not find file: ${  coinFilePath}`);
-            return;
-        }
-        var coinProfile = JSON.parse(JSON.minify(fs.readFileSync(coinFilePath, {encoding: 'utf8'})));
-        poolOptions.coin = coinProfile;
 
         // Establish Mainnet/Testnet
-        if (coinProfile.mainnet) {
-            poolOptions.coin.mainnet.bip32.public = Buffer.from(coinProfile.mainnet.bip32.public, 'hex').readUInt32LE(0);
-            poolOptions.coin.mainnet.pubKeyHash = Buffer.from(coinProfile.mainnet.pubKeyHash, 'hex').readUInt8(0);
-            poolOptions.coin.mainnet.scriptHash = Buffer.from(coinProfile.mainnet.scriptHash, 'hex').readUInt8(0);
+        if (poolOptions.coin.mainnet) {
+            poolOptions.coin.mainnet.bip32.public = Buffer.from(poolOptions.coin.mainnet.bip32.public, 'hex').readUInt32LE(0);
+            poolOptions.coin.mainnet.pubKeyHash = Buffer.from(poolOptions.coin.mainnet.pubKeyHash, 'hex').readUInt8(0);
+            poolOptions.coin.mainnet.scriptHash = Buffer.from(poolOptions.coin.mainnet.scriptHash, 'hex').readUInt8(0);
         }
-        if (coinProfile.testnet) {
-            poolOptions.coin.testnet.bip32.public = Buffer.from(coinProfile.testnet.bip32.public, 'hex').readUInt32LE(0);
-            poolOptions.coin.testnet.pubKeyHash = Buffer.from(coinProfile.testnet.pubKeyHash, 'hex').readUInt8(0);
-            poolOptions.coin.testnet.scriptHash = Buffer.from(coinProfile.testnet.scriptHash, 'hex').readUInt8(0);
-        }
-
-        // Check for no Overlap in Configurations
-        if (poolOptions.coin.name in configs) {
-            logger.error('Master', poolOptions.fileName, `coins/${  poolOptions.coinFileName
-                 } has same configured coin name ${  poolOptions.coin.name  } as coins/${
-                 configs[poolOptions.coin.name].coinFileName  } used by pool config ${
-                 configs[poolOptions.coin.name].fileName}`);
-            process.exit(1);
-            return;
+        if (poolOptions.coin.testnet) {
+            poolOptions.coin.testnet.bip32.public = Buffer.from(poolOptions.coin.testnet.bip32.public, 'hex').readUInt32LE(0);
+            poolOptions.coin.testnet.pubKeyHash = Buffer.from(poolOptions.coin.testnet.pubKeyHash, 'hex').readUInt8(0);
+            poolOptions.coin.testnet.scriptHash = Buffer.from(poolOptions.coin.testnet.scriptHash, 'hex').readUInt8(0);
         }
 
         // Load Configuration from File
@@ -166,8 +141,8 @@ var buildPoolConfigs = function() {
         configs[poolOptions.coin.name] = poolOptions;
 
         // Check to Ensure Algorithm is Supported
-        if (!(coinProfile.algorithm in algos)) {
-            logger.error('Master', coinProfile.name, `Cannot run a pool for unsupported algorithm "${  coinProfile.algorithm  }"`);
+        if (!(poolOptions.coin.algorithm in algos)) {
+            logger.error('Master', poolOptions.coin.name, `Cannot run a pool for unsupported algorithm "${  poolOptions.coin.algorithm  }"`);
             delete configs[poolOptions.coin.name];
         }
     });

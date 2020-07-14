@@ -254,6 +254,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     var pools = {}
                     var partners = {}
 
+
                     // Get Pool Information
                     for (var pool in portalStats.stats) {
                         var formattedPool = (poolQuery != null ? poolQuery.toLowerCase() : null)
@@ -270,6 +271,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                                 statistics: {
                                     invalidShares: portalStats.stats[pool].statistics.invalidShares,
                                     lastPaid: portalStats.stats[pool].statistics.lastPaid,
+                                    paymentFees: portalStats.stats[pool].fees,
                                     paymentTime: portalStats.stats[pool].statistics.paymentTime,
                                     totalPaid: portalStats.stats[pool].statistics.totalPaid,
                                     validShares: portalStats.stats[pool].statistics.validShares,
@@ -523,6 +525,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                                 statistics: {
                                     invalidShares: portalStats.stats[pool].statistics.invalidShares,
                                     lastPaid: portalStats.stats[pool].statistics.lastPaid,
+                                    paymentFees: portalStats.stats[pool].fees,
                                     paymentTime: portalStats.stats[pool].statistics.paymentTime,
                                     totalPaid: portalStats.stats[pool].statistics.totalPaid,
                                     validShares: portalStats.stats[pool].statistics.validShares,
