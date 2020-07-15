@@ -5,7 +5,7 @@
     "featured": true,
     "fees": 1.5,
     "coin": {
-        "name": "BlinkHash",
+        "name": "Blinkhash",
         "symbol": "BHTC",
         "algorithm": "scrypt",
         "peerMagic": "ace4b9cd",
@@ -51,7 +51,7 @@
         "3010": {
             "enabled": true,
             "soloMining": false,
-            "diff": 32,
+            "diff": 8,
             "varDiff": {
                 "minDiff": 8,
                 "maxDiff": 512,

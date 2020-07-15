@@ -36,7 +36,8 @@
     },
     "stats": {
         "updateInterval": 60,
-        "historicalRetention": 21600,
+        "historicalInterval": 600,
+        "historicalRetention": 43200,
         "hashrateWindow": 300
     }
 }

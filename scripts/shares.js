@@ -121,9 +121,11 @@ var PoolShares = function (logger, poolConfig) {
         if (isValidBlock) {
             var blockData = {
                 time: dateNow,
-                blockHash: shareData.blockHash,
-                txHash: shareData.txHash,
                 height: shareData.height,
+                blockHash: shareData.blockHash,
+                blockReward: shareData.blockReward,
+                txHash: shareData.txHash,
+                difficulty: difficulty,
                 worker: shareData.worker,
                 soloMined: isSoloMining,
             }

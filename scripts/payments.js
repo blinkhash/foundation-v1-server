@@ -439,15 +439,18 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     results.forEach(function(round) {
                         var roundSharesSolo = {}
                         var roundSharesShared = {}
-                        Object.keys(round).forEach(function(entry) {
-                            var details = JSON.parse(entry);
-                            if (details.soloMined) {
-                                roundSharesSolo[details.worker] = round[entry]
-                            }
-                            else {
-                                roundSharesShared[details.worker] = round[entry]
-                            }
-                        });
+                        try {
+                            Object.keys(round).forEach(function(entry) {
+                                var details = JSON.parse(entry);
+                                if (details.soloMined) {
+                                    roundSharesSolo[details.worker] = round[entry]
+                                }
+                                else {
+                                    roundSharesShared[details.worker] = round[entry]
+                                }
+                            });
+                        }
+                        catch(err) {}
                         allWorkerSharesSolo.push(roundSharesSolo)
                         allWorkerSharesShared.push(roundSharesShared)
                     });
@@ -510,8 +513,9 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             var workerSharesShared = allWorkerSharesShared[i];
 
                             // Check if Shares Exist in Round
-                            if (!workerSharesSolo && !workerSharesShared) {
-                                logger.error(logSystem, logComponent, `No worker shares for round: ${  round.height  } blockHash: ${  round.blockHash}`);
+                            if ((Object.keys(workerSharesSolo).length <= 0) && (Object.keys(workerSharesShared).length <= 0)) {
+                                redisClient.smove(`${coin  }:blocks:pending`, `${coin  }:blocks:manual`, round.serialized);
+                                logger.error(logSystem, logComponent, `No worker shares for round: ${  round.height  } blockHash: ${  round.blockHash}. Manual payout required.`);
                                 return;
                             }
 

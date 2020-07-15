@@ -40,7 +40,9 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                 time: blockInformation.time,
                 height: blockInformation.height,
                 blockHash: blockInformation.blockHash,
+                blockReward: blockInformation.blockReward / 1e8,
                 txHash: blockInformation.txHash,
+                difficulty: blockInformation.difficulty,
                 worker: blockInformation.worker,
                 soloMined: blockInformation.soloMined,
                 confirmed: false,
@@ -59,7 +61,9 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                 time: blockInformation.time,
                 height: blockInformation.height,
                 blockHash: blockInformation.blockHash,
+                blockReward: blockInformation.blockReward / 1e8,
                 txHash: blockInformation.txHash,
+                difficulty: blockInformation.difficulty,
                 worker: blockInformation.worker,
                 soloMined: blockInformation.soloMined,
                 confirmed: true,
@@ -303,6 +307,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                                     pending: blockData.pending,
                                     confirmed: blockData.confirmed
                                 },
+                                history: portalStats.stats[pool].history,
                                 payments: getPaymentsData(portalStats, pool, null),
                                 statistics: {
                                     invalidShares: portalStats.stats[pool].statistics.invalidShares,
@@ -364,6 +369,58 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                         status: 400,
                         errors: messages["invalid"],
                         endpoint: "combined",
+                        data: {},
+                    }
+
+                    // Finalize Endpoint Information
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(payload));
+
+                    return;
+                }
+
+            // History Endpoint (Done)
+            case 'history':
+                try {
+
+                    // Check to Ensure URL is Formatted Properly
+                    var urlQueries = req.query;
+                    var poolQuery = urlQueries.pool || null;
+
+                    // Define Individual Variables
+                    var history = {}
+
+                    // Get Block Information
+                    for (var pool in portalStats.stats) {
+                        var formattedPool = (poolQuery != null ? poolQuery.toLowerCase() : null)
+                        var currentPool = portalStats.stats[pool].name.toLowerCase()
+                        if ((formattedPool === null) || (formattedPool === currentPool)) {
+                            history[portalStats.stats[pool].name] = portalStats.stats[pool].history;
+                        }
+                    }
+
+                    // Finalize Payload
+                    var payload = {
+                        status: 200,
+                        errors: "",
+                        endpoint: "history",
+                        data: history,
+                    }
+
+                    // Finalize Endpoint Information
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(payload));
+
+                    return;
+
+                }
+                catch(err) {
+
+                    // Finalize Payload
+                    var payload = {
+                        status: 400,
+                        errors: messages["invalid"],
+                        endpoint: "history",
                         data: {},
                     }
 

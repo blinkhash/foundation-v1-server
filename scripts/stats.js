@@ -52,11 +52,10 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
 
     // Establish Stat Variables
     this.stats = {};
-    this.statsString = '';
 
     // Gather Stats from Database
-    var canDoStats = true;
     setupStatsRedis();
+    var canDoStats = true;
 
     // Iterate Through Each Coin File
     Object.keys(poolConfigs).forEach(function(coin) {
@@ -118,7 +117,6 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
         }
         return newObject;
     }/* eslint-disable no-prototype-builtins */
-
 
     // Sort All Blocks
     function sortBlocks(a, b) {
@@ -260,14 +258,16 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
     this.getGlobalStats = function(callback) {
 
         var allCoinStats = {};
+        var statGatherTime = Date.now() / 1000 | 0;
+        var retentionTime = (((Date.now() / 1000) - portalConfig.stats.historicalRetention) | 0).toString();
         async.each(redisClients, function(client, callback) {
 
             // Establish Redis Variables
             var windowTime = (((Date.now() / 1000) - portalConfig.stats.hashrateWindow) | 0).toString();
             var redisCommands = [];
             var redisCommandTemplates = [
-                ['zremrangebyscore', ':statistics:hashrate', '-inf', `(${  windowTime}`],
                 ['zrangebyscore', ':statistics:hashrate', windowTime, '+inf'],
+                ['hgetall', ':statistics:history'],
                 ['hgetall', ':statistics:basic'],
                 ['scard', ':blocks:pending'],
                 ['scard', ':blocks:confirmed'],
@@ -292,74 +292,200 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
 
             // Get Global Statistics for Each Coin
             client.client.multi(redisCommands).exec(function(err, replies) {
+
+                // Handle Errors
                 if (err) {
                     logger.error(logSystem, 'Global', `error with getting global stats ${  JSON.stringify(err)}`);
                     callback(err);
                 }
-                else {
-                    for (var i = 0; i < replies.length; i += commandsPerCoin) {
-                        var coinName = client.coins[i / commandsPerCoin | 0];
-                        var coinStats = {
-                            name: coinName,
-                            symbol: poolConfigs[coinName].coin.symbol.toUpperCase(),
-                            algorithm: poolConfigs[coinName].coin.algorithm,
-                            featured: poolConfigs[coinName].featured,
-                            fees: poolConfigs[coinName].fees,
-                            ports: poolConfigs[coinName].ports,
-                            blocks: {
-                                pending: replies[i + 6].sort(sortBlocks),
-                                confirmed: replies[i + 7].sort(sortBlocks).slice(0,50),
-                                confirmations: replies[i + 8],
-                                pendingCount: replies[i + 3],
-                                confirmedCount: replies[i + 4],
-                                orphanedCount: replies[i + 5],
-                            },
-                            hashrate: {
-                                hashrate: 0,
-                                hashrateShared: 0,
-                                hashrateSolo: 0,
-                                hashrates: replies[i + 1],
-                            },
-                            shares: {
-                                shares: 0,
-                                roundShares: (replies[i + 9] || {}),
-                            },
-                            statistics: {
-                                validShares: replies[i + 2] ? (replies[i + 2].validShares || 0) : 0,
-                                validBlocks: replies[i + 2] ? (replies[i + 2].validBlocks || 0) : 0,
-                                invalidShares: replies[i + 2] ? (replies[i + 2].invalidShares || 0) : 0,
-                                lastPaid: replies[i + 2] ? (replies[i + 2].lastPaid || 0) : 0,
-                                totalPaid: replies[i + 2] ? (replies[i + 2].totalPaid || 0) : 0,
-                                paymentTime: poolConfigs[coinName].paymentProcessing.paymentInterval
-                            },
-                            payments: [],
-                            workers: {
-                                workers: {},
-                                workersShared: {},
-                                workersSolo: {},
-                                workersCount: 0,
-                                workersSharedCount: 0,
-                                workersSoloCount: 0,
-                            },
-                        };
-                        for (var j = replies[i + 10].length; j > 0; j--) {
-                            var jsonObj;
-                            try {
-                                jsonObj = JSON.parse(replies[i + 10][j - 1]);
+
+                // Establish Initial Statistics for Coins
+                for (var i = 0; i < replies.length; i += commandsPerCoin) {
+                    var coinName = client.coins[i / commandsPerCoin | 0];
+                    var coinStats = {
+                        name: coinName,
+                        symbol: poolConfigs[coinName].coin.symbol.toUpperCase(),
+                        algorithm: poolConfigs[coinName].coin.algorithm,
+                        featured: poolConfigs[coinName].featured,
+                        fees: poolConfigs[coinName].fees,
+                        ports: poolConfigs[coinName].ports,
+                        blocks: {
+                            pending: replies[i + 6].sort(sortBlocks),
+                            confirmed: replies[i + 7].sort(sortBlocks).slice(0,50),
+                            confirmations: replies[i + 8],
+                            pendingCount: replies[i + 3],
+                            confirmedCount: replies[i + 4],
+                            orphanedCount: replies[i + 5],
+                        },
+                        hashrate: {
+                            hashrate: 0,
+                            hashrateShared: 0,
+                            hashrateSolo: 0,
+                            hashrates: replies[i + 0],
+                        },
+                        history: [],
+                        shares: {
+                            shares: 0,
+                            roundShares: (replies[i + 9] || {}),
+                        },
+                        statistics: {
+                            validShares: replies[i + 2] ? (replies[i + 2].validShares || 0) : 0,
+                            validBlocks: replies[i + 2] ? (replies[i + 2].validBlocks || 0) : 0,
+                            invalidShares: replies[i + 2] ? (replies[i + 2].invalidShares || 0) : 0,
+                            lastPaid: replies[i + 2] ? (replies[i + 2].lastPaid || 0) : 0,
+                            totalPaid: replies[i + 2] ? (replies[i + 2].totalPaid || 0) : 0,
+                            paymentTime: poolConfigs[coinName].paymentProcessing.paymentInterval
+                        },
+                        payments: [],
+                        workers: {
+                            workers: {},
+                            workersShared: {},
+                            workersSolo: {},
+                            workersCount: 0,
+                            workersSharedCount: 0,
+                            workersSoloCount: 0,
+                        },
+                    };
+
+                    // Calculate Historical Data
+                    var jsonObj = null;
+                    try {
+                        jsonObj = JSON.parse(replies[i + 1].history);
+                    }
+                    catch(e) {}
+                    if (jsonObj !== null) {
+                        coinStats.history = jsonObj;
+                    }
+
+                    // Calculate Payment Data
+                    for (var j = replies[i + 10].length; j > 0; j--) {
+                        var jsonObj = null;
+                        try {
+                            jsonObj = JSON.parse(replies[i + 10][j - 1]);
+                        }
+                        catch(e) {}
+                        if (jsonObj !== null) {
+                            coinStats.payments.push(jsonObj);
+                        }
+                    }
+                    allCoinStats[coinStats.name] = (coinStats);
+                }
+
+                // Calculate Specific Statistics for Coins
+                allCoinStats = sortPools(allCoinStats);
+                Object.keys(allCoinStats).forEach(function(coin) {
+                    var coinStats = allCoinStats[coin];
+
+                    // Calculate Hashrate Data
+                    coinStats.hashrate.hashrates.forEach(function(ins) {
+
+                        var parts = JSON.parse(ins);
+                        var workerShares = parseFloat(parts.difficulty);
+                        var worker = parts.worker;
+                        var difficulty = Math.round(parts.difficulty);
+                        var soloMining = parts.soloMined;
+
+                        if (workerShares > 0) {
+                            coinStats.shares.shares += workerShares;
+                            if (worker in coinStats.workers) {
+                                coinStats.workers.workers[worker].validShares += workerShares;
+                                coinStats.workers.workers[worker].difficulty = difficulty;
                             }
-                            catch(e) {
-                                jsonObj = null;
-                            }
-                            if (jsonObj !== null) {
-                                coinStats.payments.push(jsonObj);
+                            else {
+                                coinStats.workers.workers[worker] = {
+                                    difficulty: difficulty,
+                                    validShares: workerShares,
+                                    invalidShares: 0,
+                                    hashrate: null,
+                                    soloMining: soloMining,
+                                };
                             }
                         }
-                        allCoinStats[coinStats.name] = (coinStats);
+                        else {
+                            if (worker in coinStats.workers.workers) {
+                                coinStats.workers.workers[worker].invalidShares -= workerShares;
+                                coinStats.workers.workers[worker].difficulty = difficulty;
+                            }
+                            else {
+                                coinStats.workers.workers[worker] = {
+                                    difficulty: difficulty,
+                                    validShares: 0,
+                                    invalidShares: -workerShares,
+                                    hashrate: null,
+                                    soloMining: soloMining,
+                                };
+                            }
+                        }
+                    });
+
+                    // Calculate Worker Data
+                    for (var worker in coinStats.shares.roundShares) {
+                        if (worker in coinStats.workers.workers) {
+                            coinStats.workers.workers[worker].roundShares += parseFloat(coinStats.shares.roundShares[worker]);
+                        }
                     }
-                    allCoinStats = sortPools(allCoinStats);
-                    callback();
-                }
+                    for (var worker in coinStats.workers.workers) {
+                        var shareMultiplier = Math.pow(2, 32) / algos[coinStats.algorithm].multiplier;
+                        var _workerRate = shareMultiplier * coinStats.workers.workers[worker].validShares / portalConfig.stats.hashrateWindow;
+                        coinStats.workers.workers[worker].hashrate = _workerRate;
+                        if (!coinStats.workers.workers[worker].soloMining) {
+                            coinStats.workers.workersShared[worker] = coinStats.workers.workers[worker]
+                            coinStats.hashrate.hashrateShared += _workerRate
+                            coinStats.hashrate.hashrate += _workerRate
+                        }
+                        else {
+                            coinStats.workers.workersSolo[worker] = coinStats.workers.workers[worker]
+                            coinStats.hashrate.hashrateSolo += _workerRate
+                            coinStats.hashrate.hashrate += _workerRate
+                        }
+                    }
+
+                    // Calculate WorkerCounts Data
+                    coinStats.workers.workersCount = Object.keys(coinStats.workers.workers).length;
+                    coinStats.workers.workersSharedCount = Object.keys(coinStats.workers.workersShared).length;
+                    coinStats.workers.workersSoloCount = Object.keys(coinStats.workers.workersSolo).length;
+
+                    // Calculate Current Historical Data
+                    var currentData = {
+                        time: statGatherTime,
+                        hashrateSolo: coinStats.hashrate.hashrateSolo,
+                        hashrateShared: coinStats.hashrate.hashrateShared,
+                        workersSolo: coinStats.workers.workersSoloCount,
+                        workersShared: coinStats.workers.workersSharedCount,
+                    }
+
+                    // Update Historical Data
+                    coinStats.history.push(currentData);
+                    var historicalInterval = (((Date.now() / 1000) - portalConfig.stats.historicalInterval) | 0);
+                    var retentionTime = (((Date.now() / 1000) - portalConfig.stats.historicalRetention) | 0);
+
+                    // Remove Data Past Retention Time
+                    var historicalData = coinStats.history.filter(function(history) {
+                        return history.time > retentionTime;
+                    });
+
+                    // Write Updated Data to Redis
+                    historicalDataString = JSON.stringify(historicalData);
+                    if (historicalData.length <= 1) {
+                        client.client.hset(`${String(coinStats.name)  }:statistics:history`, "history", historicalDataString);
+                    }
+                    else if (historicalInterval > historicalData[historicalData.length - 2].time) {
+                        client.client.hset(`${String(coinStats.name)  }:statistics:history`, "history", historicalDataString);
+                    }
+
+                    // Clean Up Information
+                    delete coinStats.hashrate.hashrates;
+                    delete coinStats.hashrate.shares;
+                });
+
+
+                // Finalize Statistics
+                _this.stats = allCoinStats;
+
+                // Trigger Callback
+                callback();
             });
+
         }, function(err) {
 
             // Handle Errors
@@ -369,86 +495,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                 return;
             }
 
-            // Get Client Statistics for Each Coin
-            Object.keys(allCoinStats).forEach(function(coin) {
-
-                var coinStats = allCoinStats[coin];
-                coinStats.hashrate.hashrates.forEach(function(ins) {
-
-                    var parts = JSON.parse(ins);
-                    var workerShares = parseFloat(parts.difficulty);
-                    var worker = parts.worker;
-                    var difficulty = Math.round(parts.difficulty);
-                    var soloMining = parts.soloMined;
-
-                    if (workerShares > 0) {
-                        coinStats.shares.shares += workerShares;
-                        if (worker in coinStats.workers) {
-                            coinStats.workers.workers[worker].validShares += workerShares;
-                            coinStats.workers.workers[worker].difficulty = difficulty;
-                        }
-                        else {
-                            coinStats.workers.workers[worker] = {
-                                difficulty: difficulty,
-                                validShares: workerShares,
-                                invalidShares: 0,
-                                hashrate: null,
-                                soloMining: soloMining,
-                            };
-                        }
-                    }
-                    else {
-                        if (worker in coinStats.workers.workers) {
-                            coinStats.workers.workers[worker].invalidShares -= workerShares;
-                            coinStats.workers.workers[worker].difficulty = difficulty;
-                        }
-                        else {
-                            coinStats.workers.workers[worker] = {
-                                difficulty: difficulty,
-                                validShares: 0,
-                                invalidShares: -workerShares,
-                                hashrate: null,
-                                soloMining: soloMining,
-                            };
-                        }
-                    }
-                });
-
-                for (var worker in coinStats.shares.roundShares) {
-                    if (worker in coinStats.workers.workers) {
-                        coinStats.workers.workers[worker].roundShares += parseFloat(coinStats.shares.roundShares[worker]);
-                    }
-                }
-
-                for (var worker in coinStats.workers.workers) {
-                    var shareMultiplier = Math.pow(2, 32) / algos[coinStats.algorithm].multiplier;
-                    var _workerRate = shareMultiplier * coinStats.workers.workers[worker].validShares / portalConfig.stats.hashrateWindow;
-                    coinStats.workers.workers[worker].hashrate = _workerRate;
-
-                    if (!coinStats.workers.workers[worker].soloMining) {
-                        coinStats.workers.workersShared[worker] = coinStats.workers.workers[worker]
-                        coinStats.hashrate.hashrateShared += _workerRate
-                        coinStats.hashrate.hashrate += _workerRate
-                    }
-                    else {
-                        coinStats.workers.workersSolo[worker] = coinStats.workers.workers[worker]
-                        coinStats.hashrate.hashrateSolo += _workerRate
-                        coinStats.hashrate.hashrate += _workerRate
-                    }
-                }
-
-                coinStats.workers.workersCount = Object.keys(coinStats.workers.workers).length;
-                coinStats.workers.workersSharedCount = Object.keys(coinStats.workers.workersShared).length;
-                coinStats.workers.workersSoloCount = Object.keys(coinStats.workers.workersSolo).length;
-
-                // Clean Up Information
-                delete coinStats.hashrate.hashrates;
-                delete coinStats.hashrate.shares;
-            });
-
-            // Finalize Given Data
-            _this.stats = allCoinStats;
-            _this.statsString = JSON.stringify(allCoinStats);
+            // Trigger Callback
             callback();
         });
     };
