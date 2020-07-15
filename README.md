@@ -61,9 +61,9 @@ Follow the build/install instructions for your coin daemon. Your coin.conf file 
 
 ```
 daemon=1
-rpcuser=litecoinrpc
-rpcpassword=securepassword
-rpcport=19332
+rpcuser=blinkhash
+rpcpassword=blinkhash
+rpcport=26710
 ```
 
 For redundancy, its recommended to have at least two daemon instances running in case one drops out-of-sync or offline, all instances will be polled for block/transaction updates and be used for submitting blocks. Creating a backup daemon involves spawning a daemon using the `-datadir=/backup` command-line argument which creates a new daemon instance with it's own config directory and coin.conf file. Learn about the daemon, how to use it and how it works if you want to be
@@ -86,21 +86,12 @@ npm update
 #### 2) Configuration
 
 ##### Portal Configuration
-Inside the `config_example.json` file, ensure the default configuration will work for your environment, then copy the file to `config.json`.
+Inside the `config.json` file, ensure that the default configuration will work for your environment before starting the pool.
 
 Explanation for each field:
 
 ````
 {
-    /* Specifies the level of log output verbosity. Anything more severe than the level specified
-       will also be logged. */
-    "logLevel": "debug", //or "warning", "error"
-
-    /* By default NOMP logs to console and gives pretty colors. If you direct that output to a
-       log file then disable this feature to avoid nasty characters in your log file. */
-    "logColors": true,
-
-
     /* The NOMP CLI (command-line interface) will listen for commands on this port. For example,
        blocknotify messages are sent to NOMP through this. */
     "cliPort": 17117,
@@ -114,6 +105,14 @@ Explanation for each field:
         "forks": "auto"
     },
 
+    /* By default NOMP logs to console and gives pretty colors. If you direct that output to a
+       log file then disable this feature to avoid nasty characters in your log file. */
+    "logColors": true,
+
+    /* Specifies the level of log output verbosity. Anything more severe than the level specified
+       will also be logged. */
+    "logLevel": "debug", // or "warning", "error"
+
     /* Pool config file will inherit these default values if they are not set. */
     "defaultPoolConfigs": {
 
@@ -126,7 +125,7 @@ Explanation for each field:
         /* Disconnect workers that haven't submitted shares for this many seconds. */
         "connectionTimeout": 600,
 
-        /* (For MPOS mode) Store the block hashes for shares that aren't block candidates. */
+        /* Store the block hashes for shares that aren't block candidates. */
         "emitInvalidBlockHashes": false,
 
         /* This option will only authenticate miners using an address or mining key. */
@@ -142,95 +141,120 @@ Explanation for each field:
            banning your own IP address (and therefore all workers). */
         "banning": {
             "enabled": true,
-            "time": 600, //How many seconds to ban worker for
-            "invalidPercent": 50, //What percent of invalid shares triggers ban
-            "checkThreshold": 500, //Perform check when this many shares have been submitted
-            "purgeInterval": 300 //Every this many seconds clear out the list of old bans
+            "time": 600, // How many seconds to ban worker for
+            "invalidPercent": 50, // What percent of invalid shares triggers ban
+            "checkThreshold": 500, // Perform check when this many shares have been submitted
+            "purgeInterval": 300 // Every this many seconds clear out the list of old bans
         },
 
-        /* Used for storing share and block submission data and payment processing. */
+        /* Redis instance of where to store global data, */
         "redis": {
             "host": "127.0.0.1",
             "port": 6379
         }
     },
 
-    /* Redis instance of where to store global portal data such as historical stats, proxy states,
-       ect.. */
+    /* Redis instance of where to store global data, */
     "redis": {
         "host": "127.0.0.1",
         "port": 6379
     },
 
+    /* The host/port of where to run the server */
+    "server": {
+        "host": "127.0.0.1",
+        "port": 3001
+    },
+
+    /* Settings for statistics gathering
     "stats": {
-        /* Gather stats to broadcast to page viewers and store in redis for historical stats
-           every this many seconds. */
-        "updateInterval": 15,
+
+        /* Interval to update API/statistics data. Currently set to 1 minute. */
+        "updateInterval": 60,
+
+        /* Interval to calculate and gather historical stats. Currently set to 10 minutes. */
+        "historicalInterval": 600,
+
         /* How many seconds to hold onto historical stats. Currently set to 24 hours. */
         "historicalRetention": 43200,
+
         /* How many seconds worth of shares should be gathered to generate hashrate. */
         "hashrateWindow": 300
     },
 }
 ````
 
-##### Coin Configuration
-Inside the `coins` directory, ensure a json file exists for your coin. If it does not you will have to create it. Here is an example of the required fields:
+##### Pool Configuration
 
-````
-{
-    "name": "Blinkhash",
-    "symbol": "ltc",
-    "algorithm": "scrypt",
-
-    /* Magic value only required for setting up p2p block notifications. It is found in the daemon
-       source code as the pchMessageStart variable.
-       For example, litecoin mainnet magic: http://git.io/Bi8YFw
-       And for litecoin testnet magic: http://git.io/NXBYJA */
-    "peerMagic": "fbc0b6db", //optional
-    "peerMagicTestnet": "fcc1b7dc" //optional
-
-    //"txMessages": false, //options - defaults to false
-
-    //"mposDiffMultiplier": 256, //options - only for x11 coins in mpos mode
-}
-````
+In order to create a new pool, take a look at the `blinkhash-scrypt.json` file inside the `configs` directory for guidance. Create another file that relates to your coin/pool in the same folder.
 
 For additional documentation how to configure coins and their different algorithms
 see [these instructions](https://github.com/blinkhash/blinkhash-stratum-pool#module-usage).
-
-##### Pool Configuration
-Take a look at the example json file inside the `pool_configs` directory. Rename it to `yourcoin.json` and change the example fields to fit your setup.
 
 Description of options:
 
 ````
 {
-    "enabled": true, //Set this to false and a pool will not be created from this config file
-    "coin": "litecoin.json", //Reference to coin config file in 'coins' directory
+    "enabled": true, // Set this to false and a pool will not be created from this config file
+    "address": "MMvdRHMDh128QgG2GebQhiUmiV8GCiiB5G", // Address to where block rewards are given
+    "featured": false, // Whether or not you want the pool to have a 'featured' tag
 
-    "address": "mi4iBXbBsydtcc5yFmsff2zCFVX4XG7qJc", //Address to where block rewards are given
+    /* Fees for block rewards for easy statistics gathering. Make sure to set this to the same
+       value as the sum of rewardRecipients.
+    "fees": 1.5,
 
-    /* Block rewards go to the configured pool wallet address to later be paid out to miners,
-       except for a percentage that can go to, for examples, pool operator(s) as pool fees or
-       or to donations address. Addresses or hashed public keys can be used. Here is an example
-       of rewards going to the main pool op, a pool co-owner, and NOMP donation. */
-    "rewardRecipients": {
-        "n37vuNFkXfk15uFnGoVyHZ6PYQxppD3QqK": 1.5, //1.5% goes to pool op
-        "mirj3LtZxbSTharhtXvotqtJXUY7ki5qfx": 0.5, //0.5% goes to a pool co-owner
+    /* Specific information for the coin added to the pool. Make sure that the information is
+       accurate for the pool to work properly.
+    "coin": {
+        "name": "Blinkhash", // Coin name
+        "symbol": "BHTC", // Coin symbol
+        "algorithm": "scrypt", // Coin algorithm
+        "peerMagic": "ace4b9cd", // Coin peer magic (pchMessageStart in src/chainparameters.cpp)
+        "peerMagicTestnet": "f01a6eef", // Coin peer magic (pchMessageStart in src/chainparameters.cpp)
 
-        /* 0.1% donation to NOMP. This pubkey can accept any type of coin, please leave this in
-           your config to help support NOMP development. */
-        "22851477d63a085dbc2398c8430af1c09e7343f6": 0.1
-    },
+        /* Add mainnet parameters here. Just like with peerMagic/peerMagicTestnet, you can find most of
+           the required values in src/chainparameters.cpp. If your coin does not possess these values, you
+           can remove the information from the configuration file. */
+        "mainnet": {
+            "bech32": "bhtc",
+            "bip32": {
+                "public": "0488B21E"
+            },
+            "pubKeyHash": "19",
+            "scriptHash": "32"
+        },
 
+        /* Add testnet parameters here. Just like with peerMagic/peerMagicTestnet, you can find most of
+           the required values in src/chainparameters.cpp. If your coin does not possess these values, you
+           can remove the information from the configuration file. */
+        "testnet": {
+            "bech32": "tbhtc",
+            "bip32": {
+                "public": "043587CF"
+            },
+            "pubKeyHash": "19",
+            "scriptHash": "C4"
+        }
+    }
+
+    /* More than one daemon instances can be setup in case one drops out-of-sync or dies. */
+    "daemons": [
+        {
+            "host": "127.0.0.1",
+            "port": 26710,
+            "user": "blinkhash",
+            "password": "blinkhash"
+        }
+    ],
+
+    /* Functionality to handle payment processing throughout the pool */
     "paymentProcessing": {
         "enabled": true,
 
         /* Every this many seconds get submitted blocks from redis, use daemon RPC to check
            their confirmation status, if confirmed then get shares from redis that contributed
            to block and send out payments. */
-        "paymentInterval": 1200,
+        "paymentInterval": 7200,
 
         /* Every this many seconds perform checks and update specific fields in API, such as
            balances and the like */
@@ -239,16 +263,16 @@ Description of options:
         /* Minimum number of coins that a miner must earn before sending payment. Typically,
            a higher minimum means less transactions fees (you profit more) but miners see
            payments less frequently (they dislike). Opposite for a lower minimum payment. */
-        "minimumPayment": 0.01,
+        "minimumPayment": 0.05,
 
         /* This daemon is used to send out payments. It MUST be for the daemon that owns the
            configured 'address' that receives the block rewards, otherwise the daemon will not
            be able to confirm blocks or send out payments. */
         "daemon": {
             "host": "127.0.0.1",
-            "port": 19332,
-            "user": "testuser",
-            "password": "testpass"
+            "port": 26710,
+            "user": "blinkhash",
+            "password": "blinkhash"
         }
     },
 
@@ -256,37 +280,27 @@ Description of options:
        be configured to use its own pool difficulty and variable difficulty settings. varDiff is
        optional and will only be used for the ports you configure it for. */
     "ports": {
-        "3032": { //A port for your miners to connect to
-            "enabled": true, //the desired state of the port
-            "soloMining": false, //solo vs shared mining on this port
-            "diff": 32, //the pool difficulty for this port
+        "3032": { // A port for your miners to connect to
+            "enabled": true, // The desired state of the port
+            "soloMining": false, // Solo vs shared mining on this port
+            "diff": 32, // The pool difficulty for this port
 
             /* Variable difficulty is a feature that will automatically adjust difficulty for
                individual miners based on their hashrate in order to lower networking overhead */
             "varDiff": {
-                "minDiff": 8, //Minimum difficulty
-                "maxDiff": 512, //Network difficulty will be used if it is lower than this
-                "targetTime": 15, //Try to get 1 share per this many seconds
-                "retargetTime": 90, //Check to see if we should retarget every this many seconds
-                "variancePercent": 30 //Allow time to very this % from target without retargeting
+                "minDiff": 8, // Minimum difficulty
+                "maxDiff": 512, // Network difficulty will be used if it is lower than this
+                "targetTime": 15, // Try to get 1 share per this many seconds
+                "retargetTime": 90, // Check to see if we should retarget every this many seconds
+                "variancePercent": 30 // Allow time to very this % from target without retargeting
             }
         },
-        "3256": { //Another port for your miners to connect to, this port does not use varDiff
-            "enabled": true, //the desired state of the port
-            "soloMining": false, //solo vs shared mining on this port
-            "diff": 256 //The pool difficulty
+        "3256": { // Another port for your miners to connect to, this port does not use varDiff
+            "enabled": true, // The desired state of the port
+            "soloMining": false, // Solo vs shared mining on this port
+            "diff": 256 // The pool difficulty
         }
     },
-
-    /* More than one daemon instances can be setup in case one drops out-of-sync or dies. */
-    "daemons": [
-        {   //Main daemon instance
-            "host": "127.0.0.1",
-            "port": 19332,
-            "user": "testuser",
-            "password": "testpass"
-        }
-    ],
 
     /* This allows the pool to connect to the daemon as a node peer to receive block updates.
        It may be the most efficient way to get block updates (faster than polling, less
@@ -299,12 +313,20 @@ Description of options:
         "host": "127.0.0.1",
 
         /* Port configured for daemon (this is the actual peer port not RPC port) */
-        "port": 19333,
+        "port": 26709,
 
         /* If your coin daemon is new enough (i.e. not a shitcoin) then it will support a p2p
            feature that prevents the daemon from spamming our peer node with unnecessary
            transaction data. Assume its supported but if you have problems try disabling it. */
         "disableTransactions": true
+    },
+
+    /* Block rewards go to the configured pool wallet address to later be paid out to miners,
+       except for a percentage that can go to, for examples, pool operator(s) as pool fees or
+       or to donations address. Addresses or hashed public keys can be used. Here is an example
+       of rewards going to the main pool op, a pool co-owner, and NOMP donation. */
+    "rewardRecipients": {
+        "M8ucqBhn5zfwYiCG6W1KoHZ9buymbedFov": 1.5,
     },
 }
 
@@ -315,11 +337,12 @@ You can create as many of these pool config files as you want (such as one pool 
 #### 3) Start the portal
 
 ```
-node init.js
+npm run start
 ```
 
 Credits
 -------
+* [Nick Sarris / Blinkhash](https://github.com/nicksarris) - developer behind Blinkhash Mining Pool/NOMP updates
 * [Jerry Brady / mintyfresh68](https://github.com/bluecircle) - got coin-switching fully working and developed proxy-per-algo feature
 * [Tony Dobbs](http://anthonydobbs.com) - designs for front-end and created the NOMP logo
 * [LucasJones](//github.com/LucasJones) - got p2p block notify working and implemented additional hashing algos
@@ -331,7 +354,6 @@ Credits
 * [icecube45](//github.com/icecube45) - helping out with the repo wiki
 * [Fcases](//github.com/Fcases) - ordered me a pizza <3
 * Those that contributed to [node-stratum-pool](//github.com/zone117x/node-stratum-pool#credits)
-
 
 License
 -------

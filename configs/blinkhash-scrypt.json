@@ -1,7 +1,6 @@
 {
     "enabled": true,
     "address": "MMvdRHMDh128QgG2GebQhiUmiV8GCiiB5G",
-    "debug": false,
     "featured": true,
     "fees": 1.5,
     "coin": {

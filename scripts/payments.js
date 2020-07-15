@@ -933,11 +933,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     if (paymentMode === "payment") {
                         logger.debug(logSystem, logComponent, 'Finished sending all confirmed payments to users');
                     }
-                    else {
-                        if (poolOptions.debug) {
-                            logger.debug(logSystem, logComponent, 'Finished running status checks for payment processing');
-                        }
-                    }
 
                     return;
                 });

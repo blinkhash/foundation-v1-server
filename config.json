@@ -4,7 +4,8 @@
         "enabled": true,
         "forks": "auto"
     },
-    "debug": false,
+    "logColors": true,
+    "logLevel": "debug",
     "defaultPoolConfigs": {
         "blockRefreshInterval": 1000,
         "jobRebroadcastTimeout": 55,
@@ -24,8 +25,6 @@
             "port": 6379
         }
     },
-    "logColors": true,
-    "logLevel": "debug",
     "redis": {
         "host": "127.0.0.1",
         "port": 6379
