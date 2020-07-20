@@ -46,7 +46,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                 worker: blockInformation.worker,
                 soloMined: blockInformation.soloMined,
                 confirmed: false,
-                confirmations: blockConfirms[blockInformation.blockHash],
+                confirmations: blockConfirms[blockInformation.blockHash] || 1,
             }
             pending.push(blocksData);
         }
@@ -116,7 +116,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
         // Define Output Payload
         const payload = {
             pending: pending,
-            confirmed: confirmed,
+            confirmed: confirmed.slice(0, 50),
             statistics: statistics,
         }
 

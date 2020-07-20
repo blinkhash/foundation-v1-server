@@ -311,7 +311,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                         ports: poolConfigs[coinName].ports,
                         blocks: {
                             pending: replies[i + 6].sort(sortBlocks),
-                            confirmed: replies[i + 7].sort(sortBlocks).slice(0,50),
+                            confirmed: replies[i + 7].sort(sortBlocks),
                             confirmations: replies[i + 8],
                             pendingCount: replies[i + 3],
                             confirmedCount: replies[i + 4],
