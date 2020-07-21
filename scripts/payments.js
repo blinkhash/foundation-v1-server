@@ -614,6 +614,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             }
                         });
 
+                        // Check for Errors before Callback
                         if (errors == null) {
                             callback(null, workers, rounds, addressAccount);
                         }
@@ -911,6 +912,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                 if ((paymentMode === "start") || (paymentMode === "payment"))
                     finalRedisCommands.push(['hset', `${coin  }:statistics:basic`, 'lastPaid', lastInterval]);
 
+                // If No Commands, Return
                 if (finalRedisCommands.length === 0) {
                     return;
                 }
@@ -928,15 +930,62 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             logger.error('Could not write finalRedisCommands.txt, you are fucked.');
                         });
                     }
-
-                    // Send Final Messages
-                    if (paymentMode === "payment") {
-                        logger.debug(logSystem, logComponent, 'Finished sending all confirmed payments to users');
-                    }
-
-                    return;
                 });
-            }
+
+                // Check for Failed Payments
+                var fixFailedPayments = function () {
+                    redisClient.zrange(`${coin}:payments:payments`, -2, -2, (err, results) => {
+                        results.forEach(result => {
+                            var payment = JSON.parse(result)
+                            daemon.cmd('gettransaction', [payment.txid], result => {
+                                var transaction = result[0].response
+                                if (transaction === null) {
+                                    return
+                                }
+
+                                // Payment was Orphaned
+                                if (transaction.confirmations == -1) {
+                                    logger.warning(logSystem, logComponent, `Error with payment, ${payment.txid} has ${transaction.confirmations} confirmations.`)
+                                    var rpccallTracking = 'sendmany "" ' + JSON.stringify(payment.amounts)
+                                    daemon.cmd('sendmany', ['', payment.amounts], result => {
+                                        if (result.error) {
+                                            logger.warning(logSystem, logComponent, rpccallTracking)
+                                            logger.error(logSystem, logComponent, `Error sending payments ${  JSON.stringify(result.error)}`);
+                                            return;
+                                        }
+                                        if (!result.response) {
+                                            logger.warning(logSystem, logComponent, rpccallTracking)
+                                            logger.error(logSystem, logComponent, `Error sending payments ${  JSON.stringify(result)}`);
+                                            return
+                                        }
+                                        logger.special(logSystem, logComponent, `Resent payment to ${Object.keys(payment.amounts).length} miners; ${payment.txid} -> ${result.response}`)
+
+                                        // Update Redis with New Payment
+                                        var oldPaymentTime = payment.time
+                                        payment.txid = result.response
+                                        payment.time = Date.now()
+
+                                        // Push Payments to Redis
+                                        redisClient.zadd(`${coin}:payments:payments`, Date.now(), JSON.stringify(payment))
+                                        redisClient.zremrangebyscore(`${coin}:payments:payments`, oldPaymentTime, oldPaymentTime, () => {})
+                                    }, true, true);
+                                }
+                            })
+                        })
+                    })
+                }
+
+                // Check ONLY when Sending Payments
+                if (paymentMode === "payment") {
+                    fixFailedPayments();
+                };
+
+                // Send Final Messages
+                if (paymentMode === "payment") {
+                    logger.debug(logSystem, logComponent, 'Finished sending all confirmed payments to users');
+                }
+                return;
+            },
         ]);
     };
 }
