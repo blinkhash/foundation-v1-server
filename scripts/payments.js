@@ -934,7 +934,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
 
                 // Check for Failed Payments
                 var fixFailedPayments = function () {
-                    redisClient.zrange(`${coin}:payments:payments`, -2, -2, (err, results) => {
+                    redisClient.zrange(`${coin}:payments:payments`, -5, -5, (err, results) => {
                         results.forEach(result => {
                             var payment = JSON.parse(result)
                             daemon.cmd('gettransaction', [payment.txid], result => {

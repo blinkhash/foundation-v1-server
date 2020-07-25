@@ -5,6 +5,7 @@
  */
 
 // Import Network Modules
+var apicache = require('apicache')
 var bodyParser = require('body-parser');
 var compress = require('compression');
 var cors = require('cors')
@@ -37,7 +38,9 @@ var PoolServer = function (logger) {
 
     // Build Main Server
     var app = express();
+    var cache = apicache.middleware
     app.use(bodyParser.json());
+    app.use(cache('5 minutes'));
     app.use(compress());
     app.use(cors());
     app.get('/api/v1/:method', function(req, res, next) {

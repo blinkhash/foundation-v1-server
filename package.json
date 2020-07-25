@@ -32,6 +32,7 @@
     "clean": "eslint . --ext .js --ignore-pattern node_modules/ --fix"
   },
   "dependencies": {
+    "apicache": "^1.5.3",
     "async": "1.5.2",
     "babel-eslint": "^10.1.0",
     "bignum": "0.13.1",
