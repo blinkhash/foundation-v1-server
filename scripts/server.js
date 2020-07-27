@@ -40,7 +40,7 @@ var PoolServer = function (logger) {
     var app = express();
     var cache = apicache.middleware
     app.use(bodyParser.json());
-    app.use(cache('5 minutes'));
+    app.use(cache('2 minutes'));
     app.use(compress());
     app.use(cors());
     app.get('/api/v1/:method', function(req, res, next) {
