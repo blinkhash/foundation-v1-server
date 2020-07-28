@@ -246,6 +246,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     var rounds = results[1].map(function(r) {
                         var details = JSON.parse(r);
                         return {
+                            time: details.time,
                             blockHash: details.blockHash,
                             txHash: details.txHash,
                             height: details.height,
@@ -446,7 +447,10 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     roundSharesSolo[details.worker] = round[entry]
                                 }
                                 else {
-                                    roundSharesShared[details.worker] = round[entry]
+                                    roundSharesShared[details.worker] = {
+                                        time: details.time,
+                                        difficulty: round[entry]
+                                    }
                                 }
                             });
                         }
@@ -510,7 +514,20 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         // Manage Shares in each Round
                         rounds.forEach(function(round, i) {
                             var workerSharesSolo = allWorkerSharesSolo[i];
-                            var workerSharesShared = allWorkerSharesShared[i];
+                            var sharesToCheck = allWorkerSharesShared[i];
+
+                            // Filter ONLY Shares within 12 Hours of Finding a Block
+                            validShares = Object.keys(sharesToCheck).filter(function(r) {
+                                var blockTime = round.time / 1000;
+                                var shareTime = sharesToCheck[r].time / 1000;
+                                return (blockTime - shareTime) <= 43200;
+                            });
+
+                            // Establish Object from Filtered Shares
+                            var workerSharesShared = {}
+                            for (var share in validShares) {
+                                workerSharesShared[validShares[share]] = (sharesToCheck[validShares[share]]);
+                            }
 
                             // Check if Shares Exist in Round
                             if ((Object.keys(workerSharesSolo).length <= 0) && (Object.keys(workerSharesShared).length <= 0)) {
