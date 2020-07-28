@@ -226,9 +226,9 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
         async.each(_this.stats, function(pool, pcb) {
             pindex++;
             var coin = String(_this.stats[pool.name].name);
-            client.hscan(`${coin  }:shares:roundCurrent`, 0, "match", `${a}*`, "count", 1000, function(err, result) {
-                if (err) {
-                    pcb(err);
+            client.hscan(`${coin  }:shares:roundCurrent`, 0, "match", `${a}*`, "count", 1000, function(error, result) {
+                if (error) {
+                    pcb(error);
                     return;
                 }
                 var shares = 0;
@@ -276,6 +276,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                 ['smembers', ':blocks:confirmed'],
                 ['hgetall', ':blocks:pendingConfirms'],
                 ['hgetall', ':shares:roundCurrent'],
+                ['hgetall', ':times:timesCurrent'],
                 ['zrange', ':payments:payments', -100, -1],
             ];
 
@@ -291,10 +292,8 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
 
 
             // Get Global Statistics for Each Coin
-            client.client.multi(redisCommands).exec(function(err, replies) {
-
-                // Handle Errors
-                if (err) {
+            client.client.multi(redisCommands).exec(function(error, replies) {
+                if (error) {
                     logger.error(logSystem, 'Global', `error with getting global stats ${  JSON.stringify(err)}`);
                     callback(err);
                 }
@@ -327,6 +326,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                         shares: {
                             shares: 0,
                             roundShares: (replies[i + 9] || {}),
+                            roundTimes: (replies[i + 10] || {}),
                         },
                         statistics: {
                             validShares: replies[i + 2] ? (replies[i + 2].validShares || 0) : 0,
@@ -359,10 +359,10 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                     }
 
                     // Calculate Payment Data
-                    for (var j = replies[i + 10].length; j > 0; j--) {
+                    for (var j = replies[i + 11].length; j > 0; j--) {
                         var jsonObj = null;
                         try {
-                            jsonObj = JSON.parse(replies[i + 10][j - 1]);
+                            jsonObj = JSON.parse(replies[i + 11][j - 1]);
                         }
                         catch(e) {}
                         if (jsonObj !== null) {
@@ -488,8 +488,6 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
             });
 
         }, function(err) {
-
-            // Handle Errors
             if (err) {
                 logger.error(logSystem, 'Global', `error getting all stats${  JSON.stringify(err)}`);
                 callback();

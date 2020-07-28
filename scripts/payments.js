@@ -180,8 +180,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
         }
 
     ], function(error) {
-
-        // Handle Errors
         if (error) {
             setupFinished(false);
             return;
@@ -429,215 +427,259 @@ function SetupForPool(logger, poolOptions, setupFinished) {
             // Update Redis Database
             function(workers, rounds, addressAccount, callback) {
 
+                // Lookup Times from Rounds
+                var timeLookups = rounds.map(function(r) {
+                    return ['hgetall', `${coin  }:times:times${  r.height}`]
+                });
+
                 // Lookup Shares from Rounds
                 var shareLookups = rounds.map(function(r) {
                     return ['hgetall', `${coin  }:shares:round${  r.height}`]
                 });
 
-                redisClient.multi(shareLookups).exec(function(error, results) {
-                    var allWorkerSharesSolo = []
-                    var allWorkerSharesShared = []
-                    results.forEach(function(round) {
-                        var roundSharesSolo = {}
-                        var roundSharesShared = {}
-                        try {
-                            Object.keys(round).forEach(function(entry) {
-                                var details = JSON.parse(entry);
-                                if (details.soloMined) {
-                                    roundSharesSolo[details.worker] = round[entry]
-                                }
-                                else {
-                                    roundSharesShared[details.worker] = {
-                                        time: details.time,
-                                        difficulty: round[entry]
-                                    }
-                                }
-                            });
-                        }
-                        catch(err) {}
-                        allWorkerSharesSolo.push(roundSharesSolo)
-                        allWorkerSharesShared.push(roundSharesShared)
-                    });
-
-                    // Handle Errors
-                    if (error) {
-                        callback('Check finished - redis error with multi get rounds share');
+                // Establish Times Lookup
+                redisClient.multi(timeLookups).exec(function(error, allWorkerTimesShared) {
+                    if (error){
+                        callback('Check finished - redis error with multi get rounds time');
                         return;
                     }
 
-                    var errors = null;
-                    var performPayment = false;
-                    var notAddr = null;
-
-                    var feeSatoshi = coinsToSatoshies(fee);
-                    var totalOwed = parseInt(0);
-                    for (var i = 0; i < rounds.length; i++) {
-                        if (rounds[i].category == 'generate') {
-                            totalOwed = totalOwed + coinsToSatoshies(rounds[i].reward) - feeSatoshi;
-                        }
-                    }
-                    for (var w in workers) {
-                        var worker = workers[w];
-                        totalOwed = totalOwed + (worker.balance || 0);
-                    }
-
-                    // Check For Funds before Payments Processed
-                    listUnspent(null, notAddr, minConfPayout, false, function (error, balance) {
+                    // Establish Shares Lookup
+                    redisClient.multi(shareLookups).exec(function(error, sharesResults) {
                         if (error) {
-                            logger.error(logSystem, logComponent, 'Error checking pool balance before processing payments.');
-                            return callback(true);
-                        } else if (balance < totalOwed) {
-                            logger.error(logSystem, logComponent,  `Insufficient funds (${  satoshisToCoins(balance)  }) to process payments (${  satoshisToCoins(totalOwed)  }); possibly waiting for txs.`);
-                            performPayment = false;
-                        } else if (balance > totalOwed) {
-                            performPayment = true;
-                        }
-                        if (totalOwed <= 0) {
-                            performPayment = false;
-                        }
-                        if (!performPayment) {
-                            rounds = rounds.filter(function(r) {
-                                switch (r.category) {
-                                    case 'orphan':
-                                    case 'kicked':
-                                    case 'immature':
-                                        return true;
-                                    case 'generate':
-                                        r.category = 'immature';
-                                        return true;
-                                    default:
-                                        return false;
-                                }
-                            });
+                            callback('Check finished - redis error with multi get rounds share');
+                            return;
                         }
 
-                        // Manage Shares in each Round
-                        rounds.forEach(function(round, i) {
-                            var workerSharesSolo = allWorkerSharesSolo[i];
-                            var sharesToCheck = allWorkerSharesShared[i];
-
-                            // Filter ONLY Shares within 12 Hours of Finding a Block
-                            validShares = Object.keys(sharesToCheck).filter(function(r) {
-                                var blockTime = round.time / 1000;
-                                var shareTime = sharesToCheck[r].time / 1000;
-                                return (blockTime - shareTime) <= 43200;
-                            });
-
-                            // Establish Object from Filtered Shares
-                            var workerSharesShared = {}
-                            for (var share in validShares) {
-                                workerSharesShared[validShares[share]] = (sharesToCheck[validShares[share]]);
-                            }
-
-                            // Check if Shares Exist in Round
-                            if ((Object.keys(workerSharesSolo).length <= 0) && (Object.keys(workerSharesShared).length <= 0)) {
-                                redisClient.smove(`${coin  }:blocks:pending`, `${coin  }:blocks:manual`, round.serialized);
-                                logger.error(logSystem, logComponent, `No worker shares for round: ${  round.height  } blockHash: ${  round.blockHash}. Manual payout required.`);
-                                return;
-                            }
-
-                            // Find Type of Block Generated
-                            switch (round.category) {
-
-                                // No Block Found
-                                case 'kicked':
-                                case 'orphan':
-                                    break;
-
-                                // Block is Immature
-                                case 'immature':
-                                    var feeSatoshi = coinsToSatoshies(fee);
-                                    var immature = coinsToSatoshies(round.reward);
-                                    var totalShares = parseFloat(0);
-
-                                    // Check if Solo Mined
-                                    if (round.soloMined) {
-
-                                        immature = Math.round(immature - feeSatoshi);
-                                        var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
-                                        var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
-                                        worker.roundShares = shares;
-                                        var workerImmatureTotal = Math.round(immature);
-                                        worker.immature = (worker.immature || 0) + workerImmatureTotal;
-
+                        // Seperate Shared/Solo Shares
+                        var allWorkerSharesSolo = []
+                        var allWorkerSharesShared = []
+                        sharesResults.forEach(function(round) {
+                            var roundSharesSolo = {}
+                            var roundSharesShared = {}
+                            try {
+                                Object.keys(round).forEach(function(entry) {
+                                    var details = JSON.parse(entry);
+                                    if (details.soloMined) {
+                                        roundSharesSolo[details.worker] = round[entry]
                                     }
-
-                                    // Otherwise, Payout Shared
                                     else {
-
-                                        immature = Math.round(immature - feeSatoshi);
-                                        for (var workerAddress in workerSharesShared) {
-                                            var worker = workers[workerAddress] = (workers[workerAddress] || {});
-                                            var shares = parseFloat((workerSharesShared[workerAddress] || 0));
-                                            worker.roundShares = shares;
-                                            totalShares += shares;
-                                        }
-
-                                        for (var workerAddress in workerSharesShared) {
-                                            var worker = workers[workerAddress] = (workers[workerAddress] || {});
-                                            var percent = parseFloat(worker.roundShares) / totalShares;
-                                            var workerImmatureTotal = Math.round(immature * percent);
-                                            worker.immature = (worker.immature || 0) + workerImmatureTotal;
-                                        }
-
+                                        roundSharesShared[details.worker] = round[entry]
                                     }
-                                    break;
-
-                                // Block Found and Confirmed
-                                case 'generate':
-                                    var feeSatoshi = coinsToSatoshies(fee);
-                                    var reward = Math.round(coinsToSatoshies(round.reward) - feeSatoshi);
-                                    var totalShares = parseFloat(0);
-
-                                    // Check if Solo Mined
-                                    if (round.soloMined) {
-
-                                        var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
-                                        var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
-                                        worker.roundShares = shares;
-                                        worker.totalShares = parseFloat(worker.totalShares || 0) + shares;
-
-                                        var workerRewardTotal = Math.round(reward);
-                                        worker.reward = (worker.reward || 0) + workerRewardTotal;
-
-                                    }
-
-                                    // Otherwise, Payout Shared
-                                    else {
-
-                                        for (var workerAddress in workerSharesShared) {
-                                            var worker = workers[workerAddress] = (workers[workerAddress] || {});
-                                            var shares = parseFloat((workerSharesShared[workerAddress] || 0));
-                                            worker.roundShares = shares;
-                                            worker.totalShares = parseFloat(worker.totalShares || 0) + shares;
-                                            totalShares += shares;
-                                        }
-
-                                        for (var workerAddress in workerSharesShared) {
-                                            var worker = workers[workerAddress] = (workers[workerAddress] || {});
-                                            var percent = parseFloat(worker.roundShares) / totalShares;
-                                            if (percent > 1.0) {
-                                                errors = true;
-                                                logger.error(logSystem, logComponent, `Share percent is greater than 1.0 for ${workerAddress} round:${  round.height  } blockHash:${  round.blockHash}`);
-                                                return;
-                                            }
-                                            var workerRewardTotal = Math.round(reward * percent);
-                                            worker.reward = (worker.reward || 0) + workerRewardTotal;
-                                        }
-
-                                    }
-                                    break;
-
+                                });
                             }
+                            catch(err) {}
+                            allWorkerSharesSolo.push(roundSharesSolo)
+                            allWorkerSharesShared.push(roundSharesShared)
                         });
 
-                        // Check for Errors before Callback
-                        if (errors == null) {
-                            callback(null, workers, rounds, addressAccount);
+                        var errors = null;
+                        var performPayment = false;
+                        var notAddr = null;
+
+                        var feeSatoshi = coinsToSatoshies(fee);
+                        var totalOwed = parseInt(0);
+                        for (var i = 0; i < rounds.length; i++) {
+                            if (rounds[i].category == 'generate') {
+                                totalOwed = totalOwed + coinsToSatoshies(rounds[i].reward) - feeSatoshi;
+                            }
                         }
-                        else {
-                            callback(true);
+                        for (var w in workers) {
+                            var worker = workers[w];
+                            totalOwed = totalOwed + (worker.balance || 0);
                         }
+
+                        // Check For Funds before Payments Processed
+                        listUnspent(null, notAddr, minConfPayout, false, function (error, balance) {
+                            if (error) {
+                                logger.error(logSystem, logComponent, 'Error checking pool balance before processing payments.');
+                                return callback(true);
+                            } else if (balance < totalOwed) {
+                                logger.error(logSystem, logComponent,  `Insufficient funds (${  satoshisToCoins(balance)  }) to process payments (${  satoshisToCoins(totalOwed)  }); possibly waiting for txs.`);
+                                performPayment = false;
+                            } else if (balance > totalOwed) {
+                                performPayment = true;
+                            }
+                            if (totalOwed <= 0) {
+                                performPayment = false;
+                            }
+                            if (!performPayment) {
+                                rounds = rounds.filter(function(r) {
+                                    switch (r.category) {
+                                        case 'orphan':
+                                        case 'kicked':
+                                        case 'immature':
+                                            return true;
+                                        case 'generate':
+                                            r.category = 'immature';
+                                            return true;
+                                        default:
+                                            return false;
+                                    }
+                                });
+                            }
+
+                            // Manage Shares in each Round
+                            rounds.forEach(function(round, i) {
+                                var workerSharesSolo = allWorkerSharesSolo[i];
+                                var workerSharesShared = allWorkerSharesShared[i];
+                                var workerTimesShared = allWorkerTimesShared[i]
+
+                                // Check if Shares Exist in Round
+                                if ((Object.keys(workerSharesSolo).length <= 0) && (Object.keys(workerSharesShared).length <= 0)) {
+                                    redisClient.smove(`${coin  }:blocks:pending`, `${coin  }:blocks:manual`, round.serialized);
+                                    logger.error(logSystem, logComponent, `No worker shares for round: ${  round.height  } blockHash: ${  round.blockHash}. Manual payout required.`);
+                                    return;
+                                }
+
+                                var workerTimes = {};
+                                var maxTime = 0;
+                                for (var workerAddress in workerTimesShared) {
+                                    var workerTime = parseFloat(workerTimesShared[workerAddress]);
+                                    if (maxTime < workerTime) {
+                                        maxTime = workerTime;
+                                    }
+                                    if (!(workerAddress in workerTimes)) {
+                                        workerTimes[workerAddress] = workerTime;
+                                    }
+                                    else {
+                                        if (workerTimes[workerAddress] < workerTime) {
+                                            workerTimes[workerAddress] = workerTimes[workerAddress] * 0.5 + workerTime;
+                                        }
+                                        else {
+                                            workerTimes[workerAddress] = workerTimes[workerAddress] + workerTime * 0.5;
+                                        }
+                                        if (workerTimes[workerAddress] > maxTime) {
+                                            workerTimes[workerAddress] = maxTime;
+                                        }
+                                    }
+                                }
+
+                                // Find Type of Block Generated
+                                switch (round.category) {
+
+                                    // No Block Found
+                                    case 'kicked':
+                                    case 'orphan':
+                                        break;
+
+                                    // Block is Immature
+                                    case 'immature':
+                                        var feeSatoshi = coinsToSatoshies(fee);
+                                        var immature = coinsToSatoshies(round.reward);
+                                        var totalShares = parseFloat(0);
+
+                                        // Check if Solo Mined
+                                        if (round.soloMined) {
+
+                                            immature = Math.round(immature - feeSatoshi);
+                                            var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
+                                            var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
+                                            worker.roundShares = shares;
+                                            var workerImmatureTotal = Math.round(immature);
+                                            worker.immature = (worker.immature || 0) + workerImmatureTotal;
+
+                                        }
+
+                                        // Otherwise, Payout Shared
+                                        else {
+                                            immature = Math.round(immature - feeSatoshi);
+                                            for (var workerAddress in workerSharesShared) {
+                                                var worker = workers[workerAddress] = (workers[workerAddress] || {});
+                                                var shares = parseFloat((workerSharesShared[workerAddress] || 0));
+                                                if (maxTime > 0) {
+                                                    var lost = parseFloat(0);
+                                                    if (workerTimes[workerAddress] != null && parseFloat(workerTimes[workerAddress]) > 0) {
+                                                        var timePeriod = roundTo(parseFloat(workerTimes[workerAddress] || 1) / maxTime , 2);
+                                                        if (timePeriod > 0 && timePeriod < 0.51) {
+                                                            var lost = shares - (shares * timePeriod);
+                                                            shares = Math.max(shares - lost, 0);
+                                                        }
+                                                    }
+                                                }
+                                                worker.roundShares = shares;
+                                                totalShares += shares;
+                                            }
+
+                                            for (var workerAddress in workerSharesShared) {
+                                                var worker = workers[workerAddress] = (workers[workerAddress] || {});
+                                                var percent = parseFloat(worker.roundShares) / totalShares;
+                                                var workerImmatureTotal = Math.round(immature * percent);
+                                                worker.immature = (worker.immature || 0) + workerImmatureTotal;
+                                            }
+
+                                        }
+                                        break;
+
+                                    // Block Found and Confirmed
+                                    case 'generate':
+                                        var feeSatoshi = coinsToSatoshies(fee);
+                                        var reward = Math.round(coinsToSatoshies(round.reward) - feeSatoshi);
+                                        var totalShares = parseFloat(0);
+
+                                        // Check if Solo Mined
+                                        if (round.soloMined) {
+
+                                            var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
+                                            var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
+                                            worker.roundShares = shares;
+                                            worker.totalShares = parseFloat(worker.totalShares || 0) + shares;
+
+                                            var workerRewardTotal = Math.round(reward);
+                                            worker.reward = (worker.reward || 0) + workerRewardTotal;
+
+                                        }
+
+                                        // Otherwise, Payout Shared
+                                        else {
+                                            for (var workerAddress in workerSharesShared) {
+                                                var worker = workers[workerAddress] = (workers[workerAddress] || {});
+                                                var shares = parseFloat((workerSharesShared[workerAddress] || 0));
+                                                if (maxTime > 0) {
+                                                    var lost = parseFloat(0);
+                                                    if (workerTimes[workerAddress] != null && parseFloat(workerTimes[workerAddress]) > 0) {
+                                                        var timePeriod = roundTo(parseFloat(workerTimes[workerAddress] || 1) / maxTime , 2);
+                                                        if (timePeriod > 0 && timePeriod < 0.51) {
+                                                            var lost = shares - (shares * timePeriod);
+                                                            shares = Math.max(shares - lost, 0);
+                                                        }
+                                                        if (timePeriod > 1.0) {
+                                                            errors = true;
+                                                            logger.error(logSystem, logComponent, `Time share period is greater than 1.0 for ${workerAddress} round:${  round.height  } blockHash:${  round.blockHash}`);
+                                                            return;
+                                                        }
+                                                    }
+                                                }
+                                                worker.roundShares = shares;
+                                                worker.totalShares = parseFloat(worker.totalShares || 0) + shares;
+                                                totalShares += shares;
+                                            }
+
+                                            for (var workerAddress in workerSharesShared) {
+                                                var worker = workers[workerAddress] = (workers[workerAddress] || {});
+                                                var percent = parseFloat(worker.roundShares) / totalShares;
+                                                if (percent > 1.0) {
+                                                    errors = true;
+                                                    logger.error(logSystem, logComponent, `Share percent is greater than 1.0 for ${workerAddress} round:${  round.height  } blockHash:${  round.blockHash}`);
+                                                    return;
+                                                }
+                                                var workerRewardTotal = Math.round(reward * percent);
+                                                worker.reward = (worker.reward || 0) + workerRewardTotal;
+                                            }
+
+                                        }
+                                    break;
+                                }
+                            });
+
+                            // Check for Errors before Callback
+                            if (errors == null) {
+                                callback(null, workers, rounds, addressAccount);
+                            }
+                            else {
+                                callback(true);
+                            }
+                        });
                     });
                 });
             },
@@ -889,6 +931,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             if (r.canDeleteShares) {
                                 moveSharesToCurrent(r);
                                 roundsToDelete.push(`${coin  }:shares:round${  r.height}`);
+                                roundsToDelete.push(`${coin  }:times:times${  r.height}`);
                             }
                             return;
                         case 'immature':
@@ -899,6 +942,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                 confirmsToDelete.push(['hdel', `${coin  }:blocks:pendingConfirms`, r.blockHash]);
                                 movePendingCommands.push(['smove', `${coin  }:blocks:pending`, `${coin  }:blocks:confirmed`, r.serialized]);
                                 roundsToDelete.push(`${coin  }:shares:round${  r.height}`);
+                                roundsToDelete.push(`${coin  }:times:times${  r.height}`);
                             }
                             return;
                     }
