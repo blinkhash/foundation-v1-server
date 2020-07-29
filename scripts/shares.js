@@ -100,21 +100,21 @@ var PoolShares = function (logger, poolConfig) {
         // Establish Redis Variables
         var dateNow = Date.now();
         var redisCommands = [];
-        var redisTemplates = [
+        var shareLookups = [
             ['hgetall', `${coin  }:times:timesStart`],
             ['hgetall', `${coin  }:times:timesShare`]
         ]
 
         // Get Current Start/Share Times
-        redisClient.multi(redisTemplates).exec(function(error, results) {
+        redisClient.multi(shareLookups).exec(function(error, results) {
+            if (error) {
+                logger.error(logSystem, logComponent, `Could not get time data from database: ${  JSON.stringify(error)}`);
+                callback(true);
+                return;
+            }
 
             // Handle Valid Share
             if (isValidShare) {
-                if (error) {
-                    logger.error(logSystem, logComponent, `Could not get time data from database: ${  JSON.stringify(error)}`);
-                    callback(true);
-                    return;
-                }
 
                 var lastStartTimes = results[0] || {};
                 var lastShareTimes = results[1] || {};
@@ -141,6 +141,8 @@ var PoolShares = function (logger, poolConfig) {
                 // Check Regarding Continuous Mining
                 var timeChangeSec = roundTo(Math.max(dateNow - lastShareTime, 0) / 1000, 4);
                 var timeChangeTotal = roundTo(Math.max(dateNow - lastStartTime, 0) / 1000, 4);
+
+                // Add New Data to Round Times
                 if (timeChangeSec < 900) {
                     redisCommands.push(['hincrbyfloat', `${coin  }:times:timesCurrent`, workerAddress, timeChangeSec]);
                 }
@@ -159,18 +161,9 @@ var PoolShares = function (logger, poolConfig) {
                 redisCommands.push(['hincrby', `${coin  }:statistics:basic`, 'invalidShares', 1]);
             }
 
-            // Push Hashrate Data to Database
-            var difficulty = (isValidShare ? shareData.difficulty : -shareData.difficulty)
-            var hashrateData = {
-                time: dateNow,
-                difficulty: difficulty,
-                worker: shareData.worker,
-                soloMined: isSoloMining,
-            }
-            redisCommands.push(['zadd', `${coin  }:statistics:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateData)])
-
             // Push Block Data to Main Array
             if (isValidBlock) {
+
                 var blockData = {
                     time: dateNow,
                     height: shareData.height,
@@ -193,6 +186,16 @@ var PoolShares = function (logger, poolConfig) {
             else if (shareData.blockHash) {
                 redisCommands.push(['hincrby', `${coin  }:statistics:basic`, 'invalidBlocks', 1]);
             }
+
+            // Push Hashrate Data to Database
+            var difficulty = (isValidShare ? shareData.difficulty : -shareData.difficulty)
+            var hashrateData = {
+                time: dateNow,
+                difficulty: difficulty,
+                worker: shareData.worker,
+                soloMined: isSoloMining,
+            }
+            redisCommands.push(['zadd', `${coin  }:statistics:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateData)])
 
             // Write Share Information to Redis Database
             redisClient.multi(redisCommands).exec(function(error, replies) {

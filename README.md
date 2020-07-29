@@ -25,7 +25,7 @@ This portal is an extremely efficient, highly scalable, all-in-one, easy to setu
 
 * Multi-pool ability - this software was built from the ground up to run with multiple coins simultaneously (which can have different properties and hashing algorithms). It can be used to create a pool for a single coin or for multiple coins at once. The pools use clustering to load balance across multiple CPU cores.
 
-* For reward/payment processing, shares are inserted into Redis (a fast NoSQL key/value store). The PROP12 reward system is used with [Redis Transactions](http://redis.io/topics/transactions) for secure and super speedy payouts. There is zero risk to the pool operator. Shares from rounds resulting in orphaned blocks will be merged into share in the current round so that each and every share will be rewarded
+* For reward/payment processing, shares are inserted into Redis (a fast NoSQL key/value store). The PPLNT reward system is used with [Redis Transactions](http://redis.io/topics/transactions) for secure and super speedy payouts. There is zero risk to the pool operator. Shares from rounds resulting in orphaned blocks will be merged into share in the current round so that each and every share will be rewarded
 
 * This portal does not have user accounts/logins/registrations. Instead, miners simply use their coin address for stratum authentication.
 

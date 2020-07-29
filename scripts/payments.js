@@ -438,11 +438,24 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                 });
 
                 // Establish Times Lookup
-                redisClient.multi(timeLookups).exec(function(error, allWorkerTimesShared) {
+                redisClient.multi(timeLookups).exec(function(error, timesResults) {
                     if (error){
                         callback('Check finished - redis error with multi get rounds time');
                         return;
                     }
+
+                    var allWorkerTimesShared = []
+                    timesResults.forEach(function(round) {
+                        var roundTimesShared = {};
+                        try {
+                            // Format Shared Time Data
+                            Object.keys(round).forEach(function(entry) {
+                                roundTimesShared[entry] = parseFloat(round[entry])
+                            });
+                        }
+                        catch(err) {}
+                        allWorkerTimesShared.push(roundTimesShared)
+                    });
 
                     // Establish Shares Lookup
                     redisClient.multi(shareLookups).exec(function(error, sharesResults) {
@@ -451,20 +464,30 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                             return;
                         }
 
-                        // Seperate Shared/Solo Shares
                         var allWorkerSharesSolo = []
                         var allWorkerSharesShared = []
                         sharesResults.forEach(function(round) {
                             var roundSharesSolo = {}
                             var roundSharesShared = {}
                             try {
+                                // Format Shared/Solo Shares Data
                                 Object.keys(round).forEach(function(entry) {
                                     var details = JSON.parse(entry);
                                     if (details.soloMined) {
-                                        roundSharesSolo[details.worker] = round[entry]
+                                        if (!(details.worker in roundSharesSolo)) {
+                                            roundSharesSolo[details.worker] = parseFloat(round[entry])
+                                        }
+                                        else {
+                                            roundSharesSolo[details.worker] += parseFloat(round[entry])
+                                        }
                                     }
                                     else {
-                                        roundSharesShared[details.worker] = round[entry]
+                                        if (!(details.worker in roundSharesShared)) {
+                                            roundSharesShared[details.worker] = parseFloat(round[entry])
+                                        }
+                                        else {
+                                            roundSharesShared[details.worker] += parseFloat(round[entry])
+                                        }
                                     }
                                 });
                             }
@@ -624,7 +647,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                             var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
                                             worker.roundShares = shares;
                                             worker.totalShares = parseFloat(worker.totalShares || 0) + shares;
-
                                             var workerRewardTotal = Math.round(reward);
                                             worker.reward = (worker.reward || 0) + workerRewardTotal;
 
