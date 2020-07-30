@@ -727,7 +727,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                         var amountsRecords = {};
                         var unpaidRecords = {};
                         var shareRecords = {};
-                        var timeAmounts = {};
                         var workerTotals = {};
                         var totalSent = 0;
                         var totalShares = 0;
