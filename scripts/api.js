@@ -224,7 +224,6 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 200,
                         endpoint: "blocks",
                         errors: "",
                         data: blocks,
@@ -241,14 +240,13 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 400,
                         endpoint: "blocks",
                         errors: messages["invalid"],
                         data: {},
                     }
 
                     // Finalize Endpoint Information
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify(payload));
 
                     return;
@@ -324,7 +322,6 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 200,
                         endpoint: "combined",
                         errors: "",
                         data: combined,
@@ -341,14 +338,13 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 400,
                         endpoint: "combined",
                         errors: messages["invalid"],
                         data: {},
                     }
 
                     // Finalize Endpoint Information
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify(payload));
 
                     return;
@@ -376,7 +372,6 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 200,
                         endpoint: "history",
                         errors: "",
                         data: history,
@@ -393,14 +388,13 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 400,
                         endpoint: "history",
                         errors: messages["invalid"],
                         data: {},
                     }
 
                     // Finalize Endpoint Information
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify(payload));
 
                     return;
@@ -424,7 +418,6 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 200,
                         endpoint: "partners",
                         errors: "",
                         data: partners,
@@ -441,14 +434,13 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 400,
                         endpoint: "partners",
                         errors: messages["invalid"],
                         data: {},
                     }
 
                     // Finalize Endpoint Information
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify(payload));
 
                     return;
@@ -480,7 +472,6 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 200,
                         endpoint: "payments",
                         errors: "",
                         data: payments,
@@ -497,14 +488,13 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 400,
                         endpoint: "payments",
                         errors: messages["invalid"],
                         data: {},
                     }
 
                     // Finalize Endpoint Information
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify(payload));
 
                     return;
@@ -561,7 +551,6 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 200,
                         endpoint: "statistics",
                         errors: "",
                         data: statistics,
@@ -578,14 +567,13 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 400,
                         endpoint: "statistics",
                         errors: messages["invalid"],
                         data: {},
                     }
 
                     // Finalize Endpoint Information
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify(payload));
 
                     return;
@@ -639,7 +627,6 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                             // Finalize Payload
                             var payload = {
-                                status: 200,
                                 endpoint: "wallets",
                                 errors: "",
                                 data: wallets,
@@ -655,13 +642,12 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                         // Finalize Payload
                         var payload = {
-                            status: 400,
                             endpoint: "wallets",
                             errors: messages["parameters"],
                             data: {},
                         }
 
-                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.writeHead(400, { 'Content-Type': 'application/json' });
                         res.end(JSON.stringify(payload));
                     }
 
@@ -672,14 +658,13 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 400,
                         endpoint: "wallets",
                         errors: messages["invalid"],
                         data: {},
                     }
 
                     // Finalize Endpoint Information
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify(payload));
 
                     return;
@@ -710,7 +695,6 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 200,
                         endpoint: "workers",
                         errors: "",
                         data: workers,
@@ -727,14 +711,13 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
                     // Finalize Payload
                     var payload = {
-                        status: 400,
                         endpoint: "workers",
                         errors: messages["invalid"],
                         data: {},
                     }
 
                     // Finalize Endpoint Information
-                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify(payload));
 
                     return;
