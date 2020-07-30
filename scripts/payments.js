@@ -625,11 +625,6 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                             for (var workerAddress in workerSharesShared) {
                                                 var worker = workers[workerAddress] = (workers[workerAddress] || {});
                                                 var percent = parseFloat(worker.roundShares) / totalShares;
-                                                if (percent > 1.0) {
-                                                    errors = true;
-                                                    logger.error(logSystem, logComponent, `Share percent is greater than 1.0 for ${workerAddress} round:${  round.height  } blockHash:${  round.blockHash}`);
-                                                    return;
-                                                }
                                                 var workerImmatureTotal = Math.round(immature * percent);
                                                 worker.immature = (worker.immature || 0) + workerImmatureTotal;
                                             }
@@ -647,11 +642,15 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                             var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
                                             var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
                                             var workerRewardTotal = Math.round(reward);
+                                            worker.records = workers[round.workerAddress].records || {}
+                                            worker.records[round.height] = {
+                                                amounts: satoshisToCoins(workerRewardTotal),
+                                                shares: shares,
+                                                times: 1,
+                                            }
                                             worker.roundShares = shares;
                                             worker.totalShares = parseFloat(worker.totalShares || 0) + shares;
                                             worker.reward = (worker.reward || 0) + workerRewardTotal;
-                                            worker.payments = workers[round.workerAddress].payments || {}
-                                            worker.payments[round.height] = satoshisToCoins(workerRewardTotal)
                                         }
 
                                         // Otherwise, Payout Shared
@@ -659,10 +658,17 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                             for (var workerAddress in workerSharesShared) {
                                                 var worker = workers[workerAddress] = (workers[workerAddress] || {});
                                                 var shares = parseFloat((workerSharesShared[workerAddress] || 0));
+                                                worker.records = workers[round.workerAddress].records || {}
+                                                worker.records[round.height] = {
+                                                    amounts: 0,
+                                                    shares: shares,
+                                                    times: 0,
+                                                }
                                                 if (maxTime > 0) {
                                                     var lost = parseFloat(0);
                                                     if (workerTimes[workerAddress] != null && parseFloat(workerTimes[workerAddress]) > 0) {
                                                         var timePeriod = roundTo(parseFloat(workerTimes[workerAddress] || 1) / maxTime , 2);
+                                                        worker.records[round.height].times = timePeriod;
                                                         if (timePeriod > 0 && timePeriod < 0.51) {
                                                             var lost = shares - (shares * timePeriod);
                                                             shares = Math.max(shares - lost, 0);
@@ -688,9 +694,8 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                                     return;
                                                 }
                                                 var workerRewardTotal = Math.round(reward * percent);
+                                                worker.records[round.height].amounts = satoshisToCoins(workerRewardTotal);
                                                 worker.reward = (worker.reward || 0) + workerRewardTotal;
-                                                worker.payments = workers[round.workerAddress].payments || {}
-                                                worker.payments[round.height] = satoshisToCoins(workerRewardTotal)
                                             }
                                         }
                                     break;
@@ -719,9 +724,10 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                     var tries = 0;
                     var trySend = function (withholdPercent) {
 
-                        var addressAmounts = {};
-                        var balanceAmounts = {};
-                        var shareAmounts = {};
+                        var amountsRecords = {};
+                        var unpaidRecords = {};
+                        var shareRecords = {};
+                        var timeAmounts = {};
                         var workerTotals = {};
                         var totalSent = 0;
                         var totalShares = 0;
@@ -751,46 +757,46 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                 totalSent += toSendSatoshis;
                                 worker.sent = satoshisToCoins(toSendSatoshis);
                                 worker.balanceChange = Math.min(worker.balance, toSendSatoshis) * -1;
-                                if (addressAmounts[address] != null && addressAmounts[address] > 0) {
-                                    addressAmounts[address] = coinsRound(addressAmounts[address] + worker.sent);
+                                if (amountsRecords[address] != null && amountsRecords[address] > 0) {
+                                    amountsRecords[address] = coinsRound(amountsRecords[address] + worker.sent);
                                 } else {
-                                    addressAmounts[address] = worker.sent;
+                                    amountsRecords[address] = worker.sent;
                                 }
                             }
                             else {
                                 worker.sent = 0;
                                 worker.balanceChange = Math.max(toSendSatoshis - worker.balance, 0);
                                 if (worker.balanceChange > 0) {
-                                    if (balanceAmounts[address] != null && balanceAmounts[address] > 0) {
-                                        balanceAmounts[address] = coinsRound(balanceAmounts[address] + satoshisToCoins(worker.balanceChange));
+                                    if (unpaidRecords[address] != null && unpaidRecords[address] > 0) {
+                                        unpaidRecords[address] = coinsRound(unpaidRecords[address] + satoshisToCoins(worker.balanceChange));
                                     } else {
-                                        balanceAmounts[address] = satoshisToCoins(worker.balanceChange);
+                                        unpaidRecords[address] = satoshisToCoins(worker.balanceChange);
                                     }
                                 }
                             }
 
                             if (worker.totalShares > 0) {
-                                if (shareAmounts[address] != null && shareAmounts[address] > 0) {
-                                    shareAmounts[address] += worker.totalShares;
+                                if (shareRecords[address] != null && shareRecords[address] > 0) {
+                                    shareRecords[address] += worker.totalShares;
                                 } else {
-                                    shareAmounts[address] = worker.totalShares;
+                                    shareRecords[address] = worker.totalShares;
                                 }
                             }
                         }
 
                         // Check if No Workers/Rounds
-                        if (Object.keys(addressAmounts).length === 0) {
+                        if (Object.keys(amountsRecords).length === 0) {
                             callback(null, workers, rounds);
                             return;
                         }
 
-                        for (var a in addressAmounts) {
-                            addressAmounts[a] = coinsRound(addressAmounts[a]);
+                        for (var a in amountsRecords) {
+                            amountsRecords[a] = coinsRound(amountsRecords[a]);
                         }
 
                         // Send Payments Through Daemon
-                        var rpccallTracking = `sendmany "" ${  JSON.stringify(addressAmounts)}`;
-                        daemon.cmd('sendmany', [addressAccount || '', addressAmounts], function (result) {
+                        var rpccallTracking = `sendmany "" ${  JSON.stringify(amountsRecords)}`;
+                        daemon.cmd('sendmany', [addressAccount || '', amountsRecords], function (result) {
 
                             // Check Payment Errors/Edge Cases
                             if (result.error && result.error.code === -6) {
@@ -836,37 +842,43 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     txid = result.response;
                                 }
                                 if (txid != null) {
-                                    logger.special(logSystem, logComponent, `Sent ${  satoshisToCoins(totalSent)  } to ${  Object.keys(addressAmounts).length  } workers; txid: ${txid}`);
+                                    logger.special(logSystem, logComponent, `Sent ${  satoshisToCoins(totalSent)  } to ${  Object.keys(amountsRecords).length  } workers; txid: ${txid}`);
                                     if (withholdPercent > 0) {
                                         logger.warning(logSystem, logComponent, `Had to withhold ${  withholdPercent * 100
                                              }% of reward from workers to cover transaction fees. `
                                             + `Fund pool wallet with coins to prevent this from happening`);
                                     }
-                                    var paymentBlocks = rounds.filter(function(round) { return round.category == 'generate'; }).map(function(round) {
-                                        paymentRecords = {
+                                    var paymentsRecords = rounds.filter(function(round) { return round.category == 'generate'; }).map(function(round) {
+                                        roundRecords = {
                                             height: round.height,
-                                            amounts: {}
+                                            amounts: {},
+                                            shares: {},
+                                            times: {},
                                         }
                                         for (var worker in workers) {
-                                            if (typeof workers[worker].payments !== "undefined") {
-                                                if (round.height in workers[worker].payments) {
-                                                    paymentRecords.amounts[worker] = workers[worker].payments[round.height];
+                                            if (typeof workers[worker].records !== "undefined") {
+                                                if (round.height in workers[worker].records) {
+                                                    roundRecords.amounts[worker] = workers[worker].records[round.height].amounts;
+                                                    roundRecords.shares[worker] = workers[worker].records[round.height].shares;
+                                                    roundRecords.times[worker] = workers[worker].records[round.height].times;
                                                 }
                                             }
                                         }
-                                        return paymentRecords;
+                                        return roundRecords;
                                     });
                                     var paymentsUpdate = [];
                                     var paymentsData = {
                                         time: Date.now(),
                                         txid: txid,
-                                        shares: totalShares,
                                         paid: satoshisToCoins(totalSent),
-                                        workers: Object.keys(addressAmounts).length,
-                                        blocks: paymentBlocks,
-                                        amounts: addressAmounts,
-                                        unpaid: balanceAmounts,
-                                        work: shareAmounts
+                                        records: paymentsRecords,
+                                        shares: totalShares,
+                                        totals: {
+                                            amounts: amountsRecords,
+                                            shares: shareRecords,
+                                        },
+                                        unpaid: unpaidRecords,
+                                        workers: Object.keys(amountsRecords).length,
                                     };
                                     paymentsUpdate.push(['zadd', `${logComponent  }:payments:payments`, Date.now(), JSON.stringify(paymentsData)]);
                                     callback(null, workers, rounds, paymentsUpdate);

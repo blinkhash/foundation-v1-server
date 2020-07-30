@@ -135,12 +135,12 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
             var paymentsData = {
                 time: paymentInformation.time,
                 txid: paymentInformation.txid,
-                shares: paymentInformation.shares,
                 paid: paymentInformation.paid,
-                blocks: paymentInformation.blocks,
-                amounts: paymentInformation.amounts,
+                records: paymentInformation.records,
+                shares: paymentInformation.shares,
+                totals: paymentInformation.totals,
                 unpaid: paymentInformation.unpaid,
-                work: paymentInformation.work
+                workers: paymentInformation.workers,
             }
             payments.push(paymentsData);
         }
