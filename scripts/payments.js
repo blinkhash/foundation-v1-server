@@ -658,7 +658,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                             for (var workerAddress in workerSharesShared) {
                                                 var worker = workers[workerAddress] = (workers[workerAddress] || {});
                                                 var shares = parseFloat((workerSharesShared[workerAddress] || 0));
-                                                worker.records = workers[round.workerAddress].records || {}
+                                                worker.records = workers[workerAddress].records || {}
                                                 worker.records[round.height] = {
                                                     amounts: 0,
                                                     shares: shares,
