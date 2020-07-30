@@ -594,14 +594,12 @@ function SetupForPool(logger, poolOptions, setupFinished) {
 
                                         // Check if Solo Mined
                                         if (round.soloMined) {
-
                                             immature = Math.round(immature - feeSatoshi);
                                             var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
                                             var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
-                                            worker.roundShares = shares;
                                             var workerImmatureTotal = Math.round(immature);
+                                            worker.roundShares = shares;
                                             worker.immature = (worker.immature || 0) + workerImmatureTotal;
-
                                         }
 
                                         // Otherwise, Payout Shared
@@ -627,10 +625,14 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                             for (var workerAddress in workerSharesShared) {
                                                 var worker = workers[workerAddress] = (workers[workerAddress] || {});
                                                 var percent = parseFloat(worker.roundShares) / totalShares;
+                                                if (percent > 1.0) {
+                                                    errors = true;
+                                                    logger.error(logSystem, logComponent, `Share percent is greater than 1.0 for ${workerAddress} round:${  round.height  } blockHash:${  round.blockHash}`);
+                                                    return;
+                                                }
                                                 var workerImmatureTotal = Math.round(immature * percent);
                                                 worker.immature = (worker.immature || 0) + workerImmatureTotal;
                                             }
-
                                         }
                                         break;
 
@@ -642,14 +644,14 @@ function SetupForPool(logger, poolOptions, setupFinished) {
 
                                         // Check if Solo Mined
                                         if (round.soloMined) {
-
                                             var worker = workers[round.workerAddress] = (workers[round.workerAddress] || {});
                                             var shares = parseFloat((workerSharesSolo[round.workerAddress] || 0));
+                                            var workerRewardTotal = Math.round(reward);
                                             worker.roundShares = shares;
                                             worker.totalShares = parseFloat(worker.totalShares || 0) + shares;
-                                            var workerRewardTotal = Math.round(reward);
                                             worker.reward = (worker.reward || 0) + workerRewardTotal;
-
+                                            worker.payments = workers[round.workerAddress].payments || {}
+                                            worker.payments[round.height] = satoshisToCoins(workerRewardTotal)
                                         }
 
                                         // Otherwise, Payout Shared
@@ -687,8 +689,9 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                                 }
                                                 var workerRewardTotal = Math.round(reward * percent);
                                                 worker.reward = (worker.reward || 0) + workerRewardTotal;
+                                                worker.payments = workers[round.workerAddress].payments || {}
+                                                worker.payments[round.height] = satoshisToCoins(workerRewardTotal)
                                             }
-
                                         }
                                     break;
                                 }
@@ -839,8 +842,19 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                              }% of reward from workers to cover transaction fees. `
                                             + `Fund pool wallet with coins to prevent this from happening`);
                                     }
-                                    var paymentBlocks = rounds.filter(function(r) { return r.category == 'generate'; }).map(function(r) {
-                                        return parseInt(r.height);
+                                    var paymentBlocks = rounds.filter(function(round) { return round.category == 'generate'; }).map(function(round) {
+                                        paymentRecords = {
+                                            height: round.height,
+                                            amounts: {}
+                                        }
+                                        for (var worker in workers) {
+                                            if (typeof workers[worker].payments !== "undefined") {
+                                                if (round.height in workers[worker].payments) {
+                                                    paymentRecords.amounts[worker] = workers[worker].payments[round.height];
+                                                }
+                                            }
+                                        }
+                                        return paymentRecords;
                                     });
                                     var paymentsUpdate = [];
                                     var paymentsData = {

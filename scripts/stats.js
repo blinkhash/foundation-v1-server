@@ -127,21 +127,21 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
         return 0;
     }
 
+    // Get Balance From Address
     this.getBalanceByAddress = function(address, callback) {
-        var a = address.split(".")[0];
         var client = redisClients[0].client;
-
         var totalBalance = parseFloat(0);
         var totalImmature = parseFloat(0);
         var totalPaid = parseFloat(0);
         var totalUnpaid = parseFloat(0);
 
+        // Load Statistics from All Pools
         async.each(_this.stats, function(pool, pcb) {
             var coin = String(_this.stats[pool.name].name);
-            client.hscan(`${coin}:payments:balances`, 0, "match", `${a}*`, "count", 10000, function(error, bals) {
-                client.hscan(`${coin}:payments:immature`, 0, "match", `${a}*`, "count", 10000, function(error, pends) {
-                    client.hscan(`${coin}:payments:payouts`, 0, "match", `${a}*`, "count", 10000, function(error, pays) {
-                        client.hscan(`${coin}:payments:unpaid`, 0, "match", `${a}*`, "count", 10000, function(error, unpays) {
+            client.hscan(`${coin}:payments:balances`, 0, "match", `${address}*`, "count", 10000, function(error, bals) {
+                client.hscan(`${coin}:payments:immature`, 0, "match", `${address}*`, "count", 10000, function(error, pends) {
+                    client.hscan(`${coin}:payments:payouts`, 0, "match", `${address}*`, "count", 10000, function(error, pays) {
+                        client.hscan(`${coin}:payments:unpaid`, 0, "match", `${address}*`, "count", 10000, function(error, unpays) {
 
                             var workerName = "";
                             var balanceAmount = 0;
@@ -150,6 +150,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                             var unpaidAmount = 0;
                             var workers = {};
 
+                            // Update Balances
                             for (var b in bals[1]) {
                                 if (Math.abs(b % 2) != 1) {
                                     workerName = String(bals[1][b]);
@@ -162,6 +163,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                                 }
                             }
 
+                            // Update Immature
                             for (var b in pends[1]) {
                                 if (Math.abs(b % 2) != 1) {
                                     workerName = String(pends[1][b]);
@@ -174,6 +176,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                                 }
                             }
 
+                            // Update Payouts
                             for (var i in pays[1]) {
                                 if (Math.abs(i % 2) != 1) {
                                     workerName = String(pays[1][i]);
@@ -186,6 +189,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                                 }
                             }
 
+                            // Update Unpaid
                             for (var i in unpays[1]) {
                                 if (Math.abs(i % 2) != 1) {
                                     workerName = String(unpays[1][i]);
@@ -217,16 +221,17 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
         });
     };
 
+    // Get Shares From Address
     this.getTotalSharesByAddress = function(address, callback) {
-        var a = address.split(".")[0];
         var client = redisClients[0].client;
-
         var pindex = parseInt(0);
         var totalShares = parseFloat(0);
+
+        // Load Statistics from All Pools
         async.each(_this.stats, function(pool, pcb) {
             pindex++;
             var coin = String(_this.stats[pool.name].name);
-            client.hscan(`${coin  }:shares:roundCurrent`, 0, "match", `${a}*`, "count", 1000, function(error, result) {
+            client.hscan(`${coin  }:shares:roundCurrent`, 0, "match", `${address}*`, "count", 1000, function(error, result) {
                 if (error) {
                     pcb(error);
                     return;
