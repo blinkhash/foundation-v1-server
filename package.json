@@ -51,7 +51,7 @@
     "nodemon": "*",
     "nonce": "*",
     "redis": "0.12.1",
-    "request": "2.69.0",
+    "request": "2.88.2",
     "stratum-pool": "git://github.com/blinkhash/blinkhash-stratum-pool.git"
   },
   "engines": {
