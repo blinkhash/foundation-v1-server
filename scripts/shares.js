@@ -45,8 +45,8 @@ var PoolShares = function (logger, poolConfig) {
     });
 
     // Manage Error Endpoint
-    redisClient.on('error', function(err) {
-        logger.error(logSystem, logComponent, logSubCat, `Redis client had an error: ${  JSON.stringify(err)}`)
+    redisClient.on('error', function(error) {
+        logger.error(logSystem, logComponent, logSubCat, `Redis client had an error: ${  JSON.stringify(error)}`)
     });
 
     // Manage End Endpoint
@@ -109,7 +109,6 @@ var PoolShares = function (logger, poolConfig) {
         redisClient.multi(shareLookups).exec(function(error, results) {
             if (error) {
                 logger.error(logSystem, logComponent, `Could not get time data from database: ${  JSON.stringify(error)}`);
-                callback(true);
                 return;
             }
 
@@ -140,7 +139,6 @@ var PoolShares = function (logger, poolConfig) {
 
                 // Check Regarding Continuous Mining
                 var timeChangeSec = roundTo(Math.max(dateNow - lastShareTime, 0) / 1000, 4);
-                var timeChangeTotal = roundTo(Math.max(dateNow - lastStartTime, 0) / 1000, 4);
 
                 // Add New Data to Round Times
                 if (timeChangeSec < 900) {
@@ -200,7 +198,7 @@ var PoolShares = function (logger, poolConfig) {
             // Write Share Information to Redis Database
             redisClient.multi(redisCommands).exec(function(error, replies) {
                 if (error) {
-                    logger.error(logSystem, logComponent, logSubCat, `Error with share processor multi ${  JSON.stringify(err)}`);
+                    logger.error(logSystem, logComponent, logSubCat, `Error with share processor multi ${  JSON.stringify(error)}`);
                 }
             });
         });

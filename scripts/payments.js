@@ -453,7 +453,9 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                 roundTimesShared[entry] = parseFloat(round[entry])
                             });
                         }
-                        catch(err) {}
+                        catch(error) {
+                            logger.error(logSystem, logComponent, 'Check finished - redis error with formatting round times.');
+                        }
                         allWorkerTimesShared.push(roundTimesShared)
                     });
 
@@ -491,7 +493,9 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                     }
                                 });
                             }
-                            catch(err) {}
+                            catch(err) {
+                                logger.error(logSystem, logComponent, 'Check finished - redis error with formatting round shares.');
+                            }
                             allWorkerSharesSolo.push(roundSharesSolo)
                             allWorkerSharesShared.push(roundSharesShared)
                         });
@@ -848,7 +852,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                             + `Fund pool wallet with coins to prevent this from happening`);
                                     }
                                     var paymentsRecords = rounds.filter(function(round) { return round.category == 'generate'; }).map(function(round) {
-                                        roundRecords = {
+                                        var roundRecords = {
                                             height: round.height,
                                             amounts: {},
                                             shares: {},
@@ -1054,7 +1058,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                                 // Payment was Orphaned
                                 if (transaction.confirmations == -1) {
                                     logger.warning(logSystem, logComponent, `Error with payment, ${payment.txid} has ${transaction.confirmations} confirmations.`)
-                                    var rpccallTracking = 'sendmany "" ' + JSON.stringify(payment.amounts)
+                                    var rpccallTracking = `sendmany "" ${  JSON.stringify(payment.amounts)}`
                                     daemon.cmd('sendmany', ['', payment.amounts], result => {
                                         if (result.error) {
                                             logger.warning(logSystem, logComponent, rpccallTracking)
@@ -1086,7 +1090,7 @@ function SetupForPool(logger, poolOptions, setupFinished) {
                 // Check ONLY when Sending Payments
                 if (paymentMode === "payment") {
                     fixFailedPayments();
-                };
+                }
 
                 // Send Final Messages
                 if (paymentMode === "payment") {

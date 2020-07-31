@@ -101,8 +101,8 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
     // Connect to Redis Database
     function setupStatsRedis() {
         redisStats = redis.createClient(portalConfig.redis.port, portalConfig.redis.host);
-        redisStats.on('error', function(err) {
-            logger.error(logSystem, 'History', `Redis for stats had an error ${  JSON.stringify(err)}`);
+        redisStats.on('error', function(error) {
+            logger.error(logSystem, 'History', `Redis for stats had an error ${  JSON.stringify(error)}`);
         });
     }
 
@@ -207,8 +207,8 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                     });
                 });
             });
-        }, function(err) {
-            if (err) {
+        }, function(error) {
+            if (error) {
                 callback("There was an error getting balances");
                 return;
             }
@@ -247,8 +247,8 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                 }
                 pcb();
             });
-        }, function(err) {
-            if (err) {
+        }, function(error) {
+            if (error) {
                 callback(0);
                 return;
             }
@@ -264,7 +264,6 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
 
         var allCoinStats = {};
         var statGatherTime = Date.now() / 1000 | 0;
-        var retentionTime = (((Date.now() / 1000) - portalConfig.stats.historicalRetention) | 0).toString();
         async.each(redisClients, function(client, callback) {
 
             // Establish Redis Variables
@@ -299,8 +298,8 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
             // Get Global Statistics for Each Coin
             client.client.multi(redisCommands).exec(function(error, replies) {
                 if (error) {
-                    logger.error(logSystem, 'Global', `error with getting global stats ${  JSON.stringify(err)}`);
-                    callback(err);
+                    logger.error(logSystem, 'Global', `error with getting global stats ${  JSON.stringify(error)}`);
+                    callback(error);
                 }
 
                 // Establish Initial Statistics for Coins
@@ -358,6 +357,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                     try {
                         jsonObj = JSON.parse(replies[i + 1].history);
                     }
+                    /* eslint-disable-next-line no-empty */
                     catch(e) {}
                     if (jsonObj !== null) {
                         coinStats.history = jsonObj;
@@ -369,6 +369,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                         try {
                             jsonObj = JSON.parse(replies[i + 11][j - 1]);
                         }
+                        /* eslint-disable-next-line no-empty */
                         catch(e) {}
                         if (jsonObj !== null) {
                             coinStats.payments.push(jsonObj);
@@ -471,7 +472,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                     });
 
                     // Write Updated Data to Redis
-                    historicalDataString = JSON.stringify(historicalData);
+                    var historicalDataString = JSON.stringify(historicalData);
                     if (historicalData.length <= 1) {
                         client.client.hset(`${String(coinStats.name)  }:statistics:history`, "history", historicalDataString);
                     }
@@ -492,9 +493,9 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                 callback();
             });
 
-        }, function(err) {
-            if (err) {
-                logger.error(logSystem, 'Global', `error getting all stats${  JSON.stringify(err)}`);
+        }, function(error) {
+            if (error) {
+                logger.error(logSystem, 'Global', `error getting all stats${  JSON.stringify(error)}`);
                 callback();
                 return;
             }
