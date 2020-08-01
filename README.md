@@ -1,35 +1,25 @@
-Blinkhash Server
--------
+## Introduction
 
-This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written entirely in Node.js. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed as the Blinkhash Mining Pool uses a custom-built front-end design
+This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written entirely in Node.JS. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed as the Blinkhash Mining Pool uses a custom-built front-end design.
 
-#### Table of Contents
-* [Features](#features)
-  * [Attack Mitigation](#attack-mitigation)
-  * [Security](#security)
-* [Usage](#usage)
-  * [Requirements](#requirements)
-  * [Setting Up Coin Daemon](#0-setting-up-coin-daemon)
-  * [Downloading & Installing](#1-downloading--installing)
-  * [Configuration](#2-configuration)
-    * [Portal Configuration](#portal-configuration)
-    * [Coin Configuration](#coin-configuration)
-    * [Pool Configuration](#pool-configuration)
-  * [Starting the Portal](#3-start-the-portal)
-* [Credits](#credits)
-* [License](#license)
+Documentation for the API is currently available at https://github.com/blinkhash/blinkhash-documentation. The API itself was specifically designed to be self-explanatory while still providing users with standardized JSON-formatted responses.
+
+### Need Support?
+
+If you need help with an API or code-related matter, the first place to look is our [Discord](https://www.discord.gg/x2vgyZP), where I'll be available to answer any questions. However, please do not come to me with issues regarding how to clone/setup the server. Use Google for that.
+
+---
+
+## Specifications
 
 ### Features
 
 * For the pool server it uses the [blinkhash-stratum-pool](https://github.com/blinkhash/blinkhash-stratum-pool) module which supports vardiff, POW & POS, transaction messages, anti-DDoS, IP banning, [several hashing algorithms](https://github.com/blinkhash/blinkhash-stratum-pool#hashing-algorithms-supported).
-
-* Multi-pool ability - this software was built from the ground up to run with multiple coins simultaneously (which can have different properties and hashing algorithms). It can be used to create a pool for a single coin or for multiple coins at once. The pools use clustering to load balance across multiple CPU cores.
-
+* Multipool ability - this software was built from the ground up to run with multiple coins simultaneously (which can have different properties and hashing algorithms). It can be used to create a pool for a single coin or for multiple coins at once. The pools use clustering to load balance across multiple CPU cores.
 * For reward/payment processing, shares are inserted into Redis (a fast NoSQL key/value store). The PPLNT reward system is used with [Redis Transactions](http://redis.io/topics/transactions) for secure and super speedy payouts. There is zero risk to the pool operator. Shares from rounds resulting in orphaned blocks will be merged into share in the current round so that each and every share will be rewarded
-
 * This portal does not have user accounts/logins/registrations. Instead, miners simply use their coin address for stratum authentication.
 
-#### Attack Mitigation
+### Attack Mitigation
 * Detects and thwarts socket flooding (garbage data sent over socket in order to consume system resources).
 * Detects and thwarts zombie miners (botnet infected computers connecting to your server to use up sockets but not sending any shares).
 * Detects and thwarts invalid share attacks:
@@ -37,26 +27,29 @@ This portal is an extremely efficient, highly scalable, all-in-one, easy to setu
    * IP banning feature which on a configurable threshold will ban an IP for a configurable amount of time if the miner submits over a configurable threshold of invalid shares.
 * The server is written in Node.js which uses a single thread (async) to handle connections rather than the overhead of one thread per connection. Clustering is also implemented so that all CPU cores are taken advantage of.
 
-#### Security
-The server has some implicit security advantages for pool operators and miners:
+### Security
 * Without a registration/login system, non-security-oriented miners reusing passwords across pools is no longer a concern.
 * Automated payouts by default and pool profits are sent to another address so pool wallets aren't plump with coins, giving hackers few rewards and keeping your pool from being a target.
 * Miners can notice lack of automated payments as a possible early warning sign that an operator is about to run off with their coins.
 
-Usage
--------
+### Transparency
+* The API was specifically designed to be as transparent as possible regarding payouts and shares. Everything is logged for users to check and ensure that everything is legitimate.
+* The server itself will always be open-source. Feel free to create relevant issues and pull requests whenever necessary.
 
-#### Requirements
-* Coin daemon(s) (find the coin's repo and build latest version from source)
+---
+
+## Setup
+
+### Requirements
+* Coin daemon(s) (Find the coin's repository and build the latest version from source)
 * [Node.js](http://nodejs.org/) v12.0+ (Tested with v12.16.1) ([follow these installation instructions](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager))
 * [Redis](http://redis.io/) key-value store v2.6+ ([follow these instructions](http://redis.io/topics/quickstart))
 
-##### Seriously
-Those are legitimate requirements. If you use old versions of Node.js or Redis that may come with your system package manager then you will have problems. Follow the linked instructions to get the last stable versions.
+Note: Those are legitimate requirements. If you use old versions of Node.js or Redis that may come with your system package manager then you will have problems. Follow the linked instructions to get the last stable versions.
 
-[**Redis security warning**](http://redis.io/topics/security): be sure firewall access to redis - an easy way is to include `bind 127.0.0.1` in your `redis.conf` file. Also it's a good idea to learn about and understand software that you are using - a good place to start with redis is [data persistence](http://redis.io/topics/persistence).
+Beyond this, make sure to give Redis firewall access - an easy way is to include `bind 127.0.0.1` in your `redis.conf` file. Also, it's a good idea to learn about and understand all aspects of the software that you are using. A good place to start with Redis is [data persistence](http://redis.io/topics/persistence).
 
-#### 0) Setting up Coin Daemon
+#### 1) Setting up Coin Daemon
 Follow the build/install instructions for your coin daemon. Your coin.conf file should end up looking something like this:
 
 ```
@@ -66,15 +59,13 @@ rpcpassword=blinkhash
 rpcport=26710
 ```
 
-For redundancy, its recommended to have at least two daemon instances running in case one drops out-of-sync or offline, all instances will be polled for block/transaction updates and be used for submitting blocks. Creating a backup daemon involves spawning a daemon using the `-datadir=/backup` command-line argument which creates a new daemon instance with it's own config directory and coin.conf file. Learn about the daemon, how to use it and how it works if you want to be
-a good pool operator. For starters be sure to read:
+For redundancy, it's recommended to have at least two daemon instances running in case one drops out-of-sync or offline. All instances listed will be polled for block/transaction updates and be used for submitting blocks. Creating a backup daemon involves spawning a daemon using the `-datadir=/backup` command-line argument which creates a new daemon instance with it's own config directory and coin.conf file. Learn about the daemon, how to use it and how it works if you want to be a good pool operator. For starters, be sure to read:
    * https://en.bitcoin.it/wiki/Running_bitcoind
    * https://en.bitcoin.it/wiki/Data_directory
    * https://en.bitcoin.it/wiki/Original_Bitcoin_client/API_Calls_list
    * https://en.bitcoin.it/wiki/Difficulty
 
-#### 1) Downloading & Installing
-
+#### 2) Downloading & Installing
 Clone the repository and run `npm update` for all the dependencies to be installed:
 
 ```bash
@@ -83,12 +74,8 @@ cd blinkhash-server
 npm update
 ```
 
-#### 2) Configuration
-
-##### Portal Configuration
-Inside the `config.json` file, ensure that the default configuration will work for your environment before starting the pool.
-
-Explanation for each field:
+#### 3) Configuration
+Rename the `example.json` file to `config.json`. Inside it, ensure that the default configuration will work for your environment before starting the pool.
 
 ````
 {
@@ -108,34 +95,26 @@ Explanation for each field:
     /* By default NOMP logs to console and gives pretty colors. If you direct that output to a
        log file then disable this feature to avoid nasty characters in your log file. */
     "logColors": true,
-
     /* Specifies the level of log output verbosity. Anything more severe than the level specified
        will also be logged. */
     "logLevel": "debug", // or "warning", "error"
 
     /* Pool config file will inherit these default values if they are not set. */
     "defaultPoolConfigs": {
-
         /* Poll RPC daemons for new blocks every this many milliseconds. */
         "blockRefreshInterval": 1000,
-
         /* If no new blocks are available for this many seconds update and rebroadcast job. */
         "jobRebroadcastTimeout": 55,
-
         /* Disconnect workers that haven't submitted shares for this many seconds. */
         "connectionTimeout": 600,
-
         /* Store the block hashes for shares that aren't block candidates. */
         "emitInvalidBlockHashes": false,
-
         /* This option will only authenticate miners using an address or mining key. */
         "validateWorkerUsername": true,
-
         /* Enable for client IP addresses to be detected when using a load balancer with TCP
            proxy protocol enabled, such as HAProxy with 'send-proxy' param:
            http://haproxy.1wt.eu/download/1.5/doc/configuration.txt */
         "tcpProxyProtocol": false,
-
         /* If under low-diff share attack we can ban their IP to reduce system/network load. If
            running behind HAProxy be sure to enable 'tcpProxyProtocol', otherwise you'll end up
            banning your own IP address (and therefore all workers). */
@@ -146,12 +125,6 @@ Explanation for each field:
             "checkThreshold": 500, // Perform check when this many shares have been submitted
             "purgeInterval": 300 // Every this many seconds clear out the list of old bans
         },
-
-        /* Redis instance of where to store global data, */
-        "redis": {
-            "host": "127.0.0.1",
-            "port": 6379
-        }
     },
 
     /* Redis instance of where to store global data, */
@@ -168,50 +141,35 @@ Explanation for each field:
 
     /* Settings for statistics gathering
     "stats": {
-
         /* Interval to update API/statistics data. Currently set to 1 minute. */
         "updateInterval": 60,
-
         /* Interval to calculate and gather historical stats. Currently set to 10 minutes. */
         "historicalInterval": 600,
-
         /* How many seconds to hold onto historical stats. Currently set to 24 hours. */
         "historicalRetention": 43200,
-
         /* How many seconds worth of shares should be gathered to generate hashrate. */
-        "hashrateWindow": 300
-    },
+        "hashrateWindow": 300    
+    }
+
 }
 ````
 
-##### Pool Configuration
-
-In order to create a new pool, take a look at the `blinkhash-scrypt.json` file inside the `configs` directory for guidance. Create another file that relates to your coin/pool in the same folder.
-
-For additional documentation how to configure coins and their different algorithms
-see [these instructions](https://github.com/blinkhash/blinkhash-stratum-pool#module-usage).
-
-Description of options:
+In order to create a new pool, take a look at the `example.json` file inside the `configs` directory for guidance. Create another file that relates to your coin/pool in the same folder. For additional documentation how to configure coins and their different algorithms see [these instructions](https://github.com/blinkhash/blinkhash-stratum-pool#module-usage).
 
 ````
 {
     "enabled": true, // Set this to false and a pool will not be created from this config file
     "address": "MMvdRHMDh128QgG2GebQhiUmiV8GCiiB5G", // Address to where block rewards are given
     "featured": false, // Whether or not you want the pool to have a 'featured' tag
+    "fees": 1, // % Fees for block rewards for easy statistics gathering
 
-    /* Fees for block rewards for easy statistics gathering. Make sure to set this to the same
-       value as the sum of rewardRecipients.
-    "fees": 1.5,
-
-    /* Specific information for the coin added to the pool. Make sure that the information is
-       accurate for the pool to work properly.
+    /* Specifications for the current coin */
     "coin": {
         "name": "Blinkhash", // Coin name
         "symbol": "BHTC", // Coin symbol
         "algorithm": "scrypt", // Coin algorithm
         "peerMagic": "ace4b9cd", // Coin peer magic (pchMessageStart in src/chainparameters.cpp)
         "peerMagicTestnet": "f01a6eef", // Coin peer magic (pchMessageStart in src/chainparameters.cpp)
-
         /* Add mainnet parameters here. Just like with peerMagic/peerMagicTestnet, you can find most of
            the required values in src/chainparameters.cpp. If your coin does not possess these values, you
            can remove the information from the configuration file. */
@@ -223,7 +181,6 @@ Description of options:
             "pubKeyHash": "19",
             "scriptHash": "32"
         },
-
         /* Add testnet parameters here. Just like with peerMagic/peerMagicTestnet, you can find most of
            the required values in src/chainparameters.cpp. If your coin does not possess these values, you
            can remove the information from the configuration file. */
@@ -250,21 +207,17 @@ Description of options:
     /* Functionality to handle payment processing throughout the pool */
     "paymentProcessing": {
         "enabled": true,
-
         /* Every this many seconds get submitted blocks from redis, use daemon RPC to check
            their confirmation status, if confirmed then get shares from redis that contributed
            to block and send out payments. */
         "paymentInterval": 7200,
-
         /* Every this many seconds perform checks and update specific fields in API, such as
            balances and the like */
         "checkInterval": 60,
-
         /* Minimum number of coins that a miner must earn before sending payment. Typically,
            a higher minimum means less transactions fees (you profit more) but miners see
            payments less frequently (they dislike). Opposite for a lower minimum payment. */
         "minimumPayment": 0.05,
-
         /* This daemon is used to send out payments. It MUST be for the daemon that owns the
            configured 'address' that receives the block rewards, otherwise the daemon will not
            be able to confirm blocks or send out payments. */
@@ -284,7 +237,6 @@ Description of options:
             "enabled": true, // The desired state of the port
             "soloMining": false, // Solo vs shared mining on this port
             "diff": 32, // The pool difficulty for this port
-
             /* Variable difficulty is a feature that will automatically adjust difficulty for
                individual miners based on their hashrate in order to lower networking overhead */
             "varDiff": {
@@ -308,13 +260,10 @@ Description of options:
        the coin config. */
     "p2p": {
         "enabled": false,
-
         /* Host for daemon */
         "host": "127.0.0.1",
-
         /* Port configured for daemon (this is the actual peer port not RPC port) */
         "port": 26709,
-
         /* If your coin daemon is new enough (i.e. not a shitcoin) then it will support a p2p
            feature that prevents the daemon from spamming our peer node with unnecessary
            transaction data. Assume its supported but if you have problems try disabling it. */
@@ -332,16 +281,18 @@ Description of options:
 
 ````
 
-You can create as many of these pool config files as you want (such as one pool per coin you which to operate). If you are creating multiple pools, ensure that they have unique stratum ports. For more information on these configuration options see the [pool module documentation](https://github.com/blinkhash/blinkhash-stratum-pool#module-usage)
+You can create as many of these pool files as you want. If you are creating multiple pools, ensure that they have unique stratum ports. For more information on these configuration options, see the [pool module documentation](https://github.com/blinkhash/blinkhash-stratum-pool#module-usage).
 
-#### 3) Start the portal
+#### 4) Starting the Pool
+In order to start the pool, run the following line of code.
 
 ```
 npm run start
 ```
 
-Credits
--------
+---
+
+## Credits
 * [Nick Sarris / Blinkhash](https://github.com/nicksarris) - developer behind Blinkhash Mining Pool/NOMP updates
 * [Jerry Brady / mintyfresh68](https://github.com/bluecircle) - got coin-switching fully working and developed proxy-per-algo feature
 * [Tony Dobbs](http://anthonydobbs.com) - designs for front-end and created the NOMP logo
@@ -355,8 +306,8 @@ Credits
 * [Fcases](//github.com/Fcases) - ordered me a pizza <3
 * Those that contributed to [node-stratum-pool](//github.com/zone117x/node-stratum-pool#credits)
 
-License
--------
-Released under the GNU General Public License v2
+---
 
+## License
+Released under the GNU General Public License v2
 http://www.gnu.org/licenses/gpl-2.0.html
