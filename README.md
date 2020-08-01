@@ -1,3 +1,9 @@
+<p align="center">
+    <img src="resources/blinkhash-logo-text3.png" height="110"></img>
+</p>
+
+---
+
 ## Introduction
 
 This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written entirely in Node.JS. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed as the Blinkhash Mining Pool uses a custom-built front-end design.
