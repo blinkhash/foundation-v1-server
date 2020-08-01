@@ -4,3 +4,5 @@ npm-debug.log
 config.json
 configs/*
 !configs/example.json
+partners/*
+!partners/example.json
