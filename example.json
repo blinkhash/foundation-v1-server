@@ -19,10 +19,6 @@
             "invalidPercent": 50,
             "checkThreshold": 500,
             "purgeInterval": 300
-        },
-        "redis": {
-            "host": "127.0.0.1",
-            "port": 6379
         }
     },
     "redis": {

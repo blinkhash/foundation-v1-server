@@ -215,7 +215,8 @@ var startPoolPayments = function() {
     // Establish Pool Payments
     var worker = cluster.fork({
         workerType: 'payments',
-        pools: JSON.stringify(poolConfigs)
+        pools: JSON.stringify(poolConfigs),
+        portalConfig: JSON.stringify(portalConfig)
     });
 
     /* eslint-disable no-unused-vars */
@@ -259,7 +260,7 @@ var startPoolWorkers = function() {
             delete poolConfigs[coin];
         }
         else if (!connection) {
-            redisConfig = p.redis;
+            redisConfig = portalConfig.redis;
             connection = redis.createClient(redisConfig.port, redisConfig.host);
             connection.on('ready', function() {
                 logger.debug('Master', coin, `Processing setup with redis (${  redisConfig.host  }:${  redisConfig.port   })`);

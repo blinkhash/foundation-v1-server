@@ -20,10 +20,10 @@ function roundTo(n, digits) {
 
 // Pool Payments Main Function
 /* eslint no-unused-vars: ["error", { "args": "none" }] */
-var PoolShares = function (logger, poolConfig) {
+var PoolShares = function (logger, poolConfig, portalConfig) {
 
     // Establish Shares Variables
-    var redisConfig = poolConfig.redis;
+    var redisConfig = portalConfig.redis;
     var coin = poolConfig.coin.name;
     var forkId = process.env.forkId;
 

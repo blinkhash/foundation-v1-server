@@ -63,7 +63,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
         // Check to Ensure Stats are Active
         if (!canDoStats) return;
         var poolConfig = poolConfigs[coin];
-        var redisConfig = poolConfig.redis;
+        var redisConfig = portalConfig.redis;
 
         // Push Configurations to Each Redis Client
         for (var i = 0; i < redisClients.length; i++) {

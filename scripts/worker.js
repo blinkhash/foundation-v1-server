@@ -51,7 +51,7 @@ var PoolWorker = function (logger) {
 
         // Establish Pool Variables
         var poolOptions = poolConfigs[coin];
-        var sharesProcessor = new PoolShares(logger, poolOptions);
+        var sharesProcessor = new PoolShares(logger, poolOptions, portalConfig);
         var handlers = {
             auth: function() {},
             share: function() {},

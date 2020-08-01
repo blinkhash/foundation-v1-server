@@ -24,7 +24,7 @@ function getProperAddress(poolOptions, address) {
 // Setup Payments for Individual Pools
 /* eslint no-unused-vars: ["error", { "args": "none" }] */
 /* eslint-disable no-useless-catch, no-prototype-builtins */
-function SetupForPool(logger, poolOptions, setupFinished) {
+function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
 
     // Establish Payment Variables
     var coin = poolOptions.coin.name;
@@ -45,9 +45,9 @@ function SetupForPool(logger, poolOptions, setupFinished) {
     });
 
     // Load Database from Config
-    var redisClient = redis.createClient(poolOptions.redis.port, poolOptions.redis.host);
-    if (poolOptions.redis.password) {
-        redisClient.auth(poolOptions.redis.password);
+    var redisClient = redis.createClient(portalConfig.redis.port, portalConfig.redis.host);
+    if (portalConfig.redis.password) {
+        redisClient.auth(portalConfig.redis.password);
     }
 
     // Establsh Helper Variables
@@ -1107,6 +1107,7 @@ var PoolPayments = function (logger) {
 
     // Load Useful Data from Process
     var poolConfigs = JSON.parse(process.env.pools);
+    var portalConfig = JSON.parse(process.env.portalConfig);
     var enabledPools = [];
 
     // Push Individual Configs to Main Array
@@ -1119,7 +1120,7 @@ var PoolPayments = function (logger) {
 
     // Load Payments for Individual Pools
     async.filter(enabledPools, function(coin, callback) {
-        SetupForPool(logger, poolConfigs[coin], function(setupResults) {
+        SetupForPool(logger, poolConfigs[coin], portalConfig, function(setupResults) {
             callback(setupResults);
         });
     }, function(coins) {
@@ -1135,7 +1136,7 @@ var PoolPayments = function (logger) {
             logger.debug(logSystem, logComponent, `Payment processing setup to run every ${
                  processingConfig.paymentInterval  } second(s) with daemon (${
                  processingConfig.daemon.user  }@${  processingConfig.daemon.host  }:${  processingConfig.daemon.port
-                 }) and redis (${  poolOptions.redis.host  }:${  poolOptions.redis.port  })`);
+                 }) and redis (${  portalConfig.redis.host  }:${  portalConfig.redis.port  })`);
         });
     });
 };
