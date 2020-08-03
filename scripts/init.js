@@ -8,9 +8,10 @@
 var fs = require('fs');
 var path = require('path');
 var os = require('os');
-var redis = require('redis');
 var cluster = require('cluster');
 var extend = require('extend');
+var redis = require('redis');
+var RedisClustr = require('redis-clustr');
 
 // Import Pool Functionality
 var PoolListener = require('./listener.js');
@@ -261,7 +262,20 @@ var startPoolWorkers = function() {
         }
         else if (!connection) {
             redisConfig = portalConfig.redis;
-            connection = redis.createClient(redisConfig.port, redisConfig.host);
+            if (redisConfig.cluster) {
+                connection = new RedisClustr({
+                    servers: [{
+                        host: redisConfig.host,
+                        port: redisConfig.port,
+                    }]
+                });
+            }
+            else {
+                connection = redis.createClient(
+                    portalConfig.redis.port,
+                    portalConfig.redis.host
+                );
+            }
             connection.on('ready', function() {
                 logger.debug('Master', coin, `Processing setup with redis (${  redisConfig.host  }:${  redisConfig.port   })`);
             });

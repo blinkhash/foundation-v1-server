@@ -6,9 +6,10 @@
 
 // Import Required Modules
 var fs = require('fs');
-var redis = require('redis');
 var async = require('async');
 var util = require('stratum-pool/lib/util.js');
+var redis = require('redis');
+var RedisClustr = require('redis-clustr');
 
 // Import Stratum Module
 var Stratum = require('stratum-pool');
@@ -44,8 +45,24 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
         logger[severity](logSystem, logComponent, message);
     });
 
+    // Establish Redis Client
+    var redisClient;
+    if (portalConfig.redis.cluster) {
+        redisClient = new RedisClustr({
+            servers: [{
+                host: portalConfig.redis.host,
+                port: portalConfig.redis.port,
+            }]
+        });
+    }
+    else {
+        redisClient = redis.createClient(
+            portalConfig.redis.port,
+            portalConfig.redis.host
+        );
+    }
+
     // Load Database from Config
-    var redisClient = redis.createClient(portalConfig.redis.port, portalConfig.redis.host);
     if (portalConfig.redis.password) {
         redisClient.auth(portalConfig.redis.password);
     }

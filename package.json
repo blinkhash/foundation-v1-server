@@ -50,7 +50,8 @@
     "node-watch": "0.5.9",
     "nodemon": "*",
     "nonce": "*",
-    "redis": "0.12.1",
+    "redis": "^3.0.2",
+    "redis-clustr": "^1.7.0",
     "request": "2.88.2",
     "stratum-pool": "git://github.com/blinkhash/blinkhash-stratum-pool.git"
   },

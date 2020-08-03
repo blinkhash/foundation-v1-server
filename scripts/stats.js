@@ -7,6 +7,7 @@
 // Import Required Modules
 var redis = require('redis');
 var async = require('async');
+var RedisClustr = require('redis-clustr');
 
 // Import Stratum Algorithms
 var algos = require('stratum-pool/lib/algoProperties.js');
@@ -73,9 +74,27 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                 return;
             }
         }
+
+        // Establish Redis Client
+        var redisClient;
+        if (redisConfig.cluster) {
+            redisClient = new RedisClustr({
+                servers: [{
+                    host: redisConfig.host,
+                    port: redisConfig.port,
+                }]
+            });
+        }
+        else {
+            redisClient = redis.createClient(
+                redisConfig.port,
+                redisConfig.host
+            );
+        }
+
         redisClients.push({
             coins: [coin],
-            client: redis.createClient(redisConfig.port, redisConfig.host),
+            client: redisClient,
         });
     });
 
@@ -100,7 +119,21 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
 
     // Connect to Redis Database
     function setupStatsRedis() {
-        redisStats = redis.createClient(portalConfig.redis.port, portalConfig.redis.host);
+        var redisStats;
+        if (portalConfig.redis.cluster) {
+            redisStats = new RedisClustr({
+                servers: [{
+                    host: portalConfig.redis.host,
+                    port: portalConfig.redis.port,
+                }]
+            });
+        }
+        else {
+            redisStats = redis.createClient(
+                portalConfig.redis.port,
+                portalConfig.redis.host
+            );
+        }
         redisStats.on('error', function(error) {
             logger.error(logSystem, 'History', `Redis for stats had an error ${  JSON.stringify(error)}`);
         });

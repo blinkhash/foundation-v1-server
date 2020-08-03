@@ -6,6 +6,7 @@
 
 // Import Required Modules
 var redis = require('redis');
+var RedisClustr = require('redis-clustr');
 
 // Round to # of Digits Given
 function roundTo(n, digits) {
@@ -32,8 +33,24 @@ var PoolShares = function (logger, poolConfig, portalConfig) {
     var logComponent = coin;
     var logSubCat = `Thread ${  parseInt(forkId) + 1}`;
 
+    // Establish Redis Client
+    var redisClient;
+    if (redisConfig.cluster) {
+        redisClient = new RedisClustr({
+            servers: [{
+                host: redisConfig.host,
+                port: redisConfig.port,
+            }]
+        });
+    }
+    else {
+        redisClient = redis.createClient(
+            redisConfig.port,
+            redisConfig.host
+        );
+    }
+
     // Load Database from Config
-    var redisClient = redis.createClient(redisConfig.port, redisConfig.host);
     if (redisConfig.password) {
         redisClient.auth(redisConfig.password);
     }
