@@ -48,8 +48,8 @@ If you need help with an API or code-related matter, the first place to look is 
 
 ### Requirements
 * Coin daemon(s) (Find the coin's repository and build the latest version from source)
-* [Node.js](http://nodejs.org/) v12.0+ (Tested with v12.16.1) ([follow these installation instructions](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager))
-* [Redis](http://redis.io/) key-value store v2.6+ ([follow these instructions](http://redis.io/topics/quickstart))
+* [Node.js](http://nodejs.org/) v12.0+ (Tested with v12.16.1) ([Instructions](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager))
+* [Redis](http://redis.io/) key-value store v2.6+ (Tested with v5.0.7) ([Instructions](http://redis.io/topics/quickstart))
 
 Note: Those are legitimate requirements. If you use old versions of Node.js or Redis that may come with your system package manager then you will have problems. Follow the linked instructions to get the last stable versions.
 
