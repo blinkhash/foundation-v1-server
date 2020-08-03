@@ -82,7 +82,10 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                 servers: [{
                     host: redisConfig.host,
                     port: redisConfig.port,
-                }]
+                }],
+                createClient: function(port, host) {
+                    return redis.createClient(port, host);
+                }
             });
         }
         else {
@@ -125,7 +128,10 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                 servers: [{
                     host: portalConfig.redis.host,
                     port: portalConfig.redis.port,
-                }]
+                }],
+                createClient: function(port, host) {
+                    return redis.createClient(port, host);
+                }
             });
         }
         else {

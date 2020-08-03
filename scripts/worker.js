@@ -31,7 +31,10 @@ var PoolWorker = function (logger) {
             servers: [{
                 host: portalConfig.redis.host,
                 port: portalConfig.redis.port,
-            }]
+            }],
+            createClient: function(port, host) {
+                return redis.createClient(port, host);
+            }
         });
     }
     else {

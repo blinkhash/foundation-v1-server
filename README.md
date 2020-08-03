@@ -136,7 +136,8 @@ Rename the `example.json` file to `config.json`. Inside it, ensure that the defa
     /* Redis instance of where to store global data, */
     "redis": {
         "host": "127.0.0.1",
-        "port": 6379
+        "port": 6379,
+        "cluster": false,
     },
 
     /* The host/port of where to run the server */

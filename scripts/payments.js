@@ -52,7 +52,10 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
             servers: [{
                 host: portalConfig.redis.host,
                 port: portalConfig.redis.port,
-            }]
+            }],
+            createClient: function(port, host) {
+                return redis.createClient(port, host);
+            }
         });
     }
     else {

@@ -267,7 +267,10 @@ var startPoolWorkers = function() {
                     servers: [{
                         host: redisConfig.host,
                         port: redisConfig.port,
-                    }]
+                    }],
+                    createClient: function(port, host) {
+                        return redis.createClient(port, host);
+                    }
                 });
             }
             else {

@@ -40,7 +40,10 @@ var PoolShares = function (logger, poolConfig, portalConfig) {
             servers: [{
                 host: redisConfig.host,
                 port: redisConfig.port,
-            }]
+            }],
+            createClient: function(port, host) {
+                return redis.createClient(port, host);
+            }
         });
     }
     else {
@@ -119,7 +122,9 @@ var PoolShares = function (logger, poolConfig, portalConfig) {
         var redisCommands = [];
         var shareLookups = [
             ['hgetall', `${coin  }:times:timesStart`],
-            ['hgetall', `${coin  }:times:timesShare`]
+            ['hgetall', `${coin  }:times:timesShare`],
+            ['hgetall', `${coin  }:shares:roundCurrent`],
+            ['hgetall', `${coin  }:times:timesCurrent`]
         ]
 
         // Get Current Start/Share Times
@@ -128,6 +133,10 @@ var PoolShares = function (logger, poolConfig, portalConfig) {
                 logger.error(logSystem, logComponent, `Could not get time data from database: ${  JSON.stringify(error)}`);
                 return;
             }
+
+            // Establish Current Values
+            var currentShares = results[2] || {}
+            var currentTimes = results[3] || {}
 
             // Handle Valid Share
             if (isValidShare) {
@@ -162,6 +171,10 @@ var PoolShares = function (logger, poolConfig, portalConfig) {
                     redisCommands.push(['hincrbyfloat', `${coin  }:times:timesCurrent`, workerAddress, timeChangeSec]);
                 }
 
+                // Update Current Round Shares/Times
+                currentShares[JSON.stringify(combinedShare)] = shareData.difficulty;
+                currentTimes[workerAddress] = timeChangeSec;
+
                 // Check to Ensure Block Not Found
                 if (!isValidBlock) {
                     redisCommands.push(['hset', `${coin  }:times:timesStart`, workerAddress, lastStartTime]);
@@ -190,11 +203,27 @@ var PoolShares = function (logger, poolConfig, portalConfig) {
                     soloMined: isSoloMining,
                 }
 
-                // Handle Redis Updates
+                // Handle Redis Deletions
                 redisCommands.push(['del', `${coin  }:times:timesStart`]);
                 redisCommands.push(['del', `${coin  }:times:timesShare`]);
-                redisCommands.push(['rename', `${coin  }:shares:roundCurrent`, `${coin  }:shares:round${  shareData.height}`]);
-                redisCommands.push(['rename', `${coin  }:times:timesCurrent`, `${coin  }:times:times${  shareData.height}`]);
+
+                // Handle Redis Shares/Times Updates
+                if (redisConfig.cluster) {
+                    redisCommands.push(['del', `${coin  }:shares:roundCurrent`]);
+                    redisCommands.push(['del', `${coin  }:times:timesCurrent`]);
+                    for (var share in currentShares) {
+                        redisCommands.push(['hset', `${coin  }:shares:round${  shareData.height}`, share, currentShares[share]])
+                    }
+                    for (var worker in currentTimes) {
+                        redisCommands.push(['hset', `${coin  }:times:times${  shareData.height}`, worker, currentTimes[worker]])
+                    }
+                }
+                else {
+                    redisCommands.push(['rename', `${coin  }:shares:roundCurrent`, `${coin  }:shares:round${  shareData.height}`]);
+                    redisCommands.push(['rename', `${coin  }:times:timesCurrent`, `${coin  }:times:times${  shareData.height}`]);
+                }
+
+                // Handle Redis Updates
                 redisCommands.push(['sadd', `${coin  }:blocks:pending`, JSON.stringify(blockData)])
                 redisCommands.push(['hincrby', `${coin  }:statistics:basic`, 'validBlocks', 1]);
             }
