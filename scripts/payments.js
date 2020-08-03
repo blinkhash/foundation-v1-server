@@ -22,6 +22,62 @@ function getProperAddress(poolOptions, address) {
     else return address;
 }
 
+// Generate Redis Client
+function getRedisClient(portalConfig) {
+    redisConfig = portalConfig.redis;
+    var redisClient;
+    if (redisConfig.cluster) {
+        if (redisConfig.password !== "") {
+            redisClient = new RedisClustr({
+                servers: [{
+                    host: redisConfig.host,
+                    port: redisConfig.port,
+                }],
+                createClient: function(port, host, options) {
+                    return redis.createClient({
+                        port: port,
+                        host: host,
+                        password: options.password,
+                    });
+                },
+                redisOptions: {
+                    password: redisConfig.password
+                }
+            });
+        }
+        else {
+            redisClient = new RedisClustr({
+                servers: [{
+                    host: redisConfig.host,
+                    port: redisConfig.port,
+                }],
+                createClient: function(port, host) {
+                    return redis.createClient({
+                        port: port,
+                        host: host,
+                    });
+                },
+            });
+        }
+    }
+    else {
+        if (redisConfig.password !== "") {
+            redisClient = redis.createClient({
+                port: redisConfig.port,
+                host: redisConfig.host,
+                password: redisConfig.password
+            });
+        }
+        else {
+            redisClient = redis.createClient({
+                port: redisConfig.port,
+                host: redisConfig.host,
+            });
+        }
+    }
+    return redisClient;
+}
+
 // Setup Payments for Individual Pools
 /* eslint no-unused-vars: ["error", { "args": "none" }] */
 /* eslint-disable no-useless-catch, no-prototype-builtins */
@@ -46,29 +102,7 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
     });
 
     // Establish Redis Client
-    var redisClient;
-    if (portalConfig.redis.cluster) {
-        redisClient = new RedisClustr({
-            servers: [{
-                host: portalConfig.redis.host,
-                port: portalConfig.redis.port,
-            }],
-            createClient: function(port, host) {
-                return redis.createClient(port, host);
-            }
-        });
-    }
-    else {
-        redisClient = redis.createClient(
-            portalConfig.redis.port,
-            portalConfig.redis.host
-        );
-    }
-
-    // Load Database from Config
-    if (portalConfig.redis.password) {
-        redisClient.auth(portalConfig.redis.password);
-    }
+    var redisClient = getRedisClient(portalConfig);
 
     // Establsh Helper Variables
     var magnitude;

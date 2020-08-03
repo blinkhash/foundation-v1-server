@@ -12,6 +12,62 @@ var RedisClustr = require('redis-clustr');
 var PoolShares = require('./shares.js');
 var Stratum = require('stratum-pool');
 
+// Generate Redis Client
+function getRedisClient(portalConfig) {
+    redisConfig = portalConfig.redis;
+    var redisClient;
+    if (redisConfig.cluster) {
+        if (redisConfig.password !== "") {
+            redisClient = new RedisClustr({
+                servers: [{
+                    host: redisConfig.host,
+                    port: redisConfig.port,
+                }],
+                createClient: function(port, host, options) {
+                    return redis.createClient({
+                        port: port,
+                        host: host,
+                        password: options.password,
+                    });
+                },
+                redisOptions: {
+                    password: redisConfig.password
+                }
+            });
+        }
+        else {
+            redisClient = new RedisClustr({
+                servers: [{
+                    host: redisConfig.host,
+                    port: redisConfig.port,
+                }],
+                createClient: function(port, host) {
+                    return redis.createClient({
+                        port: port,
+                        host: host,
+                    });
+                },
+            });
+        }
+    }
+    else {
+        if (redisConfig.password !== "") {
+            redisClient = redis.createClient({
+                port: redisConfig.port,
+                host: redisConfig.host,
+                password: redisConfig.password
+            });
+        }
+        else {
+            redisClient = redis.createClient({
+                port: redisConfig.port,
+                host: redisConfig.host,
+            });
+        }
+    }
+    return redisClient;
+}
+
 // Pool Worker Main Function
 /* eslint no-unused-vars: ["error", { "args": "none" }] */
 var PoolWorker = function (logger) {
@@ -25,29 +81,7 @@ var PoolWorker = function (logger) {
     var pools = {};
 
     // Establish Redis Client
-    var redisClient;
-    if (portalConfig.redis.cluster) {
-        redisClient = new RedisClustr({
-            servers: [{
-                host: portalConfig.redis.host,
-                port: portalConfig.redis.port,
-            }],
-            createClient: function(port, host) {
-                return redis.createClient(port, host);
-            }
-        });
-    }
-    else {
-        redisClient = redis.createClient(
-            portalConfig.redis.port,
-            portalConfig.redis.host
-        );
-    }
-
-    // Load Database from Config
-    if (portalConfig.redis.password) {
-        redisClient.auth(portalConfig.redis.password);
-    }
+    var redisClient = getRedisClient(portalConfig);
 
     // Handle IPC Messages
     process.on('message', function(message) {

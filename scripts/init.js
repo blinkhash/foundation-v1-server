@@ -81,8 +81,64 @@ if (cluster.isWorker) {
     return;
 }
 
+// Generate Redis Client
+function getRedisClient(portalConfig) {
+    redisConfig = portalConfig.redis;
+    var redisClient;
+    if (redisConfig.cluster) {
+        if (redisConfig.password !== "") {
+            redisClient = new RedisClustr({
+                servers: [{
+                    host: redisConfig.host,
+                    port: redisConfig.port,
+                }],
+                createClient: function(port, host, options) {
+                    return redis.createClient({
+                        port: port,
+                        host: host,
+                        password: options.password,
+                    });
+                },
+                redisOptions: {
+                    password: redisConfig.password
+                }
+            });
+        }
+        else {
+            redisClient = new RedisClustr({
+                servers: [{
+                    host: redisConfig.host,
+                    port: redisConfig.port,
+                }],
+                createClient: function(port, host) {
+                    return redis.createClient({
+                        port: port,
+                        host: host,
+                    });
+                },
+            });
+        }
+    }
+    else {
+        if (redisConfig.password !== "") {
+            redisClient = redis.createClient({
+                port: redisConfig.port,
+                host: redisConfig.host,
+                password: redisConfig.password
+            });
+        }
+        else {
+            redisClient = redis.createClient({
+                port: redisConfig.port,
+                host: redisConfig.host,
+            });
+        }
+    }
+    return redisClient;
+}
+
 // Read and Combine ALL Pool Configurations
-var buildPoolConfigs = function() {
+function buildPoolConfigs() {
     var configs = {};
     var configDir = 'configs/';
     var poolConfigFiles = [];
@@ -152,7 +208,7 @@ var buildPoolConfigs = function() {
 };
 
 // Read and Combine ALL Partner Configurations
-var buildPartnerConfigs = function() {
+function buildPartnerConfigs() {
     var configs = {};
     var configDir = 'partners/';
 
@@ -169,7 +225,7 @@ var buildPartnerConfigs = function() {
 }
 
 // Functionality for Pool Listener
-var startPoolListener = function() {
+function startPoolListener() {
 
     // Establish Listener Variables
     var cliPort = portalConfig.cliPort;
@@ -196,7 +252,7 @@ var startPoolListener = function() {
 };
 
 // Functionality for Pool Payments
-var startPoolPayments = function() {
+function startPoolPayments() {
 
     // Check if Pool Enabled Payments
     var enabledForAny = false;
@@ -229,7 +285,7 @@ var startPoolPayments = function() {
     });
 };
 
-var startPoolServer = function() {
+function startPoolServer() {
 
     var worker = cluster.fork({
         workerType: 'server',
@@ -248,12 +304,10 @@ var startPoolServer = function() {
 };
 
 // Functionality for Pool Workers
-var startPoolWorkers = function() {
-
-    var redisConfig;
-    var connection;
+function startPoolWorkers() {
 
     // Check if Daemons Configured
+    var connection;
     Object.keys(poolConfigs).forEach(function(coin) {
         var p = poolConfigs[coin];
         if (!Array.isArray(p.daemons) || p.daemons.length < 1) {
@@ -261,24 +315,7 @@ var startPoolWorkers = function() {
             delete poolConfigs[coin];
         }
         else if (!connection) {
-            redisConfig = portalConfig.redis;
-            if (redisConfig.cluster) {
-                connection = new RedisClustr({
-                    servers: [{
-                        host: redisConfig.host,
-                        port: redisConfig.port,
-                    }],
-                    createClient: function(port, host) {
-                        return redis.createClient(port, host);
-                    }
-                });
-            }
-            else {
-                connection = redis.createClient(
-                    portalConfig.redis.port,
-                    portalConfig.redis.host
-                );
-            }
+            connection = getRedisClient(portalConfig);
             connection.on('ready', function() {
                 logger.debug('Master', coin, `Processing setup with redis (${  redisConfig.host  }:${  redisConfig.port   })`);
             });

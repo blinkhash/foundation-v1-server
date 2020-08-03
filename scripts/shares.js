@@ -19,12 +19,67 @@ function roundTo(n, digits) {
     return +(test.toFixed(digits));
 }
 
+// Generate Redis Client
+function getRedisClient(portalConfig) {
+    redisConfig = portalConfig.redis;
+    var redisClient;
+    if (redisConfig.cluster) {
+        if (redisConfig.password !== "") {
+            redisClient = new RedisClustr({
+                servers: [{
+                    host: redisConfig.host,
+                    port: redisConfig.port,
+                }],
+                createClient: function(port, host, options) {
+                    return redis.createClient({
+                        port: port,
+                        host: host,
+                        password: options.password,
+                    });
+                },
+                redisOptions: {
+                    password: redisConfig.password
+                }
+            });
+        }
+        else {
+            redisClient = new RedisClustr({
+                servers: [{
+                    host: redisConfig.host,
+                    port: redisConfig.port,
+                }],
+                createClient: function(port, host) {
+                    return redis.createClient({
+                        port: port,
+                        host: host,
+                    });
+                },
+            });
+        }
+    }
+    else {
+        if (redisConfig.password !== "") {
+            redisClient = redis.createClient({
+                port: redisConfig.port,
+                host: redisConfig.host,
+                password: redisConfig.password
+            });
+        }
+        else {
+            redisClient = redis.createClient({
+                port: redisConfig.port,
+                host: redisConfig.host,
+            });
+        }
+    }
+    return redisClient;
+}
+
 // Pool Payments Main Function
 /* eslint no-unused-vars: ["error", { "args": "none" }] */
 var PoolShares = function (logger, poolConfig, portalConfig) {
 
     // Establish Shares Variables
-    var redisConfig = portalConfig.redis;
     var coin = poolConfig.coin.name;
     var forkId = process.env.forkId;
 
@@ -34,29 +89,7 @@ var PoolShares = function (logger, poolConfig, portalConfig) {
     var logSubCat = `Thread ${  parseInt(forkId) + 1}`;
 
     // Establish Redis Client
-    var redisClient;
-    if (redisConfig.cluster) {
-        redisClient = new RedisClustr({
-            servers: [{
-                host: redisConfig.host,
-                port: redisConfig.port,
-            }],
-            createClient: function(port, host) {
-                return redis.createClient(port, host);
-            }
-        });
-    }
-    else {
-        redisClient = redis.createClient(
-            redisConfig.port,
-            redisConfig.host
-        );
-    }
-
-    // Load Database from Config
-    if (redisConfig.password) {
-        redisClient.auth(redisConfig.password);
-    }
+    var redisClient = getRedisClient(portalConfig);
 
     // Manage Ready Endpoint
     redisClient.on('ready', function() {

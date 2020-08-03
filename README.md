@@ -137,6 +137,7 @@ Rename the `example.json` file to `config.json`. Inside it, ensure that the defa
     "redis": {
         "host": "127.0.0.1",
         "port": 6379,
+        "password": ""
         "cluster": false,
     },
 

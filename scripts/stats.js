@@ -40,6 +40,62 @@ function sortProperties(obj, sortedBy, isNumericSort, reverse) {
     return sortable;
 }
 
+// Generate Redis Client
+function getRedisClient(portalConfig) {
+    redisConfig = portalConfig.redis;
+    var redisClient;
+    if (redisConfig.cluster) {
+        if (redisConfig.password !== "") {
+            redisClient = new RedisClustr({
+                servers: [{
+                    host: redisConfig.host,
+                    port: redisConfig.port,
+                }],
+                createClient: function(port, host, options) {
+                    return redis.createClient({
+                        port: port,
+                        host: host,
+                        password: options.password,
+                    });
+                },
+                redisOptions: {
+                    password: redisConfig.password
+                }
+            });
+        }
+        else {
+            redisClient = new RedisClustr({
+                servers: [{
+                    host: redisConfig.host,
+                    port: redisConfig.port,
+                }],
+                createClient: function(port, host) {
+                    return redis.createClient({
+                        port: port,
+                        host: host,
+                    });
+                },
+            });
+        }
+    }
+    else {
+        if (redisConfig.password !== "") {
+            redisClient = redis.createClient({
+                port: redisConfig.port,
+                host: redisConfig.host,
+                password: redisConfig.password
+            });
+        }
+        else {
+            redisClient = redis.createClient({
+                port: redisConfig.port,
+                host: redisConfig.host,
+            });
+        }
+    }
+    return redisClient;
+}
+
 // Pool Stats Main Function
 var PoolStats = function (logger, poolConfigs, portalConfig) {
 
@@ -64,7 +120,6 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
         // Check to Ensure Stats are Active
         if (!canDoStats) return;
         var poolConfig = poolConfigs[coin];
-        var redisConfig = portalConfig.redis;
 
         // Push Configurations to Each Redis Client
         for (var i = 0; i < redisClients.length; i++) {
@@ -76,25 +131,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
         }
 
         // Establish Redis Client
-        var redisClient;
-        if (redisConfig.cluster) {
-            redisClient = new RedisClustr({
-                servers: [{
-                    host: redisConfig.host,
-                    port: redisConfig.port,
-                }],
-                createClient: function(port, host) {
-                    return redis.createClient(port, host);
-                }
-            });
-        }
-        else {
-            redisClient = redis.createClient(
-                redisConfig.port,
-                redisConfig.host
-            );
-        }
-
+        var redisClient = getRedisClient(portalConfig);
         redisClients.push({
             coins: [coin],
             client: redisClient,
@@ -122,24 +159,9 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
 
     // Connect to Redis Database
     function setupStatsRedis() {
-        var redisStats;
-        if (portalConfig.redis.cluster) {
-            redisStats = new RedisClustr({
-                servers: [{
-                    host: portalConfig.redis.host,
-                    port: portalConfig.redis.port,
-                }],
-                createClient: function(port, host) {
-                    return redis.createClient(port, host);
-                }
-            });
-        }
-        else {
-            redisStats = redis.createClient(
-                portalConfig.redis.port,
-                portalConfig.redis.host
-            );
-        }
+
+        // Establish Redis Client
+        var redisStats = getRedisClient(portalConfig);
         redisStats.on('error', function(error) {
             logger.error(logSystem, 'History', `Redis for stats had an error ${  JSON.stringify(error)}`);
         });
