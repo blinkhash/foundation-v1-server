@@ -293,6 +293,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                                 history: portalStats.stats[pool].history,
                                 payments: paymentsData.payments,
                                 statistics: {
+                                    hashrateType: portalStats.stats[pool].statistics.hashrateType,
                                     invalidShares: portalStats.stats[pool].statistics.invalidShares,
                                     lastPaid: portalStats.stats[pool].statistics.lastPaid,
                                     paymentFees: portalStats.stats[pool].fees,
@@ -535,6 +536,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                                 featured: portalStats.stats[pool].featured,
                                 ports: portalStats.stats[pool].ports,
                                 statistics: {
+                                    hashrateType: portalStats.stats[pool].statistics.hashrateType,
                                     invalidShares: portalStats.stats[pool].statistics.invalidShares,
                                     lastPaid: portalStats.stats[pool].statistics.lastPaid,
                                     paymentFees: portalStats.stats[pool].fees,
