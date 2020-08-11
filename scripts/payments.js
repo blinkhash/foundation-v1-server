@@ -408,13 +408,13 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
 
         // Validate Main Address
         function(callback) {
-            validateAddress(poolOptions.address, 'validateAddress', callback);
+            validateAddress(poolOptions.address, 'validateaddress', callback);
         },
 
         // Validate tAddress, if Exists
         function(callback) {
             if (poolOptions.tAddress) {
-                validateAddress(poolOptions.tAddress, 'validateAddress', callback);
+                validateAddress(poolOptions.tAddress, 'validateaddress', callback);
             }
             else {
                 callback();
