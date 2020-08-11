@@ -116,6 +116,9 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
         for (var w in portalStats.stats[pool].payments) {
             var paymentInformation = portalStats.stats[pool].payments[w];
             var paymentsData = {
+                pool: portalStats.stats[pool].name,
+                symbol: portalStats.stats[pool].symbol,
+                algorithm: portalStats.stats[pool].algorithm,
                 time: paymentInformation.time,
                 txid: paymentInformation.txid,
                 shares: paymentInformation.shares,
@@ -154,11 +157,15 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
         for (var w in portalStats.stats[pool].workers.workersShared) {
             var workerInformation = portalStats.stats[pool].workers.workersShared[w];
             var workersData = {
+                pool: portalStats.stats[pool].name,
+                symbol: portalStats.stats[pool].symbol,
+                algorithm: portalStats.stats[pool].algorithm,
                 address: w,
                 difficulty: workerInformation.difficulty,
                 validShares: workerInformation.validShares,
                 invalidShares: workerInformation.invalidShares,
                 hashrate: workerInformation.hashrate,
+                hashrateType: workerInformation.hashrateType,
                 soloMining: workerInformation.soloMining,
             }
             workers.push(workersData);
@@ -168,11 +175,15 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
         for (var w in portalStats.stats[pool].workers.workersSolo) {
             var workerInformation = portalStats.stats[pool].workers.workersSolo[w];
             var workersData = {
+                pool: portalStats.stats[pool].name,
+                symbol: portalStats.stats[pool].symbol,
+                algorithm: portalStats.stats[pool].algorithm,
                 address: w,
                 difficulty: workerInformation.difficulty,
                 validShares: workerInformation.validShares,
                 invalidShares: workerInformation.invalidShares,
                 hashrate: workerInformation.hashrate,
+                hashrateType: workerInformation.hashrateType,
                 soloMining: workerInformation.soloMining,
             }
             workers.push(workersData);

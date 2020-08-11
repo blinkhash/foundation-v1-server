@@ -466,6 +466,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                                     validShares: workerShares,
                                     invalidShares: 0,
                                     hashrate: null,
+                                    hashrateType: poolConfigs[coinName].hashrateType,
                                     soloMining: soloMining,
                                 };
                             }
@@ -481,6 +482,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                                     validShares: 0,
                                     invalidShares: -workerShares,
                                     hashrate: null,
+                                    hashrateType: poolConfigs[coinName].hashrateType,
                                     soloMining: soloMining,
                                 };
                             }
