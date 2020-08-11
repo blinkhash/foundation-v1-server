@@ -6,7 +6,7 @@
 
 ## Introduction
 
-This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written entirely in Node.JS. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed as the Blinkhash Mining Pool uses a custom-built front-end design.
+This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written entirely in Node.JS. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed as the Blinkhash Mining Pool uses a custom-built front-end design. If you want to access the Blinkhash Mining Pool, however, the website is available at https://blinkhash.com.
 
 Documentation for the API is currently available at https://github.com/blinkhash/blinkhash-documentation. The API itself was specifically designed to be self-explanatory while still providing users with standardized JSON-formatted responses.
 
@@ -170,6 +170,7 @@ In order to create a new pool, take a look at the `example.json` file inside the
     "address": "MMvdRHMDh128QgG2GebQhiUmiV8GCiiB5G", // Address to where block rewards are given
     "featured": false, // Whether or not you want the pool to have a 'featured' tag
     "fees": 1, // % Fees for block rewards for easy statistics gathering
+    "hashrateType": "sols", // Type of hashrate supported by coin ('hashes', 'sols')
 
     /* Specifications for the current coin */
     "coin": {
@@ -215,13 +216,19 @@ In order to create a new pool, take a look at the `example.json` file inside the
     /* Functionality to handle payment processing throughout the pool */
     "paymentProcessing": {
         "enabled": true,
+        /* Every this many seconds perform checks and update specific fields in API, such
+            as balances and the like */
+        "checkInterval": 20,
+        /* Every this many seconds (disabled if == 0) perform checks on the status of the
+           shielding processes for coins that support it (zcash, zclassic, etc) */
+        "operationInterval": 0,
         /* Every this many seconds get submitted blocks from redis, use daemon RPC to check
            their confirmation status, if confirmed then get shares from redis that contributed
            to block and send out payments. */
-        "paymentInterval": 7200,
-        /* Every this many seconds perform checks and update specific fields in API, such as
-           balances and the like */
-        "checkInterval": 60,
+       "paymentInterval": 7200,
+        /* Every this many seconds (disabled if == 0) run a shielding process for coins that
+           support it (zcash, zclassic, etc.) */
+       "shieldInterval": 0,
         /* Minimum number of coins that a miner must earn before sending payment. Typically,
            a higher minimum means less transactions fees (you profit more) but miners see
            payments less frequently (they dislike). Opposite for a lower minimum payment. */
@@ -301,7 +308,7 @@ npm run start
 ---
 
 ## Credits
-* [Nick Sarris / Blinkhash](https://github.com/nicksarris) - developer behind Blinkhash Mining Pool/NOMP updates
+* [Nick Sarris / Blinkhash](https://github.com/blinkhash) - developer behind Blinkhash Mining Pool/NOMP updates
 * [Jerry Brady / mintyfresh68](https://github.com/bluecircle) - got coin-switching fully working and developed proxy-per-algo feature
 * [Tony Dobbs](http://anthonydobbs.com) - designs for front-end and created the NOMP logo
 * [LucasJones](//github.com/LucasJones) - got p2p block notify working and implemented additional hashing algos
