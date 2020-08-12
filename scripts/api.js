@@ -605,34 +605,53 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                         portalStats.getBalanceByAddress(workerQuery, function(balances) {
 
                             // Define Individual Variables
-                            var blocks = {}
-                            var payments = {}
-                            var workers = {}
+                            var blocks;
+                            var payments;
+                            var workers;
+                            var name = 'Bitcoin';
+                            var symbol = 'BTC';
+                            var algorithm = 'sha256';
+                            var poolFlag = false;
 
                             // Get Block Information
                             for (var pool in portalStats.stats) {
                                 var blocksData = getBlocksData(portalStats, pool, workerQuery)
                                 if ((blocksData.blocks.length >= 1)) {
-                                    blocks[portalStats.stats[pool].name] = blocksData.blocks;
+                                    blocks = blocksData.blocks;
+                                    poolFlag = true;
                                 }
                                 var paymentsData = getPaymentsData(portalStats, pool, workerQuery)
                                 if (paymentsData.payments.length >= 1) {
-                                    payments[portalStats.stats[pool].name] = paymentsData.payments;
+                                    payments = paymentsData.payments;
+                                    poolFlag = true;
                                 }
                                 var workersData = getWorkersData(portalStats, pool, workerQuery)
                                 if (workersData.workers.length >= 1) {
-                                    workers[portalStats.stats[pool].name] = workersData.workers;
+                                    workers = workersData.workers;
+                                    poolFlag = true;
+                                }
+                                if (poolFlag === true) {
+                                    name = portalStats.stats[pool].name;
+                                    symbol = portalStats.stats[pool].symbol;
+                                    algorithm = portalStats.stats[pool].algorithm;
+                                    break;
                                 }
                             }
 
+                            // Combined Balance
+                            const combined = balances.totalBalance + balances.totalImmature + balances.totalPaid + balances.totalUnpaid;
+
                             // Structure Wallet Output
                             const wallets = {
+                                pool: name,
+                                symbol: symbol,
+                                algorithm: algorithm,
                                 worker: workerQuery,
                                 balance: balances.totalBalance.toFixed(8),
                                 immature: balances.totalImmature.toFixed(8),
                                 paid: balances.totalPaid.toFixed(8),
                                 unpaid: balances.totalUnpaid.toFixed(8),
-                                total: (balances.totalBalance + balances.totalImmature + balances.totalPaid + balances.totalUnpaid).toFixed(8),
+                                total: combined.toFixed(8),
                                 blocks: blocks,
                                 payments: payments,
                                 workers: workers,

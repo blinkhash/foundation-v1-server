@@ -17,7 +17,7 @@ var Stratum = require('stratum-pool');
 // Derive Main Address from Given
 function getProperAddress(poolOptions, address) {
     if (address.length === 40) {
-        return util.addressFromEx(poolOptions.address, address);
+        return util.addressFromEx(poolOptions.addresses.address, address);
     }
     return address;
 }
@@ -274,7 +274,7 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
             return;
         }
         var amount = satoshisToCoins(balance - 10000);
-        var params = [poolOptions.address, [{'address': poolOptions.zAddress, 'amount': amount}]];
+        var params = [poolOptions.addresses.address, [{'address': poolOptions.addresses.zAddress, 'amount': amount}]];
         daemon.cmd('z_sendmany', params, function(result) {
             if (!result || result.error || result[0].error) {
                 logger.error(logSystem, logComponent, `Error with RPC call z_sendmany ${  JSON.stringify(result[0].error)}`);
@@ -313,7 +313,7 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
         if (amount > 100.0) {
             amount = 100.0;
         }
-        var params = [poolOptions.zAddress, [{'address': poolOptions.tAddress, 'amount': amount}]];
+        var params = [poolOptions.addresses.zAddress, [{'address': poolOptions.addresses.tAddress, 'amount': amount}]];
         daemon.cmd('z_sendmany', params, function(result) {
             if (!result || result.error || result[0].error) {
                 logger.error(logSystem, logComponent, `Error with RPC call z_sendmany ${  JSON.stringify(result[0].error)}`);
@@ -408,13 +408,13 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
 
         // Validate Main Address
         function(callback) {
-            validateAddress(poolOptions.address, 'validateaddress', callback);
+            validateAddress(poolOptions.addresses.address, 'validateaddress', callback);
         },
 
         // Validate tAddress, if Exists
         function(callback) {
-            if (poolOptions.tAddress) {
-                validateAddress(poolOptions.tAddress, 'validateaddress', callback);
+            if (poolOptions.addresses.tAddress !== "") {
+                validateAddress(poolOptions.addresses.tAddress, 'validateaddress', callback);
             }
             else {
                 callback();
@@ -423,8 +423,8 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
 
         // Validate zAddress, if Exists
         function(callback) {
-            if ((poolOptions.zAddress) && (requireShielding)) {
-                validateAddress(poolOptions.zAddress, 'z_validateaddress', callback);
+            if ((poolOptions.addresses.zAddress !== "") && (requireShielding)) {
+                validateAddress(poolOptions.addresses.zAddress, 'z_validateaddress', callback);
             }
             else {
                 callback()
@@ -484,10 +484,10 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
                     shieldIntervalState += 1;
                     switch (shieldIntervalState) {
                         case 1:
-                            listUnspent(poolOptions.address, null, minConfPayout, false, sendCoinsToZ);
+                            listUnspent(poolOptions.addresses.address, null, minConfPayout, false, sendCoinsToZ);
                             break;
                         default:
-                            listUnspentZ(poolOptions.zAddress, minConfPayout, false, sendCoinsToT)
+                            listUnspentZ(poolOptions.addresses.zAddress, minConfPayout, false, sendCoinsToT)
                             shieldIntervalState = 0;
                             break;
                     }
@@ -622,7 +622,7 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
                 var batchRPCCommand = rounds.map(function(r) {
                     return ['gettransaction', [r.txHash]];
                 });
-                batchRPCCommand.push(['getaccount', [poolOptions.address]]);
+                batchRPCCommand.push(['getaccount', [poolOptions.addresses.address]]);
 
                 // Manage RPC Batches
                 daemon.batchCmd(batchRPCCommand, function(error, txDetails) {
@@ -665,7 +665,7 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
 
                         // Check Transaction Edge Cases
                         var generationTx = tx.result.details.filter(function(tx) {
-                            return tx.address === poolOptions.address;
+                            return tx.address === poolOptions.addresses.address;
                         })[0];
                         if (!generationTx && tx.result.details.length === 1) {
                             generationTx = tx.result.details[0];
@@ -798,7 +798,7 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
                         var notAddr = null;
 
                         if (requireShielding) {
-                            notAddr = poolOptions.address;
+                            notAddr = poolOptions.addresses.address;
                         }
 
                         var feeSatoshi = coinsToSatoshies(fee);

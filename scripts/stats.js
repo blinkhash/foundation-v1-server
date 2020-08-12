@@ -394,7 +394,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                             roundTimes: (replies[i + 10] || {}),
                         },
                         statistics: {
-                            hashrateType: poolConfigs[coinName].hashrateType,
+                            hashrateType: poolConfigs[coinName].coin.hashrateType,
                             validShares: replies[i + 2] ? (replies[i + 2].validShares || 0) : 0,
                             validBlocks: replies[i + 2] ? (replies[i + 2].validBlocks || 0) : 0,
                             invalidShares: replies[i + 2] ? (replies[i + 2].invalidShares || 0) : 0,
@@ -466,7 +466,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                                     validShares: workerShares,
                                     invalidShares: 0,
                                     hashrate: null,
-                                    hashrateType: poolConfigs[coinName].hashrateType,
+                                    hashrateType: poolConfigs[coinName].coin.hashrateType,
                                     soloMining: soloMining,
                                 };
                             }
@@ -482,7 +482,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                                     validShares: 0,
                                     invalidShares: -workerShares,
                                     hashrate: null,
-                                    hashrateType: poolConfigs[coinName].hashrateType,
+                                    hashrateType: poolConfigs[coinName].coin.hashrateType,
                                     soloMining: soloMining,
                                 };
                             }

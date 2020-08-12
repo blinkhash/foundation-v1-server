@@ -170,7 +170,13 @@ In order to create a new pool, take a look at the `example.json` file inside the
     "address": "MMvdRHMDh128QgG2GebQhiUmiV8GCiiB5G", // Address to where block rewards are given
     "featured": false, // Whether or not you want the pool to have a 'featured' tag
     "fees": 1, // % Fees for block rewards for easy statistics gathering
-    "hashrateType": "sols", // Type of hashrate supported by coin ('hashes', 'sols')
+
+    /* Addresses for the pool to use for payments */
+    "addresses": {
+        "address": "MMvdRHMDh128QgG2GebQhiUmiV8GCiiB5G",
+        "tAddress": "",
+        "zAddress": ""
+    },
 
     /* Specifications for the current coin */
     "coin": {
@@ -179,6 +185,10 @@ In order to create a new pool, take a look at the `example.json` file inside the
         "algorithm": "scrypt", // Coin algorithm
         "peerMagic": "ace4b9cd", // Coin peer magic (pchMessageStart in src/chainparameters.cpp)
         "peerMagicTestnet": "f01a6eef", // Coin peer magic (pchMessageStart in src/chainparameters.cpp)
+        "hashrateType": "sols", // Type of hashrate supported by coin ('hashes', 'sols')
+        "requireShielding": false, // Whether the coin requires shielding
+        "sapling": false, // Whether the coin supports the sapling protocol
+        "txfee": 0.0004, // The default txfee to use when sending transactions
         /* Add mainnet parameters here. Just like with peerMagic/peerMagicTestnet, you can find most of
            the required values in src/chainparameters.cpp. If your coin does not possess these values, you
            can remove the information from the configuration file. */
@@ -189,6 +199,12 @@ In order to create a new pool, take a look at the `example.json` file inside the
             },
             "pubKeyHash": "19",
             "scriptHash": "32"
+        },
+        /* Add equihash parameters here, depending on the configuration of the algorithm used */
+        "parameters": {
+            "N": "",
+            "K": "",
+            "personalization": ""
         },
         /* Add testnet parameters here. Just like with peerMagic/peerMagicTestnet, you can find most of
            the required values in src/chainparameters.cpp. If your coin does not possess these values, you

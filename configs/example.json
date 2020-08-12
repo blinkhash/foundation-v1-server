@@ -1,15 +1,19 @@
 {
     "enabled": false,
-    "address": "MMvdRHMDh128QgG2GebQhiUmiV8GCiiB5G",
     "featured": true,
     "fees": 1,
-    "hashrateType": "sols",
+    "addresses": {
+        "address": "MMvdRHMDh128QgG2GebQhiUmiV8GCiiB5G",
+        "tAddress": "",
+        "zAddress": ""
+    },
     "coin": {
         "name": "Blinkhash",
         "symbol": "BHTC",
         "algorithm": "scrypt",
         "peerMagic": "ace4b9cd",
         "peerMagicTestnet": "f01a6eef",
+        "hashrateType": "sols",
         "requireShielding": false,
         "sapling": false,
         "txfee": 0.0004,
