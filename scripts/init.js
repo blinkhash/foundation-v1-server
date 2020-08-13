@@ -21,7 +21,7 @@ var PoolServer = require('./server.js');
 var PoolWorker = require('./worker.js');
 
 // Import Stratum Algorithms
-var algos = require('stratum-pool/lib/algoProperties.js');
+var algorithms = require('stratum-pool/lib/algorithms.js');
 
 // Import JSON Functionality
 JSON.minify = JSON.minify || require("node-json-minify");
@@ -198,7 +198,7 @@ function buildPoolConfigs() {
         configs[poolOptions.coin.name] = poolOptions;
 
         // Check to Ensure Algorithm is Supported
-        if (!(poolOptions.coin.algorithm in algos)) {
+        if (!(poolOptions.coin.algorithm in algorithms)) {
             logger.error('Master', poolOptions.coin.name, `Cannot run a pool for unsupported algorithm "${  poolOptions.coin.algorithm  }"`);
             delete configs[poolOptions.coin.name];
         }

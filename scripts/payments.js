@@ -786,7 +786,7 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
                                     }
                                 });
                             }
-                            catch(err) {
+                            catch(e) {
                                 logger.error(logSystem, logComponent, 'Check finished - redis error with formatting round shares.');
                             }
                             allWorkerSharesSolo.push(roundSharesSolo)

@@ -247,7 +247,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     return;
 
                 }
-                catch(err) {
+                catch(e) {
 
                     // Finalize Payload
                     var payload = {
@@ -346,7 +346,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     return;
 
                 }
-                catch(err) {
+                catch(e) {
 
                     // Finalize Payload
                     var payload = {
@@ -396,7 +396,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     return;
 
                 }
-                catch(err) {
+                catch(e) {
 
                     // Finalize Payload
                     var payload = {
@@ -442,7 +442,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     return;
 
                 }
-                catch(err) {
+                catch(e) {
 
                     // Finalize Payload
                     var payload = {
@@ -496,7 +496,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     return;
 
                 }
-                catch(err) {
+                catch(e) {
 
                     // Finalize Payload
                     var payload = {
@@ -576,7 +576,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     return;
 
                 }
-                catch(err) {
+                catch(e) {
 
                     // Finalize Payload
                     var payload = {
@@ -686,7 +686,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     return;
 
                 }
-                catch(err) {
+                catch(e) {
 
                     // Finalize Payload
                     var payload = {
@@ -739,7 +739,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                     return;
 
                 }
-                catch(err) {
+                catch(e) {
 
                     // Finalize Payload
                     var payload = {

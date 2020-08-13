@@ -10,7 +10,7 @@ var async = require('async');
 var RedisClustr = require('redis-clustr');
 
 // Import Stratum Algorithms
-var algos = require('stratum-pool/lib/algoProperties.js');
+var algorithms = require('stratum-pool/lib/algorithms.js');
 
 // Sort Object Properties Given Info
 /* eslint-disable no-prototype-builtins */
@@ -496,7 +496,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                         }
                     }
                     for (var worker in coinStats.workers.workers) {
-                        var shareMultiplier = Math.pow(2, 32) / algos[coinStats.algorithm].multiplier;
+                        var shareMultiplier = Math.pow(2, 32) / algorithms[coinStats.algorithm].multiplier;
                         var _workerRate = shareMultiplier * coinStats.workers.workers[worker].validShares / portalConfig.stats.hashrateWindow;
                         coinStats.workers.workers[worker].hashrate = _workerRate;
                         if (!coinStats.workers.workers[worker].soloMining) {
