@@ -29,7 +29,7 @@
   },
   "scripts": {
     "start": "nodemon scripts/init.js",
-    "clean": "eslint . --ext .js --ignore-pattern node_modules/ --fix",
+    "clean": "eslint . --ext .js --ignore-pattern node_modules/",
     "prod:start": "forever start -l blinkhash-log.txt --append scripts/init.js",
     "prod:stop": "forever stop scripts/init.js"
   },

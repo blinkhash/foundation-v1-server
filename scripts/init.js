@@ -21,7 +21,7 @@ var PoolServer = require('./server.js');
 var PoolWorker = require('./worker.js');
 
 // Import Stratum Algorithms
-var algorithms = require('stratum-pool/lib/algorithms.js');
+var algorithms = require('stratum-pool/scripts/algorithms.js');
 
 // Import JSON Functionality
 JSON.minify = JSON.minify || require("node-json-minify");

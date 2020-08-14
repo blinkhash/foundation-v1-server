@@ -167,7 +167,6 @@ In order to create a new pool, take a look at the `example.json` file inside the
 ````
 {
     "enabled": true, // Set this to false and a pool will not be created from this config file
-    "address": "MMvdRHMDh128QgG2GebQhiUmiV8GCiiB5G", // Address to where block rewards are given
     "featured": false, // Whether or not you want the pool to have a 'featured' tag
     "fees": 1, // % Fees for block rewards for easy statistics gathering
 

@@ -10,7 +10,7 @@ var async = require('async');
 var RedisClustr = require('redis-clustr');
 
 // Import Stratum Algorithms
-var algorithms = require('stratum-pool/lib/algorithms.js');
+var algorithms = require('stratum-pool/scripts/algorithms.js');
 
 // Sort Object Properties Given Info
 /* eslint-disable no-prototype-builtins */
