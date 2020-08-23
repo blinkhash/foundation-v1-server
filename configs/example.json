@@ -13,6 +13,7 @@
         "algorithm": "scrypt",
         "peerMagic": "ace4b9cd",
         "peerMagicTestnet": "f01a6eef",
+        "hasGetInfo": false,
         "hashrateType": "sols",
         "requireShielding": false,
         "sapling": false,

@@ -26,6 +26,7 @@ If you need help with an API or code-related matter, the first place to look is 
 * This portal does not have user accounts/logins/registrations. Instead, miners simply use their coin address for stratum authentication.
 
 ### Attack Mitigation
+
 * Detects and thwarts socket flooding (garbage data sent over socket in order to consume system resources).
 * Detects and thwarts zombie miners (botnet infected computers connecting to your server to use up sockets but not sending any shares).
 * Detects and thwarts invalid share attacks:
@@ -34,11 +35,13 @@ If you need help with an API or code-related matter, the first place to look is 
 * The server is written in Node.js which uses a single thread (async) to handle connections rather than the overhead of one thread per connection. Clustering is also implemented so that all CPU cores are taken advantage of.
 
 ### Security
+
 * Without a registration/login system, non-security-oriented miners reusing passwords across pools is no longer a concern.
 * Automated payouts by default and pool profits are sent to another address so pool wallets aren't plump with coins, giving hackers few rewards and keeping your pool from being a target.
 * Miners can notice lack of automated payments as a possible early warning sign that an operator is about to run off with their coins.
 
 ### Transparency
+
 * The API was specifically designed to be as transparent as possible regarding payouts and shares. Everything is logged for users to check and ensure that everything is legitimate.
 * The server itself will always be open-source. Feel free to create relevant issues and pull requests whenever necessary.
 
@@ -47,6 +50,7 @@ If you need help with an API or code-related matter, the first place to look is 
 ## Setup
 
 ### Requirements
+
 * Coin daemon(s) (Find the coin's repository and build the latest version from source)
 * [Node.js](http://nodejs.org/) v12.0+ (Tested with v12.16.1) ([Instructions](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager))
 * [Redis](http://redis.io/) key-value store v2.6+ (Tested with v5.0.7) ([Instructions](http://redis.io/topics/quickstart))
@@ -56,6 +60,7 @@ Note: Those are legitimate requirements. If you use old versions of Node.js or R
 Beyond this, make sure to give Redis firewall access - an easy way is to include `bind 127.0.0.1` in your `redis.conf` file. Also, it's a good idea to learn about and understand all aspects of the software that you are using. A good place to start with Redis is [data persistence](http://redis.io/topics/persistence).
 
 #### 1) Setting up Coin Daemon
+
 Follow the build/install instructions for your coin daemon. Your coin.conf file should end up looking something like this:
 
 ```
@@ -72,6 +77,7 @@ For redundancy, it's recommended to have at least two daemon instances running i
    * https://en.bitcoin.it/wiki/Difficulty
 
 #### 2) Downloading & Installing
+
 Clone the repository and run `npm update` for all the dependencies to be installed:
 
 ```bash
@@ -81,6 +87,7 @@ npm update
 ```
 
 #### 3) Configuration
+
 Rename the `example.json` file to `config.json`. Inside it, ensure that the default configuration will work for your environment before starting the pool.
 
 ````
@@ -308,13 +315,13 @@ In order to create a new pool, take a look at the `example.json` file inside the
         "M8ucqBhn5zfwYiCG6W1KoHZ9buymbedFov": 1.5,
     },
 }
-
 ````
 
 You can create as many of these pool files as you want. If you are creating multiple pools, ensure that they have unique stratum ports. For more information on these configuration options, see the [pool module documentation](https://github.com/blinkhash/blinkhash-stratum-pool#module-usage).
 
 #### 4) Starting the Pool
-In order to start the pool, run the following line of code.
+
+In order to start the pool, simply run the following line of code.
 
 ```
 npm run start
@@ -323,7 +330,22 @@ npm run start
 ---
 
 ## Credits
-* [Nick Sarris / Blinkhash](https://github.com/blinkhash) - developer behind Blinkhash Mining Pool/NOMP updates
+
+#### Blinkhash
+* [Nick Sarris / Blinkhash](https://github.com/blinkhash) - developer behind Blinkhash updates
+
+#### S-NOMP
+* [egyptianbman](https://github.com/egyptianbman) - developer behind S-NOMP updates
+* [nettts](https://github.com/nettts) - developer behind S-NOMP updates
+* [potato](https://github.com/zzzpotato) - developer behind S-NOMP updates
+
+#### Z-NOMP
+* [Joshua Yabut / movrcx](https://github.com/joshuayabut) - developer behind Z-NOMP updates
+* [Aayan L / anarch3](https://github.com/aayanl) - developer behind Z-NOMP updates
+* [hellcatz](https://github.com/hellcatz) - developer behind Z-NOMP updates
+
+#### NOMP
+* [Matthew Little / zone117x](https://github.com/zone117x) - developer behind NOMP updates
 * [Jerry Brady / mintyfresh68](https://github.com/bluecircle) - got coin-switching fully working and developed proxy-per-algo feature
 * [Tony Dobbs](http://anthonydobbs.com) - designs for front-end and created the NOMP logo
 * [LucasJones](//github.com/LucasJones) - got p2p block notify working and implemented additional hashing algos
@@ -339,5 +361,6 @@ npm run start
 ---
 
 ## License
+
 Released under the GNU General Public License v2
 http://www.gnu.org/licenses/gpl-2.0.html
