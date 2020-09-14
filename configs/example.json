@@ -14,9 +14,10 @@
         "peerMagic": "ace4b9cd",
         "peerMagicTestnet": "f01a6eef",
         "hasGetInfo": false,
-        "hashrateType": "sols",
+        "hashrateType": "hashes",
         "requireShielding": false,
         "sapling": false,
+        "segwit": true,
         "txfee": 0.0004,
         "mainnet": {
             "bech32": "bhtc",
