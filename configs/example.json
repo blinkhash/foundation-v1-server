@@ -2,6 +2,7 @@
     "enabled": false,
     "featured": true,
     "fees": 1,
+    "identifier": "https://github.com/blinkhash/blinkhash-server",
     "addresses": {
         "address": "MMvdRHMDh128QgG2GebQhiUmiV8GCiiB5G",
         "tAddress": "",
@@ -16,6 +17,7 @@
         "hasGetInfo": false,
         "hashrateType": "hashes",
         "requireShielding": false,
+        "overwinter": false,
         "sapling": false,
         "segwit": true,
         "txfee": 0.0004,
