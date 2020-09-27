@@ -51,6 +51,51 @@
             "password": "blinkhash"
         }
     ],
+    "rewards": {
+        "rewardType": "",
+        "founders": {
+            "interval": 0,
+            "reward": 0,
+            "startHeight": 0,
+            "endHeight": 0,
+            "recipients": []
+        },
+        "giveaways": {
+            "interval": 0,
+            "reward": 0,
+            "startHeight": 0,
+            "endHeight": 0,
+            "recipients": []
+        },
+        "infrastructure": {
+            "interval": 0,
+            "reward": 0,
+            "startHeight": 0,
+            "endHeight": 0,
+            "recipients": []
+        },
+        "secureNodes": {
+            "interval": 0,
+            "reward": 0,
+            "startHeight": 0,
+            "endHeight": 0,
+            "recipients": []
+        },
+        "superNodes": {
+            "interval": 0,
+            "reward": 0,
+            "startHeight": 0,
+            "endHeight": 0,
+            "recipients": []
+        },
+        "treasury": {
+            "interval": 0,
+            "reward": 0,
+            "startHeight": 0,
+            "endHeight": 0,
+            "recipients": []
+        }
+    },
     "paymentProcessing": {
         "enabled": true,
         "checkInterval": 20,
