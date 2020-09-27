@@ -61,20 +61,6 @@
             "endHeight": 0,
             "recipients": []
         },
-        "giveaways": {
-            "interval": 0,
-            "reward": 0,
-            "startHeight": 0,
-            "endHeight": 0,
-            "recipients": []
-        },
-        "infrastructure": {
-            "interval": 0,
-            "reward": 0,
-            "startHeight": 0,
-            "endHeight": 0,
-            "recipients": []
-        },
         "secureNodes": {
             "interval": 0,
             "reward": 0,
