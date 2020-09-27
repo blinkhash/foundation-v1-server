@@ -370,6 +370,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                         name: coinName,
                         symbol: poolConfigs[coinName].coin.symbol.toUpperCase(),
                         algorithm: poolConfigs[coinName].coin.algorithm,
+                        logo: poolConfigs[coinName].logo,
                         featured: poolConfigs[coinName].featured,
                         fees: poolConfigs[coinName].fees,
                         ports: poolConfigs[coinName].ports,

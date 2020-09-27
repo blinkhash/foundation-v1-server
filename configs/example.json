@@ -3,6 +3,7 @@
     "featured": true,
     "fees": 1,
     "identifier": "https://github.com/blinkhash/blinkhash-server",
+    "logo": "",
     "addresses": {
         "address": "MMvdRHMDh128QgG2GebQhiUmiV8GCiiB5G",
         "tAddress": "",

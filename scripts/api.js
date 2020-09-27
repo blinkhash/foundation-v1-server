@@ -287,6 +287,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                                 pool: portalStats.stats[pool].name,
                                 symbol: portalStats.stats[pool].symbol,
                                 algorithm: portalStats.stats[pool].algorithm,
+                                logo: portalStats.stats[pool].logo,
                                 featured: portalStats.stats[pool].featured,
                                 ports: portalStats.stats[pool].ports,
                                 blocks: blocksData.blocks,
@@ -533,6 +534,7 @@ var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
                                 pool: portalStats.stats[pool].name,
                                 symbol: portalStats.stats[pool].symbol,
                                 algorithm: portalStats.stats[pool].algorithm,
+                                logo: portalStats.stats[pool].logo,
                                 featured: portalStats.stats[pool].featured,
                                 ports: portalStats.stats[pool].ports,
                                 statistics: {
