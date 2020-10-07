@@ -206,7 +206,7 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
 
     // Return Main Unspent Balance
     function listUnspent (addr, notAddr, minConf, displayBool, callback) {
-        if (addr !== null) {
+        if (addr != null) {
             var args = [minConf, 99999999, [addr]];
         } else {
             addr = 'Payout wallet';

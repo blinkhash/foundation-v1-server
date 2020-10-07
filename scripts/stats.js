@@ -372,7 +372,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                         algorithm: poolConfigs[coinName].coin.algorithm,
                         logo: poolConfigs[coinName].logo,
                         featured: poolConfigs[coinName].featured,
-                        fees: poolConfigs[coinName].fees,
+                        fees: 0,
                         ports: poolConfigs[coinName].ports,
                         blocks: {
                             pending: replies[i + 6].sort(sortBlocks),
@@ -422,7 +422,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                     }
                     /* eslint-disable-next-line no-empty */
                     catch(e) {}
-                    if (jsonObj !== null) {
+                    if (jsonObj != null) {
                         coinStats.history = jsonObj;
                     }
 
@@ -434,11 +434,16 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                         }
                         /* eslint-disable-next-line no-empty */
                         catch(e) {}
-                        if (jsonObj !== null) {
+                        if (jsonObj != null) {
                             coinStats.payments.push(jsonObj);
                         }
                     }
                     allCoinStats[coinStats.name] = (coinStats);
+
+                    // Calculate Combined Fees for Recipients
+                    Object.keys(poolConfigs[coinName].rewardRecipients).forEach(function(recipient) {
+                        coinStats.fees += poolConfigs[coinName].rewardRecipients[recipient];
+                    });
                 }
 
                 // Calculate Specific Statistics for Coins
