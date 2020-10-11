@@ -15,6 +15,14 @@ Documentation for the API is currently available at https://github.com/blinkhash
 If you need help with an API or code-related matter, the first place to look is our [Discord](https://www.discord.gg/x2vgyZP), where I'll be available to answer any questions. However, please do not come to me with issues regarding how to clone/setup the server. Use Google for that.
 
 ---
+## Configurations
+
+Each of the configurations mentioned have been confirmed to work with the current release of the software. They've either been run in a closed environment on the coin's testnet or on the Blinkhash Mining Pool. The full repository of configurations is available at https://github.com/blinkhash/blinkhash-configurations. In order to use any of these configurations, download the .json file and place it in the "configs" folder. Make sure to look over the file thoroughly and change the addresses, ports, and fees as necessary.
+
+* Bitcoin - [Configuration](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoin-sha256d.json)
+* Bitcoin (Testnet) - [Configuration](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoin-sha256d-testnet.json)
+
+---
 
 ## Specifications
 
