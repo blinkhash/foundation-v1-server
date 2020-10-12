@@ -22,6 +22,7 @@
         "segwit": true,
         "txfee": 0.0004,
         "mainnet": {
+            "network": "btc",
             "bech32": "bhtc",
             "bip32": {
                 "public": "0488B21E"
@@ -35,6 +36,7 @@
             "personalization": ""
         },
         "testnet": {
+            "network": "btc",
             "bech32": "tbhtc",
             "bip32": {
                 "public": "043587CF"
