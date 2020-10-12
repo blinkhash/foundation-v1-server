@@ -665,7 +665,11 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
 
                         // Check Transaction Edge Cases
                         var generationTx = tx.result.details.filter(function(tx) {
-                            return tx.address === poolOptions.addresses.address;
+                            var generationAddress = tx.address;
+                            if (generationAddress.indexOf(':') > -1) {
+                                generationAddress = generationAddress.split(':')[1]
+                            }
+                            return generationAddress === poolOptions.addresses.address;
                         })[0];
                         if (!generationTx && tx.result.details.length === 1) {
                             generationTx = tx.result.details[0];
