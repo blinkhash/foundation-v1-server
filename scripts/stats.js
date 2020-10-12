@@ -551,7 +551,6 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                     }
 
                     // Clean Up Information
-                    delete coinStats.hashrate.hashrates;
                     delete coinStats.hashrate.shares;
                 });
 
