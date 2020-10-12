@@ -386,7 +386,7 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                             hashrate: 0,
                             hashrateShared: 0,
                             hashrateSolo: 0,
-                            hashrates: replies[i + 0],
+                            hashrates: replies[i + 0] || [],
                         },
                         history: [],
                         shares: {
