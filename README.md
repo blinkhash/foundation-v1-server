@@ -21,6 +21,8 @@ Each of the configurations mentioned have been confirmed to work with the curren
 
 * Bitcoin - [Configuration](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoin-sha256d.json)
 * Bitcoin (Testnet) - [Configuration](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoin-sha256d-testnet.json)
+* Bitcoin Cash - [Configuration](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoincash-sha256d.json)
+* Bitcoin Cash (Testnet) - [Configuration](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoincash-sha256d-testnet.json)
 
 ---
 
