@@ -19,14 +19,10 @@ If you need help with an API or code-related matter, the first place to look is 
 
 Each of the configurations mentioned have been confirmed to work with the current release of the software. They've either been run in a closed environment on the coin's testnet or on the Blinkhash Mining Pool. The full repository of configurations is available at https://github.com/blinkhash/blinkhash-configurations. In order to use any of these configurations, download the .json file and place it in the "configs" folder. Make sure to look over the file thoroughly and change the addresses, ports, and fees as necessary.
 
-* Bitcoin - [Configuration](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoin-sha256d.json)
-* Bitcoin (Testnet) - [Configuration](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoin-sha256d-testnet.json)
-* Bitcoin Cash - [Configuration](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoincash-sha256d.json)
-* Bitcoin Cash (Testnet) - [Configuration](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoincash-sha256d-testnet.json)
-* Litecoin - [Configuration](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/litecoin-scrypt.json)
-* Litecoin (Testnet) - [Configuration](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/litecoin-scrypt-testnet.json)
-* Dash - [Configuration](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dash-x11.json)
-* Dash (Testnet) - [Configuration](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dash-x11-testnet.json)
+* Bitcoin - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoin-sha256d.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoin-sha256d-testnet.json)
+* Bitcoin Cash - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoincash-sha256d.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoincash-sha256d-testnet.json)
+* Litecoin - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/litecoin-scrypt.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/litecoin-scrypt-testnet.json)
+* Dash - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dash-x11.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dash-x11-testnet.json)
 
 ---
 
