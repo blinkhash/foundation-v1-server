@@ -23,6 +23,7 @@ Each of the configurations mentioned have been confirmed to work with the curren
 * Bitcoin Cash - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoincash-sha256d.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoincash-sha256d-testnet.json)
 * Litecoin - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/litecoin-scrypt.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/litecoin-scrypt-testnet.json)
 * Dash - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dash-x11.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dash-x11-testnet.json)
+* Dogecoin - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dogecoin-scrypt.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dogecoin-scrypt-testnet.json)
 
 ---
 
