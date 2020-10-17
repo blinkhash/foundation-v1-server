@@ -1,34 +1,36 @@
 {
     "enabled": false,
     "featured": true,
+    "fees": 1,
     "identifier": "https://github.com/blinkhash/blinkhash-server",
     "logo": "",
     "addresses": {
-        "address": "MMvdRHMDh128QgG2GebQhiUmiV8GCiiB5G",
+        "address": "",
         "tAddress": "",
         "zAddress": ""
     },
     "coin": {
-        "name": "Blinkhash",
-        "symbol": "BHTC",
-        "algorithm": "scrypt",
-        "peerMagic": "ace4b9cd",
-        "peerMagicTestnet": "f01a6eef",
+        "name": "Bitcoin",
+        "symbol": "BTC",
+        "algorithm": "sha256",
+        "peerMagic": "f9beb4d9",
+        "peerMagicTestnet": "0b110907",
         "hasGetInfo": false,
         "hashrateType": "hashes",
-        "requireShielding": false,
         "overwinter": false,
+        "requireShielding": false,
+        "rewardType": "coinbasevalue",
         "sapling": false,
         "segwit": true,
         "txfee": 0.0004,
         "mainnet": {
             "network": "btc",
-            "bech32": "bhtc",
+            "bech32": "bc",
             "bip32": {
                 "public": "0488B21E"
             },
-            "pubKeyHash": "19",
-            "scriptHash": "32"
+            "pubKeyHash": "00",
+            "scriptHash": "05"
         },
         "parameters": {
             "N": "",
@@ -37,20 +39,20 @@
         },
         "testnet": {
             "network": "btc",
-            "bech32": "tbhtc",
+            "bech32": "tb",
             "bip32": {
                 "public": "043587CF"
             },
-            "pubKeyHash": "19",
+            "pubKeyHash": "6F",
             "scriptHash": "C4"
         }
     },
     "daemons": [
         {
             "host": "127.0.0.1",
-            "port": 26710,
-            "user": "blinkhash",
-            "password": "blinkhash"
+            "port": 8332,
+            "user": "",
+            "password": ""
         }
     ],
     "rewards": {
@@ -90,47 +92,20 @@
         "operationInterval": 0,
         "paymentInterval": 7200,
         "shieldInterval": 0,
-        "minimumPayment": 0.05,
+        "minimumPayment": 0.005,
         "daemon": {
             "host": "127.0.0.1",
-            "port": 26710,
-            "user": "blinkhash",
-            "password": "blinkhash"
+            "port": 8332,
+            "user": "",
+            "password": ""
         }
     },
-    "ports": {
-        "3010": {
-            "enabled": true,
-            "soloMining": false,
-            "diff": 8,
-            "varDiff": {
-                "minDiff": 8,
-                "maxDiff": 512,
-                "targetTime": 15,
-                "retargetTime": 90,
-                "variancePercent": 30
-            }
-        },
-        "3011": {
-            "enabled": true,
-            "soloMining": true,
-            "diff": 8,
-            "varDiff": {
-                "minDiff": 8,
-                "maxDiff": 512,
-                "targetTime": 15,
-                "retargetTime": 90,
-                "variancePercent": 30
-            }
-        }
-    },
+    "ports": {},
     "p2p": {
         "enabled": true,
         "host": "127.0.0.1",
-        "port": 26709,
+        "port": 8333,
         "disableTransactions": true
     },
-    "rewardRecipients": {
-        "M8ucqBhn5zfwYiCG6W1KoHZ9buymbedFov": 1
-    }
+    "rewardRecipients": {}
 }
