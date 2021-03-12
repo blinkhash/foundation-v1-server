@@ -89,6 +89,17 @@ Each of the configurations mentioned have been confirmed to work with the curren
 
 ---
 
+## Donations
+
+Maintaining this project has always been driven out of nothing more than a desire to give back to the mining community, however I always appreciate donations, especially if this repository helps you in any way.
+
+- Bitcoin: 3EbrVYLxN5WeQmPpL6owo3A7rJELXecbbc
+- Ethereum: 0xd3e3daED621d228244Fa89A3dd8AF07B52E72319
+- Litecoin: MFWpARrSADAy3Qj79C4pSasS9F156QipwC
+- ZCash: t1NSk8gyiou8TxWRZTVuUkfM5f9riopN58A
+
+---
+
 ## License
 
 Released under the GNU General Public License v2
