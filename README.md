@@ -6,7 +6,7 @@
 
 ## Introduction
 
-This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written entirely in Node.JS. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed as the Blinkhash Mining Pool uses a custom-built front-end design. If you want to access the Blinkhash Mining Pool, however, the website is available at https://blinkhash.com.
+This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written entirely in Node.JS. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed as the Blinkhash Mining Pool will implement a custom-built front-end design.
 
 Documentation for the API is currently available at https://github.com/blinkhash/blinkhash-documentation. The API itself was specifically designed to be self-explanatory while still providing users with standardized JSON-formatted responses.
 
