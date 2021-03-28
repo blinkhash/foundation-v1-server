@@ -1,24 +1,23 @@
 module.exports = {
-    parser: 'babel-eslint',
-    extends: ['eslint:recommended'],
-    env: {
-        jest: true,
-        browser: true,
-        node: true,
-        es6: true,
+    "env": {
+        "browser": true,
+        "node": true,
+        "jest": true,
+        "es2021": true
     },
-    parserOptions: {
-        ecmaVersion: 6,
-        sourceType: 'module',
-        ecmaFeatures: {
-            jsx: true,
-        },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+        "ecmaVersion": 12,
+        "sourceType": "module"
     },
-    rules: {
-        'arrow-body-style': [2, 'as-needed'],
-        'no-console': 0,
-        'no-unused-vars': 2,
-        'no-redeclare': 0,
-        'prefer-template': 2,
-    },
+    "rules": {
+        "no-var": 2,
+        "semi": [2, "always"],
+        "indent": 2,
+        "no-multi-spaces": 2,
+        "space-in-parens": 2,
+        "no-multiple-empty-lines": 2,
+        "prefer-const": 2,
+        "no-use-before-define": 2
+    }
 };

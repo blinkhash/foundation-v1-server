@@ -1,10 +1,7 @@
-<p align="center">
-    <img src="resources/blinkhash-logo-text3.png" height="110"></img>
-</p>
+# Blinkhash Server
 
----
-
-## Introduction
+[![Build Status](https://travis-ci.org/blinkhash/blinkhash-server.svg?branch=master)](https://travis-ci.org/blinkhash/blinkhash-server)
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
 This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written entirely in Node.JS. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed as the Blinkhash Mining Pool will implement a custom-built front-end design.
 
@@ -15,7 +12,8 @@ Documentation for the API is currently available at https://github.com/blinkhash
 If you need help with an API or code-related matter, the first place to look is our [Discord](https://www.discord.gg/x2vgyZP), where I'll be available to answer any questions. However, please do not come to me with issues regarding how to clone/setup the server. Use Google for that.
 
 ---
-## Configurations
+
+### Configurations
 
 Each of the configurations mentioned have been confirmed to work with the current release of the software. They've either been run in a closed environment on the coin's testnet or on the Blinkhash Mining Pool. The full repository of configurations is available at https://github.com/blinkhash/blinkhash-configurations. In order to use any of these configurations, download the .json file and place it in the "configs" folder. Make sure to look over the file thoroughly and change the addresses, ports, and fees as necessary.
 
@@ -27,7 +25,7 @@ Each of the configurations mentioned have been confirmed to work with the curren
 
 ---
 
-## Specifications
+### Specifications
 
 #### Features
 
@@ -58,7 +56,7 @@ Each of the configurations mentioned have been confirmed to work with the curren
 
 ---
 
-## Credits
+### Credits
 
 #### Blinkhash
 * [Nick Sarris / Blinkhash](https://github.com/blinkhash) - developer behind Blinkhash updates
@@ -89,7 +87,7 @@ Each of the configurations mentioned have been confirmed to work with the curren
 
 ---
 
-## Donations
+### Donations
 
 Maintaining this project has always been driven out of nothing more than a desire to give back to the mining community, however I always appreciate donations, especially if this repository helps you in any way.
 
@@ -100,7 +98,8 @@ Maintaining this project has always been driven out of nothing more than a desir
 
 ---
 
-## License
+### License
 
-Released under the GNU General Public License v2
-http://www.gnu.org/licenses/gpl-2.0.html
+Released under the GNU General Public License v2. See http://www.gnu.org/licenses/gpl-2.0.html for more information
+
+---

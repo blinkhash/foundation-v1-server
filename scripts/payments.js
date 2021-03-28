@@ -7,7 +7,7 @@
 // Import Required Modules
 var fs = require('fs');
 var async = require('async');
-var util = require('stratum-pool/scripts/util.js');
+var util = require('stratum-pool/scripts/main/util.js');
 var redis = require('redis');
 var RedisClustr = require('redis-clustr');
 
