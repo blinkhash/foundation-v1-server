@@ -42,6 +42,7 @@
     "apicache": "^1.5.3",
     "async": "1.5.2",
     "bignum": "0.13.1",
+    "blinkhash-stratum-pool": "0.0.1",
     "body-parser": "*",
     "colors": "*",
     "compression": "*",
@@ -58,8 +59,7 @@
     "nonce": "*",
     "redis": "^3.0.2",
     "redis-clustr": "^1.7.0",
-    "request": "2.88.2",
-    "stratum-pool": "git://github.com/blinkhash/blinkhash-stratum-pool.git"
+    "request": "2.88.2"
   },
   "devDependencies": {
     "codecov": "^3.8.1",
@@ -71,8 +71,5 @@
   "engines": {
     "node": ">=0.10"
   },
-  "readmeFilename": "README.md",
-  "_id": "server@0.0.1",
-  "_resolved": "git://github.com/blinkhash/blinkhash-server.git",
-  "_from": "stratum-pool@git://github.com/blinkhash/blinkhash-server.git"
+  "readmeFilename": "README.md"
 }
