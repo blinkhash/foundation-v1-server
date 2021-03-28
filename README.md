@@ -13,18 +13,6 @@ If you need help with an API or code-related matter, the first place to look is 
 
 ---
 
-### Configurations
-
-Each of the configurations mentioned have been confirmed to work with the current release of the software. They've either been run in a closed environment on the coin's testnet or on the Blinkhash Mining Pool. The full repository of configurations is available at https://github.com/blinkhash/blinkhash-configurations. In order to use any of these configurations, download the .json file and place it in the "configs" folder. Make sure to look over the file thoroughly and change the addresses, ports, and fees as necessary.
-
-* Bitcoin - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoin-sha256d.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoin-sha256d-testnet.json)
-* Bitcoin Cash - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoincash-sha256d.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoincash-sha256d-testnet.json)
-* Litecoin - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/litecoin-scrypt.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/litecoin-scrypt-testnet.json)
-* Dash - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dash-x11.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dash-x11-testnet.json)
-* Dogecoin - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dogecoin-scrypt.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dogecoin-scrypt-testnet.json)
-
----
-
 ### Specifications
 
 #### Features
@@ -56,34 +44,15 @@ Each of the configurations mentioned have been confirmed to work with the curren
 
 ---
 
-### Credits
+### Configurations
 
-#### Blinkhash
-* [Nick Sarris / Blinkhash](https://github.com/blinkhash) - developer behind Blinkhash updates
+Each of the configurations mentioned have been confirmed to work with the current release of the software. They've either been run in a closed environment on the coin's testnet or on the Blinkhash Mining Pool. The full repository of configurations is available at https://github.com/blinkhash/blinkhash-configurations. In order to use any of these configurations, download the .json file and place it in the "configs" folder. Make sure to look over the file thoroughly and change the addresses, ports, and fees as necessary.
 
-#### S-NOMP
-* [egyptianbman](https://github.com/egyptianbman) - developer behind S-NOMP updates
-* [nettts](https://github.com/nettts) - developer behind S-NOMP updates
-* [potato](https://github.com/zzzpotato) - developer behind S-NOMP updates
-
-#### Z-NOMP
-* [Joshua Yabut / movrcx](https://github.com/joshuayabut) - developer behind Z-NOMP updates
-* [Aayan L / anarch3](https://github.com/aayanl) - developer behind Z-NOMP updates
-* [hellcatz](https://github.com/hellcatz) - developer behind Z-NOMP updates
-
-#### NOMP
-* [Matthew Little / zone117x](https://github.com/zone117x) - developer behind NOMP updates
-* [Jerry Brady / mintyfresh68](https://github.com/bluecircle) - got coin-switching fully working and developed proxy-per-algo feature
-* [Tony Dobbs](http://anthonydobbs.com) - designs for front-end and created the NOMP logo
-* [LucasJones](//github.com/LucasJones) - got p2p block notify working and implemented additional hashing algos
-* [vekexasia](//github.com/vekexasia) - co-developer & great tester
-* [TheSeven](//github.com/TheSeven) - answering an absurd amount of my questions and being a very helpful gentleman
-* [UdjinM6](//github.com/UdjinM6) - helped implement fee withdrawal in payment processing
-* [Alex Petrov / sysmanalex](https://github.com/sysmanalex) - contributed the pure C block notify script
-* [svirusxxx](//github.com/svirusxxx) - sponsored development of MPOS mode
-* [icecube45](//github.com/icecube45) - helping out with the repo wiki
-* [Fcases](//github.com/Fcases) - ordered me a pizza <3
-* Those that contributed to [node-stratum-pool](//github.com/zone117x/node-stratum-pool#credits)
+* Bitcoin - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoin-sha256d.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoin-sha256d-testnet.json)
+* Bitcoin Cash - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoincash-sha256d.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoincash-sha256d-testnet.json)
+* Litecoin - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/litecoin-scrypt.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/litecoin-scrypt-testnet.json)
+* Dash - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dash-x11.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dash-x11-testnet.json)
+* Dogecoin - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dogecoin-scrypt.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dogecoin-scrypt-testnet.json)
 
 ---
 
