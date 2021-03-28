@@ -12,7 +12,7 @@ var redis = require('redis');
 var RedisClustr = require('redis-clustr');
 
 // Import Stratum Module
-var Stratum = require('stratum-pool');
+var Stratum = require('blinkhash-stratum-pool');
 
 // Derive Main Address from Given
 function getProperAddress(poolOptions, address) {

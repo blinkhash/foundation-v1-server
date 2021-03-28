@@ -25,7 +25,7 @@
     "verbose": true
   },
   "scripts": {
-    "start": "nodemon scripts/init.js",
+    "start": "nodemon scripts/index.js",
     "clean": "eslint . --ext .js --ignore-pattern node_modules/",
     "clean:fix": "eslint . --ext .js --fix --ignore-pattern node_modules/",
     "test": "jest --coverage",

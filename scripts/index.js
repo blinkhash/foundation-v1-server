@@ -14,11 +14,11 @@ var redis = require('redis');
 var RedisClustr = require('redis-clustr');
 
 // Import Pool Functionality
-var PoolListener = require('./listener.js');
-var PoolLogger = require('./logger.js');
-var PoolPayments = require('./payments.js');
-var PoolServer = require('./server.js');
-var PoolWorker = require('./worker.js');
+var PoolListener = require('./main/listener.js');
+var PoolLogger = require('./main/logger.js');
+var PoolPayments = require('./main/payments.js');
+var PoolServer = require('./main/server.js');
+var PoolWorker = require('./main/worker.js');
 
 // Import Stratum Algorithms
 var algorithms = require('blinkhash-stratum-pool/scripts/main/algorithms.js');
