@@ -7,12 +7,12 @@
 // Import Required Modules
 var fs = require('fs');
 var async = require('async');
-var util = require('blinkhash-stratum-pool/scripts/main/util.js');
+var util = require('@blinkhash/blinkhash-stratum/scripts/main/util.js');
 var redis = require('redis');
 var RedisClustr = require('redis-clustr');
 
 // Import Stratum Module
-var Stratum = require('blinkhash-stratum-pool');
+var Stratum = require('@blinkhash/blinkhash-stratum');
 
 // Derive Main Address from Given
 function getProperAddress(poolOptions, address) {

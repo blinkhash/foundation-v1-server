@@ -21,7 +21,7 @@ var PoolServer = require('./main/server.js');
 var PoolWorker = require('./main/worker.js');
 
 // Import Stratum Algorithms
-var algorithms = require('blinkhash-stratum-pool/scripts/main/algorithms.js');
+var algorithms = require('@blinkhash/blinkhash-stratum/scripts/main/algorithms.js');
 
 // Import JSON Functionality
 JSON.minify = JSON.minify || require("node-json-minify");
@@ -132,6 +132,24 @@ function buildPoolConfigs() {
 
     // Iterate Through Each Configuration File
     poolConfigFiles.forEach(function(poolOptions) {
+
+        // Establish JSON Mainnet Conversion
+        if (poolOptions.coin.mainnet) {
+            poolOptions.coin.mainnet.bip32.public = Buffer.from(poolOptions.coin.mainnet.bip32.public, 'hex').readUInt32LE(0);
+            poolOptions.coin.mainnet.bip32.private = Buffer.from(poolOptions.coin.mainnet.bip32.private, 'hex').readUInt32LE(0);
+            poolOptions.coin.mainnet.pubKeyHash = Buffer.from(poolOptions.coin.mainnet.pubKeyHash, 'hex').readUInt8(0);
+            poolOptions.coin.mainnet.scriptHash = Buffer.from(poolOptions.coin.mainnet.scriptHash, 'hex').readUInt8(0);
+            poolOptions.coin.mainnet.wif = Buffer.from(poolOptions.coin.mainnet.wif, 'hex').readUInt8(0);
+        }
+
+        // Establish JSON Testnet Conversion
+        if (poolOptions.coin.testnet) {
+            poolOptions.coin.testnet.bip32.public = Buffer.from(poolOptions.coin.testnet.bip32.public, 'hex').readUInt32LE(0);
+            poolOptions.coin.testnet.bip32.private = Buffer.from(poolOptions.coin.testnet.bip32.private, 'hex').readUInt32LE(0);
+            poolOptions.coin.testnet.pubKeyHash = Buffer.from(poolOptions.coin.testnet.pubKeyHash, 'hex').readUInt8(0);
+            poolOptions.coin.testnet.scriptHash = Buffer.from(poolOptions.coin.testnet.scriptHash, 'hex').readUInt8(0);
+            poolOptions.coin.testnet.wif = Buffer.from(poolOptions.coin.testnet.wif, 'hex').readUInt8(0);
+        }
 
         // Load Configuration from File
         for (var option in portalConfig.defaultPoolConfigs) {

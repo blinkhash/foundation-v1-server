@@ -10,7 +10,7 @@ var RedisClustr = require('redis-clustr');
 
 // Import Stratum/PoolShares Modules
 var PoolShares = require('./shares.js');
-var Stratum = require('blinkhash-stratum-pool');
+var Stratum = require('@blinkhash/blinkhash-stratum');
 
 // Generate Redis Client
 function getRedisClient(portalConfig) {
