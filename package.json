@@ -39,7 +39,7 @@
     "url": "https://github.com/blinkhash/blinkhash-server.git"
   },
   "dependencies": {
-    "@blinkhash/blinkhash-stratum": "0.0.1",
+    "@blinkhash/blinkhash-stratum": "0.0.2",
     "apicache": "^1.5.3",
     "async": "1.5.2",
     "bignum": "0.13.1",
