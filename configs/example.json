@@ -1,13 +1,10 @@
 {
     "enabled": false,
     "featured": true,
-    "fees": 1,
     "identifier": "https://github.com/blinkhash/blinkhash-server",
     "logo": "",
     "addresses": {
-        "address": "",
-        "tAddress": "",
-        "zAddress": ""
+        "address": ""
     },
     "coin": {
         "name": "Bitcoin",
@@ -17,34 +14,32 @@
         "peerMagicTestnet": "0b110907",
         "hasGetInfo": false,
         "hashrateType": "hashes",
-        "overwinter": false,
-        "requireShielding": false,
         "rewardType": "coinbasevalue",
-        "sapling": false,
         "segwit": true,
         "txfee": 0.0004,
         "mainnet": {
-            "network": "btc",
+            "messagePrefix": "\x18Bitcoin Signed Message:\n",
             "bech32": "bc",
             "bip32": {
-                "public": "0488B21E"
+                "public": 0x0488b21e,
+                "private": 0x0488ade4,
             },
-            "pubKeyHash": "00",
-            "scriptHash": "05"
-        },
-        "parameters": {
-            "N": "",
-            "K": "",
-            "personalization": ""
+            "pubKeyHash": 0x00,
+            "scriptHash": 0x05,
+            "wif": 0x80,
+            "coin": "btc",
         },
         "testnet": {
-            "network": "btc",
+            "messagePrefix": "\x18Bitcoin Signed Message:\n",
             "bech32": "tb",
             "bip32": {
-                "public": "043587CF"
+                "public": 0x043587cf,
+                "private": 0x04358394,
             },
-            "pubKeyHash": "6F",
-            "scriptHash": "C4"
+            "pubKeyHash": 0x6f,
+            "scriptHash": 0xc4,
+            "wif": 0xef,
+            "coin": "btc"
         }
     },
     "daemons": [
@@ -55,43 +50,10 @@
             "password": ""
         }
     ],
-    "rewards": {
-        "rewardType": "",
-        "founders": {
-            "interval": 0,
-            "reward": 0,
-            "startHeight": 0,
-            "endHeight": 0,
-            "recipients": []
-        },
-        "secureNodes": {
-            "interval": 0,
-            "reward": 0,
-            "startHeight": 0,
-            "endHeight": 0,
-            "recipients": []
-        },
-        "superNodes": {
-            "interval": 0,
-            "reward": 0,
-            "startHeight": 0,
-            "endHeight": 0,
-            "recipients": []
-        },
-        "treasury": {
-            "interval": 0,
-            "reward": 0,
-            "startHeight": 0,
-            "endHeight": 0,
-            "recipients": []
-        }
-    },
     "paymentProcessing": {
         "enabled": true,
         "checkInterval": 20,
-        "operationInterval": 0,
         "paymentInterval": 7200,
-        "shieldInterval": 0,
         "minimumPayment": 0.005,
         "daemon": {
             "host": "127.0.0.1",
@@ -100,12 +62,32 @@
             "password": ""
         }
     },
-    "ports": {},
+    "ports": {
+        "3001": {
+            "enabled": true,
+            "initial": 32,
+            "difficulty": {
+                "minDiff": 8,
+                "maxDiff": 512,
+                "targetTime": 15,
+                "retargetTime": 90,
+                "variancePercent": 30
+            }
+        }
+    },
     "p2p": {
         "enabled": true,
         "host": "127.0.0.1",
         "port": 8333,
         "disableTransactions": true
     },
-    "rewardRecipients": {}
+    "recipients": [
+        {
+            "address": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+            "percentage": 0.05
+        }
+    ],
+    "rewards": {
+        "rewardType": ""
+    }
 }

@@ -334,7 +334,6 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                         algorithm: poolConfigs[coinName].coin.algorithm,
                         logo: poolConfigs[coinName].logo,
                         featured: poolConfigs[coinName].featured,
-                        fees: 0,
                         ports: poolConfigs[coinName].ports,
                         blocks: {
                             pending: replies[i + 6].sort(sortBlocks),
@@ -401,11 +400,6 @@ var PoolStats = function (logger, poolConfigs, portalConfig) {
                         }
                     }
                     allCoinStats[coinStats.name] = (coinStats);
-
-                    // Calculate Combined Fees for Recipients
-                    Object.keys(poolConfigs[coinName].rewardRecipients).forEach(function(recipient) {
-                        coinStats.fees += poolConfigs[coinName].rewardRecipients[recipient];
-                    });
                 }
 
                 // Calculate Specific Statistics for Coins

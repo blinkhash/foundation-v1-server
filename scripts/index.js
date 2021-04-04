@@ -133,18 +133,6 @@ function buildPoolConfigs() {
     // Iterate Through Each Configuration File
     poolConfigFiles.forEach(function(poolOptions) {
 
-        // Establish Mainnet/Testnet
-        if (poolOptions.coin.mainnet) {
-            poolOptions.coin.mainnet.bip32.public = Buffer.from(poolOptions.coin.mainnet.bip32.public, 'hex').readUInt32LE(0);
-            poolOptions.coin.mainnet.pubKeyHash = Buffer.from(poolOptions.coin.mainnet.pubKeyHash, 'hex').readUInt8(0);
-            poolOptions.coin.mainnet.scriptHash = Buffer.from(poolOptions.coin.mainnet.scriptHash, 'hex').readUInt8(0);
-        }
-        if (poolOptions.coin.testnet) {
-            poolOptions.coin.testnet.bip32.public = Buffer.from(poolOptions.coin.testnet.bip32.public, 'hex').readUInt32LE(0);
-            poolOptions.coin.testnet.pubKeyHash = Buffer.from(poolOptions.coin.testnet.pubKeyHash, 'hex').readUInt8(0);
-            poolOptions.coin.testnet.scriptHash = Buffer.from(poolOptions.coin.testnet.scriptHash, 'hex').readUInt8(0);
-        }
-
         // Load Configuration from File
         for (var option in portalConfig.defaultPoolConfigs) {
             if (!(option in poolOptions)) {

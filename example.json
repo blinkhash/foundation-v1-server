@@ -1,5 +1,7 @@
 {
     "cliPort": 42320,
+    "logColors": true,
+    "logLevel": "debug",
     "clustering": {
         "enabled": true,
         "forks": "auto"
@@ -19,8 +21,6 @@
             "purgeInterval": 300
         }
     },
-    "logColors": true,
-    "logLevel": "debug",
     "redis": {
         "host": "127.0.0.1",
         "port": 6379,
