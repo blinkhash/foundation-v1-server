@@ -4,8 +4,6 @@
         "enabled": true,
         "forks": "auto"
     },
-    "logColors": true,
-    "logLevel": "debug",
     "defaultPoolConfigs": {
         "blockRefreshInterval": 1000,
         "jobRebroadcastTimeout": 55,
@@ -21,11 +19,12 @@
             "purgeInterval": 300
         }
     },
+    "logColors": true,
+    "logLevel": "debug",
     "redis": {
         "host": "127.0.0.1",
         "port": 6379,
         "password": "",
-        "cluster": false
     },
     "server": {
         "host": "127.0.0.1",

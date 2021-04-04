@@ -22,57 +22,19 @@ function roundTo(n, digits) {
 // Generate Redis Client
 function getRedisClient(portalConfig) {
     redisConfig = portalConfig.redis;
-    var redisClient;
-    if (redisConfig.cluster) {
-        if (redisConfig.password !== "") {
-            redisClient = new RedisClustr({
-                servers: [{
-                    host: redisConfig.host,
-                    port: redisConfig.port,
-                }],
-                createClient: function(port, host, options) {
-                    return redis.createClient({
-                        port: port,
-                        host: host,
-                        password: options.password,
-                    });
-                },
-                redisOptions: {
-                    password: redisConfig.password
-                }
-            });
-        }
-        else {
-            redisClient = new RedisClustr({
-                servers: [{
-                    host: redisConfig.host,
-                    port: redisConfig.port,
-                }],
-                createClient: function(port, host) {
-                    return redis.createClient({
-                        port: port,
-                        host: host,
-                    });
-                },
-            });
-        }
+    if (redisConfig.password !== "") {
+        return redis.createClient({
+            port: redisConfig.port,
+            host: redisConfig.host,
+            password: redisConfig.password
+        });
     }
     else {
-        if (redisConfig.password !== "") {
-            redisClient = redis.createClient({
-                port: redisConfig.port,
-                host: redisConfig.host,
-                password: redisConfig.password
-            });
-        }
-        else {
-            redisClient = redis.createClient({
-                port: redisConfig.port,
-                host: redisConfig.host,
-            });
-        }
+        return redis.createClient({
+            port: redisConfig.port,
+            host: redisConfig.host,
+        });
     }
-    return redisClient;
 }
 
 // Pool Payments Main Function
@@ -224,8 +186,7 @@ var PoolShares = function (logger, poolConfig, portalConfig) {
 
             // Push Block Data to Main Array
             if (isValidBlock) {
-
-                var blockData = {
+                const blockData = {
                     time: dateNow,
                     height: shareData.height,
                     blockHash: shareData.blockHash,
@@ -236,27 +197,11 @@ var PoolShares = function (logger, poolConfig, portalConfig) {
                     soloMined: isSoloMining,
                 }
 
-                // Handle Redis Deletions
+                // Handle Redis Updates
                 redisCommands.push(['del', `${coin  }:times:timesStart`]);
                 redisCommands.push(['del', `${coin  }:times:timesShare`]);
-
-                // Handle Redis Shares/Times Updates
-                if (redisConfig.cluster) {
-                    redisCommands.push(['del', `${coin  }:shares:roundCurrent`]);
-                    redisCommands.push(['del', `${coin  }:times:timesCurrent`]);
-                    for (var share in currentShares) {
-                        redisCommands.push(['hset', `${coin  }:shares:round${  shareData.height}`, share, currentShares[share]])
-                    }
-                    for (var worker in currentTimes) {
-                        redisCommands.push(['hset', `${coin  }:times:times${  shareData.height}`, worker, currentTimes[worker]])
-                    }
-                }
-                else {
-                    redisCommands.push(['rename', `${coin  }:shares:roundCurrent`, `${coin  }:shares:round${  shareData.height}`]);
-                    redisCommands.push(['rename', `${coin  }:times:timesCurrent`, `${coin  }:times:times${  shareData.height}`]);
-                }
-
-                // Handle Redis Updates
+                redisCommands.push(['rename', `${coin  }:shares:roundCurrent`, `${coin  }:shares:round${  shareData.height}`]);
+                redisCommands.push(['rename', `${coin  }:times:timesCurrent`, `${coin  }:times:times${  shareData.height}`]);
                 redisCommands.push(['sadd', `${coin  }:blocks:pending`, JSON.stringify(blockData)])
                 redisCommands.push(['hincrby', `${coin  }:statistics:basic`, 'validBlocks', 1]);
             }

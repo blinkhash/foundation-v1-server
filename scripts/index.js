@@ -84,57 +84,19 @@ if (cluster.isWorker) {
 // Generate Redis Client
 function getRedisClient(portalConfig) {
     redisConfig = portalConfig.redis;
-    var redisClient;
-    if (redisConfig.cluster) {
-        if (redisConfig.password !== "") {
-            redisClient = new RedisClustr({
-                servers: [{
-                    host: redisConfig.host,
-                    port: redisConfig.port,
-                }],
-                createClient: function(port, host, options) {
-                    return redis.createClient({
-                        port: port,
-                        host: host,
-                        password: options.password,
-                    });
-                },
-                redisOptions: {
-                    password: redisConfig.password
-                }
-            });
-        }
-        else {
-            redisClient = new RedisClustr({
-                servers: [{
-                    host: redisConfig.host,
-                    port: redisConfig.port,
-                }],
-                createClient: function(port, host) {
-                    return redis.createClient({
-                        port: port,
-                        host: host,
-                    });
-                },
-            });
-        }
+    if (redisConfig.password !== "") {
+        return redis.createClient({
+            port: redisConfig.port,
+            host: redisConfig.host,
+            password: redisConfig.password
+        });
     }
     else {
-        if (redisConfig.password !== "") {
-            redisClient = redis.createClient({
-                port: redisConfig.port,
-                host: redisConfig.host,
-                password: redisConfig.password
-            });
-        }
-        else {
-            redisClient = redis.createClient({
-                port: redisConfig.port,
-                host: redisConfig.host,
-            });
-        }
+        return redis.createClient({
+            port: redisConfig.port,
+            host: redisConfig.host,
+        });
     }
-    return redisClient;
 }
 
 // Read and Combine ALL Pool Configurations
