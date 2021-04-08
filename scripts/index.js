@@ -11,7 +11,6 @@ var os = require('os');
 var cluster = require('cluster');
 var extend = require('extend');
 var redis = require('redis');
-var RedisClustr = require('redis-clustr');
 
 // Import Pool Functionality
 var PoolListener = require('./main/listener.js');

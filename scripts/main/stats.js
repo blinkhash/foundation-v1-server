@@ -7,7 +7,6 @@
 // Import Required Modules
 var redis = require('redis');
 var async = require('async');
-var RedisClustr = require('redis-clustr');
 
 // Import Stratum Algorithms
 var algorithms = require('@blinkhash/blinkhash-stratum/scripts/main/algorithms.js');

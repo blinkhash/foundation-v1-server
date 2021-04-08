@@ -6,7 +6,6 @@
 
 // Import Required Modules
 var redis = require('redis');
-var RedisClustr = require('redis-clustr');
 
 // Round to # of Digits Given
 function roundTo(n, digits) {

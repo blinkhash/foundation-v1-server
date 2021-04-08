@@ -9,7 +9,6 @@ var fs = require('fs');
 var async = require('async');
 var util = require('@blinkhash/blinkhash-stratum/scripts/main/util.js');
 var redis = require('redis');
-var RedisClustr = require('redis-clustr');
 
 // Import Stratum Module
 var Stratum = require('@blinkhash/blinkhash-stratum');

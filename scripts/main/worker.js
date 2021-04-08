@@ -6,7 +6,6 @@
 
 // Import Required Modules
 var redis = require('redis');
-var RedisClustr = require('redis-clustr');
 
 // Import Stratum/PoolShares Modules
 var PoolShares = require('./shares.js');

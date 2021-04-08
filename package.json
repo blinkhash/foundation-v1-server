@@ -58,7 +58,6 @@
     "nodemon": "*",
     "nonce": "*",
     "redis": "^3.0.2",
-    "redis-clustr": "^1.7.0",
     "request": "2.88.2"
   },
   "devDependencies": {
