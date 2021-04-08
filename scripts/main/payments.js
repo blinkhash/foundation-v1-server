@@ -17,7 +17,7 @@ var Stratum = require('@blinkhash/blinkhash-stratum');
 // Derive Main Address from Given
 function getProperAddress(poolOptions, address) {
     if (address.length === 40) {
-        return util.addressFromEx(poolOptions.addresses.address, address);
+        return util.addressFromEx(poolOptions.address, address);
     }
     return address;
 }
@@ -165,16 +165,12 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
     }
 
     // Return Main Unspent Balance
-    function listUnspent (addr, notAddr, minConf, displayBool, callback) {
-        if (addr != null) {
-            var args = [minConf, 99999999, [addr]];
-        } else {
-            addr = 'Payout wallet';
-            var args = [minConf, 99999999];
-        }
+    function listUnspent (minConf, displayBool, callback) {
+        const addr = 'Payout wallet';
+        const args = [ minConf, 99999999 ];
         daemon.cmd('listunspent', args, function (result) {
             if (!result || result.error || result[0].error) {
-                logger.error(logSystem, logComponent, `Error with RPC call listunspent ${  addr  } ${  JSON.stringify(result[0].error)}`);
+                logger.error(logSystem, logComponent, `Error with RPC call listunspent ${ addr } ${ JSON.stringify(result[0].error) }`);
                 callback = function () {};
                 callback(true);
             }
@@ -182,35 +178,14 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
                 var balance = parseFloat(0);
                 if (result[0].response != null && result[0].response.length > 0) {
                     for (var i = 0, len = result[0].response.length; i < len; i++) {
-                        if (result[0].response[i].address && result[0].response[i].address !== notAddr) {
+                        if (result[0].response[i].address && result[0].response[i].address !== null) {
                             balance += parseFloat(result[0].response[i].amount || 0);
                         }
                     }
                     balance = coinsRound(balance);
                 }
                 if (displayBool) {
-                    logger.special(logSystem, logComponent, `${  addr  } balance of ${  balance}`);
-                }
-                callback(null, coinsToSatoshies(balance));
-            }
-        });
-    }
-
-    // Return zAddress Unspent Balance
-    function listUnspentZ(addr, minConf, displayBool, callback) {
-        daemon.cmd('z_getbalance', [addr, minConf], function (result) {
-            if (!result || result.error || result[0].error) {
-                logger.error(logSystem, logComponent, `Error with RPC call z_getbalance ${  addr  } ${  JSON.stringify(result[0].error)}`);
-                callback = function () {};
-                callback(true);
-            }
-            else {
-                var balance = parseFloat(0);
-                if (result[0].response != null) {
-                    balance = coinsRound(result[0].response);
-                }
-                if (displayBool) {
-                    logger.special(logSystem, logComponent, `${  addr.substring(0,14)} ... ${  addr.substring(addr.length - 14)  } balance of ${  balance}`);
+                    logger.special(logSystem, logComponent, `${ addr } balance of ${ balance }`);
                 }
                 callback(null, coinsToSatoshies(balance));
             }
@@ -222,7 +197,7 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
 
         // Validate Main Address
         function(callback) {
-            validateAddress(poolOptions.addresses.address, 'validateaddress', callback);
+            validateAddress(poolOptions.address, 'validateaddress', callback);
         },
 
         // Validate Main Balance
@@ -382,7 +357,7 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
                 var batchRPCCommand = rounds.map(function(r) {
                     return ['gettransaction', [r.txHash]];
                 });
-                batchRPCCommand.push(['getaccount', [poolOptions.addresses.address]]);
+                batchRPCCommand.push(['getaccount', [poolOptions.address]]);
 
                 // Manage RPC Batches
                 daemon.batchCmd(batchRPCCommand, function(error, txDetails) {
@@ -429,7 +404,7 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
                             if (generationAddress.indexOf(':') > -1) {
                                 generationAddress = generationAddress.split(':')[1]
                             }
-                            return generationAddress === poolOptions.addresses.address;
+                            return generationAddress === poolOptions.address;
                         })[0];
                         if (!generationTx && tx.result.details.length === 1) {
                             generationTx = tx.result.details[0];
@@ -559,12 +534,6 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
 
                         var errors = null;
                         var performPayment = false;
-                        var notAddr = null;
-
-                        if (requireShielding) {
-                            notAddr = poolOptions.addresses.address;
-                        }
-
                         var feeSatoshi = coinsToSatoshies(fee);
                         var totalOwed = parseInt(0);
                         for (var i = 0; i < rounds.length; i++) {
@@ -578,7 +547,7 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
                         }
 
                         // Check For Funds before Payments Processed
-                        listUnspent(null, notAddr, minConfPayout, false, function (error, balance) {
+                        listUnspent(minConfPayout, false, function (error, balance) {
                             if (error) {
                                 logger.error(logSystem, logComponent, 'Error checking pool balance before processing payments.');
                                 return callback(true);

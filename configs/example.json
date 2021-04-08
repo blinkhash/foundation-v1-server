@@ -1,15 +1,13 @@
 {
     "enabled": false,
     "featured": true,
+    "address": "",
     "identifier": "https://github.com/blinkhash/blinkhash-server",
     "logo": "",
-    "addresses": {
-        "address": ""
-    },
     "coin": {
         "name": "Bitcoin",
         "symbol": "BTC",
-        "algorithm": "sha256",
+        "algorithm": "sha256d",
         "peerMagic": "f9beb4d9",
         "peerMagicTestnet": "0b110907",
         "hasGetInfo": false,

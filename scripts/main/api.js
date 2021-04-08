@@ -11,9 +11,9 @@ var PoolStats = require('./stats.js');
 var PoolAPI = function (logger, partnerConfigs, poolConfigs, portalConfig) {
 
     // Establish API Variables
+    const _this = this;
     var portalStats = new PoolStats(logger, poolConfigs, portalConfig);
     this.stats = portalStats
-    this.liveStatConnections = {};
 
     // Manage API Error Messages
     const messages = {
