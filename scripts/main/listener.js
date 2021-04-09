@@ -31,8 +31,8 @@ var PoolListener = function (port) {
                         });
                     }
                 });
-                c.on('end', function () {});
-                c.on('error', function () {});
+                c.on('end', function() {});
+                c.on('error', function() {});
             }
             catch(e) {
                 emitLog(`CLI listener failed to parse message ${  data}`);

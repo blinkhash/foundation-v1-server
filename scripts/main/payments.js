@@ -170,7 +170,7 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
         daemon.cmd('listunspent', args, function (result) {
             if (!result || result.error || result[0].error) {
                 logger.error(logSystem, logComponent, `Error with RPC call listunspent ${ addr } ${ JSON.stringify(result[0].error) }`);
-                callback = function () {};
+                callback = function() {};
                 callback(true);
             }
             else {
@@ -1074,7 +1074,7 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
                 });
 
                 // Check for Failed Payments
-                var fixFailedPayments = function () {
+                var fixFailedPayments = function() {
                     redisClient.zrange(`${coin}:payments:payments`, -5, -5, (err, results) => {
                         results.forEach(result => {
                             var payment = JSON.parse(result)

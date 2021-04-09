@@ -53,7 +53,7 @@ var PoolServer = function (logger) {
 
     try {
         // Main Server is Running
-        app.listen(portalConfig.server.port, portalConfig.server.host, function () {
+        app.listen(portalConfig.server.port, portalConfig.server.host, function() {
             logger.debug(logSystem, 'Server', `Website started on ${
             portalConfig.server.host  }:${  portalConfig.server.port}`);
         });
