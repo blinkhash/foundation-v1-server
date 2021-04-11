@@ -120,10 +120,12 @@ const PoolInitializer = function() {
                 if (!(option in config)) {
                     let clonedOption = {};
                     const toCloneOption = _this.portalConfig.defaultPoolConfigs[option];
-                    if (toCloneOption.constructor === Object)
+                    if (toCloneOption.constructor === Object) {
                         extend(true, clonedOption, toCloneOption);
-                    else
+                    }
+                    else {
                         clonedOption = toCloneOption;
+                    }
                     config[option] = clonedOption;
                 }
             });
@@ -176,7 +178,7 @@ const PoolInitializer = function() {
         listener.on('command', function(command, params, options, reply) {
             switch (command) {
                 case 'reloadpool':
-                    Object.keys(cluster.workers).forEach(function(id) {
+                    Object.keys(cluster.workers).forEach(id => {
                         cluster.workers[id].send({type: 'reloadpool', coin: params[0] });
                     });
                     reply(`reloaded pool ${  params[0]}`);
@@ -211,7 +213,7 @@ const PoolInitializer = function() {
         // Establish Worker Exit
         worker.on('exit', function(code, signal) {
             logger.error('Master', 'Payments', 'Payment process died, starting replacement...');
-            setTimeout(function() {
+            setTimeout(() => {
                 _this.startPoolPayments();
             }, 2000);
         });
@@ -231,7 +233,7 @@ const PoolInitializer = function() {
         // Establish Worker Exit
         worker.on('exit', function(code, signal) {
             logger.error('Master', 'Server', 'Server process died, starting replacement...');
-            setTimeout(function() {
+            setTimeout(() => {
                 _this.startPoolServer();
             }, 2000);
         });
@@ -294,7 +296,7 @@ const PoolInitializer = function() {
             // Establish Worker Exit
             worker.on('exit', function(code, signal) {
                 logger.error('Master', 'Workers', `Fork ${  forkId  } died, starting replacement worker...`);
-                setTimeout(function() {
+                setTimeout(() => {
                     createPoolWorker(forkId);
                 }, 2000);
             });
@@ -303,7 +305,7 @@ const PoolInitializer = function() {
             worker.on('message', function(msg) {
                 switch (msg.type) {
                     case 'banIP':
-                        Object.keys(cluster.workers).forEach(function(id) {
+                        Object.keys(cluster.workers).forEach(id => {
                             if (cluster.workers[id].type === 'worker') {
                                 cluster.workers[id].send({ type: 'banIP', ip: msg.ip });
                             }
@@ -315,7 +317,7 @@ const PoolInitializer = function() {
 
         // Create Pool Workers
         let numWorkers = 0;
-        const startInterval = setInterval(function() {
+        const startInterval = setInterval(() => {
             createPoolWorker(numWorkers);
             numWorkers += 1;
             if (numWorkers === numForks) {

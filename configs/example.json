@@ -11,7 +11,6 @@
         "peerMagic": "f9beb4d9",
         "peerMagicTestnet": "0b110907",
         "hasGetInfo": false,
-        "hashrateType": "hashes",
         "rewardType": "coinbasevalue",
         "segwit": true,
         "txfee": 0.0004,
