@@ -116,10 +116,10 @@ const PoolInitializer = function() {
             }
 
             // Load Configuration from File
-            Object.keys(_this.portalConfig.defaultPoolConfigs).forEach(option => {
+            Object.keys(_this.portalConfig.settings).forEach(option => {
                 if (!(option in config)) {
                     let clonedOption = {};
-                    const toCloneOption = _this.portalConfig.defaultPoolConfigs[option];
+                    const toCloneOption = _this.portalConfig.settings[option];
                     if (toCloneOption.constructor === Object) {
                         extend(true, clonedOption, toCloneOption);
                     }
@@ -149,9 +149,10 @@ const PoolInitializer = function() {
         fs.readdirSync(configDir).forEach(file => {
             const currentDate = new Date()
             if (!fs.existsSync(configDir + file) || path.extname(configDir + file) !== '.json') return;
-            const partnerOptions = JSON.parse(JSON.minify(fs.readFileSync(configDir + file, {encoding: 'utf8'})));
-            if (new Date(partnerOptions.subscription.endDate) < currentDate) return;
-            configs[partnerOptions.name] = partnerOptions;
+            const config = JSON.parse(JSON.minify(fs.readFileSync(configDir + file, {encoding: 'utf8'})));
+            if (new Date(config.subscription.endDate) < currentDate) return;
+            config.fileName = "example.json";
+            configs[config.name] = config;
         });
 
         // Return Updated Configs
@@ -159,8 +160,8 @@ const PoolInitializer = function() {
     }
 
     // Build Configurations
-    _this.pools = this.buildPoolConfigs();
-    _this.partners = this.buildPartnerConfigs();
+    this.pools = this.buildPoolConfigs();
+    this.partners = this.buildPartnerConfigs();
 
     // Functionality for Pool Listener
     this.startPoolListener = function() {
@@ -187,7 +188,7 @@ const PoolInitializer = function() {
                     reply(`unrecognized command "${  command  }"`);
                     break;
             }
-        }).start();
+        }).initializeListener();
     };
 
     // Functionality for Pool Payments
@@ -331,29 +332,36 @@ const PoolInitializer = function() {
 // Pool Builder Main Function
 const PoolBuilder = function() {
 
-    // Handle Master Forks
-    if (cluster.isMaster) {
-        const pool = new PoolInitializer();
-        pool.startPoolListener();
-        pool.startPoolPayments();
-        pool.startPoolServer();
-        pool.startPoolWorkers();
-    }
+    // Start Pool Server
+    this.initializePool = function() {
 
-    // Handle Worker Forks
-    if (cluster.isWorker) {
-        switch (process.env.workerType) {
-            case 'payments':
-                worker = new PoolPayments(logger);
-                break;
-            case 'server':
-                worker = new PoolServer(logger);
-                break;
-            case 'worker':
-                worker = new PoolWorker(logger);
-                break;
-            default:
-                break;
+        // Handle Master Forks
+        if (cluster.isMaster) {
+            const pool = new PoolInitializer();
+            pool.startPoolListener();
+            pool.startPoolPayments();
+            pool.startPoolServer();
+            pool.startPoolWorkers();
+        }
+
+        // Handle Worker Forks
+        if (cluster.isWorker) {
+            switch (process.env.workerType) {
+                case 'payments':
+                    worker = new PoolPayments(logger);
+                    break;
+                case 'server':
+                    worker = new PoolServer(logger);
+                    break;
+                case 'worker':
+                    worker = new PoolWorker(logger);
+                    break;
+                default:
+                    break;
+            }
         }
     }
-}();
+};
+
+// Start Pool Server
+const server = new PoolBuilder().initializePool();

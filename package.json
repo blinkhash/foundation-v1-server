@@ -25,7 +25,8 @@
     "verbose": true
   },
   "scripts": {
-    "start": "nodemon scripts/index.js",
+    "start": "nodemon scripts/main.js",
+    "start-v2": "nodemon scripts-v2/main.js",
     "clean": "eslint . --ext .js --ignore-pattern node_modules/",
     "clean:fix": "eslint . --ext .js --fix --ignore-pattern node_modules/",
     "test": "jest --coverage",
@@ -39,10 +40,10 @@
     "url": "https://github.com/blinkhash/blinkhash-server.git"
   },
   "dependencies": {
-    "@blinkhash/blinkhash-stratum": "0.0.2",
     "apicache": "^1.5.3",
     "async": "1.5.2",
     "bignum": "0.13.1",
+    "blinkhash-stratum": "0.0.4",
     "body-parser": "*",
     "colors": "*",
     "compression": "*",
@@ -65,7 +66,8 @@
     "eslint": "^7.23.0",
     "jest": "^26.6.3",
     "mitm": "^1.7.1",
-    "nock": "^13.0.10"
+    "nock": "^13.0.10",
+    "redis-mock": "^0.56.3"
   },
   "engines": {
     "node": ">=0.10"

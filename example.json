@@ -6,7 +6,16 @@
         "enabled": true,
         "forks": "auto"
     },
-    "defaultPoolConfigs": {
+    "redis": {
+        "host": "127.0.0.1",
+        "port": 6379,
+        "password": ""
+    },
+    "server": {
+        "host": "127.0.0.1",
+        "port": 3001
+    },
+    "settings": {
         "blockRefreshInterval": 1000,
         "jobRebroadcastTimeout": 55,
         "connectionTimeout": 600,
@@ -20,15 +29,6 @@
             "checkThreshold": 500,
             "purgeInterval": 300
         }
-    },
-    "redis": {
-        "host": "127.0.0.1",
-        "port": 6379,
-        "password": ""
-    },
-    "server": {
-        "host": "127.0.0.1",
-        "port": 3001
     },
     "stats": {
         "updateInterval": 60,

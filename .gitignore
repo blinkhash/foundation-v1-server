@@ -6,3 +6,4 @@ configs/*
 !configs/example.json
 partners/*
 !partners/example.json
+coverage/

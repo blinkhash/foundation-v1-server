@@ -1,7 +1,7 @@
 {
     "enabled": false,
     "featured": true,
-    "address": "",
+    "address": "tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw",
     "identifier": "https://github.com/blinkhash/blinkhash-server",
     "logo": "",
     "coin": {
@@ -11,7 +11,6 @@
         "peerMagic": "f9beb4d9",
         "peerMagicTestnet": "0b110907",
         "hasGetInfo": false,
-        "rewardType": "coinbasevalue",
         "segwit": true,
         "txfee": 0.0004,
         "mainnet": {
@@ -78,7 +77,7 @@
     },
     "recipients": [
         {
-            "address": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
+            "address": "tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw",
             "percentage": 0.05
         }
     ],

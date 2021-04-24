@@ -25,7 +25,7 @@ var PoolServer = function (logger) {
 
     // Establish Server Variables
     var portalApi = new PoolAPI(logger, partnerConfigs, poolConfigs, portalConfig);
-    var portalStats = portalApi.stats;
+    var portalStats = portalApi.poolStats;
     var logSystem = 'Server';
 
     // Gather Global Statistics

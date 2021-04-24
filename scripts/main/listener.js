@@ -18,7 +18,7 @@ var PoolListener = function (port) {
     };
 
     // Start Listener Server
-    this.start = function() {
+    this.initializeListener = function() {
         net.createServer(function(c) {
             var data = '';
             try {
