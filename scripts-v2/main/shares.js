@@ -127,11 +127,11 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     }
 
     // Build Redis Commands
-    this.buildCommands = function(results, shareData, shareValid, blockValid, callback) {
+    this.buildCommands = function(results, shareData, shareValid, blockValid, callback, handler) {
         let commands = [];
         commands = commands.concat(_this.buildSharesCommands(results, shareData, shareValid, blockValid));
         commands = commands.concat(_this.buildBlocksCommands(shareData, shareValid, blockValid));
-        this.executeCommands(commands, callback, () => {});
+        this.executeCommands(commands, callback, handler);
         return commands;
     }
 
@@ -140,18 +140,18 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
         _this.client.multi(commands).exec((error, results) => {
             if (error) {
                 logger.error(logSystem, logComponent, logSubCat, `Error with redis share processing ${ JSON.stringify(error) }`);
-                handler();
+                handler(error);
             }
             callback(results);
         });
     }
 
     // Start Share Capabilities
-    this.start = function(shareData, shareValid, blockValid) {
+    this.start = function(shareData, shareValid, blockValid, callback, handler) {
         const shareLookups = [['hgetall', `${ _this.coin }:rounds:current:times:last`]]
         this.executeCommands(shareLookups, (results) => {
-            _this.buildCommands(results, shareData, shareValid, blockValid, () => {})
-        }, () => {});
+            _this.buildCommands(results, shareData, shareValid, blockValid, callback, handler);
+        }, handler);
     }
 }
 

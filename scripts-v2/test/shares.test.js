@@ -44,6 +44,22 @@ describe('Test shares functionality', () => {
         client._redisMock._maxListeners = 0;
     });
 
+    test('Test redis client error handling', () => {
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        poolShares.client.emit('error', 'example error');
+        expect(consoleSpy).toHaveBeenCalled();
+        // console.log.mockClear();
+    });
+
+    test('Test redis client ending handling', () => {
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        poolShares.client.emit('end');
+        expect(consoleSpy).toHaveBeenCalled();
+        // console.log.mockClear();
+    });
+
     test('Test timing command handling [1]', () => {
         const dateNow = Date.now();
         const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
@@ -286,6 +302,27 @@ describe('Test shares functionality', () => {
         expect(commands.length).toBe(0);
     });
 
+    test('Test block command handling [4]', () => {
+        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const shareData = {
+            "job": '4',
+            "ip": '::1',
+            "port": 3001,
+            "blockDiff": 137403310.58987552,
+            "blockDiffActual": 137403310.58987552,
+            "difficulty": 1,
+            "hash": null,
+            "hashInvalid": null,
+            "height": 1972211,
+            "reward": 10006839,
+            "shareDiff": '2.35170820',
+            "worker": 'example'
+        }
+        const expected = [['hincrby', 'Bitcoin:main:blocks:counts', 'invalidBlocks', 1]]
+        const commands = poolShares.buildBlocksCommands(shareData, false, false);
+        expect(commands.length).toBe(0);
+    });
+
     test('Test command handling and execution', (done) => {
         const dateNow = Date.now();
         const callback = () => done()
@@ -320,12 +357,73 @@ describe('Test shares functionality', () => {
         expect(commands[4].slice(0, 2)).toStrictEqual(expected[4]);
     });
 
-    test('Test command execution', (done) => {
+    test('Test command execution w/ errors', (done) => {
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
         const callback = function() {
+            expect(consoleSpy).toHaveBeenCalled();
+            // console.log.mockClear();
             done();
         }
         const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
         const commands = [['rename', 'Bitcoin:example1', 'Bitcoin:example2']];
         poolShares.executeCommands(commands, () => {}, callback);
+    });
+
+    test('Test command execution on shares handler start', (done) => {
+        const dateNow = Date.now();
+        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const commands = [['hset', 'Bitcoin:rounds:current:times:last', 'example', dateNow - 300000]]
+        const shareData = {
+            "job": '4',
+            "ip": '::1',
+            "port": 3001,
+            "blockDiff": 137403310.58987552,
+            "blockDiffActual": 137403310.58987552,
+            "difficulty": 1,
+            "hash": null,
+            "hashInvalid": null,
+            "height": 1972211,
+            "reward": 10006839,
+            "shareDiff": '2.35170820',
+            "worker": 'example'
+        }
+        poolShares.client.multi(commands).exec((error, results) => {
+            if (!error) {
+                poolShares.start(shareData, true, false, (results) => {
+                    expect(results[1]).toBe(0);
+                    expect(results[2]).toBe(2);
+                    expect(results[3]).toBe(2);
+                    expect(results[4]).toBe(1);
+                    done();
+                }, () => {});
+            }
+            else {
+                // Indicates Error thrown in Redis Client
+                expect(true).toBe(false);
+                done();
+            }
+        });
+    });
+
+    test('Test error handling on shares handler start', (done) => {
+        const dateNow = Date.now();
+        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const shareData = {
+            "job": '4',
+            "ip": '::1',
+            "port": 3001,
+            "blockDiff": 137403310.58987552,
+            "blockDiffActual": 137403310.58987552,
+            "difficulty": 1,
+            "hash": null,
+            "hashInvalid": null,
+            "height": 1972211,
+            "reward": 10006839,
+            "shareDiff": '2.35170820',
+            "worker": 'example'
+        }
+        poolShares.start(shareData, true, false, () => {}, (error) => {
+            done();
+        });
     });
 });

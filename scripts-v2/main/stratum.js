@@ -19,17 +19,6 @@ const PoolStratum = function (logger, poolConfig, poolShares) {
     const logComponent = _this.coin;
     const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
 
-    // Determine Share Viability
-    this.checkShare = function(shareData, shareValid) {
-        const serializedData = JSON.stringify(shareData);
-        if (!shareValid) {
-            logger.debug(logSystem, logComponent, logSubCat, `Share rejected by the daemon: ${ serializedData }`);
-        }
-        else {
-            logger.debug(logSystem, logComponent, logSubCat, `Share accepted at difficulty ${ shareData.difficulty }/${ shareData.shareDiff } by ${ shareData.worker } [${ shareData.ip }]` );
-        }
-    }
-
     // Determine Block Viability
     this.checkBlock = function(shareData, blockValid) {
         const serializedData = JSON.stringify(shareData);
@@ -38,6 +27,17 @@ const PoolStratum = function (logger, poolConfig, poolShares) {
         }
         else if (blockValid) {
             logger.debug(logSystem, logComponent, logSubCat, `Block found: ${ shareData.hash } by ${ shareData.worker }`);
+        }
+    }
+
+    // Determine Share Viability
+    this.checkShare = function(shareData, shareValid) {
+        const serializedData = JSON.stringify(shareData);
+        if (!shareValid) {
+            logger.debug(logSystem, logComponent, logSubCat, `Share rejected by the daemon: ${ serializedData }`);
+        }
+        else {
+            logger.debug(logSystem, logComponent, logSubCat, `Share accepted at difficulty ${ shareData.difficulty }/${ shareData.shareDiff } by ${ shareData.worker } [${ shareData.ip }]` );
         }
     }
 
@@ -62,28 +62,13 @@ const PoolStratum = function (logger, poolConfig, poolShares) {
         }
     };
 
-    // Handle Worker Authentication
-    this.authorizeWorker = function(ip, port, workerName, password, callback) {
-        _this.checkWorker(port, workerName, password, (authorized) => {
-            const authString = authorized ? 'Authorized' : 'Unauthorized ';
-            logger.debug(logSystem, logComponent, logSubCat, `${ authString } ${ workerName }:${ password } [${ ip }]`);
-            callback({ error: null, authorized: authorized, disconnect: false });
-        });
-    }
+    // Build Pool from Configuration
+    this.buildStratum = function() {
 
-    // Handle Share Submissions
-    this.handleShares = function(shareData, shareValid, blockValid) {
-        _this.checkShare(shareData, shareValid);
-        _this.checkBlock(shareData, blockValid);
-        _this.poolShares.start(shareData, shareValid, blockValid);
-    }
-
-    // Start Stratum Capabilities
-    this.start = function() {
-
-        // Build Pool from Configuration
+        // Initialize Pool
         const poolStratum = Stratum.createPool(_this.poolConfig, _this.authorizeWorker, logger);
 
+        // Establish Main Emitter Handlers
         poolStratum.on('banIP',(ip, worker) => {
             process.send({ type: 'banIP', ip: ip });
         });
@@ -97,9 +82,32 @@ const PoolStratum = function (logger, poolConfig, poolShares) {
             _this.handleShares(shareData, shareValid, blockValid);
         });
 
-        // Save Configured Pool
-        poolStratum.start();
+        // Return Generated Pool
+        return poolStratum
+    }
+
+    // Handle Worker Authentication
+    this.authorizeWorker = function(ip, port, workerName, password, callback) {
+        _this.checkWorker(port, workerName, password, (authorized) => {
+            const authString = authorized ? 'Authorized' : 'Unauthorized ';
+            logger.debug(logSystem, logComponent, logSubCat, `${ authString } ${ workerName }:${ password } [${ ip }]`);
+            callback({ error: null, authorized: authorized, disconnect: false });
+        });
+    }
+
+    // Handle Share Submissions
+    this.handleShares = function(shareData, shareValid, blockValid) {
+        _this.poolShares.start(shareData, shareValid, blockValid, () => {
+            _this.checkBlock(shareData, blockValid);
+            _this.checkShare(shareData, shareValid);
+        }, () => {});
+    }
+
+    // Start Stratum Capabilities
+    this.start = function() {
+        const poolStratum = _this.buildStratum()
         _this.poolStratum = poolStratum;
+        poolStratum.start();
     }
 };
 
