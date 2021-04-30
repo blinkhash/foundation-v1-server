@@ -1,6 +1,6 @@
 /*
  *
- * PoolLogger (Updated)
+ * Logger (Updated)
  *
  */
 

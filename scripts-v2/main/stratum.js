@@ -1,6 +1,6 @@
 /*
  *
- * PoolStratum (Updated)
+ * Stratum (Updated)
  *
  */
 

@@ -15,7 +15,7 @@ const portalConfig = utils.readFile('example.json');
 poolConfig.address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
 poolConfig.recipients[0].address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
 
-const logger = new PoolLogger(poolConfig);
+const logger = new PoolLogger(portalConfig);
 
 ////////////////////////////////////////////////////////////////////////////////
 

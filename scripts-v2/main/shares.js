@@ -1,6 +1,6 @@
 /*
  *
- * PoolShares (Updated)
+ * Shares (Updated)
  *
  */
 

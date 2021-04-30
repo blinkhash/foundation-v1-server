@@ -30,7 +30,7 @@ client._redisMock._maxListeners = 0;
 nock.disableNetConnect();
 nock.enableNetConnect('127.0.0.1');
 
-const logger = new PoolLogger(poolConfig);
+const logger = new PoolLogger(portalConfig);
 
 ////////////////////////////////////////////////////////////////////////////////
 
