@@ -1,15 +1,13 @@
 {
     "enabled": false,
     "featured": true,
-    "address": "tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw",
+    "address": "example",
     "identifier": "https://github.com/blinkhash/blinkhash-server",
     "logo": "",
     "coin": {
         "name": "Bitcoin",
         "symbol": "BTC",
         "algorithm": "sha256d",
-        "peerMagic": "f9beb4d9",
-        "peerMagicTestnet": "0b110907",
         "hasGetInfo": false,
         "segwit": true,
         "txfee": 0.0004,
@@ -19,6 +17,7 @@
                 "public": "0488B21E",
                 "private": "0488ADE4"
             },
+            "peerMagic": "f9beb4d9",
             "pubKeyHash": "00",
             "scriptHash": "05",
             "wif": "80",
@@ -30,6 +29,7 @@
                 "public": "043587CF",
                 "private": "04358394"
             },
+            "peerMagic": "0b110907",
             "pubKeyHash": "6F",
             "scriptHash": "C4",
             "wif": "EF",
@@ -77,7 +77,7 @@
     },
     "recipients": [
         {
-            "address": "tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw",
+            "address": "example",
             "percentage": 0.05
         }
     ],

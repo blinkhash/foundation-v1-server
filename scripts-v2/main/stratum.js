@@ -6,7 +6,9 @@
 
 const Stratum = require('blinkhash-stratum');
 
-// Pool Stratum Main Function
+////////////////////////////////////////////////////////////////////////////////
+
+// Main Stratum Function
 const PoolStratum = function (logger, poolConfig, poolShares) {
 
     const _this = this;
@@ -28,7 +30,7 @@ const PoolStratum = function (logger, poolConfig, poolShares) {
         else if (blockValid) {
             logger.debug(logSystem, logComponent, logSubCat, `Block found: ${ shareData.hash } by ${ shareData.worker }`);
         }
-    }
+    };
 
     // Determine Share Viability
     this.checkShare = function(shareData, shareValid) {
@@ -37,78 +39,62 @@ const PoolStratum = function (logger, poolConfig, poolShares) {
             logger.debug(logSystem, logComponent, logSubCat, `Share rejected by the daemon: ${ serializedData }`);
         }
         else {
-            logger.debug(logSystem, logComponent, logSubCat, `Share accepted at difficulty ${ shareData.difficulty }/${ shareData.shareDiff } by ${ shareData.worker } [${ shareData.ip }]` );
-        }
-    }
-
-    // Check for Valid Worker Address
-    this.checkWorker = function(port, workerName, password, callback) {
-        if (workerName.length === 40) {
-            try {
-                Buffer.from(workerName, 'hex');
-                callback(true);
-            }
-            catch (e) {
-                callback(false);
-            }
-        }
-        else {
-            _this.poolStratum.daemon.cmd('validateaddress', [workerName], (results) => {
-                const isValid = results.filter((result) => {
-                    return result.response.isvalid
-                }).length > 0;
-                callback(isValid);
-            });
+            logger.debug(logSystem, logComponent, logSubCat, `Share accepted at difficulty ${ shareData.difficulty }/${ shareData.shareDiff } by ${ shareData.worker } [${ shareData.ip }]`);
         }
     };
 
-    // Build Pool from Configuration
-    this.buildStratum = function() {
+    // Handle Worker Authentication
+    this.authorizeWorker = function(ip, port, workerName, password, callback) {
+        _this.checkWorker(workerName, (authorized) => {
+            const authString = authorized ? 'Authorized' : 'Unauthorized ';
+            logger.debug(logSystem, logComponent, logSubCat, `${ authString } ${ workerName }:${ password } [${ ip }:${ port }]`);
+            callback({ error: null, authorized: authorized, disconnect: false });
+        });
+    };
 
-        // Initialize Pool
-        const poolStratum = Stratum.createPool(_this.poolConfig, _this.authorizeWorker, logger);
+    // Check for Valid Worker Address
+    this.checkWorker = function(workerName, callback) {
+        _this.poolStratum.daemon.cmd('validateaddress', [workerName], (results) => {
+            const isValid = results.filter((result) => {
+                return result.response.isvalid;
+            }).length > 0;
+            callback(isValid);
+        });
+    };
 
-        // Establish Main Emitter Handlers
-        poolStratum.on('banIP',(ip, worker) => {
-            process.send({ type: 'banIP', ip: ip });
+    // Handle Share Submissions
+    this.handleShares = function(shareData, shareValid, blockValid, callback) {
+        _this.poolShares.handleShares(shareData, shareValid, blockValid, () => {
+            _this.checkBlock(shareData, blockValid);
+            _this.checkShare(shareData, shareValid);
+            callback();
+        }, () => {});
+    };
+
+    // Handle Stratum Events
+    this.handleEvents = function(poolStratum) {
+        poolStratum.on('banIP', (ip) => {
+            _this.poolStratum.stratum.addBannedIP(ip);
+        });
+        poolStratum.on('log', (severity, text) => {
+            logger[severity](logSystem, logComponent, logSubCat, text);
         });
         poolStratum.on('difficultyUpdate', (workerName, diff) => {
             logger.debug(logSystem, logComponent, logSubCat, `Difficulty update to ${ diff } for worker: ${ JSON.stringify(workerName) }`);
         });
-        poolStratum.on('log', (severity, text) => {
-            logger[severity](logSystem, logComponent, logSubCat, text);
-        })
-        poolStratum.on('share', (shareData, shareValid, blockValid) => {
-            _this.handleShares(shareData, shareValid, blockValid);
+        poolStratum.on('share', (shareData, shareValid, blockValid, callback) => {
+            _this.handleShares(shareData, shareValid, blockValid, callback);
         });
+        return poolStratum;
+    };
 
-        // Return Generated Pool
-        return poolStratum
-    }
-
-    // Handle Worker Authentication
-    this.authorizeWorker = function(ip, port, workerName, password, callback) {
-        _this.checkWorker(port, workerName, password, (authorized) => {
-            const authString = authorized ? 'Authorized' : 'Unauthorized ';
-            logger.debug(logSystem, logComponent, logSubCat, `${ authString } ${ workerName }:${ password } [${ ip }]`);
-            callback({ error: null, authorized: authorized, disconnect: false });
-        });
-    }
-
-    // Handle Share Submissions
-    this.handleShares = function(shareData, shareValid, blockValid) {
-        _this.poolShares.start(shareData, shareValid, blockValid, () => {
-            _this.checkBlock(shareData, blockValid);
-            _this.checkShare(shareData, shareValid);
-        }, () => {});
-    }
-
-    // Start Stratum Capabilities
-    this.start = function() {
-        const poolStratum = _this.buildStratum()
-        _this.poolStratum = poolStratum;
-        poolStratum.start();
-    }
+    // Build Pool from Configuration
+    this.setupStratum = function(callback) {
+        let poolStratum = Stratum.create(_this.poolConfig, _this.authorizeWorker, callback);
+        poolStratum = _this.handleEvents(poolStratum);
+        poolStratum.setupPool();
+        this.poolStratum = poolStratum;
+    };
 };
 
 module.exports = PoolStratum;

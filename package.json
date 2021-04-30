@@ -21,8 +21,11 @@
     "name": "Nick Sarris"
   },
   "jest": {
+    "verbose": true,
     "collectCoverage": true,
-    "verbose": true
+    "coveragePathIgnorePatterns": [
+      ".mock.js"
+    ]
   },
   "scripts": {
     "start": "nodemon scripts/main.js",
@@ -43,7 +46,7 @@
     "apicache": "^1.5.3",
     "async": "1.5.2",
     "bignum": "0.13.1",
-    "blinkhash-stratum": "0.0.4",
+    "blinkhash-stratum": "0.1.3",
     "body-parser": "*",
     "colors": "*",
     "compression": "*",
@@ -58,7 +61,7 @@
     "node-watch": "0.5.9",
     "nodemon": "*",
     "nonce": "*",
-    "redis": "^3.0.2",
+    "redis": "^3.1.1",
     "request": "2.88.2"
   },
   "devDependencies": {

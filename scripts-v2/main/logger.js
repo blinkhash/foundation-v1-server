@@ -9,18 +9,20 @@ const colors = require('colors');
 const dateFormat = require('dateformat');
 const utils = require('./utils');
 
+////////////////////////////////////////////////////////////////////////////////
+
 // Main Logger Function
-const PoolLogger = function (config) {
+const PoolLogger = function (portalConfig) {
 
     const _this = this;
-    this.logLevel = utils.loggerSeverity[config.logLevel];
-    this.logColors = config.logColors;
+    this.logLevel = utils.loggerSeverity[portalConfig.logLevel];
+    this.logColors = portalConfig.logColors;
 
     // Start Logging Capabilities
-    this.start = function(severity, system, component, text, subcat) {
+    this.logText = function(severity, system, component, text, subcat) {
         if (utils.loggerSeverity[severity] < _this.logLevel) {
-            return
-        };
+            return;
+        }
         if (subcat) {
             const realText = subcat;
             const realSubCat = text;
@@ -42,19 +44,19 @@ const PoolLogger = function (config) {
         else {
             let logString = `${ entryDesc }[${ component }] `;
             if (subcat) {
-                logString += `(${  subcat  }) `;
+                logString += `(${ subcat }) `;
             }
             logString += text;
             console.log(logString);
         }
     };
 
-    // Manage Logger Messages
+    // Manage Logger Events
     Object.keys(utils.loggerSeverity).forEach((logType) => {
         _this[logType] = function() {
             const args = Array.prototype.slice.call(arguments, 0);
             args.unshift(logType);
-            _this.start.apply(this, args);
+            _this.logText.apply(this, args);
         };
     });
 };

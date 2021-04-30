@@ -14,77 +14,115 @@ const Algorithms = require('blinkhash-stratum').algorithms;
 const PoolLogger = require('./main/logger');
 const PoolWorkers = require('./main/workers');
 
-// Check to Ensure Config Exists
-if (!fs.existsSync('config.json')) {
-    console.log('config.json file does not exist. Read the installation/setup instructions.');
-    return;
-}
+////////////////////////////////////////////////////////////////////////////////
 
-const config = utils.readFile("config.json");
-const logger = new PoolLogger({ logLevel: config.logLevel, logColors: config.logColors });
-
-// Main Builder Function
-const PoolBuilder = function() {
+// Main PoolDatabase Function
+const PoolDatabase = function(logger, portalConfig) {
 
     const _this = this;
-    this.config = config;
-    this.logger = logger;
+    this.portalConfig = portalConfig;
+
+    // Connect to Redis Client
+    this.buildRedisClient = function() {
+        if (_this.portalConfig.redis.password !== '') {
+            return redis.createClient({
+                port: _this.portalConfig.redis.port,
+                host: _this.portalConfig.redis.host,
+                password: _this.portalConfig.redis.password
+            });
+        }
+        else {
+            return redis.createClient({
+                port: _this.portalConfig.redis.port,
+                host: _this.portalConfig.redis.host,
+            });
+        }
+    };
+
+    // Check Redis Client Version
+    this.checkRedisClient = function(client) {
+        client.info((error, response) => {
+            if (error) {
+                console.log('Redis version check failed');
+                return;
+            }
+            let version;
+            const settings = response.split('\r\n');
+            settings.forEach(line => {
+                if (line.indexOf('redis_version') !== -1) {
+                    version = parseFloat(line.split(':')[1]);
+                    return;
+                }
+            });
+            if (!version || version <= 2.6) {
+                console.log('Could not detect redis version or your redis client is out of date');
+            }
+            return;
+        });
+    };
+};
+
+// Main Builder Function
+const PoolBuilder = function(logger, portalConfig) {
+
+    const _this = this;
+    this.portalConfig = portalConfig;
 
     // Format Pool Configurations
-    this.formatPoolConfigs = function(configFiles, configPorts, config) {
+    this.formatPoolConfigs = function(configFiles, configPorts, poolConfig) {
 
         // Establish JSON Mainnet Conversion
-        if (config.coin.mainnet) {
-            config.coin.mainnet.bip32.public = Buffer.from(config.coin.mainnet.bip32.public, 'hex').readUInt32LE(0);
-            config.coin.mainnet.bip32.private = Buffer.from(config.coin.mainnet.bip32.private, 'hex').readUInt32LE(0);
-            config.coin.mainnet.pubKeyHash = Buffer.from(config.coin.mainnet.pubKeyHash, 'hex').readUInt8(0);
-            config.coin.mainnet.scriptHash = Buffer.from(config.coin.mainnet.scriptHash, 'hex').readUInt8(0);
-            config.coin.mainnet.wif = Buffer.from(config.coin.mainnet.wif, 'hex').readUInt8(0);
+        if (poolConfig.coin.mainnet) {
+            poolConfig.coin.mainnet.bip32.public = Buffer.from(poolConfig.coin.mainnet.bip32.public, 'hex').readUInt32LE(0);
+            poolConfig.coin.mainnet.bip32.private = Buffer.from(poolConfig.coin.mainnet.bip32.private, 'hex').readUInt32LE(0);
+            poolConfig.coin.mainnet.pubKeyHash = Buffer.from(poolConfig.coin.mainnet.pubKeyHash, 'hex').readUInt8(0);
+            poolConfig.coin.mainnet.scriptHash = Buffer.from(poolConfig.coin.mainnet.scriptHash, 'hex').readUInt8(0);
+            poolConfig.coin.mainnet.wif = Buffer.from(poolConfig.coin.mainnet.wif, 'hex').readUInt8(0);
         }
 
         // Establish JSON Testnet Conversion
-        if (config.coin.testnet) {
-            config.coin.testnet.bip32.public = Buffer.from(config.coin.testnet.bip32.public, 'hex').readUInt32LE(0);
-            config.coin.testnet.bip32.private = Buffer.from(config.coin.testnet.bip32.private, 'hex').readUInt32LE(0);
-            config.coin.testnet.pubKeyHash = Buffer.from(config.coin.testnet.pubKeyHash, 'hex').readUInt8(0);
-            config.coin.testnet.scriptHash = Buffer.from(config.coin.testnet.scriptHash, 'hex').readUInt8(0);
-            config.coin.testnet.wif = Buffer.from(config.coin.testnet.wif, 'hex').readUInt8(0);
+        if (poolConfig.coin.testnet) {
+            poolConfig.coin.testnet.bip32.public = Buffer.from(poolConfig.coin.testnet.bip32.public, 'hex').readUInt32LE(0);
+            poolConfig.coin.testnet.bip32.private = Buffer.from(poolConfig.coin.testnet.bip32.private, 'hex').readUInt32LE(0);
+            poolConfig.coin.testnet.pubKeyHash = Buffer.from(poolConfig.coin.testnet.pubKeyHash, 'hex').readUInt8(0);
+            poolConfig.coin.testnet.scriptHash = Buffer.from(poolConfig.coin.testnet.scriptHash, 'hex').readUInt8(0);
+            poolConfig.coin.testnet.wif = Buffer.from(poolConfig.coin.testnet.wif, 'hex').readUInt8(0);
         }
 
         // Check for Overlapping Ports
-        configFiles.push(config)
+        configFiles.push(poolConfig);
         configFiles.flatMap(configFile => Object.keys(configFile.ports))
             .forEach((port, idx) => {
                 if (configPorts.indexOf(port) !== -1) {
-                    _this.logger.error('Master', configFiles[idx].coin.name, `Overlapping configuration on port ${ port }`);
+                    logger.error('Master', configFiles[idx].coin.name, `Overlapping configuration on port ${ port }`);
                     process.exit(1);
                     return;
                 }
                 configPorts.push(port);
             }
-        );
+            );
 
         // Clone Default Settings from Portal Config
-        Object.keys(_this.config.settings).forEach(setting => {
-            if (!(setting in _this.config)) {
-                let settingCopy = _this.config.settings[setting];
+        Object.keys(_this.portalConfig.settings).forEach(setting => {
+            if (!(setting in _this.portalConfig)) {
+                let settingCopy = _this.portalConfig.settings[setting];
                 if (typeof setting === 'object') {
-                    settingCopy = Object.assign({}, _this.config.settings[setting]);
+                    settingCopy = Object.assign({}, _this.portalConfig.settings[setting]);
                 }
-                config[setting] = settingCopy;
+                poolConfig[setting] = settingCopy;
             }
         });
 
-        return config
-    }
+        return poolConfig;
+    };
 
     // Build Pool Configurations
     this.buildPoolConfigs = function() {
 
-        const configs = {};
-        const configFiles = []
-        const configPorts = []
+        const configFiles = [];
+        const configPorts = [];
         const configDir = 'configs/';
+        const poolConfigs = {};
 
         // Iterate Through Each Configuration File
         fs.readdirSync(configDir).forEach(file => {
@@ -95,25 +133,25 @@ const PoolBuilder = function() {
             }
 
             // Read and Check File
-            let config = utils.readFile(configDir + file)
-            if (!config.enabled) return;
-            if (!config.coin.algorithm in Algorithms) {
-                _this.logger.error('Master', config.coin.name, `Cannot run a pool for unsupported algorithm "${ config.coin.algorithm }"`);
+            let poolConfig = utils.readFile(configDir + file);
+            if (!poolConfig.enabled) return;
+            if (!(poolConfig.coin.algorithm in Algorithms)) {
+                logger.error('Master', poolConfig.coin.name, `Cannot run a pool for unsupported algorithm "${ poolConfig.coin.algorithm }"`);
                 return;
             }
 
-            config = _this.formatPoolConfigs(configFiles, configPorts, config);
-            configs[config.coin.name] = config;
+            poolConfig = _this.formatPoolConfigs(configFiles, configPorts, poolConfig);
+            poolConfigs[poolConfig.coin.name] = poolConfig;
         });
 
-        return configs;
-    }
+        return poolConfigs;
+    };
 
     // Read and Format Partner Configs
     this.buildPartnerConfigs = function() {
 
-        const configs = {};
         const configDir = 'partners/';
+        const partnerConfigs = {};
 
         // Iterate Through Each Configuration File
         fs.readdirSync(configDir).forEach(file => {
@@ -124,17 +162,17 @@ const PoolBuilder = function() {
             }
 
             // Read and Check File
-            const currentDate = new Date()
-            const config = utils.readFile(configDir + file)
-            if (new Date(config.subscription.endDate) < currentDate) {
-                return
-            };
+            const currentDate = new Date();
+            const partnerConfig = utils.readFile(configDir + file);
+            if (new Date(partnerConfig.subscription.endDate) < currentDate) {
+                return;
+            }
 
-            configs[config.name] = config;
+            partnerConfigs[partnerConfig.name] = partnerConfig;
         });
 
-        return configs;
-    }
+        return partnerConfigs;
+    };
 
     this.pools = _this.buildPoolConfigs();
     this.partners = _this.buildPartnerConfigs();
@@ -146,7 +184,7 @@ const PoolBuilder = function() {
         const worker = cluster.fork({
             workerType: 'worker',
             poolConfigs: JSON.stringify(_this.pools),
-            portalConfig: JSON.stringify(_this.config),
+            portalConfig: JSON.stringify(_this.portalConfig),
             forkId: forkId,
         });
 
@@ -154,39 +192,40 @@ const PoolBuilder = function() {
         worker.type = 'worker';
         poolWorkers[forkId] = worker;
 
+        // Handle Worker Events
         worker.on('message', (msg) => {
             switch (msg.type) {
-                case 'banIP':
-                    Object.keys(cluster.workers).forEach(id => {
-                        if (cluster.workers[id].type === 'worker') {
-                            cluster.workers[id].send({ type: 'banIP', ip: msg.ip });
-                        }
-                    });
-                    break;
-                default:
-                    break;
+            case 'banIP':
+                Object.keys(cluster.workers).forEach(id => {
+                    if (cluster.workers[id].type === 'worker') {
+                        cluster.workers[id].send({ type: 'banIP', ip: msg.ip });
+                    }
+                });
+                break;
+            default:
+                break;
             }
         });
 
-        worker.on('exit', (code, signal) => {
-            _this.logger.error('Master', 'Workers', `Fork ${ forkId } died, starting replacement worker...`);
+        worker.on('exit', () => {
+            logger.error('Master', 'Workers', `Fork ${ forkId } died, starting replacement worker...`);
             setTimeout(() => {
-                createPoolWorker(forkId);
+                _this.createPoolWorker(forkId);
             }, 2000);
         });
 
         return worker;
-    }
+    };
 
     // Functionality for Pool Workers
-    this.startPoolWorkers = function() {
+    this.setupPoolWorkers = function() {
 
         const poolWorkers = {};
         let numWorkers = 0;
 
         // Check if No Configurations Exist
         if (Object.keys(_this.pools).length === 0) {
-            _this.logger.warning('Master', 'Workers', 'No pool configs exists or are enabled in configs folder. No pools started.');
+            logger.warning('Master', 'Workers', 'No pool configs exists or are enabled in configs folder. No pools started.');
             return;
         }
 
@@ -194,93 +233,71 @@ const PoolBuilder = function() {
         Object.keys(_this.pools).forEach(config => {
             const pool = _this.pools[config];
             if (!Array.isArray(pool.daemons) || pool.daemons.length < 1) {
-                _this.logger.error('Master', config, 'No daemons configured so a pool cannot be started for this coin.');
+                logger.error('Master', config, 'No daemons configured so a pool cannot be started for this coin.');
                 delete _this.pools[config];
             }
         });
 
         // Create Pool Workers
-        const numForks = utils.countProcessForks(_this.config);
+        const numForks = utils.countProcessForks(_this.portalConfig);
         const startInterval = setInterval(() => {
             _this.createPoolWorkers(poolWorkers, numWorkers);
             numWorkers += 1;
             if (numWorkers === numForks) {
                 clearInterval(startInterval);
-                _this.logger.debug('Master', 'Workers', `Started ${ Object.keys(_this.pools).length } pool(s) on ${ numForks } thread(s)`);
+                logger.debug('Master', 'Workers', `Started ${ Object.keys(_this.pools).length } pool(s) on ${ numForks } thread(s)`);
             }
         }, 250);
-    }
-}
+    };
+};
 
 // Pool Initializer Main Function
-const PoolInitializer = function() {
+const PoolInitializer = function(logger, client, portalConfig) {
 
     const _this = this;
-    this.config = config;
-    this.logger = logger;
-
-    // Build and Connect to Redis Client
-    this.buildRedisClient = function() {
-        if (_this.config.redis.password !== "") {
-            return redis.createClient({
-                port: _this.config.redis.port,
-                host: _this.config.redis.host,
-                password: _this.config.redis.password
-            });
-        }
-        else {
-            return redis.createClient({
-                port: _this.config.redis.port,
-                host: _this.config.redis.host,
-            });
-        }
-    }
-
-    // Check Redis Client Version
-    this.checkRedisClient = function(client) {
-        client.info((error, response) => {
-            if (error) {
-                logger.error(logSystem, logComponent, logSubCat, 'Redis version check failed');
-                return;
-            }
-            let version;
-            const settings = response.split('\r\n');
-            settings.forEach(line => {
-                if (line.indexOf('redis_version') !== -1) {
-                    version = parseFloat(line.split(':')[1])
-                    return;
-                }
-            });
-            if (!version || version <= 2.6) {
-                logger.error(logSystem, logComponent, logSubCat, 'Could not detect redis version or your redis client is out of date');
-            }
-            return;
-        })
-    }
+    this.client = client;
+    this.portalConfig = portalConfig;
 
     // Start Pool Server
-    this.start = function() {
+    this.setupClusters = function() {
 
         // Handle Master Forks
         if (cluster.isMaster) {
-            const pool = new PoolBuilder();
-            pool.startPoolWorkers();
+            const pool = new PoolBuilder(logger, _this.portalConfig);
+            pool.setupPoolWorkers();
         }
 
         // Handle Worker Forks
         if (cluster.isWorker) {
             switch (process.env.workerType) {
-                case 'worker':
-                    const client = _this.buildRedisClient();
-                    _this.checkRedisClient(client)
-                    worker = new PoolWorkers(_this.logger, client).start();
-                    break;
-                default:
-                    break;
+            case 'worker':
+                new PoolWorkers(logger, _this.client).setupWorkers(() => {});
+                break;
+            default:
+                break;
             }
         }
-    }
+    };
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+// Check to Ensure Config Exists
+if (!fs.existsSync('config.json')) {
+    throw new Error('Unable to find config.json file. Read the installation/setup instructions.');
+}
+
+// Initialize Secondary Services
+const config = utils.readFile('config.json');
+const logger = new PoolLogger({ logLevel: config.logLevel, logColors: config.logColors });
+const database = new PoolDatabase(logger, config);
+const client = database.buildRedisClient();
+
+// Check for Redis Connection Errors
+client.on('error', () => {
+    throw new Error('Unable to establish database connection. Ensure Redis is setup properly and listening.');
+});
+
 // Start Pool Server
-const server = new PoolInitializer().start();
+database.checkRedisClient(client);
+new PoolInitializer(logger, client, config).setupClusters();
