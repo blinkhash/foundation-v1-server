@@ -4,10 +4,11 @@
  *
  */
 
-// Import Required Modules
 const utils = require('./utils');
 
-// Pool Shares Main Function
+////////////////////////////////////////////////////////////////////////////////
+
+// Main Shares Function
 const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     const _this = this;
@@ -23,7 +24,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     _this.client.on('ready', () => {});
     _this.client.on('error', (error) => {
-        logger.error(logSystem, logComponent, logSubCat, `Redis client had an error: ${ JSON.stringify(error) }`)
+        logger.error(logSystem, logComponent, logSubCat, `Redis client had an error: ${ JSON.stringify(error) }`);
     });
     _this.client.on('end', () => {
         logger.error(logSystem, logComponent, logSubCat, 'Connection to redis database has been ended');
@@ -46,7 +47,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
         const lastShareTime = lastShareTimes[workerAddress];
 
         // Check for Continous Mining
-        let timeChangeSec = utils.roundTo(Math.max(dateNow - lastShareTime, 0) / 1000, 4);
+        const timeChangeSec = utils.roundTo(Math.max(dateNow - lastShareTime, 0) / 1000, 4);
         if (timeChangeSec < 900) {
             commands.push(['hincrbyfloat', `${ _this.coin }:rounds:current:times:values`, workerAddress, timeChangeSec]);
         }
@@ -57,12 +58,12 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
         }
 
         return commands;
-    }
+    };
 
     // Manage Worker Shares
     this.buildSharesCommands = function(results, shareData, shareValid, blockValid) {
 
-        let commands = []
+        let commands = [];
         const dateNow = Date.now();
         const workerAddress = shareData.worker;
         const isSoloMining = utils.checkSoloMining(_this.poolConfig, shareData);
@@ -72,7 +73,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
             time: dateNow,
             worker: workerAddress,
             solo: isSoloMining
-        }
+        };
 
         // Handle Valid/Invalid Shares
         if (shareValid) {
@@ -80,21 +81,21 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
             commands.push(['hincrby', `${ _this.coin }:rounds:current:shares:values`, workerAddress, shareData.difficulty]);
             commands.push(['hincrby', `${ _this.coin }:rounds:current:shares:counts`, 'validShares', 1]);
             outputShare.difficulty = shareData.difficulty;
-            commands.push(['zadd', `${ _this.coin }:rounds:current:shares:records`, dateNow / 1000 | 0, JSON.stringify(outputShare)])
+            commands.push(['zadd', `${ _this.coin }:rounds:current:shares:records`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
         }
         else {
             commands.push(['hincrby', `${ _this.coin }:rounds:current:shares:counts`, 'invalidShares', 1]);
             outputShare.difficulty = -shareData.difficulty;
-            commands.push(['zadd', `${ _this.coin }:rounds:current:shares:records`, dateNow / 1000 | 0, JSON.stringify(outputShare)])
+            commands.push(['zadd', `${ _this.coin }:rounds:current:shares:records`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
         }
 
         return commands;
-    }
+    };
 
     // Manage Worker Blocks
     this.buildBlocksCommands = function(shareData, shareValid, blockValid) {
 
-        const commands = []
+        const commands = [];
         const dateNow = Date.now();
         const difficulty = (shareValid ? shareData.difficulty : -shareData.difficulty);
         const isSoloMining = utils.checkSoloMining(_this.poolConfig, shareData);
@@ -109,7 +110,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
             difficulty: difficulty,
             worker: shareData.worker,
             solo: isSoloMining,
-        }
+        };
 
         // Handle Valid/Invalid Blocks
         if (blockValid) {
@@ -124,7 +125,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
         }
 
         return commands;
-    }
+    };
 
     // Build Redis Commands
     this.buildCommands = function(results, shareData, shareValid, blockValid, callback, handler) {
@@ -133,7 +134,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
         commands = commands.concat(_this.buildBlocksCommands(shareData, shareValid, blockValid));
         this.executeCommands(commands, callback, handler);
         return commands;
-    }
+    };
 
     // Execute Redis Commands
     this.executeCommands = function(commands, callback, handler) {
@@ -144,15 +145,15 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
             }
             callback(results);
         });
-    }
+    };
 
-    // Start Share Capabilities
-    this.start = function(shareData, shareValid, blockValid, callback, handler) {
-        const shareLookups = [['hgetall', `${ _this.coin }:rounds:current:times:last`]]
+    // Handle Share Submissions
+    this.handleShares = function(shareData, shareValid, blockValid, callback, handler) {
+        const shareLookups = [['hgetall', `${ _this.coin }:rounds:current:times:last`]];
         this.executeCommands(shareLookups, (results) => {
             _this.buildCommands(results, shareData, shareValid, blockValid, callback, handler);
         }, handler);
-    }
-}
+    };
+};
 
 module.exports = PoolShares;

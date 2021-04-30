@@ -21,14 +21,17 @@
     "name": "Nick Sarris"
   },
   "jest": {
+    "verbose": true,
     "collectCoverage": true,
-    "verbose": true
+    "coveragePathIgnorePatterns": [
+      ".mock.js"
+    ]
   },
   "scripts": {
     "start": "nodemon scripts/main.js",
     "start-v2": "nodemon scripts-v2/main.js",
-    "clean": "eslint . --ext .js --ignore-pattern node_modules/",
-    "clean:fix": "eslint . --ext .js --fix --ignore-pattern node_modules/",
+    "clean": "eslint scripts-v2/ --ext .js --ignore-pattern node_modules/",
+    "clean:fix": "eslint scripts-v2/ --ext .js --fix --ignore-pattern node_modules/",
     "test": "jest --coverage",
     "prod:start": "forever start -l blinkhash-log.txt --append scripts/init.js",
     "prod:stop": "forever stop scripts/init.js"
@@ -43,7 +46,7 @@
     "apicache": "^1.5.3",
     "async": "1.5.2",
     "bignum": "0.13.1",
-    "blinkhash-stratum": "0.0.4",
+    "blinkhash-stratum": "0.1.3",
     "body-parser": "*",
     "colors": "*",
     "compression": "*",

@@ -7,7 +7,9 @@
 const PoolShares = require('./shares');
 const PoolStratum = require('./stratum');
 
-// Pool Workers Main Function
+////////////////////////////////////////////////////////////////////////////////
+
+// Main Workers Function
 const PoolWorkers = function (logger, client) {
 
     const _this = this;
@@ -17,34 +19,30 @@ const PoolWorkers = function (logger, client) {
     this.portalConfig = JSON.parse(process.env.portalConfig);
     this.forkId = process.env.forkId;
 
-    // Handle Worker Messaging
-    this.handleMessaging = function() {
-        process.on('message', (message) => {
-            switch (message.type) {
-                case 'banIP':
-                    _this.pools.forEach(pool => {
-                        if (_this.pools[pool].stratum) {
-                            _this.pools[pool].stratum.addBannedIP(message.ip);
-                        }
-                    });
-                    break;
-                default:
-                    break;
-            }
+    // Build Promise from Input Configuration
+    this.createPromises = function(configName) {
+        return new Promise((resolve, reject) => {
+            const poolConfig = _this.poolConfigs[configName];
+            const poolShares = new PoolShares(logger, _this.client, poolConfig, _this.portalConfig);
+            const poolStratum = new PoolStratum(logger, poolConfig, poolShares);
+            poolStratum.setupStratum((response) => {
+                if (response === true) resolve(poolStratum);
+                else reject(`Error thrown on pool creation: ${ response }`);
+            });
         });
-    }
+    };
 
     // Start Worker Capabilities
-    this.start = function() {
-        _this.handleMessaging();
-        Object.keys(_this.poolConfigs).forEach((config) => {
-            const poolConfig = _this.poolConfigs[config];
-            const poolShares = new PoolShares(logger, client, poolConfig, _this.portalConfig);
-            const poolStratum = new PoolStratum(logger, poolConfig, poolShares)
-            poolStratum.start();
-            _this.pools[config] = poolStratum;
-        });
-    }
+    this.setupWorkers = function(callback) {
+        const poolsKeys = Object.keys(_this.poolConfigs);
+        const poolsPromises = poolsKeys.map((configName) => _this.createPromises(configName));
+        Promise.all(poolsPromises).then((results) => {
+            results.forEach(poolStratum => {
+                _this.pools[poolStratum.coin] = poolStratum;
+            });
+            callback();
+        }, callback);
+    };
 };
 
 module.exports = PoolWorkers;
