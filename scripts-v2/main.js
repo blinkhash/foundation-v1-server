@@ -7,9 +7,10 @@
 const fs = require('fs');
 const utils = require('./main/utils');
 
-const PoolDatabase = require('./main/database.js');
-const PoolLogger = require('./main/logger.js');
-const PoolInitializer = require('./main/builder.js');
+const PoolDatabase = require('./main/database');
+const PoolLogger = require('./main/logger');
+const PoolBuilder = require('./main/builder');
+const PoolInitializer = PoolBuilder.initializer;
 
 ////////////////////////////////////////////////////////////////////////////////
 

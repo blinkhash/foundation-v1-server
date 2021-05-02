@@ -15,7 +15,7 @@ const PoolWorkers = require('./workers');
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Builder Function
-const PoolBuilder = function(logger, portalConfig) {
+const PoolFormatter = function(logger, portalConfig) {
 
     const _this = this;
     this.portalConfig = portalConfig;
@@ -47,7 +47,6 @@ const PoolBuilder = function(logger, portalConfig) {
             .forEach((port, idx) => {
                 if (configPorts.indexOf(port) !== -1) {
                     logger.error('Builder', configFiles[idx].coin.name, `Overlapping configuration on port ${ port }`);
-                    process.exit(1);
                     return;
                 }
                 configPorts.push(port);
@@ -56,24 +55,23 @@ const PoolBuilder = function(logger, portalConfig) {
 
         // Clone Default Settings from Portal Config
         Object.keys(_this.portalConfig.settings).forEach(setting => {
-            if (!(setting in _this.portalConfig)) {
-                let settingCopy = _this.portalConfig.settings[setting];
-                if (typeof setting === 'object') {
-                    settingCopy = Object.assign({}, _this.portalConfig.settings[setting]);
-                }
-                poolConfig[setting] = settingCopy;
+            let settingCopy = _this.portalConfig.settings[setting];
+            if (typeof settingCopy === 'object') {
+                settingCopy = Object.assign({}, settingCopy);
             }
+            poolConfig[setting] = settingCopy;
         });
 
         return poolConfig;
     };
 
     // Build Pool Configurations
+    /* istanbul ignore next */
     this.buildPoolConfigs = function() {
 
+        const configDir = 'configs/';
         const configFiles = [];
         const configPorts = [];
-        const configDir = 'configs/';
         const poolConfigs = {};
 
         // Iterate Through Each Configuration File
@@ -100,6 +98,7 @@ const PoolBuilder = function(logger, portalConfig) {
     };
 
     // Read and Format Partner Configs
+    /* istanbul ignore next */
     this.buildPartnerConfigs = function() {
 
         const configDir = 'partners/';
@@ -126,10 +125,8 @@ const PoolBuilder = function(logger, portalConfig) {
         return partnerConfigs;
     };
 
-    this.pools = _this.buildPoolConfigs();
-    this.partners = _this.buildPartnerConfigs();
-
     // Handle Pool Worker Creation
+    /* istanbul ignore next */
     this.createPoolWorkers = function(poolWorkers, forkId) {
 
         // Build Worker from Data
@@ -170,6 +167,7 @@ const PoolBuilder = function(logger, portalConfig) {
     };
 
     // Functionality for Pool Workers
+    /* istanbul ignore next */
     this.setupPoolWorkers = function() {
 
         const poolWorkers = {};
@@ -211,12 +209,15 @@ const PoolInitializer = function(logger, client, portalConfig) {
     this.portalConfig = portalConfig;
 
     // Start Pool Server
+    /* istanbul ignore next */
     this.setupClusters = function() {
 
         // Handle Master Forks
         if (cluster.isMaster) {
-            const pool = new PoolBuilder(logger, _this.portalConfig);
-            pool.setupPoolWorkers();
+            const poolBuilder = new PoolFormatter(logger, _this.portalConfig);
+            poolBuilder.pools = poolBuilder.buildPoolConfigs();
+            poolBuilder.partners = poolBuilder.buildPartnerConfigs();
+            poolBuilder.setupPoolWorkers();
         }
 
         // Handle Worker Forks
@@ -232,4 +233,5 @@ const PoolInitializer = function(logger, client, portalConfig) {
     };
 };
 
-module.exports = PoolInitializer;
+exports.formatter = PoolFormatter;
+exports.initializer = PoolInitializer;

@@ -25,8 +25,13 @@ describe('Test server functionality', () => {
 
     let poolServer;
     beforeAll((done) => {
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
         poolServer = new PoolServer(logger);
-        poolServer.setupServer(() => done());
+        poolServer.setupServer(() => {
+            expect(consoleSpy).toHaveBeenCalled();
+            console.log.mockClear();
+            done();
+        });
     });
 
     afterAll((done) => {

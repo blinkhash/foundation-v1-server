@@ -37,7 +37,6 @@ const PoolWorkers = function (logger, client) {
         const poolsKeys = Object.keys(_this.poolConfigs);
         const poolsPromises = poolsKeys.map((configName) => _this.createPromises(configName));
         Promise.all(poolsPromises).then((results) => {
-            console.log(results);
             results.forEach(poolStratum => {
                 _this.pools[poolStratum.coin] = poolStratum;
             });
