@@ -4,9 +4,7 @@
  *
  */
 
-/* eslint-disable no-unused-vars */
 const utils = require('../main/utils');
-const redis = require('redis-mock');
 const PoolDatabase = require('../main/database');
 const PoolLogger = require('../main/logger');
 

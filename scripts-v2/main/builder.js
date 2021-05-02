@@ -46,7 +46,7 @@ const PoolBuilder = function(logger, portalConfig) {
         configFiles.flatMap(configFile => Object.keys(configFile.ports))
             .forEach((port, idx) => {
                 if (configPorts.indexOf(port) !== -1) {
-                    logger.error('Master', configFiles[idx].coin.name, `Overlapping configuration on port ${ port }`);
+                    logger.error('Builder', configFiles[idx].coin.name, `Overlapping configuration on port ${ port }`);
                     process.exit(1);
                     return;
                 }
@@ -88,7 +88,7 @@ const PoolBuilder = function(logger, portalConfig) {
             let poolConfig = utils.readFile(configDir + file);
             if (!poolConfig.enabled) return;
             if (!(poolConfig.coin.algorithm in Algorithms)) {
-                logger.error('Master', poolConfig.coin.name, `Cannot run a pool for unsupported algorithm "${ poolConfig.coin.algorithm }"`);
+                logger.error('Builder', poolConfig.coin.name, `Cannot run a pool for unsupported algorithm "${ poolConfig.coin.algorithm }"`);
                 return;
             }
 
@@ -160,7 +160,7 @@ const PoolBuilder = function(logger, portalConfig) {
         });
 
         worker.on('exit', () => {
-            logger.error('Master', 'Workers', `Fork ${ forkId } died, starting replacement worker...`);
+            logger.error('Builder', 'Workers', `Fork ${ forkId } died, starting replacement worker...`);
             setTimeout(() => {
                 _this.createPoolWorker(forkId);
             }, 2000);
@@ -177,7 +177,7 @@ const PoolBuilder = function(logger, portalConfig) {
 
         // Check if No Configurations Exist
         if (Object.keys(_this.pools).length === 0) {
-            logger.warning('Master', 'Workers', 'No pool configs exists or are enabled in configs folder. No pools started.');
+            logger.warning('Builder', 'Workers', 'No pool configs exists or are enabled in configs folder. No pools started.');
             return;
         }
 
@@ -185,7 +185,7 @@ const PoolBuilder = function(logger, portalConfig) {
         Object.keys(_this.pools).forEach(config => {
             const pool = _this.pools[config];
             if (!Array.isArray(pool.daemons) || pool.daemons.length < 1) {
-                logger.error('Master', config, 'No daemons configured so a pool cannot be started for this coin.');
+                logger.error('Builder', config, 'No daemons configured so a pool cannot be started for this coin.');
                 delete _this.pools[config];
             }
         });
@@ -197,7 +197,7 @@ const PoolBuilder = function(logger, portalConfig) {
             numWorkers += 1;
             if (numWorkers === numForks) {
                 clearInterval(startInterval);
-                logger.debug('Master', 'Workers', `Started ${ Object.keys(_this.pools).length } pool(s) on ${ numForks } thread(s)`);
+                logger.debug('Builder', 'Workers', `Started ${ Object.keys(_this.pools).length } pool(s) on ${ numForks } thread(s)`);
             }
         }, 250);
     };

@@ -9,6 +9,7 @@ const bodyParser = require('body-parser');
 const compress = require('compression');
 const cors = require('cors');
 const express = require('express');
+const http = require('http');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -16,8 +17,8 @@ const express = require('express');
 const PoolServer = function (logger) {
 
     const _this = this;
-    this.partnerConfigs = JSON.parse(process.env.partners);
-    this.poolConfigs = JSON.parse(process.env.pools);
+    this.partnerConfigs = JSON.parse(process.env.partnerConfigs);
+    this.poolConfigs = JSON.parse(process.env.poolConfigs);
     this.portalConfig = JSON.parse(process.env.portalConfig);
     this.forkId = process.env.forkId;
 
@@ -27,31 +28,43 @@ const PoolServer = function (logger) {
 
     // const portalApi = new PoolAPI(logger, partnerConfigs, poolConfigs, portalConfig);
 
-    // Build Main Server
-    const app = express();
-    const cache = apicache.middleware;
-    app.use(bodyParser.json());
-    app.use(cache('5 minutes'));
-    app.use(compress());
-    app.use(cors());
+    this.buildServer = function() {
 
-    // Handle API Requests
-    app.get('/api/v1/:method', function(req, res, next) {
-        console.log(req, res, next);
-    });
+        // Build Main Server
+        const app = express();
+        const cache = apicache.middleware;
+        app.use(bodyParser.json());
+        app.use(cache('5 minutes'));
+        app.use(compress());
+        app.use(cors());
 
-    // Handle Error Responses
-    /* eslint-disable-next-line no-unused-vars */
-    app.use(function(err, req, res, next) {
-        console.error(err.stack);
-        res.send(500, 'Something broke!');
-    });
+        // Handle API Requests
+        /* istanbul ignore next */
+        app.get('/api/v1/:method', function(req, res, next) {
+            console.log(req, res, next);
+        });
 
-    // Start Server w/ Website on Port
-    app.listen(_this.portalConfig.server.port, _this.portalConfig.server.host, function() {
-        logger.debug(logSystem, logComponent, logSubCat,
-            `Website started on ${ _this.portalConfig.server.host }:${ _this.portalConfig.server.port}`);
-    });
+        // Handle Error Responses
+        /* istanbul ignore next */
+        /* eslint-disable-next-line no-unused-vars */
+        app.use(function(err, req, res, next) {
+            console.error(err.stack);
+            res.send(500, 'Something broke!');
+        });
+
+        // Set Existing Server Variable
+        this.server = http.createServer(app);
+    };
+
+    // Start Worker Capabilities
+    this.setupServer = function(callback) {
+        _this.buildServer();
+        _this.server.listen(_this.portalConfig.server.port, _this.portalConfig.server.host, function() {
+            logger.debug(logSystem, logComponent, logSubCat,
+                `Website started on ${ _this.portalConfig.server.host }:${ _this.portalConfig.server.port}`);
+            callback();
+        });
+    };
 };
 
 module.exports = PoolServer;

@@ -4,9 +4,9 @@
  *
  */
 
-/* eslint-disable no-unused-vars */
-const os = require('os');
+/* eslint-disable-next-line no-unused-vars */
 const colors = require('colors');
+const os = require('os');
 const utils = require('../main/utils');
 
 ////////////////////////////////////////////////////////////////////////////////

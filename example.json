@@ -23,7 +23,6 @@
         "validateWorkerUsername": true,
         "tcpProxyProtocol": false,
         "banning": {
-            "enabled": true,
             "time": 600,
             "invalidPercent": 50,
             "checkThreshold": 500,

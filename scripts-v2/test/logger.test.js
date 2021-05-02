@@ -4,9 +4,8 @@
  *
  */
 
-/* eslint-disable no-unused-vars */
+/* eslint-disable-next-line no-unused-vars */
 const colors = require('colors');
-const dateFormat = require('dateformat');
 const utils = require('../main/utils');
 const PoolLogger = require('../main/logger');
 
