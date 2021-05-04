@@ -72,13 +72,6 @@ describe('Test utility functionality', () => {
         expect(utils.loggerColors('other', `${'test'}`)).toBe('test'.italic);
     });
 
-    test('Test implemented readFile', () => {
-        const config = utils.readFile('example.json');
-        expect(typeof config).toBe('object');
-        expect(config.cliPort).toBe(42320);
-        expect(config.redis).toStrictEqual({ host: '127.0.0.1', port: 6379, password: '' });
-    });
-
     test('Test implemented roundTo', () => {
         expect(utils.roundTo(10.31831)).toBe(10);
         expect(utils.roundTo(10.9318)).toBe(11);

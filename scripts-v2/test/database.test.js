@@ -4,11 +4,9 @@
  *
  */
 
-const utils = require('../main/utils');
 const PoolDatabase = require('../main/database');
 const PoolLogger = require('../main/logger');
-
-const portalConfig = utils.readFile('example.json');
+const portalConfig = require('../../configs/main/example.js');
 const logger = new PoolLogger(portalConfig);
 
 // Mock Redis w/ Redis-Mock Functionality

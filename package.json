@@ -24,6 +24,7 @@
     "verbose": true,
     "collectCoverage": true,
     "coveragePathIgnorePatterns": [
+      "configs/",
       ".mock.js"
     ]
   },
@@ -46,7 +47,7 @@
     "apicache": "^1.5.3",
     "async": "1.5.2",
     "bignum": "0.13.1",
-    "blinkhash-stratum": "0.1.6",
+    "blinkhash-stratum": "0.1.7",
     "body-parser": "*",
     "colors": "*",
     "compression": "*",

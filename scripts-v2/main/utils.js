@@ -61,11 +61,6 @@ exports.loggerColors = function(severity, text) {
     }
 };
 
-// Read File Given Path
-exports.readFile = function(path) {
-    return JSON.parse(JSON.minify(fs.readFileSync(path, { encoding: 'utf8' })));
-};
-
 // Round to # of Digits Given
 exports.roundTo = function(n, digits) {
     if (digits === undefined) {

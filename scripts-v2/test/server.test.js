@@ -4,12 +4,10 @@
  *
  */
 
-const utils = require('../main/utils');
 const PoolServer = require('../main/server');
 const PoolLogger = require('../main/logger');
-
-const poolConfig = utils.readFile('configs/example.json');
-const portalConfig = utils.readFile('example.json');
+const poolConfig = require('../../configs/pools/example.js');
+const portalConfig = require('../../configs/main/example.js');
 
 process.env.partnerConfigs = JSON.stringify({});
 process.env.poolConfigs = JSON.stringify({ Bitcoin: poolConfig });

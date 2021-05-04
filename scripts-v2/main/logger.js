@@ -15,8 +15,8 @@ const utils = require('./utils');
 const PoolLogger = function (portalConfig) {
 
     const _this = this;
-    this.logLevel = utils.loggerSeverity[portalConfig.logLevel];
-    this.logColors = portalConfig.logColors;
+    this.logLevel = utils.loggerSeverity[portalConfig.logger.logLevel];
+    this.logColors = portalConfig.logger.logColors;
 
     // Start Logging Capabilities
     this.logText = function(severity, system, component, text, subcat) {

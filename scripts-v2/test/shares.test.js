@@ -8,13 +8,11 @@ const utils = require('../main/utils');
 const redis = require('redis-mock');
 const PoolLogger = require('../main/logger');
 const PoolShares = require('../main/shares');
-
-const poolConfig = utils.readFile('configs/example.json');
-const portalConfig = utils.readFile('example.json');
+const poolConfig = require('../../configs/pools/example.js');
+const portalConfig = require('../../configs/main/example.js');
 
 poolConfig.address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
 poolConfig.recipients[0].address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
-
 const logger = new PoolLogger(portalConfig);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -234,15 +232,19 @@ describe('Test shares functionality', () => {
             ['rename', 'Bitcoin:rounds:current:times:last', 'Bitcoin:rounds:round-1972211:times:last'],
             ['rename', 'Bitcoin:rounds:current:times:values', 'Bitcoin:rounds:round-1972211:times:values'],
             ['rename', 'Bitcoin:rounds:current:shares:values', 'Bitcoin:rounds:round-1972211:shares:values'],
-            ['sadd', 'Bitcoin:main:blocks:pending'],
+            ['rename', 'Bitcoin:rounds:current:shares:counts', 'Bitcoin:rounds:round-1972211:shares:counts'],
+            ['rename', 'Bitcoin:rounds:current:shares:records', 'Bitcoin:rounds:round-1972211:shares:records'],
+            ['zadd', 'Bitcoin:main:blocks:pending'],
             ['hincrby', 'Bitcoin:main:blocks:counts', 'validBlocks', 1]];
         const commands = poolShares.buildBlocksCommands(shareData, true, true);
-        expect(commands.length).toBe(5);
+        expect(commands.length).toBe(7);
         expect(commands[0]).toStrictEqual(expected[0]);
         expect(commands[1]).toStrictEqual(expected[1]);
         expect(commands[2]).toStrictEqual(expected[2]);
-        expect(commands[3].slice(0, 2)).toStrictEqual(expected[3]);
+        expect(commands[3]).toStrictEqual(expected[3]);
         expect(commands[4]).toStrictEqual(expected[4]);
+        expect(commands[5].slice(0, 2)).toStrictEqual(expected[5]);
+        expect(commands[6]).toStrictEqual(expected[6]);
     });
 
     test('Test block command handling [2]', () => {

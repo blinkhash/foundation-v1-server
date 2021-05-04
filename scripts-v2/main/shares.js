@@ -117,7 +117,9 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
             commands.push(['rename', `${ _this.coin }:rounds:current:times:last`, `${ _this.coin }:rounds:round-${ shareData.height }:times:last`]);
             commands.push(['rename', `${ _this.coin }:rounds:current:times:values`, `${ _this.coin }:rounds:round-${ shareData.height }:times:values`]);
             commands.push(['rename', `${ _this.coin }:rounds:current:shares:values`, `${ _this.coin }:rounds:round-${ shareData.height }:shares:values`]);
-            commands.push(['sadd', `${ _this.coin }:main:blocks:pending`, JSON.stringify(outputBlock)]);
+            commands.push(['rename', `${ _this.coin }:rounds:current:shares:counts`, `${ _this.coin }:rounds:round-${ shareData.height }:shares:counts`]);
+            commands.push(['rename', `${ _this.coin }:rounds:current:shares:records`, `${ _this.coin }:rounds:round-${ shareData.height }:shares:records`]);
+            commands.push(['zadd', `${ _this.coin }:main:blocks:pending`, shareData.height, JSON.stringify(outputBlock)]);
             commands.push(['hincrby', `${ _this.coin }:main:blocks:counts`, 'validBlocks', 1]);
         }
         else if (shareData.hash) {

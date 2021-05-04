@@ -5,23 +5,26 @@
  */
 
 const fs = require('fs');
-const utils = require('./main/utils');
+const path = require('path');
 
 const PoolDatabase = require('./main/database');
 const PoolLogger = require('./main/logger');
-const PoolBuilder = require('./main/builder');
-const PoolInitializer = PoolBuilder.initializer;
+const PoolThreads = require('./main/threads');
 
 ////////////////////////////////////////////////////////////////////////////////
 
+let config;
+const normalizedPath = path.join(__dirname, "../configs/main/example.js");
+
 // Check to Ensure Config Exists
-if (!fs.existsSync('config.json')) {
-    throw new Error('Unable to find config.json file. Read the installation/setup instructions.');
+try {
+    config = require(normalizedPath);
+}
+catch(e) {
+    throw new Error('Unable to find config.js file. Read the installation/setup instructions.');
 }
 
-// Initialize Secondary Services
-const config = utils.readFile('config.json');
-const logger = new PoolLogger({ logLevel: config.logLevel, logColors: config.logColors });
+const logger = new PoolLogger(config);
 const database = new PoolDatabase(logger, config);
 const client = database.buildRedisClient();
 
@@ -32,4 +35,4 @@ client.on('error', () => {
 
 // Start Pool Server
 database.checkRedisClient(client);
-new PoolInitializer(logger, client, config).setupClusters();
+new PoolThreads(logger, client, config).setupThreads();

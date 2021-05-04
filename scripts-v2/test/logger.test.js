@@ -6,10 +6,8 @@
 
 /* eslint-disable-next-line no-unused-vars */
 const colors = require('colors');
-const utils = require('../main/utils');
 const PoolLogger = require('../main/logger');
-
-const portalConfig = utils.readFile('example.json');
+const portalConfig = require('../../configs/main/example.js');
 
 const logSystem = 'Test';
 const logComponent = 'Test';
@@ -66,7 +64,8 @@ describe('Test logger functionality', () => {
     test('Test logger events [5]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
         const configCopy = Object.assign({}, portalConfig);
-        configCopy.logColors = false;
+        configCopy.logger = Object.assign({}, portalConfig.logger);
+        configCopy.logger.logColors = false;
         const logger = new PoolLogger(configCopy);
         logger.debug(logSystem, logComponent, logSubCat, 'Example Text');
         expect(consoleSpy).toHaveBeenCalled();
@@ -76,7 +75,8 @@ describe('Test logger functionality', () => {
     test('Test logger events [6]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
         const configCopy = Object.assign({}, portalConfig);
-        configCopy.logLevel = 'error';
+        configCopy.logger = Object.assign({}, portalConfig.logger);
+        configCopy.logger.logLevel = 'error';
         const logger = new PoolLogger(configCopy);
         logger.debug(logSystem, logComponent, logSubCat, 'Example Text');
         expect(consoleSpy).not.toHaveBeenCalled();
@@ -95,7 +95,8 @@ describe('Test logger functionality', () => {
     test('Test logger events [8]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
         const configCopy = Object.assign({}, portalConfig);
-        configCopy.logColors = false;
+        configCopy.logger = Object.assign({}, portalConfig.logger);
+        configCopy.logger.logColors = false;
         const logger = new PoolLogger(configCopy);
         logger.debug(logSystem, logComponent, 'Example Text');
         expect(consoleSpy).toHaveBeenCalled();

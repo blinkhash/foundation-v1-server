@@ -9,14 +9,12 @@ const mock = require('./stratum.mock.js');
 const nock = require('nock');
 const utils = require('../main/utils');
 
-const PoolBuilder = require('../main/builder');
 const PoolLogger = require('../main/logger');
 const PoolShares = require('../main/shares');
 const PoolStratum = require('../main/stratum');
-const PoolFormatter = PoolBuilder.formatter;
 
-let poolConfig = utils.readFile('configs/example.json');
-const portalConfig = utils.readFile('example.json');
+let poolConfig = require('../../configs/pools/example.js');
+const portalConfig = require('../../configs/main/example.js');
 
 poolConfig.address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
 poolConfig.recipients[0].address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
@@ -32,9 +30,7 @@ nock.disableNetConnect();
 nock.enableNetConnect('127.0.0.1');
 
 const logger = new PoolLogger(portalConfig);
-const poolFormatter = new PoolFormatter(logger, portalConfig);
 const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
-poolConfig = poolFormatter.formatPoolConfigs([], [], poolConfig);
 
 ////////////////////////////////////////////////////////////////////////////////
 
