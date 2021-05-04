@@ -9,54 +9,54 @@ const config = {};
 // Main Configuration
 config.enabled = false;
 config.featured = false;
-config.address = "example";
+config.address = 'example';
 config.debug = false;
-config.identifier = "https://github.com/blinkhash/blinkhash-server";
-config.logo = "";
+config.identifier = 'https://github.com/blinkhash/blinkhash-server';
+config.logo = '';
 
 // Coin Configuration
 config.coin = {};
-config.coin.name = "Bitcoin";
-config.coin.symbol = "BTC";
-config.coin.algorithm = "sha256d";
+config.coin.name = 'Bitcoin';
+config.coin.symbol = 'BTC';
+config.coin.algorithm = 'sha256d';
 config.coin.asicBoost = true;
 config.coin.hasGetInfo = false;
 config.coin.segwit = true;
 config.coin.txFee = 0.0004;
-config.coin.rewards = "";
+config.coin.rewards = '';
 
 // Mainnet Configuration
 config.coin.mainnet = {};
-config.coin.mainnet.bech32 = "bc";
+config.coin.mainnet.bech32 = 'bc';
 config.coin.mainnet.bip32 = {};
-config.coin.mainnet.bip32.public = Buffer.from("0488B21E", 'hex').readUInt32LE(0);
-config.coin.mainnet.bip32.private = Buffer.from("0488ADE4", 'hex').readUInt32LE(0);
-config.coin.mainnet.peerMagic = "f9beb4d9";
-config.coin.mainnet.pubKeyHash = Buffer.from("00", 'hex').readUInt8(0);;
-config.coin.mainnet.scriptHash = Buffer.from("05", 'hex').readUInt8(0);;
-config.coin.mainnet.wif = Buffer.from("80", 'hex').readUInt8(0);
-config.coin.mainnet.coin = "btc";
+config.coin.mainnet.bip32.public = Buffer.from('0488B21E', 'hex').readUInt32LE(0);
+config.coin.mainnet.bip32.private = Buffer.from('0488ADE4', 'hex').readUInt32LE(0);
+config.coin.mainnet.peerMagic = 'f9beb4d9';
+config.coin.mainnet.pubKeyHash = Buffer.from('00', 'hex').readUInt8(0);
+config.coin.mainnet.scriptHash = Buffer.from('05', 'hex').readUInt8(0);
+config.coin.mainnet.wif = Buffer.from('80', 'hex').readUInt8(0);
+config.coin.mainnet.coin = 'btc';
 
 // Mainnet Configuration
 config.coin.testnet = {};
-config.coin.testnet.bech32 = "tb";
+config.coin.testnet.bech32 = 'tb';
 config.coin.testnet.bip32 = {};
-config.coin.testnet.bip32.public = Buffer.from("043587CF", 'hex').readUInt32LE(0);
-config.coin.testnet.bip32.private = Buffer.from("04358394", 'hex').readUInt32LE(0);
-config.coin.testnet.peerMagic = "0b110907";
-config.coin.testnet.pubKeyHash = Buffer.from("6F", 'hex').readUInt8(0);;
-config.coin.testnet.scriptHash = Buffer.from("C4", 'hex').readUInt8(0);;
-config.coin.testnet.wif = Buffer.from("EF", 'hex').readUInt8(0);
-config.coin.testnet.coin = "btc";
+config.coin.testnet.bip32.public = Buffer.from('043587CF', 'hex').readUInt32LE(0);
+config.coin.testnet.bip32.private = Buffer.from('04358394', 'hex').readUInt32LE(0);
+config.coin.testnet.peerMagic = '0b110907';
+config.coin.testnet.pubKeyHash = Buffer.from('6F', 'hex').readUInt8(0);
+config.coin.testnet.scriptHash = Buffer.from('C4', 'hex').readUInt8(0);
+config.coin.testnet.wif = Buffer.from('EF', 'hex').readUInt8(0);
+config.coin.testnet.coin = 'btc';
 
 // Daemon Configuration
 config.daemons = [];
 
 const daemons1 = {};
-daemons1.host = "127.0.0.1";
+daemons1.host = '127.0.0.1';
 daemons1.port = 8332;
-daemons1.user = "";
-daemons1.password = "";
+daemons1.user = '';
+daemons1.password = '';
 config.daemons.push(daemons1);
 
 // Payment Configuration
@@ -66,10 +66,10 @@ config.payments.checkInterval = 20;
 config.payments.paymentInterval = 7200;
 config.payments.minimumPayment = 0.005;
 config.payments.daemon = {};
-config.payments.daemon.host = "127.0.0.1";
+config.payments.daemon.host = '127.0.0.1';
 config.payments.daemon.port = 8332;
-config.payments.daemon.user = "";
-config.payments.daemon.password = "";
+config.payments.daemon.user = '';
+config.payments.daemon.password = '';
 
 // Banning Configuration
 config.banning = {};
@@ -97,14 +97,14 @@ config.ports.push(ports1);
 config.recipients = [];
 
 const recipient1 = {};
-recipient1.address = "example";
-recipient1.percentage = 0.05
+recipient1.address = 'example';
+recipient1.percentage = 0.05;
 config.recipients.push(recipient1);
 
 // P2P Configuration
 config.p2p = {};
 config.p2p.enabled = true;
-config.p2p.host = "127.0.0.1";
+config.p2p.host = '127.0.0.1';
 config.p2p.port = 8333;
 config.p2p.disableTransactions = true;
 

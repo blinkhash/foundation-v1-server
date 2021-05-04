@@ -4,7 +4,6 @@
  *
  */
 
-const fs = require('fs');
 const path = require('path');
 
 const PoolDatabase = require('./main/database');
@@ -14,7 +13,7 @@ const PoolThreads = require('./main/threads');
 ////////////////////////////////////////////////////////////////////////////////
 
 let config;
-const normalizedPath = path.join(__dirname, "../configs/main/example.js");
+const normalizedPath = path.join(__dirname, '../configs/main/example.js');
 
 // Check to Ensure Config Exists
 try {

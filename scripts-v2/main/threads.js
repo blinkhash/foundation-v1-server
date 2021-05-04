@@ -24,7 +24,7 @@ const PoolThreads = function(logger, client, portalConfig) {
 
         // Handle Master Forks
         if (cluster.isMaster) {
-            const poolLoader = new PoolLoader(logger, _this.portalConfig)
+            const poolLoader = new PoolLoader(logger, _this.portalConfig);
             const poolBuilder = new PoolBuilder(logger, _this.portalConfig);
             poolBuilder.pools = poolLoader.buildPoolConfigs();
             poolBuilder.partners = poolLoader.buildPartnerConfigs();

@@ -23,7 +23,7 @@ const PoolLoader = function(logger, portalConfig) {
             return false;
         }
         return true;
-    }
+    };
 
     // Validate Pool Configs
     this.validatePoolConfigs = function(poolConfig) {
@@ -33,7 +33,7 @@ const PoolLoader = function(logger, portalConfig) {
             return false;
         }
         return true;
-    }
+    };
 
     // Check for Overlapping Pool Ports
     this.validatePoolPorts = function(poolConfigs, poolConfig) {
@@ -44,17 +44,17 @@ const PoolLoader = function(logger, portalConfig) {
             .flatMap(config => config.port);
         configPorts = configPorts.concat(currentPorts);
         if (new Set(configPorts).size !== configPorts.length) {
-            logger.error('Builder', 'Setup', `Overlapping port configuration. Check your configuration files`);
+            logger.error('Builder', 'Setup', 'Overlapping port configuration. Check your configuration files');
             return false;
         }
         return true;
-    }
+    };
 
     // Read and Format Partner Configs
     /* istanbul ignore next */
     this.buildPartnerConfigs = function() {
         const partnerConfigs = {};
-        const normalizedPath = path.join(__dirname, "../../configs/partners/");
+        const normalizedPath = path.join(__dirname, '../../configs/partners/');
         fs.readdirSync(normalizedPath).forEach(file => {
             if (!fs.existsSync(normalizedPath + file) || path.extname(normalizedPath + file) !== '.js') {
                 return;
@@ -70,12 +70,12 @@ const PoolLoader = function(logger, portalConfig) {
     /* istanbul ignore next */
     this.buildPoolConfigs = function() {
         const poolConfigs = {};
-        const normalizedPath = path.join(__dirname, "../../configs/pools/");
+        const normalizedPath = path.join(__dirname, '../../configs/pools/');
         fs.readdirSync(normalizedPath).forEach(file => {
             if (!fs.existsSync(normalizedPath + file) || path.extname(normalizedPath + file) !== '.js') {
                 return;
             }
-            let poolConfig = require(normalizedPath + file);
+            const poolConfig = require(normalizedPath + file);
             if (!_this.validatePoolConfigs(poolConfig)) return;
             if (!_this.validatePoolPorts(poolConfigs, poolConfig)) return;
             poolConfigs[poolConfig.coin.name] = poolConfig;

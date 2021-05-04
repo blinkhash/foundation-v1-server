@@ -4,7 +4,6 @@
  *
  */
 
-const redis = require('redis-mock');
 const PoolBuilder = require('../main/builder');
 const PoolLogger = require('../main/logger');
 const portalConfig = require('../../configs/main/example.js');

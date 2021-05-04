@@ -7,12 +7,11 @@
 const redis = require('redis-mock');
 const mock = require('./stratum.mock.js');
 const nock = require('nock');
-const utils = require('../main/utils');
 
 const PoolLogger = require('../main/logger');
 const PoolWorkers = require('../main/workers');
 
-let poolConfig = require('../../configs/pools/example.js');
+const poolConfig = require('../../configs/pools/example.js');
 const portalConfig = require('../../configs/main/example.js');
 
 poolConfig.address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
