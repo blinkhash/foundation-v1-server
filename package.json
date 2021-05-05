@@ -58,7 +58,6 @@
     "extend": "*",
     "forever": "^3.0.4",
     "mysql": "*",
-    "node-json-minify": "*",
     "node-watch": "0.5.9",
     "nodemon": "*",
     "nonce": "*",

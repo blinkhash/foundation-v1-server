@@ -40,8 +40,7 @@ const PoolLogger = function (portalConfig) {
             }
             logString += text.grey;
             console.log(logString);
-        }
-        else {
+        } else {
             let logString = `${ entryDesc }[${ component }] `;
             if (subcat) {
                 logString += `(${ subcat }) `;

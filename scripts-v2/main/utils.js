@@ -8,9 +8,6 @@ const os = require('os');
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Override JSON Minify Functionality
-JSON.minify = JSON.minify || require('node-json-minify');
-
 // Check to see if Solo Mining
 exports.checkSoloMining = function(poolConfig, data) {
     let isSoloMining = false;
@@ -26,11 +23,9 @@ exports.checkSoloMining = function(poolConfig, data) {
 exports.countProcessForks = function(portalConfig) {
     if (!portalConfig.clustering || !portalConfig.clustering.enabled) {
         return 1;
-    }
-    else if (portalConfig.clustering.forks === 'auto') {
+    } else if (portalConfig.clustering.forks === 'auto') {
         return os.cpus().length;
-    }
-    else if (!portalConfig.clustering.forks || isNaN(portalConfig.clustering.forks)) {
+    } else if (!portalConfig.clustering.forks || isNaN(portalConfig.clustering.forks)) {
         return 1;
     }
     return portalConfig.clustering.forks;

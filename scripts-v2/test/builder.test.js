@@ -13,8 +13,12 @@ const logger = new PoolLogger(portalConfig);
 
 describe('Test builder functionality', () => {
 
+    let configCopy;
+    beforeEach(() => {
+        configCopy = Object.assign({}, portalConfig);
+    });
+
     test('Test initialization of builder', () => {
-        const configCopy = Object.assign({}, portalConfig);
         const poolBuilder = new PoolBuilder(logger, configCopy);
         expect(typeof poolBuilder.portalConfig).toBe('object');
         expect(typeof poolBuilder.createPoolWorker).toBe('function');

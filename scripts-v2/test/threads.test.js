@@ -21,8 +21,12 @@ const logger = new PoolLogger(portalConfig);
 
 describe('Test threads functionality', () => {
 
+    let configCopy;
+    beforeEach(() => {
+        configCopy = Object.assign({}, portalConfig);
+    });
+
     test('Test initialization of threads', () => {
-        const configCopy = Object.assign({}, portalConfig);
         const poolThreads = new PoolThreads(logger, client, configCopy);
         expect(typeof poolThreads.client).toBe('object');
         expect(typeof poolThreads.setupThreads).toBe('function');

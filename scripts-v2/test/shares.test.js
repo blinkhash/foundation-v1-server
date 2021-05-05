@@ -19,18 +19,26 @@ const logger = new PoolLogger(portalConfig);
 
 describe('Test shares functionality', () => {
 
-    let client;
+    let client, configCopy;
     beforeEach(() => {
         client = redis.createClient({
             'port': portalConfig.redis.port,
             'host': portalConfig.redis.host,
         });
         client._redisMock._maxListeners = 0;
+        configCopy = Object.assign({}, portalConfig);
+    });
+
+    test('Test initialization of shares', () => {
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
+        expect(typeof poolShares.poolConfig).toBe('object');
+        expect(typeof poolShares.buildBlocksCommands).toBe('function');
+        expect(typeof poolShares.buildSharesCommands).toBe('function');
     });
 
     test('Test redis client error handling', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         poolShares.client.emit('error', 'example error');
         expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Redis client had an error'));
         console.log.mockClear();
@@ -38,7 +46,7 @@ describe('Test shares functionality', () => {
 
     test('Test redis client ending handling', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         poolShares.client.emit('end');
         expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Connection to redis database has been ended'));
         console.log.mockClear();
@@ -46,7 +54,7 @@ describe('Test shares functionality', () => {
 
     test('Test timing command handling [1]', () => {
         const dateNow = Date.now();
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         const results = [{ 'example': dateNow - 300000 }];
         const shareData = {
             'job': '4',
@@ -75,7 +83,7 @@ describe('Test shares functionality', () => {
 
     test('Test timing command handling [2]', () => {
         const dateNow = Date.now();
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         const results = [];
         const shareData = {
             'job': '4',
@@ -104,7 +112,7 @@ describe('Test shares functionality', () => {
 
     test('Test timing command handling [3]', () => {
         const dateNow = Date.now();
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         const results = [{ 'example': dateNow - 1000000 }];
         const shareData = {
             'job': '4',
@@ -129,7 +137,7 @@ describe('Test shares functionality', () => {
 
     test('Test timing command handling [4]', () => {
         const dateNow = Date.now();
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         const results = [{ 'example': dateNow - 300000 }];
         const shareData = {
             'job': '4',
@@ -154,7 +162,7 @@ describe('Test shares functionality', () => {
 
     test('Test share command handling [1]', () => {
         const dateNow = Date.now();
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         const results = [{ 'example': dateNow - 300000 }];
         const shareData = {
             'job': '4',
@@ -187,7 +195,7 @@ describe('Test shares functionality', () => {
 
     test('Test share command handling [2]', () => {
         const dateNow = Date.now();
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         const results = [{ 'example': dateNow - 300000 }];
         const shareData = {
             'job': '4',
@@ -213,7 +221,7 @@ describe('Test shares functionality', () => {
     });
 
     test('Test block command handling [1]', () => {
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         const shareData = {
             'job': '4',
             'ip': '::1',
@@ -248,7 +256,7 @@ describe('Test shares functionality', () => {
     });
 
     test('Test block command handling [2]', () => {
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         const shareData = {
             'job': '4',
             'ip': '::1',
@@ -270,7 +278,7 @@ describe('Test shares functionality', () => {
     });
 
     test('Test block command handling [3]', () => {
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         const shareData = {
             'job': '4',
             'ip': '::1',
@@ -290,7 +298,7 @@ describe('Test shares functionality', () => {
     });
 
     test('Test block command handling [4]', () => {
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         const shareData = {
             'job': '4',
             'ip': '::1',
@@ -311,7 +319,7 @@ describe('Test shares functionality', () => {
 
     test('Test command handling and execution', (done) => {
         const dateNow = Date.now();
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         const results = [{ 'example': dateNow - 300000 }];
         const shareData = {
             'job': '4',
@@ -333,7 +341,9 @@ describe('Test shares functionality', () => {
             ['hincrby', 'Bitcoin:rounds:current:shares:values', 'example', 1],
             ['hincrby', 'Bitcoin:rounds:current:shares:counts', 'validShares', 1],
             ['zadd', 'Bitcoin:rounds:current:shares:records']];
-        const commands = poolShares.buildCommands(results, shareData, true, false, () => {return done();});
+        const commands = poolShares.buildCommands(results, shareData, true, false, () => {
+            return done();
+        });
         expect(commands.length).toBe(5);
         expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
         expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
@@ -344,7 +354,7 @@ describe('Test shares functionality', () => {
 
     test('Test command execution w/ errors', (done) => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         const commands = [['rename', 'Bitcoin:example1', 'Bitcoin:example2']];
         poolShares.executeCommands(commands, () => {}, () => {
             expect(consoleSpy).toHaveBeenCalled();
@@ -355,7 +365,7 @@ describe('Test shares functionality', () => {
 
     test('Test command execution on shares handler start', (done) => {
         const dateNow = Date.now();
-        const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+        const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
         const commands = [['hset', 'Bitcoin:rounds:current:times:last', 'example', dateNow - 300000]];
         const shareData = {
             'job': '4',
@@ -381,8 +391,7 @@ describe('Test shares functionality', () => {
                     expect(results[4]).toBe(1);
                     done();
                 }, () => {});
-            }
-            else {
+            } else {
                 // Indicates Error thrown in Redis Client
                 expect(true).toBe(false);
                 done();

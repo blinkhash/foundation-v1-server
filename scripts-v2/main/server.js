@@ -40,14 +40,14 @@ const PoolServer = function (logger) {
 
         // Handle API Requests
         /* istanbul ignore next */
-        app.get('/api/v1/:method', function(req, res, next) {
+        app.get('/api/v1/:method', (req, res, next) => {
             console.log(req, res, next);
         });
 
         // Handle Error Responses
         /* istanbul ignore next */
         /* eslint-disable-next-line no-unused-vars */
-        app.use(function(err, req, res, next) {
+        app.use((err, req, res, next) => {
             console.error(err.stack);
             res.send(500, 'Something broke!');
         });
@@ -59,7 +59,7 @@ const PoolServer = function (logger) {
     // Start Worker Capabilities
     this.setupServer = function(callback) {
         _this.buildServer();
-        _this.server.listen(_this.portalConfig.server.port, _this.portalConfig.server.host, function() {
+        _this.server.listen(_this.portalConfig.server.port, _this.portalConfig.server.host, () => {
             logger.debug(logSystem, logComponent, logSubCat,
                 `Website started on ${ _this.portalConfig.server.host }:${ _this.portalConfig.server.port}`);
             callback();

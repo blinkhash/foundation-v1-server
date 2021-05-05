@@ -27,7 +27,7 @@ const PoolLoader = function(logger, portalConfig) {
 
     // Validate Pool Configs
     this.validatePoolConfigs = function(poolConfig) {
-        if (!poolConfig.enabled) return;
+        if (!poolConfig.enabled) return false;
         if (!(poolConfig.coin.algorithm in Algorithms)) {
             logger.error('Builder', poolConfig.coin.name, `Cannot run a pool for unsupported algorithm "${ poolConfig.coin.algorithm }"`);
             return false;
@@ -39,6 +39,7 @@ const PoolLoader = function(logger, portalConfig) {
     this.validatePoolPorts = function(poolConfigs, poolConfig) {
         const currentPorts = poolConfig.ports.flatMap(config => config.port);
         let configPorts = Object.values(poolConfigs)
+            .filter(config => config.enabled)
             .flatMap(config => config.ports)
             .filter(config => config.enabled)
             .flatMap(config => config.port);

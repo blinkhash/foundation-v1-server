@@ -22,8 +22,7 @@ const PoolDatabase = function(logger, portalConfig) {
                 host: _this.portalConfig.redis.host,
                 password: _this.portalConfig.redis.password
             });
-        }
-        else {
+        } else {
             return redis.createClient({
                 port: _this.portalConfig.redis.port,
                 host: _this.portalConfig.redis.host,

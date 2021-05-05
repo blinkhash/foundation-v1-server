@@ -17,8 +17,12 @@ const logSubCat = 'Thread 1';
 
 describe('Test logger functionality', () => {
 
+    let configCopy;
+    beforeEach(() => {
+        configCopy = Object.assign({}, portalConfig);
+    });
+
     test('Test initialization of logger', () => {
-        const configCopy = Object.assign({}, portalConfig);
         const logger = new PoolLogger(configCopy);
         expect(typeof logger).toBe('object');
         expect(typeof logger.logText).toBe('function');
@@ -27,7 +31,6 @@ describe('Test logger functionality', () => {
 
     test('Test logger events [1]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const configCopy = Object.assign({}, portalConfig);
         const logger = new PoolLogger(configCopy);
         logger.debug(logSystem, logComponent, logSubCat, 'Example Text');
         expect(consoleSpy).toHaveBeenCalled();
@@ -36,7 +39,6 @@ describe('Test logger functionality', () => {
 
     test('Test logger events [2]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const configCopy = Object.assign({}, portalConfig);
         const logger = new PoolLogger(configCopy);
         logger.warning(logSystem, logComponent, logSubCat, 'Example Text');
         expect(consoleSpy).toHaveBeenCalled();
@@ -45,7 +47,6 @@ describe('Test logger functionality', () => {
 
     test('Test logger events [3]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const configCopy = Object.assign({}, portalConfig);
         const logger = new PoolLogger(configCopy);
         logger.error(logSystem, logComponent, logSubCat, 'Example Text');
         expect(consoleSpy).toHaveBeenCalled();
@@ -54,7 +55,6 @@ describe('Test logger functionality', () => {
 
     test('Test logger events [4]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const configCopy = Object.assign({}, portalConfig);
         const logger = new PoolLogger(configCopy);
         logger.special(logSystem, logComponent, logSubCat, 'Example Text');
         expect(consoleSpy).toHaveBeenCalled();
@@ -63,7 +63,6 @@ describe('Test logger functionality', () => {
 
     test('Test logger events [5]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const configCopy = Object.assign({}, portalConfig);
         configCopy.logger = Object.assign({}, portalConfig.logger);
         configCopy.logger.logColors = false;
         const logger = new PoolLogger(configCopy);
@@ -74,7 +73,6 @@ describe('Test logger functionality', () => {
 
     test('Test logger events [6]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const configCopy = Object.assign({}, portalConfig);
         configCopy.logger = Object.assign({}, portalConfig.logger);
         configCopy.logger.logLevel = 'error';
         const logger = new PoolLogger(configCopy);
@@ -85,7 +83,6 @@ describe('Test logger functionality', () => {
 
     test('Test logger events [7]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const configCopy = Object.assign({}, portalConfig);
         const logger = new PoolLogger(configCopy);
         logger.debug(logSystem, logComponent, 'Example Text');
         expect(consoleSpy).toHaveBeenCalled();
@@ -94,7 +91,6 @@ describe('Test logger functionality', () => {
 
     test('Test logger events [8]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const configCopy = Object.assign({}, portalConfig);
         configCopy.logger = Object.assign({}, portalConfig.logger);
         configCopy.logger.logColors = false;
         const logger = new PoolLogger(configCopy);

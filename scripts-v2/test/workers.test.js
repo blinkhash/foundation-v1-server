@@ -35,6 +35,13 @@ const logger = new PoolLogger(portalConfig);
 
 describe('Test workers functionality', () => {
 
+    test('Test initialization of workers', () => {
+        const poolWorkers = new PoolWorkers(logger, client);
+        expect(typeof poolWorkers.portalConfig).toBe('object');
+        expect(typeof poolWorkers.createPromises).toBe('function');
+        expect(typeof poolWorkers.setupWorkers).toBe('function');
+    });
+
     test('Test worker stratum creation [1]', (done) => {
         mock.mockDaemon();
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});

@@ -18,8 +18,7 @@ const normalizedPath = path.join(__dirname, '../configs/main/example.js');
 // Check to Ensure Config Exists
 try {
     config = require(normalizedPath);
-}
-catch(e) {
+} catch(e) {
     throw new Error('Unable to find config.js file. Read the installation/setup instructions.');
 }
 

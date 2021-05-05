@@ -16,8 +16,12 @@ jest.mock('redis', () => require('redis-mock'));
 
 describe('Test database functionality', () => {
 
+    let configCopy;
+    beforeEach(() => {
+        configCopy = Object.assign({}, portalConfig);
+    });
+
     test('Test initialization of database', () => {
-        const configCopy = Object.assign({}, portalConfig);
         const database = new PoolDatabase(logger, configCopy);
         expect(typeof database).toBe('object');
         expect(typeof database.buildRedisClient).toBe('function');
@@ -25,7 +29,6 @@ describe('Test database functionality', () => {
     });
 
     test('Test database events [1]', () => {
-        const configCopy = Object.assign({}, portalConfig);
         const database = new PoolDatabase(logger, configCopy);
         const client = database.buildRedisClient();
         expect(typeof client).toBe('object');
@@ -34,7 +37,6 @@ describe('Test database functionality', () => {
     });
 
     test('Test database events [2]', () => {
-        const configCopy = Object.assign({}, portalConfig);
         configCopy.redis = Object.assign({}, portalConfig.redis);
         configCopy.redis.password = 'example';
         const database = new PoolDatabase(logger, configCopy);
@@ -46,7 +48,6 @@ describe('Test database functionality', () => {
 
     test('Test database events [3]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const configCopy = Object.assign({}, portalConfig);
         const database = new PoolDatabase(logger, configCopy);
         const client = database.buildRedisClient();
         client.info = (callback) => callback(null, 'redis_version:9.0.0');
@@ -56,7 +57,6 @@ describe('Test database functionality', () => {
 
     test('Test database events [4]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const configCopy = Object.assign({}, portalConfig);
         const database = new PoolDatabase(logger, configCopy);
         const client = database.buildRedisClient();
         client.info = (callback) => callback(null, 'redis_version:1.0.0');
@@ -66,7 +66,6 @@ describe('Test database functionality', () => {
 
     test('Test database events [5]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const configCopy = Object.assign({}, portalConfig);
         const database = new PoolDatabase(logger, configCopy);
         const client = database.buildRedisClient();
         client.info = (callback) => callback(null, 'example:9.0.0');
@@ -76,7 +75,6 @@ describe('Test database functionality', () => {
 
     test('Test database events [6]', () => {
         const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const configCopy = Object.assign({}, portalConfig);
         const database = new PoolDatabase(logger, configCopy);
         const client = database.buildRedisClient();
         client.info = (callback) => callback(true, 'redis_version:9.0.0');
