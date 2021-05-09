@@ -15,6 +15,27 @@ const PoolBuilder = function(logger, portalConfig) {
     const _this = this;
     this.portalConfig = portalConfig;
 
+    // Handle Pool Server Creation
+    /* istanbul ignore next */
+    this.setupPoolServer = function() {
+
+        // Establish Pool Server
+        const worker = cluster.fork({
+            workerType: 'server',
+            partnerConfigs: JSON.stringify(_this.partnerConfigs),
+            poolConfigs: JSON.stringify(_this.poolConfigs),
+            portalConfig: JSON.stringify(_this.portalConfig)
+        });
+
+        // Establish Worker Exit
+        worker.on('exit', function(code, signal) {
+            logger.error('Master', 'Server', 'Server process died, starting replacement...');
+            setTimeout(() => {
+                _this.startPoolServer();
+            }, 2000);
+        });
+    };
+
     // Handle Pool Worker Creation
     /* istanbul ignore next */
     this.createPoolWorker = function(poolWorkers, forkId) {
@@ -22,7 +43,7 @@ const PoolBuilder = function(logger, portalConfig) {
         // Build Worker from Data
         const worker = cluster.fork({
             workerType: 'worker',
-            poolConfigs: JSON.stringify(_this.pools),
+            poolConfigs: JSON.stringify(_this.poolConfigs),
             portalConfig: JSON.stringify(_this.portalConfig),
             forkId: forkId,
         });
@@ -46,6 +67,7 @@ const PoolBuilder = function(logger, portalConfig) {
             }
         });
 
+        // Establish Worker Exit
         worker.on('exit', () => {
             logger.error('Builder', 'Workers', `Fork ${ forkId } died, starting replacement worker...`);
             setTimeout(() => {
@@ -62,17 +84,17 @@ const PoolBuilder = function(logger, portalConfig) {
         let numWorkers = 0;
 
         // Check if No Configurations Exist
-        if (Object.keys(_this.pools).length === 0) {
+        if (Object.keys(_this.poolConfigs).length === 0) {
             logger.warning('Builder', 'Workers', 'No pool configs exists or are enabled in configs folder. No pools started.');
             return;
         }
 
         // Check if Daemons Configured
-        Object.keys(_this.pools).forEach(config => {
-            const pool = _this.pools[config];
+        Object.keys(_this.poolConfigs).forEach(config => {
+            const pool = _this.poolConfigs[config];
             if (!Array.isArray(pool.daemons) || pool.daemons.length < 1) {
                 logger.error('Builder', config, 'No daemons configured so a pool cannot be started for this coin.');
-                delete _this.pools[config];
+                delete _this.poolConfigs[config];
             }
         });
 
@@ -83,7 +105,7 @@ const PoolBuilder = function(logger, portalConfig) {
             numWorkers += 1;
             if (numWorkers === numForks) {
                 clearInterval(startInterval);
-                logger.debug('Builder', 'Workers', `Started ${ Object.keys(_this.pools).length } pool(s) on ${ numForks } thread(s)`);
+                logger.debug('Builder', 'Workers', `Started ${ Object.keys(_this.poolConfigs).length } pool(s) on ${ numForks } thread(s)`);
             }
         }, 250);
     };

@@ -14,9 +14,10 @@ const http = require('http');
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Server Function
-const PoolServer = function (logger) {
+const PoolServer = function (logger, client) {
 
     const _this = this;
+    this.client = client;
     this.partnerConfigs = JSON.parse(process.env.partnerConfigs);
     this.poolConfigs = JSON.parse(process.env.poolConfigs);
     this.portalConfig = JSON.parse(process.env.portalConfig);
@@ -26,8 +27,7 @@ const PoolServer = function (logger) {
     const logComponent = 'Website';
     const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
 
-    // const portalApi = new PoolAPI(logger, partnerConfigs, poolConfigs, portalConfig);
-
+    // Build Server w/ Middleware
     this.buildServer = function() {
 
         // Build Main Server
