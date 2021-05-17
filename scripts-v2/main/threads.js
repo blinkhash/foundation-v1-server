@@ -7,6 +7,7 @@
 const cluster = require('cluster');
 const PoolBuilder = require('./builder');
 const PoolLoader = require('./loader');
+const PoolPayments = require('./payments');
 const PoolServer = require('./server');
 const PoolWorkers = require('./workers');
 
@@ -29,13 +30,17 @@ const PoolThreads = function(logger, client, portalConfig) {
             const poolBuilder = new PoolBuilder(logger, _this.portalConfig);
             poolBuilder.partnerConfigs = poolLoader.buildPartnerConfigs();
             poolBuilder.poolConfigs = poolLoader.buildPoolConfigs();
-            poolBuilder.setupPoolWorkers();
+            poolBuilder.setupPoolPayments();
             poolBuilder.setupPoolServer();
+            poolBuilder.setupPoolWorkers();
         }
 
         // Handle Worker Forks
         if (cluster.isWorker) {
             switch (process.env.workerType) {
+            case 'payments':
+                new PoolPayments(logger, _this.client).setupPayments(() => {});
+                break;
             case 'server':
                 new PoolServer(logger, _this.client).setupServer(() => {});
                 break;

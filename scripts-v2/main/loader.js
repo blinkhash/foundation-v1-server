@@ -35,6 +35,17 @@ const PoolLoader = function(logger, portalConfig) {
         return true;
     };
 
+    // Check for Overlapping Pool Names
+    this.validatePoolNames = function(poolConfigs, poolConfig) {
+        let configNames = Object.keys(poolConfigs);
+        configNames = configNames.concat(poolConfig.coin.name);
+        if (new Set(configNames).size !== configNames.length) {
+            logger.error('Builder', 'Setup', 'Overlapping coin names. Check your configuration files');
+            return false;
+        }
+        return true
+    }
+
     // Check for Overlapping Pool Ports
     this.validatePoolPorts = function(poolConfigs, poolConfig) {
         const currentPorts = poolConfig.ports.flatMap(config => config.port);
@@ -78,6 +89,7 @@ const PoolLoader = function(logger, portalConfig) {
             }
             const poolConfig = require(normalizedPath + file);
             if (!_this.validatePoolConfigs(poolConfig)) return;
+            if (!_this.validatePoolNames(poolConfigs, poolConfig)) return;
             if (!_this.validatePoolPorts(poolConfigs, poolConfig)) return;
             poolConfigs[poolConfig.coin.name] = poolConfig;
         });

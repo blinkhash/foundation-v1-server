@@ -15,6 +15,36 @@ const PoolBuilder = function(logger, portalConfig) {
     const _this = this;
     this.portalConfig = portalConfig;
 
+    // Handle Pool Payments Creation
+    /* istanbul ignore next */
+    this.setupPoolPayments = function() {
+
+        // Check if Any Pool Enabled Payments
+        let enabled = false;
+        Object.keys(_this.poolConfigs).forEach(coin => {
+            const poolConfig = _this.poolConfigs[coin];
+            if (poolConfig.enabled && poolConfig.payments && poolConfig.payments.enabled) {
+                enabled = true;
+            };
+        });
+
+        // Establish Pool Payments
+        if (!enabled) return;
+        const worker = cluster.fork({
+            workerType: 'payments',
+            poolConfigs: JSON.stringify(_this.poolConfigs),
+            portalConfig: JSON.stringify(_this.portalConfig)
+        });
+
+        // Establish Worker Exit
+        worker.on('exit', function(code, signal) {
+            logger.error('Master', 'Payments', 'Payment process died, starting replacement...');
+            setTimeout(() => {
+                _this.setupPoolPayments();
+            }, 2000);
+        });
+    }
+
     // Handle Pool Server Creation
     /* istanbul ignore next */
     this.setupPoolServer = function() {
@@ -31,7 +61,7 @@ const PoolBuilder = function(logger, portalConfig) {
         worker.on('exit', function(code, signal) {
             logger.error('Master', 'Server', 'Server process died, starting replacement...');
             setTimeout(() => {
-                _this.startPoolServer();
+                _this.setupPoolServer();
             }, 2000);
         });
     };
@@ -83,7 +113,7 @@ const PoolBuilder = function(logger, portalConfig) {
         const poolWorkers = {};
         let numWorkers = 0;
 
-        // Check if No Configurations Exist
+        // Check if No Configs Exist
         if (Object.keys(_this.poolConfigs).length === 0) {
             logger.warning('Builder', 'Workers', 'No pool configs exists or are enabled in configs folder. No pools started.');
             return;

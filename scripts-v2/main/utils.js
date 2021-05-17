@@ -19,6 +19,26 @@ exports.checkSoloMining = function(poolConfig, data) {
     return isSoloMining;
 };
 
+// Round Coins to Nearest Value
+exports.coinsRound = function(number, precision) {
+    return exports.roundTo(number, precision);
+}
+
+// Convert Coins to Satoshis
+exports.coinsToSatoshis = function(coins, magnitude) {
+    return Math.round(coins * magnitude);
+};
+
+// Count Occurences of Value in Array
+exports.countOccurences = function(array, value) {
+    let count = 0;
+    for (let i = 0; i < array.length; i++) {
+        if (array[i] === value)
+            count += 1;
+    }
+    return count;
+}
+
 // Count Number of Process Forks
 exports.countProcessForks = function(portalConfig) {
     if (!portalConfig.clustering || !portalConfig.clustering.enabled) {
@@ -29,6 +49,11 @@ exports.countProcessForks = function(portalConfig) {
         return 1;
     }
     return portalConfig.clustering.forks;
+};
+
+// Convert Satoshis to Coins
+exports.satoshisToCoins = function(satoshis, magnitude, precision) {
+    return exports.roundTo((satoshis / magnitude), precision);
 };
 
 // Severity Mapping Values
@@ -62,6 +87,6 @@ exports.roundTo = function(n, digits) {
     }
     const multiplicator = Math.pow(10, digits);
     n = parseFloat((n * multiplicator).toFixed(11));
-    const test =(Math.round(n) / multiplicator);
+    const test = Math.round(n) / multiplicator;
     return +(test.toFixed(digits));
 };

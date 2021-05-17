@@ -63,6 +63,22 @@ describe('Test loader functionality', () => {
         expect(response).toBe(false);
     });
 
+    test('Test pool name validation [1]', () => {
+        const poolLoader = new PoolLoader(logger, configCopy);
+        const poolConfig = { enabled: true, coin: { name: "Litecoin" }};
+        const poolConfigs = { Bitcoin: { enabled: true, coin: { name: "Bitcoin" }}};
+        const response = poolLoader.validatePoolNames(poolConfigs, poolConfig);
+        expect(response).toBe(true);
+    });
+
+    test('Test pool name validation [2]', () => {
+        const poolLoader = new PoolLoader(logger, configCopy);
+        const poolConfig = { enabled: true, coin: { name: "Bitcoin" }};
+        const poolConfigs = { Bitcoin: { enabled: true, coin: { name: "Bitcoin" }}};
+        const response = poolLoader.validatePoolNames(poolConfigs, poolConfig);
+        expect(response).toBe(false);
+    });
+
     test('Test pool port validation [1]', () => {
         const poolLoader = new PoolLoader(logger, configCopy);
         const poolConfig = { enabled: true, ports: [{ enabled: true, port: 3001 }]};

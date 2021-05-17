@@ -21,7 +21,6 @@ const PoolServer = function (logger, client) {
     this.partnerConfigs = JSON.parse(process.env.partnerConfigs);
     this.poolConfigs = JSON.parse(process.env.poolConfigs);
     this.portalConfig = JSON.parse(process.env.portalConfig);
-    this.forkId = process.env.forkId;
 
     const logSystem = 'Server';
     const logComponent = 'Website';
@@ -60,7 +59,7 @@ const PoolServer = function (logger, client) {
     this.setupServer = function(callback) {
         _this.buildServer();
         _this.server.listen(_this.portalConfig.server.port, _this.portalConfig.server.host, () => {
-            logger.debug(logSystem, logComponent, logSubCat,
+            logger.debug(logSystem, logComponent,
                 `Website started on ${ _this.portalConfig.server.host }:${ _this.portalConfig.server.port}`);
             callback();
         });

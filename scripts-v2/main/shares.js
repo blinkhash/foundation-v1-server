@@ -78,9 +78,9 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
         // Handle Valid/Invalid Shares
         if (shareValid) {
             commands = commands.concat(_this.buildTimesCommands(results, shareData, blockValid));
-            commands.push(['hincrby', `${ _this.coin }:rounds:current:shares:values`, workerAddress, shareData.difficulty]);
             commands.push(['hincrby', `${ _this.coin }:rounds:current:shares:counts`, 'validShares', 1]);
             outputShare.difficulty = shareData.difficulty;
+            commands.push(['hincrby', `${ _this.coin }:rounds:current:shares:values`, JSON.stringify(outputShare), shareData.difficulty]);
             commands.push(['zadd', `${ _this.coin }:rounds:current:shares:records`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
         } else {
             commands.push(['hincrby', `${ _this.coin }:rounds:current:shares:counts`, 'invalidShares', 1]);

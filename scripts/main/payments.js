@@ -50,10 +50,6 @@ function SetupForPool(logger, poolOptions, portalConfig, setupFinished) {
     var logSystem = 'Payments';
     var logComponent = coin;
 
-    // Optional Payment Variables
-    var opidCount = 0;
-    var opids = []
-
     // Mandatory Payment Variables
     var fee = parseFloat(poolOptions.coin.txfee) || parseFloat(0.0004);
     var minConfPayout = Math.max((processingConfig.minConf || 10), 1);
