@@ -31,8 +31,8 @@
   "scripts": {
     "start": "nodemon scripts/main.js",
     "start-v2": "nodemon scripts-v2/main.js",
-    "clean": "eslint . --ext .js --ignore-pattern node_modules/",
-    "clean:fix": "eslint . --ext .js --fix --ignore-pattern node_modules/",
+    "clean": "eslint scripts-v2 --ext .js --ignore-pattern node_modules/",
+    "clean:fix": "eslint scripts-v2 --ext .js --fix --ignore-pattern node_modules/",
     "test": "jest --coverage",
     "prod:start": "forever start -l blinkhash-log.txt --append scripts/init.js",
     "prod:stop": "forever stop scripts/init.js"

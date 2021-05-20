@@ -19,8 +19,8 @@ poolConfig.recipients[0].address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
 poolConfig.p2p.enabled = false;
 
 const client = redis.createClient({
-    'port': portalConfig.redis.port,
-    'host': portalConfig.redis.host,
+  'port': portalConfig.redis.port,
+  'host': portalConfig.redis.host,
 });
 client._redisMock._maxListeners = 0;
 
@@ -35,39 +35,39 @@ const logger = new PoolLogger(portalConfig);
 
 describe('Test workers functionality', () => {
 
-    test('Test initialization of workers', () => {
-        const poolWorkers = new PoolWorkers(logger, client);
-        expect(typeof poolWorkers.portalConfig).toBe('object');
-        expect(typeof poolWorkers.createPromises).toBe('function');
-        expect(typeof poolWorkers.setupWorkers).toBe('function');
-    });
+  test('Test initialization of workers', () => {
+    const poolWorkers = new PoolWorkers(logger, client);
+    expect(typeof poolWorkers.portalConfig).toBe('object');
+    expect(typeof poolWorkers.createPromises).toBe('function');
+    expect(typeof poolWorkers.setupWorkers).toBe('function');
+  });
 
-    test('Test worker stratum creation [1]', (done) => {
-        mock.mockDaemon();
-        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const poolWorkers = new PoolWorkers(logger, client);
-        poolWorkers.setupWorkers(() => {
-            expect(consoleSpy).toHaveBeenCalled();
-            expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('p2p has been disabled in the configuration'));
-            expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Stratum pool server started for Bitcoin'));
-            const poolStratum = poolWorkers.pools.Bitcoin;
-            poolStratum.poolStratum.stratum.stopServer();
-            console.log.mockClear();
-            nock.cleanAll();
-            done();
-        });
+  test('Test worker stratum creation [1]', (done) => {
+    mock.mockDaemon();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolWorkers = new PoolWorkers(logger, client);
+    poolWorkers.setupWorkers(() => {
+      expect(consoleSpy).toHaveBeenCalled();
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('p2p has been disabled in the configuration'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Stratum pool server started for Bitcoin'));
+      const poolStratum = poolWorkers.pools.Bitcoin;
+      poolStratum.poolStratum.stratum.stopServer();
+      console.log.mockClear();
+      nock.cleanAll();
+      done();
     });
+  });
 
-    test('Test worker stratum creation [2]', (done) => {
-        mock.mockGetInitialBatch();
-        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const poolWorkers = new PoolWorkers(logger, client);
-        poolWorkers.setupWorkers(() => {
-            expect(consoleSpy).toHaveBeenCalled();
-            expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Failed to connect daemon'));
-            console.log.mockClear();
-            nock.cleanAll();
-            done();
-        });
+  test('Test worker stratum creation [2]', (done) => {
+    mock.mockGetInitialBatch();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolWorkers = new PoolWorkers(logger, client);
+    poolWorkers.setupWorkers(() => {
+      expect(consoleSpy).toHaveBeenCalled();
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Failed to connect daemon'));
+      console.log.mockClear();
+      nock.cleanAll();
+      done();
     });
+  });
 });

@@ -17,9 +17,9 @@ const normalizedPath = path.join(__dirname, '../configs/main/example.js');
 
 // Check to Ensure Config Exists
 try {
-    config = require(normalizedPath);
+  config = require(normalizedPath);
 } catch(e) {
-    throw new Error('Unable to find config.js file. Read the installation/setup instructions.');
+  throw new Error('Unable to find config.js file. Read the installation/setup instructions.');
 }
 
 const logger = new PoolLogger(config);
@@ -28,7 +28,7 @@ const client = database.buildRedisClient();
 
 // Check for Redis Connection Errors
 client.on('error', () => {
-    throw new Error('Unable to establish database connection. Ensure Redis is setup properly and listening.');
+  throw new Error('Unable to establish database connection. Ensure Redis is setup properly and listening.');
 });
 
 // Start Pool Server

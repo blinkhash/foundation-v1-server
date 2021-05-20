@@ -21,24 +21,24 @@ jest.mock('redis', () => require('redis-mock'));
 
 describe('Test server functionality', () => {
 
-    let poolServer;
-    beforeAll((done) => {
-        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        poolServer = new PoolServer(logger);
-        poolServer.setupServer(() => {
-            expect(consoleSpy).toHaveBeenCalled();
-            console.log.mockClear();
-            done();
-        });
+  let poolServer;
+  beforeAll((done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    poolServer = new PoolServer(logger);
+    poolServer.setupServer(() => {
+      expect(consoleSpy).toHaveBeenCalled();
+      console.log.mockClear();
+      done();
     });
+  });
 
-    afterAll((done) => {
-        poolServer.server.close(() => done());
-    });
+  afterAll((done) => {
+    poolServer.server.close(() => done());
+  });
 
-    test('Test initialization of server', () => {
-        expect(typeof poolServer).toBe('object');
-        expect(typeof poolServer.server).toBe('object');
-        expect(poolServer.server._connections).toBe(0);
-    });
+  test('Test initialization of server', () => {
+    expect(typeof poolServer).toBe('object');
+    expect(typeof poolServer.server).toBe('object');
+    expect(poolServer.server._connections).toBe(0);
+  });
 });

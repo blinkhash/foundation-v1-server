@@ -13,15 +13,15 @@ const logger = new PoolLogger(portalConfig);
 
 describe('Test builder functionality', () => {
 
-    let configCopy;
-    beforeEach(() => {
-        configCopy = Object.assign({}, portalConfig);
-    });
+  let configCopy;
+  beforeEach(() => {
+    configCopy = Object.assign({}, portalConfig);
+  });
 
-    test('Test initialization of builder', () => {
-        const poolBuilder = new PoolBuilder(logger, configCopy);
-        expect(typeof poolBuilder.portalConfig).toBe('object');
-        expect(typeof poolBuilder.createPoolWorker).toBe('function');
-        expect(typeof poolBuilder.setupPoolWorkers).toBe('function');
-    });
+  test('Test initialization of builder', () => {
+    const poolBuilder = new PoolBuilder(logger, configCopy);
+    expect(typeof poolBuilder.portalConfig).toBe('object');
+    expect(typeof poolBuilder.createPoolWorker).toBe('function');
+    expect(typeof poolBuilder.setupPoolWorkers).toBe('function');
+  });
 });
