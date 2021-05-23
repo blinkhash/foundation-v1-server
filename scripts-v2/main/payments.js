@@ -35,9 +35,9 @@ const PoolPayments = function (logger, client) {
     let shareFlag = true;
     rounds.forEach((cRound) => {
       if ((cRound.height === round.height) &&
-                (cRound.category !== 'kicked') &&
-                (cRound.category !== 'orphan') &&
-                (cRound.serialized !== round.serialized)) {
+          (cRound.category !== 'kicked') &&
+          (cRound.category !== 'orphan') &&
+          (cRound.serialized !== round.serialized)) {
         shareFlag = false;
       }
     });
@@ -66,11 +66,11 @@ const PoolPayments = function (logger, client) {
             logger.error('Payments', coin, `Error with payment processing daemon: ${ message }`);
             callback(true, []);
           } else {
-            callback(false, []);
+            callback(null, []);
           }
         });
       } else {
-        callback(false, []);
+        callback(null, []);
       }
     });
   };
@@ -80,7 +80,7 @@ const PoolPayments = function (logger, client) {
     const processingConfig = config.payments;
     daemon.cmd('getbalance', [], (result) => {
       if (result.error) {
-        logger.error('Payments', coin, `Error with payment processing daemon ${ JSON.stringify(result.error) }`);
+        logger.error('Payments', coin, `Error with payment processing daemon: ${ JSON.stringify(result.error) }`);
         callback(true, []);
         return;
       }
@@ -89,16 +89,71 @@ const PoolPayments = function (logger, client) {
         const magnitude = parseInt(`10${ new Array(data.length).join('0') }`);
         const minSatoshis = parseInt(processingConfig.minPayment * magnitude);
         const coinPrecision = magnitude.toString().length - 1;
-        callback(false, [magnitude, minSatoshis, coinPrecision]);
+        callback(null, [magnitude, minSatoshis, coinPrecision]);
       } catch(e) {
         logger.error('Payments', coin, `Error detecting number of satoshis in a coin. Tried parsing: ${ result.data }`);
         callback(true, []);
+        return;
       }
     }, true, true);
   };
 
+  // Handle Shares of Orphan Blocks
+  this.handleOrphans = function(commands, round, coin, callback) {
+    const dateNow = Date.now();
+    if (typeof round.orphanShares !== 'undefined') {
+      logger.warning('Payments', coin, `Moving shares/times from orphaned block ${ round.height } to current round.`);
+
+      // Move Orphaned Shares to Following Round
+      Object.keys(round.orphanShares).forEach((address) => {
+        const outputShare = {
+          time: dateNow,
+          worker: address,
+          solo: false,
+          difficulty: round.orphanShares[address],
+        };
+        commands.push(['hincrby', `${ coin }:rounds:current:shares:counts`, 'validShares', 1]);
+        commands.push(['hincrby', `${ coin }:rounds:current:shares:values`, JSON.stringify(outputShare), round.orphanShares[address]]);
+        commands.push(['zadd', `${ coin }:rounds:current:shares:records`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
+      });
+
+      // Move Orphaned Times to Following Round
+      Object.keys(round.orphanTimes).forEach((address) => {
+        commands.push(['hincrbyfloat', `${ coin }:rounds:current:times:values`, address, round.orphanTimes[address]]);
+      });
+    }
+
+    callback(null, [commands]);
+  }
+
+  // Calculate Unspent Balance in Daemon
+  this.handleUnspent = function(daemon, config, category, coin, callback) {
+    const args = [config.payments.minConfirmations, 99999999];
+    daemon.cmd('listunspent', args, (result) => {
+      if (!result || result.error || result[0].error) {
+          logger.error('Payments', coin, `Error with payment processing daemon: ${ JSON.stringify(result[0].error) }`);
+          callback(true, []);
+          return;
+      } else {
+        let balance = parseFloat(0);
+        if (result[0].response != null && result[0].response.length > 0) {
+          result[0].response.forEach((instance) => {
+            if (instance.address && instance.address !== null) {
+              balance += parseFloat(instance.amount || 0);
+            }
+          });
+          balance = utils.coinsRound(balance, config.payments.coinPrecision);
+        }
+        if (category === "start") {
+          logger.special('Payments', coin, `Payment wallet has a balance of ${ balance } ${ config.coin.symbol }`);
+        }
+        callback(null, [utils.coinsToSatoshis(balance, config.payments.magnitude)]);
+      }
+    });
+  }
+
   // Handle Duplicate Blocks
-  this.handleDuplicates = function(daemon, rounds, coin, callback) {
+  this.handleDuplicates = function(daemon, coin, rounds, callback) {
 
     const validBlocks = {};
     const invalidBlocks = [];
@@ -111,7 +166,7 @@ const PoolPayments = function (logger, client) {
     daemon.batchCmd(commands, (error, blocks) => {
       if (error || !blocks) {
         logger.error('Payments', coin, `Could not get blocks from daemon: ${ JSON.stringify(error) }`);
-        callback(true);
+        callback(true, []);
         return;
       }
 
@@ -119,9 +174,9 @@ const PoolPayments = function (logger, client) {
       blocks.forEach((block, idx) => {
         if (block && block.result) {
           if (block.result.confirmations < 0) {
-            invalidBlocks.push(['smove', `${ coin }:blocks:pending`, `${ coin }:blocks:duplicate`, duplicates[idx].serialized]);
+            invalidBlocks.push(['smove', `${ coin }:main:blocks:confirming`, `${ coin }:main:blocks:duplicate`, duplicates[idx].serialized]);
           } else if (Object.prototype.hasOwnProperty.call(validBlocks, duplicates[idx].hash)) {
-            invalidBlocks.push(['smove', `${ coin }:blocks:pending`, `${ coin }:blocks:duplicate`, duplicates[idx].serialized]);
+            invalidBlocks.push(['smove', `${ coin }:main:blocks:confirming`, `${ coin }:main:blocks:duplicate`, duplicates[idx].serialized]);
           } else {
             validBlocks[duplicates[idx].hash] = duplicates[idx].serialized;
           }
@@ -133,26 +188,162 @@ const PoolPayments = function (logger, client) {
         _this.client.multi(invalidBlocks).exec((error,) => {
           if (error) {
             logger.error('Payments', coin, `Error could not move invalid duplicate blocks ${ JSON.stringify(error) }`);
+            callback(true, []);
             return;
           }
-          callback(null, rounds);
+          callback(null, [rounds]);
         });
       } else {
-        callback(null, rounds);
+        callback(null, [rounds]);
       }
     }, true, true);
   };
+
+  // Handle Workers for Immature Blocks
+  this.handleImmature = function(config, round, workers, times, maxTime, solo, shared, callback) {
+
+    let totalShares = parseFloat(0);
+    const feeSatoshi = utils.coinsToSatoshis(config.payments.processingFee, config.payments.magnitude);
+    const immature = Math.round(utils.coinsToSatoshis(round.reward, config.payments.magnitude)) - feeSatoshi;
+
+    // Handle Solo Rounds
+    if (round.solo) {
+      const worker = workers[round.worker] || {};
+      worker.shares = worker.shares || {}
+      const shares = parseFloat(solo[round.worker] || 0);
+      const total = Math.round(immature);
+      worker.shares.round = shares;
+      worker.immature = (worker.immature || 0) + total;
+      workers[round.worker] = worker;
+
+    // Handle Shared Rounds
+    } else {
+
+      // Handle PPLNT Share Reduction
+      Object.keys(shared).forEach((address) => {
+        let shares = parseFloat(shared[address] || 0);
+        const worker = workers[address] || {};
+        worker.shares = worker.shares || {}
+        if (times[address] != null && parseFloat(times[address]) > 0) {
+          const timePeriod = utils.roundTo((parseFloat(times[address] || 1) / maxTime), 2);
+          if (timePeriod > 1.0) {
+              logger.error(logSystem, logComponent, `Time share period is greater than 1.0 for address: ${ address }, round: ${ round }`);
+              callback(true, []);
+              return;
+          }
+          if (timePeriod > 0 && timePeriod < 0.51) {
+            const lost = shares * (1 - timePeriod);
+            shares = Math.max(shares - lost, 0);
+          }
+        }
+        totalShares += shares;
+        worker.shares.round = shares;
+        workers[address] = worker;
+      });
+
+      // Calculate Final Block Rewards
+      Object.keys(shared).forEach((address) => {
+        const worker = workers[address] || {};
+        const percent = parseFloat(worker.shares.round) / totalShares;
+        if (percent > 1.0) {
+            logger.error(logSystem, logComponent, `Share percentage is greater than 1.0 for address: ${ address }, round: ${ round }`);
+            callback(true, []);
+            return;
+        }
+        const total = Math.round(immature * percent);
+        worker.immature = (worker.immature || 0) + total;
+        workers[address] = worker;
+      });
+    }
+
+    // Return Updated Workers as Callback
+    callback(null, [workers]);
+  }
+
+  // Handle Workers for Generate Blocks
+  this.handleGenerate = function(config, round, workers, times, maxTime, solo, shared, callback) {
+
+    let totalShares = parseFloat(0);
+    const feeSatoshi = utils.coinsToSatoshis(config.payments.processingFee, config.payments.magnitude);
+    const generate = Math.round(utils.coinsToSatoshis(round.reward, config.payments.magnitude)) - feeSatoshi;
+
+    // Handle Solo Rounds
+    if (round.solo) {
+      const worker = workers[round.worker] || {};
+      worker.shares = worker.shares || {}
+      const shares = parseFloat(solo[round.worker] || 0);
+      const total = Math.round(generate);
+      worker.records = worker[round.worker].records || {};
+      worker.records[round.height] = {
+        amount: utils.satoshisToCoins(total, config.payments.magnitude),
+        shares: shares,
+        times: 1,
+      }
+      worker.shares.round = shares;
+      worker.shares.total = parseFloat(worker.shares.total || 0) + shares;
+      worker.generate = (worker.generate || 0) + total;
+      workers[round.worker] = worker;
+
+    // Handle Shared Rounds
+    } else {
+
+      // Handle PPLNT Share Reduction
+      Object.keys(shared).forEach((address) => {
+        let shares = parseFloat(shared[address] || 0);
+        const worker = workers[address] || {};
+        worker.shares = worker.shares || {}
+        worker.records = worker.records || {};
+        worker.records[round.height] = {};
+        if (times[address] != null && parseFloat(times[address]) > 0) {
+          const timePeriod = utils.roundTo((parseFloat(times[address] || 1) / maxTime), 2);
+          worker.records[round.height].times = timePeriod;
+          if (timePeriod > 1.0) {
+              logger.error(logSystem, logComponent, `Time share period is greater than 1.0 for address: ${ address }, round: ${ round }`);
+              callback(true, []);
+              return;
+          }
+          if (timePeriod > 0 && timePeriod < 0.51) {
+            const lost = shares * (1 - timePeriod);
+            shares = Math.max(shares - lost, 0);
+          }
+        }
+        totalShares += shares;
+        worker.shares.round = shares;
+        worker.shares.total = parseFloat(worker.shares.total || 0) + shares;
+        worker.records[round.height].shares = shares;
+        workers[address] = worker;
+      });
+
+      // Calculate Final Block Rewards
+      Object.keys(shared).forEach((address) => {
+        const worker = workers[address] || {};
+        const percent = parseFloat(worker.shares.round) / totalShares;
+        if (percent > 1.0) {
+            logger.error(logSystem, logComponent, `Share percentage is greater than 1.0 for address: ${ address }, round: ${ round }`);
+            callback(true, []);
+            return;
+        }
+        const total = Math.round(generate * percent);
+        worker.records[round.height].amounts = utils.satoshisToCoins(total, config.payments.magnitude, config.payments.coinPrecision);
+        worker.generate = (worker.generate || 0) + total;
+        workers[address] = worker;
+      });
+    }
+
+    // Return Updated Workers as Callback
+    callback(null, [workers]);
+  }
 
   // Check Blocks for Duplicates/Issues
   this.handleBlocks = function(daemon, config, callback) {
 
     // Load Blocks from Database
     const coin = config.coin.name;
-    const commands = [['zrangebyscore', `${ coin }:main:blocks:pending`, '-inf', 'inf']];
+    const commands = [['zrangebyscore', `${ coin }:main:blocks:confirming`, '-inf', 'inf']];
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
         logger.error('Payments', coin, `Could not get blocks from database: ${ JSON.stringify(error) }`);
-        callback(true);
+        callback(true, []);
         return;
       }
 
@@ -177,7 +368,7 @@ const PoolPayments = function (logger, client) {
       let duplicateFound = false;
       rounds.sort((a, b) => a.height - b.height);
       const roundHeights = rounds.flatMap(round => round.height);
-      rounds.forEach(round => {
+      rounds.forEach((round) => {
         if (utils.countOccurences(roundHeights, round.height) > 1) {
           round.duplicate = true;
           duplicateFound = true;
@@ -186,15 +377,15 @@ const PoolPayments = function (logger, client) {
 
       // Handle Duplicate Blocks
       if (duplicateFound) {
-        _this.handleDuplicates(daemon, rounds, coin, callback);
+        _this.handleDuplicates(daemon, coin, rounds, callback);
       } else {
-        callback(null, rounds);
+        callback(null, [rounds]);
       }
     });
   };
 
   // Check Workers for Unpaid Balances
-  this.handleWorkers = function(config, rounds, callback) {
+  this.handleWorkers = function(config, data, callback) {
 
     // Load Unpaid Workers from Database
     const coin = config.coin.name;
@@ -202,7 +393,7 @@ const PoolPayments = function (logger, client) {
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
         logger.error('Payments', coin, `Could not get workers from database: ${ JSON.stringify(error) }`);
-        callback(true);
+        callback(true, []);
         return;
       }
 
@@ -211,19 +402,20 @@ const PoolPayments = function (logger, client) {
       const magnitude = config.payments.magnitude;
       Object.keys(results[0] || {}).forEach((worker) => {
         workers[worker] = {
-          balance: utils.coinsToSatoshies(parseFloat(results[0][worker]), magnitude)
+          balance: utils.coinsToSatoshis(parseFloat(results[0][worker]), magnitude)
         };
       });
 
       // Return Workers as Callback
-      callback(null, rounds, workers);
+      callback(null, [data[0], workers]);
     });
   };
 
   // Validate Transaction Hashes
-  this.handleTransactions = function(daemon, config, rounds, workers, callback) {
+  this.handleTransactions = function(daemon, config, data, callback) {
 
     // Get Hashes for Each Transaction
+    let rounds = data[0];
     const coin = config.coin.name;
     const commands = rounds.map((round) => ['gettransaction', [round.transaction]]);
 
@@ -231,7 +423,7 @@ const PoolPayments = function (logger, client) {
     daemon.batchCmd(commands, (error, transactions) => {
       if (error || !transactions) {
         logger.error('Payments', coin, `Could not get transactions from daemon: ${ JSON.stringify(error) }`);
-        callback(true);
+        callback(true, []);
         return;
       }
 
@@ -289,7 +481,7 @@ const PoolPayments = function (logger, client) {
         switch (round.category) {
         case 'orphan':
         case 'kicked':
-          round.remove = _this.checkShares(rounds, round);
+          round.delete = _this.checkShares(rounds, round);
           return false;
         case 'immature':
         case 'generate':
@@ -300,16 +492,16 @@ const PoolPayments = function (logger, client) {
       });
 
       // Return Rounds as Callback
-      callback(null, rounds, workers);
+      callback(null, [rounds, data[1]]);
     });
   };
 
   // Calculate Scores from Round Data
-  this.handleTimes = function(config, rounds, workers, callback) {
+  this.handleTimes = function(config, data, callback) {
 
     const times = [];
     const coin = config.coin.name;
-    const commands = rounds.map((round) => {
+    const commands = data[0].map((round) => {
       return [['hgetall', `${ coin }:rounds:round-${ round.height }:times:values`]];
     });
 
@@ -317,7 +509,7 @@ const PoolPayments = function (logger, client) {
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
         logger.error('Payments', coin, `Could not load times data from database: ${ JSON.stringify(error) }`);
-        callback(true);
+        callback(true, []);
         return;
       }
 
@@ -335,17 +527,17 @@ const PoolPayments = function (logger, client) {
       });
 
       // Return Times Data as Callback
-      callback(null, rounds, workers, times);
+      callback(null, [data[0], data[1], times]);
     });
   };
 
   // Calculate Shares from Round Data
-  this.handleShares = function(config, rounds, workers, times, callback) {
+  this.handleShares = function(config, data, callback) {
 
     const solo = [];
     const shared = [];
     const coin = config.coin.name;
-    const commands = rounds.map((round) => {
+    const commands = data[0].map((round) => {
       return [['hgetall', `${ coin }:rounds:round-${ round.height }:shares:values`]];
     });
 
@@ -353,7 +545,7 @@ const PoolPayments = function (logger, client) {
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
         logger.error('Payments', coin, `Could not load shares data from database: ${ JSON.stringify(error) }`);
-        callback(true);
+        callback(true, []);
         return;
       }
 
@@ -386,35 +578,293 @@ const PoolPayments = function (logger, client) {
       });
 
       // Return Times Data as Callback
-      callback(null, rounds, workers, times, solo, shared);
+      callback(null, [data[0], data[1], data[2], solo, shared]);
     });
   };
 
+  // Calculate Amount Owed to Workers
+  this.handleOwed = function(daemon, config, category, data, callback) {
+
+    let sendPayments = false;
+    let totalOwed = parseInt(0);
+    let rounds = data[0];
+
+    const coin = config.coin.name;
+    const feeSatoshi = utils.coinsToSatoshis(config.payments.processingFee, config.payments.magnitude);
+
+    // Add to Total Owed from Rounds
+    rounds.forEach((round) => {
+      if (round.category === 'generate') {
+        totalOwed += utils.coinsToSatoshis(round.reward, config.payments.magnitude) - feeSatoshi;
+      }
+    })
+
+    // Add to Total Owed from Unpaid
+    Object.keys(data[1]).forEach((worker) => {
+      totalOwed += worker.balance || 0;
+    });
+
+    // Check Unspent Balance
+    _this.handleUnspent(daemon, config, category, coin, (error, balance) => {
+      if (error) {
+        logger.error('Payments', coin, 'Error checking pool balance before processing payments.');
+        callback(true, []);
+        return;
+      }
+
+      // Check Balance for Payments
+      if (balance[0] < totalOwed) {
+        const currentBalance = utils.satoshisToCoins(balance[0], config.payments.magnitude, config.payments.coinPrecision);
+        const owedBalance = utils.satoshisToCoins(totalOwed, config.payments.magnitude, config.payments.coinPrecision);
+        logger.error('Payments', coin, `Insufficient funds (${ currentBalance }) to process payments (${ owedBalance }), possibly waiting for transactions.`);
+        sendPayments = false;
+      } else if (balance > totalOwed) {
+        sendPayments = true;
+      }
+
+      // Payments Aren't Necessary
+      if (totalOwed <= 0 || category !== "payments") {
+        sendPayments = false;
+      }
+
+      // Ensure Payments Aren't Sent Out
+      // If Payments Aren't Necessary
+      if (!sendPayments) {
+        rounds = rounds.filter((r) => {
+          switch (r.category) {
+          case 'orphan':
+          case 'kicked':
+          case 'immature':
+            return true;
+          case 'generate':
+            r.category = 'immature';
+            return true;
+          default:
+            return false;
+          }
+        });
+      }
+
+      // Return Payment Data as Callback
+      callback(null, [rounds, data[1], data[2], data[3], data[4]]);
+    });
+  }
+
+  // Calculate Scores Given Times/Shares
+  this.handleRewards = function(config, data, callback) {
+
+    let errors = null;
+    const rounds = data[0];
+    let workers = data[1];
+    const coin = config.coin.name;
+
+    // Manage Shares in each Round
+    rounds.forEach((round, i) => {
+
+      let maxTime = 0;
+      const times = data[2][i]
+      const solo = data[3][i];
+      const shared = data[4][i];
+      const workerTimes = {};
+
+      // Check if Shares Exist in Round
+      if ((Object.keys(solo).length <= 0) && (Object.keys(shared).length <= 0)) {
+          _this.client.smove(`${ coin }:main:blocks:confirming`, `${coin  }:main:blocks:manual`, round.serialized);
+          logger.error('Payments', coin, `No worker shares for round: ${ round.height }, hash: ${ round.hash }. Manual payout required.`);
+          callback(true, []);
+          return;
+      }
+
+      // Find Max Time in ALL Shares
+      Object.keys(shared).forEach((address) => {
+        const workerTime = parseFloat(shared[address]);
+        if (maxTime < workerTime) {
+          maxTime = workerTime;
+        }
+        if (!(address in workerTimes)) {
+          workerTimes[address] = workerTime;
+        } else {
+          const currentTime = workerTimes[address];
+          if (currentTime < workerTime) {
+            workerTimes[address] = (currentTime * 0.5) + workerTime;
+          } else {
+            workerTimes[address] = currentTime + (workerTime * 0.5);
+          }
+          if (currentTime > maxTime) {
+            workerTimes[address] = maxTime;
+          }
+        }
+      });
+
+      // Manage Block Generated
+      switch (round.category) {
+      case 'kicked':
+      case 'orphan':
+        round.orphanShares = shared;
+        round.orphanTimes = times;
+        break;
+      case 'immature':
+        _this.handleImmature(config, round, workers, times, maxTime, solo, shared, (error, results) => {
+          if (error) {
+            logger.error('Payments', coin, `Error handling immature block for round: ${ round }`);
+            callback(true, []);
+            return;
+          }
+          workers = results[0];
+        });
+        break;
+      case 'generate':
+        _this.handleGenerate(config, round, workers, times, maxTime, solo, shared, (error, results) => {
+          if (error) {
+            logger.error('Payments', coin, `Error handling generate block for round: ${ round }`);
+            callback(true, []);
+            return;
+          }
+          workers = results[0];
+        });
+        break;
+      }
+    });
+
+    // Return Updated Rounds/Workers as Callback
+    callback(null, [rounds, workers]);
+  }
+
+  // Structure and Apply Redis Updates
+  this.handleUpdates = function(config, category, interval, data, callback) {
+
+    let commands = [];
+    const totalPaid = 0;
+    const rounds = data[0];
+    const workers = data[1];
+    const coin = config.coin.name;
+
+    // Update Worker Payouts/Balances
+    Object.keys(workers).forEach((address) => {
+      const worker = workers[address];
+
+      // Manage Worker Commands [1]
+      if (category === "payments") {
+        if (worker.change !== 0) {
+          const change = utils.satoshisToCoins(worker.change, config.payments.magnitude, config.payments.coinPrecision);
+          commands.push(['hincrbyfloat', `${ coin }:main:payments:unpaid`, address, change]);
+        }
+        if ((worker.sent || 0) > 0) {
+          const sent = utils.coinsRound(worker.sent, config.payments.coinPrecision);
+          totalPaid = utils.coinsRound(totalPaid + worker.sent, config.payments.coinPrecision);
+          commands.push(['hincrbyfloat', `${ coin }:main:payments:payouts`, address, sent]);
+        }
+      }
+
+      // Manage Worker Commands [2]
+      if ((worker.immature || 0) > 0) {
+        worker.immature = utils.satoshisToCoins(worker.immature, config.payments.magnitude, config.payments.coinPrecision);
+        const immature = utils.coinsRound(worker.immature, config.payments.coinPrecision);
+        commands.push(['hset', `${ coin }:main:payments:immature`, address, immature]);
+      } else {
+        commands.push(['hset', `${ coin }:main:payments:immature`, address, 0]);
+      }
+
+      // Manage Worker Commands [3]
+      if ((worker.generate || 0) > 0) {
+        worker.generate = utils.satoshisToCoins(worker.generate, config.payments.magnitude, config.payments.coinPrecision);
+        const generate = utils.coinsRound(worker.generate, config.payments.coinPrecision);
+        commands.push(['hset', `${ coin }:main:payments:balance`, address, generate])
+      } else {
+        commands.push(['hset', `${ coin }:main:payments:balance`, address, 0]);
+      }
+    });
+
+    // Update Worker Shares
+    const deleteCurrent = function() {
+      return [
+        commands.push(['del', `${ coin }:rounds:round-${ round.height }:shares:counts`]),
+        commands.push(['del', `${ coin }:rounds:round-${ round.height }:shares:records`]),
+        commands.push(['del', `${ coin }:rounds:round-${ round.height }:shares:values`]),
+        commands.push(['del', `${ coin }:rounds:round-${ round.height }:times:last`]),
+        commands.push(['del', `${ coin }:rounds:round-${ round.height }:times:values`])];
+    };
+
+    // Update Round Shares/Times
+    rounds.forEach((round) => {
+      switch (round.category) {
+      case 'kicked':
+      case 'orphan':
+        commands.push(['hdel', `${ coin }:main:blocks:pending`, round.hash]);
+        commands.push(['smove', `${ coin }:main:blocks:confirming`, `${ coin }:main:blocks:kicked`, round.serialized]);
+        if (round.delete) {
+          _this.handleOrphans(commands, round, coin, (error, results) => {
+            commands = commands.concat(results[0]);
+            commands = commands.concat(deleteCurrent());
+          });
+        }
+        break;
+      case 'immature':
+        commands.push(['hset', `${ coin }:main:blocks:pending`, round.hash, (round.confirmations || 0)]);
+        break;
+      case 'generate':
+        commands.push(['hdel', `${ coin }:main:blocks:pending`, round.hash]);
+        commands.push(['smove', `${ coin }:main:blocks:confirming`, `${ coin }:main:blocks:confirmed`, round.serialized]);
+        commands = commands.concat(deleteCurrent());
+        break;
+      }
+    })
+
+    // Update Miscellaneous Statistics
+    if ((category === "start") || (category === "payments")) {
+      commands.push(['hincrbyfloat', `${ coin }:main:payments:counts`, 'totalPaid', totalPaid]);
+      commands.push(['hset', `${ coin }:main:payments:counts`, 'lastPaid', interval]);
+    }
+
+    // Manage Redis Commands
+    _this.client.multi(commands).exec(function(error, results) {
+      if (error) {
+        logger.error('Payments', coin, `Payments sent but could not update redis: ${
+          JSON.stringify(error) }. Disabling payment processing to prevent double-payouts. The commands in ${
+          coin }_commands.txt must be ran manually`);
+        fs.writeFile(`${ coin }_commands.txt`, JSON.stringify(commands), (error) => {
+          logger.error('Could not write output commands.txt, stop the program immediately.');
+        });
+        callback(true, []);
+        return;
+      }
+    });
+
+    // Finish Up Payment Pipeline
+    callback(null, []);
+  }
+
   // Process Main Payment Checks
-  this.processChecks = function(daemon, config, interval, callbackMain) {
+  this.processChecks = function(daemon, config, category, interval, callbackMain) {
 
     // Process Checks Incrementally
     async.waterfall([
       (callback) => _this.handleBlocks(daemon, config, callback),
-      (rounds, callback) => _this.handleWorkers(config, rounds, callback),
-      (rounds, workers, callback) => _this.handleTransactions(daemon, config, rounds, workers, callback),
-      (rounds, workers, callback) => _this.handleTimes(config, rounds, workers, callback),
-      (rounds, workers, times, callback) => _this.handleShares(config, rounds, workers, times, callback),
+      (data, callback) => _this.handleWorkers(config, data, callback),
+      (data, callback) => _this.handleTransactions(daemon, config, data, callback),
+      (data, callback) => _this.handleTimes(config, data, callback),
+      (data, callback) => _this.handleShares(config, data, callback),
+      (data, callback) => _this.handleOwed(daemon, config, category, data, callback),
+      (data, callback) => _this.handleRewards(config, data, callback),
+      (data, callback) => _this.handleUpdates(config, category, interval, data, callback),
     ]);
 
     callbackMain();
   };
 
   // Process Main Payment Functionality
-  this.processPayments = function(daemon, config, interval, callbackMain) {
+  this.processPayments = function(daemon, config, category, interval, callbackMain) {
 
     // Process Payments Incrementally
     async.waterfall([
       (callback) => _this.handleBlocks(daemon, config, callback),
-      (rounds, callback) => _this.handleWorkers(config, rounds, callback),
-      (rounds, workers, callback) => _this.handleTransactions(daemon, config, rounds, workers, callback),
-      (rounds, workers, callback) => _this.handleTimes(config, rounds, workers, callback),
-      (rounds, workers, times, callback) => _this.handleShares(config, rounds, workers, times, callback),
+      (data, callback) => _this.handleWorkers(config, data, callback),
+      (data, callback) => _this.handleTransactions(daemon, config, data, callback),
+      (data, callback) => _this.handleTimes(config, data, callback),
+      (data, callback) => _this.handleShares(config, data, callback),
+      (data, callback) => _this.handleOwed(daemon, config, category, data, callback),
+      (data, callback) => _this.handleRewards(config, data, callback),
+      (data, callback) => _this.handleUpdates(config, category, interval, data, callback),
     ]);
 
     callbackMain();
@@ -426,8 +876,9 @@ const PoolPayments = function (logger, client) {
     // Handle Main Payment Checks
     const checkInterval = setInterval(() => {
       try {
+        const category = "checks";
         const lastInterval = Date.now();
-        _this.processChecks(daemon, config, lastInterval, () => {});
+        _this.processChecks(daemon, config, category, lastInterval, () => {});
       } catch(e) {
         clearInterval(checkInterval);
         throw new Error(e);
@@ -437,8 +888,9 @@ const PoolPayments = function (logger, client) {
     // Handle Main Payment Functionality
     const paymentInterval = setInterval(() => {
       try {
+        const category = "payments";
         const lastInterval = Date.now();
-        _this.processPayments(daemon, config, lastInterval, () => {});
+        _this.processPayments(daemon, config, category, lastInterval, () => {});
       } catch(e) {
         clearInterval(paymentInterval);
         throw new Error(e);
@@ -448,8 +900,9 @@ const PoolPayments = function (logger, client) {
     // Start Payment Functionality with Initial Check
     setTimeout(() => {
       try {
+        const category = "start";
         const lastInterval = Date.now();
-        _this.processChecks(daemon, config, lastInterval, () => callback(null, true));
+        _this.processChecks(daemon, config, category, lastInterval, () => callback(null, true));
       } catch(e) {
         throw new Error(e);
       }

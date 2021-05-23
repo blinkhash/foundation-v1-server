@@ -13,7 +13,7 @@ module.exports = {
     'rules': {
         'no-var': 2,
         'semi': [2, 'always'],
-        'indent': 2,
+        'indent': ['error', 2],
         'no-multi-spaces': 2,
         'space-in-parens': 2,
         'quotes': [2, 'single'],

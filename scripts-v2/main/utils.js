@@ -74,7 +74,7 @@ exports.loggerColors = function(severity, text) {
   case 'error':
     return text.red;
   case 'special':
-    return text.cyan.underline;
+    return text.cyan;
   default:
     return text.italic;
   }
