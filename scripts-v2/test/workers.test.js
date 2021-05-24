@@ -5,7 +5,7 @@
  */
 
 const redis = require('redis-mock');
-const mock = require('./stratum.mock.js');
+const mock = require('./daemon.mock.js');
 const nock = require('nock');
 
 const PoolLogger = require('../main/logger');

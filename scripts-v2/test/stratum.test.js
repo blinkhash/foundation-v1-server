@@ -5,7 +5,7 @@
  */
 
 const redis = require('redis-mock');
-const mock = require('./stratum.mock.js');
+const mock = require('./daemon.mock.js');
 const nock = require('nock');
 
 const PoolLogger = require('../main/logger');
@@ -129,7 +129,7 @@ describe('Test stratum functionality', () => {
 
   test('Test worker authorization method [2]', (done) => {
     mock.mockDaemon();
-    mock.mockValidateInvalidAddress();
+    mock.mockValidateAddressInvalid();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
     poolStratum.setupStratum(() => {

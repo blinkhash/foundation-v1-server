@@ -52,7 +52,7 @@ const PoolPayments = function (logger, client) {
       } else if (!result.response || !result.response.ismine) {
         callback(true, 'The daemon does not own the pool address listed');
       } else {
-        callback(false);
+        callback(null);
       }
     }, true);
   };
@@ -93,7 +93,6 @@ const PoolPayments = function (logger, client) {
       } catch(e) {
         logger.error('Payments', coin, `Error detecting number of satoshis in a coin. Tried parsing: ${ result.data }`);
         callback(true, []);
-        return;
       }
     }, true, true);
   };
