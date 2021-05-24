@@ -174,9 +174,9 @@ const PoolPayments = function (logger, client) {
       blocks.forEach((block, idx) => {
         if (block && block.result) {
           if (block.result.confirmations < 0) {
-            invalidBlocks.push(['smove', `${ coin }:main:blocks:confirming`, `${ coin }:main:blocks:duplicate`, duplicates[idx].serialized]);
+            invalidBlocks.push(['smove', `${ coin }:main:blocks:pending`, `${ coin }:main:blocks:duplicate`, duplicates[idx].serialized]);
           } else if (Object.prototype.hasOwnProperty.call(validBlocks, duplicates[idx].hash)) {
-            invalidBlocks.push(['smove', `${ coin }:main:blocks:confirming`, `${ coin }:main:blocks:duplicate`, duplicates[idx].serialized]);
+            invalidBlocks.push(['smove', `${ coin }:main:blocks:pending`, `${ coin }:main:blocks:duplicate`, duplicates[idx].serialized]);
           } else {
             validBlocks[duplicates[idx].hash] = duplicates[idx].serialized;
           }
@@ -339,7 +339,7 @@ const PoolPayments = function (logger, client) {
 
     // Load Blocks from Database
     const coin = config.coin.name;
-    const commands = [['zrangebyscore', `${ coin }:main:blocks:confirming`, '-inf', 'inf']];
+    const commands = [['zrangebyscore', `${ coin }:main:blocks:pending`, '-inf', 'inf']];
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
         logger.error('Payments', coin, `Could not get blocks from database: ${ JSON.stringify(error) }`);
@@ -637,7 +637,6 @@ const PoolPayments = function (logger, client) {
           case 'immature':
             return true;
           case 'generate':
-            r.category = 'immature';
             return true;
           default:
             return false;
@@ -669,7 +668,7 @@ const PoolPayments = function (logger, client) {
 
       // Check if Shares Exist in Round
       if ((Object.keys(solo).length <= 0) && (Object.keys(shared).length <= 0)) {
-          _this.client.smove(`${ coin }:main:blocks:confirming`, `${coin  }:main:blocks:manual`, round.serialized);
+          _this.client.smove(`${ coin }:main:blocks:pending`, `${coin  }:main:blocks:manual`, round.serialized);
           logger.error('Payments', coin, `No worker shares for round: ${ round.height }, hash: ${ round.hash }. Manual payout required.`);
           callback(true, []);
           return;
@@ -776,7 +775,7 @@ const PoolPayments = function (logger, client) {
     });
 
     // Update Worker Shares
-    const deleteCurrent = function() {
+    const deleteCurrent = function(coin, round) {
       return [
         commands.push(['del', `${ coin }:rounds:round-${ round.height }:shares:counts`]),
         commands.push(['del', `${ coin }:rounds:round-${ round.height }:shares:records`]),
@@ -790,22 +789,24 @@ const PoolPayments = function (logger, client) {
       switch (round.category) {
       case 'kicked':
       case 'orphan':
-        commands.push(['hdel', `${ coin }:main:blocks:pending`, round.hash]);
-        commands.push(['smove', `${ coin }:main:blocks:confirming`, `${ coin }:main:blocks:kicked`, round.serialized]);
+        commands.push(['hdel', `${ coin }:main:blocks:confirmations`, round.hash]);
+        commands.push(['smove', `${ coin }:main:blocks:pending`, `${ coin }:main:blocks:kicked`, round.serialized]);
         if (round.delete) {
           _this.handleOrphans(commands, round, coin, (error, results) => {
             commands = commands.concat(results[0]);
-            commands = commands.concat(deleteCurrent());
+            commands = commands.concat(deleteCurrent(coin, round));
           });
         }
         break;
       case 'immature':
-        commands.push(['hset', `${ coin }:main:blocks:pending`, round.hash, (round.confirmations || 0)]);
+        commands.push(['hset', `${ coin }:main:blocks:confirmations`, round.hash, (round.confirmations || 0)]);
         break;
       case 'generate':
-        commands.push(['hdel', `${ coin }:main:blocks:pending`, round.hash]);
-        commands.push(['smove', `${ coin }:main:blocks:confirming`, `${ coin }:main:blocks:confirmed`, round.serialized]);
-        commands = commands.concat(deleteCurrent());
+        if (category === "payments") {
+          commands.push(['hdel', `${ coin }:main:blocks:confirmations`, round.hash]);
+          commands.push(['smove', `${ coin }:main:blocks:pending`, `${ coin }:main:blocks:confirmed`, round.serialized]);
+          commands = commands.concat(deleteCurrent(coin, round));
+        }
         break;
       }
     })
@@ -849,6 +850,8 @@ const PoolPayments = function (logger, client) {
       (data, callback) => _this.handleUpdates(config, category, interval, data, callback),
     ]);
 
+    const coin = config.coin.name;
+    logger.debug('Payments', coin, 'Finished payment processing checks and database maintenance.');
     callbackMain();
   };
 
@@ -867,6 +870,8 @@ const PoolPayments = function (logger, client) {
       (data, callback) => _this.handleUpdates(config, category, interval, data, callback),
     ]);
 
+    const coin = config.coin.name;
+    logger.debug('Payments', coin, 'Finished payment processing checks and attempted to send out payments.');
     callbackMain();
   };
 
