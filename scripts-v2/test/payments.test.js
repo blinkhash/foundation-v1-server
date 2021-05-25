@@ -931,4 +931,92 @@ describe('Test payments functionality', () => {
       done();
     });
   });
+
+  test('Test main times handling [1]', (done) => {
+    const commands = [
+      ['hincrbyfloat', `Bitcoin:rounds:round-180:times:values`, "worker1", 20.15],
+      ['hincrbyfloat', `Bitcoin:rounds:round-180:times:values`, "worker2", 163.50]];
+    mockSetupClient(client, commands, 'Bitcoin', () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const poolPayments = new PoolPayments(logger, client);
+      const config = poolPayments.poolConfigs["Bitcoin"];
+      const rounds = [{ height: 180 }];
+      poolPayments.handleTimes(config, [rounds, []], (error, results) => {
+        expect(error).toBe(null);
+        expect(results[2][0]["worker1"]).toBe(20.15);
+        expect(results[2][0]["worker2"]).toBe(163.50);
+        console.log.mockClear();
+        done();
+      });
+    });
+  });
+
+  test('Test main times handling [2]', (done) => {
+    const commands = [
+      ['hincrbyfloat', `Bitcoin:rounds:round-180:times:values`, "worker1", 20.15],
+      ['hincrbyfloat', `Bitcoin:rounds:round-180:times:values`, "worker2", 163.50],
+      ['hincrbyfloat', `Bitcoin:rounds:round-181:times:values`, "worker1", 80.43],
+      ['hincrbyfloat', `Bitcoin:rounds:round-181:times:values`, "worker2", 121.637]];
+    mockSetupClient(client, commands, 'Bitcoin', () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const poolPayments = new PoolPayments(logger, client);
+      const config = poolPayments.poolConfigs["Bitcoin"];
+      const rounds = [{ height: 180 }, { height: 181 }];
+      poolPayments.handleTimes(config, [rounds, []], (error, results) => {
+        expect(error).toBe(null);
+        expect(results[2][0]["worker1"]).toBe(20.15);
+        expect(results[2][0]["worker2"]).toBe(163.50);
+        expect(results[2][1]["worker1"]).toBe(80.43);
+        expect(results[2][1]["worker2"]).toBe(121.637);
+        console.log.mockClear();
+        done();
+      });
+    });
+  });
+
+  test('Test main shares handling [1]', (done) => {
+    const commands = [
+      ['hincrbyfloat', `Bitcoin:rounds:round-180:shares:values`, JSON.stringify({ date: 0, worker: "worker1", "solo": true }), 8],
+      ['hincrbyfloat', `Bitcoin:rounds:round-180:shares:values`, JSON.stringify({ date: 0, worker: "worker2", "solo": false }), 16],
+      ['hincrbyfloat', `Bitcoin:rounds:round-180:shares:values`, JSON.stringify({ date: 1, worker: "worker2", "solo": false }), 12]];
+    mockSetupClient(client, commands, 'Bitcoin', () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const poolPayments = new PoolPayments(logger, client);
+      const config = poolPayments.poolConfigs["Bitcoin"];
+      const rounds = [{ height: 180 }];
+      poolPayments.handleShares(config, [rounds, [], []], (error, results) => {
+        expect(error).toBe(null);
+        expect(results[3][0]["worker1"]).toBe(8);
+        expect(results[4][0]["worker2"]).toBe(28);
+        console.log.mockClear();
+        done();
+      });
+    });
+  });
+
+  test('Test main shares handling [2]', (done) => {
+    const commands = [
+      ['hincrbyfloat', `Bitcoin:rounds:round-180:shares:values`, JSON.stringify({ date: 0, worker: "worker1", "solo": true }), 8],
+      ['hincrbyfloat', `Bitcoin:rounds:round-180:shares:values`, JSON.stringify({ date: 0, worker: "worker2", "solo": false }), 16],
+      ['hincrbyfloat', `Bitcoin:rounds:round-180:shares:values`, JSON.stringify({ date: 1, worker: "worker2", "solo": false }), 12],
+      ['hincrbyfloat', `Bitcoin:rounds:round-181:shares:values`, JSON.stringify({ date: 0, worker: "worker1", "solo": true }), 16],
+      ['hincrbyfloat', `Bitcoin:rounds:round-181:shares:values`, JSON.stringify({ date: 1, worker: "worker1", "solo": true }), 10],
+      ['hincrbyfloat', `Bitcoin:rounds:round-181:shares:values`, JSON.stringify({ date: 0, worker: "worker2", "solo": false }), 28],
+      ['hincrbyfloat', `Bitcoin:rounds:round-181:shares:values`, JSON.stringify({ date: 1, worker: "worker2", "solo": false }), 12]];
+    mockSetupClient(client, commands, 'Bitcoin', () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const poolPayments = new PoolPayments(logger, client);
+      const config = poolPayments.poolConfigs["Bitcoin"];
+      const rounds = [{ height: 180 }, { height: 181 }];
+      poolPayments.handleShares(config, [rounds, [], []], (error, results) => {
+        expect(error).toBe(null);
+        expect(results[3][0]["worker1"]).toBe(8);
+        expect(results[4][0]["worker2"]).toBe(28);
+        expect(results[3][1]["worker1"]).toBe(26);
+        expect(results[4][1]["worker2"]).toBe(40);
+        console.log.mockClear();
+        done();
+      });
+    });
+  });
 });

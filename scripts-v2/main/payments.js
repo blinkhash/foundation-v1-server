@@ -82,7 +82,6 @@ const PoolPayments = function (logger, client) {
       if (result.error) {
         logger.error('Payments', coin, `Error with payment processing daemon: ${ JSON.stringify(result.error) }`);
         callback(true, []);
-        return;
       }
       try {
         const data = result.data.split('result":')[1].split(',')[0].split('.')[1];
@@ -188,7 +187,6 @@ const PoolPayments = function (logger, client) {
           if (error) {
             logger.error('Payments', coin, `Error could not move invalid duplicate blocks ${ JSON.stringify(error) }`);
             callback(true, []);
-            return;
           }
           callback(null, [rounds]);
         });
@@ -375,7 +373,6 @@ const PoolPayments = function (logger, client) {
       if (error) {
         logger.error('Payments', coin, `Could not get workers from database: ${ JSON.stringify(error) }`);
         callback(true, []);
-        return;
       }
 
       // Manage Individual Workers
@@ -475,12 +472,13 @@ const PoolPayments = function (logger, client) {
   };
 
   // Calculate Scores from Round Data
+  /* istanbul ignore next */
   this.handleTimes = function(config, data, callback) {
 
     const times = [];
     const coin = config.coin.name;
     const commands = data[0].map((round) => {
-      return [['hgetall', `${ coin }:rounds:round-${ round.height }:times:values`]];
+      return ['hgetall', `${ coin }:rounds:round-${ round.height }:times:values`];
     });
 
     // Build Commands from Rounds
@@ -488,19 +486,14 @@ const PoolPayments = function (logger, client) {
       if (error) {
         logger.error('Payments', coin, `Could not load times data from database: ${ JSON.stringify(error) }`);
         callback(true, []);
-        return;
       }
 
       // Build Worker Times Data w/ Results
       results.forEach((round) => {
         const timesRound = {};
-        try {
-          Object.keys(round).forEach((entry) => {
-            timesRound[entry] = parseFloat(round[entry]);
-          });
-        } catch(e) {
-          logger.error('Payments', coin, `Unable to format worker round times: ${ JSON.stringify(e) }`);
-        }
+        Object.keys(round).forEach((entry) => {
+          timesRound[entry] = parseFloat(round[entry]);
+        });
         times.push(timesRound);
       });
 
@@ -510,13 +503,14 @@ const PoolPayments = function (logger, client) {
   };
 
   // Calculate Shares from Round Data
+  /* istanbul ignore next */
   this.handleShares = function(config, data, callback) {
 
     const solo = [];
     const shared = [];
     const coin = config.coin.name;
     const commands = data[0].map((round) => {
-      return [['hgetall', `${ coin }:rounds:round-${ round.height }:shares:values`]];
+      return ['hgetall', `${ coin }:rounds:round-${ round.height }:shares:values`];
     });
 
     // Build Commands from Rounds
@@ -524,33 +518,28 @@ const PoolPayments = function (logger, client) {
       if (error) {
         logger.error('Payments', coin, `Could not load shares data from database: ${ JSON.stringify(error) }`);
         callback(true, []);
-        return;
       }
 
       // Build Worker Shares Data w/ Results
       results.forEach((round) => {
         const soloRound = {};
         const sharedRound = {};
-        try {
-          Object.keys(round).forEach((entry) => {
-            const details = JSON.parse(entry);
-            if (details.solo) {
-              if (!(details.worker in soloRound)) {
-                soloRound[details.worker] = parseFloat(round[entry]);
-              } else {
-                soloRound[details.worker] += parseFloat(round[entry]);
-              }
+        Object.keys(round).forEach((entry) => {
+          const details = JSON.parse(entry);
+          if (details.solo) {
+            if (!(details.worker in soloRound)) {
+              soloRound[details.worker] = parseFloat(round[entry]);
             } else {
-              if (!(details.worker in sharedRound)) {
-                sharedRound[details.worker] = parseFloat(round[entry]);
-              } else {
-                sharedRound[details.worker] += parseFloat(round[entry]);
-              }
+              soloRound[details.worker] += parseFloat(round[entry]);
             }
-          });
-        } catch(e) {
-          logger.error('Payments', coin, `Unable to format worker round shares: ${ JSON.stringify(e) }`);
-        }
+          } else {
+            if (!(details.worker in sharedRound)) {
+              sharedRound[details.worker] = parseFloat(round[entry]);
+            } else {
+              sharedRound[details.worker] += parseFloat(round[entry]);
+            }
+          }
+        });
         solo.push(soloRound);
         shared.push(sharedRound);
       });
@@ -587,7 +576,6 @@ const PoolPayments = function (logger, client) {
       if (error) {
         logger.error('Payments', coin, 'Error checking pool balance before processing payments.');
         callback(true, []);
-        return;
       }
 
       // Check Balance for Payments
@@ -650,7 +638,6 @@ const PoolPayments = function (logger, client) {
           _this.client.smove(`${ coin }:blocks:pending`, `${coin  }:blocks:manual`, round.serialized);
           logger.error('Payments', coin, `No worker shares for round: ${ round.height }, hash: ${ round.hash }. Manual payout required.`);
           callback(true, []);
-          return;
       }
 
       // Find Max Time in ALL Shares
@@ -686,7 +673,6 @@ const PoolPayments = function (logger, client) {
           if (error) {
             logger.error('Payments', coin, `Error handling immature block for round: ${ round }`);
             callback(true, []);
-            return;
           }
           workers = results[0];
         });
@@ -696,7 +682,6 @@ const PoolPayments = function (logger, client) {
           if (error) {
             logger.error('Payments', coin, `Error handling generate block for round: ${ round }`);
             callback(true, []);
-            return;
           }
           workers = results[0];
         });
@@ -806,7 +791,6 @@ const PoolPayments = function (logger, client) {
           logger.error('Could not write output commands.txt, stop the program immediately.');
         });
         callback(true, []);
-        return;
       }
     });
 
