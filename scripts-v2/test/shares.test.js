@@ -4,12 +4,21 @@
  *
  */
 
-const utils = require('../main/utils');
 const redis = require('redis-mock');
+jest.mock('redis', () => jest.requireActual('redis-mock'));
+
+const utils = require('../main/utils');
 const PoolLogger = require('../main/logger');
 const PoolShares = require('../main/shares');
 const poolConfig = require('../../configs/pools/example.js');
 const portalConfig = require('../../configs/main/example.js');
+
+const client = redis.createClient({
+  'port': portalConfig.redis.port,
+  'host': portalConfig.redis.host,
+});
+client._maxListeners = 0;
+client._redisMock._maxListeners = 0;
 
 poolConfig.address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
 poolConfig.recipients[0].address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
@@ -19,14 +28,12 @@ const logger = new PoolLogger(portalConfig);
 
 describe('Test shares functionality', () => {
 
-  let client, configCopy;
-  beforeEach(() => {
-    client = redis.createClient({
-      'port': portalConfig.redis.port,
-      'host': portalConfig.redis.host,
-    });
-    client._redisMock._maxListeners = 0;
+  let configCopy;
+  beforeEach((done) => {
     configCopy = Object.assign({}, portalConfig);
+    client.flushall((error, results) => {
+      done();
+    });
   });
 
   test('Test initialization of shares', () => {
@@ -248,8 +255,8 @@ describe('Test shares functionality', () => {
       ['rename', 'Bitcoin:rounds:current:shares:values', 'Bitcoin:rounds:round-1972211:shares:values'],
       ['rename', 'Bitcoin:rounds:current:shares:counts', 'Bitcoin:rounds:round-1972211:shares:counts'],
       ['rename', 'Bitcoin:rounds:current:shares:records', 'Bitcoin:rounds:round-1972211:shares:records'],
-      ['zadd', 'Bitcoin:main:blocks:pending'],
-      ['hincrby', 'Bitcoin:main:blocks:counts', 'validBlocks', 1]];
+      ['zadd', 'Bitcoin:blocks:pending'],
+      ['hincrby', 'Bitcoin:blocks:counts', 'validBlocks', 1]];
     const commands = poolShares.buildBlocksCommands(shareData, true, true);
     expect(commands.length).toBe(7);
     expect(commands[0]).toStrictEqual(expected[0]);
@@ -277,7 +284,7 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
       'worker': 'example'
     };
-    const expected = [['hincrby', 'Bitcoin:main:blocks:counts', 'invalidBlocks', 1]];
+    const expected = [['hincrby', 'Bitcoin:blocks:counts', 'invalidBlocks', 1]];
     const commands = poolShares.buildBlocksCommands(shareData, true, false);
     expect(commands.length).toBe(1);
     expect(commands[0]).toStrictEqual(expected[0]);
@@ -392,7 +399,7 @@ describe('Test shares functionality', () => {
       if (!error) {
         poolShares.handleShares(shareData, true, false, (results) => {
           expect(results[1]).toBe(0);
-          expect(results[2]).toBe(2);
+          expect(results[2]).toBe(1);
           expect(results[3]).toBe(1);
           expect(results[4]).toBe(1);
           done();

@@ -4,9 +4,11 @@
  *
  */
 
+const redis = require('redis-mock');
+jest.mock('redis', () => jest.requireActual('redis-mock'));
+
 const nock = require('nock');
 const mock = require('./daemon.mock.js');
-const redis = require('redis-mock');
 
 const PoolLogger = require('../main/logger');
 const PoolPayments = require('../main/payments');
@@ -23,6 +25,7 @@ const client = redis.createClient({
   'port': portalConfig.redis.port,
   'host': portalConfig.redis.host,
 });
+client._maxListeners = 0;
 client._redisMock._maxListeners = 0;
 
 nock.disableNetConnect();
@@ -35,7 +38,34 @@ const logger = new PoolLogger(portalConfig);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function mockBuildBlock(height, hash, reward, transaction, difficulty, worker, solo) {
+  return JSON.stringify({
+    height: height,
+    hash: hash,
+    reward: reward,
+    transaction: transaction,
+    difficulty: difficulty,
+    worker: worker,
+    solo: solo,
+  });
+}
+
+function mockSetupClient(client, commands, coin, callback) {
+  client.multi(commands).exec((error, results) => {
+    callback();
+  });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 describe('Test payments functionality', () => {
+
+  beforeEach((done) => {
+    client.flushall((error, results) => {
+      done();
+    });
+  });
+
 
   test('Test initialization of payments', () => {
     const poolPayments = new PoolPayments(logger, client);
@@ -622,4 +652,68 @@ describe('Test payments functionality', () => {
       done();
     });
   });
+
+  test('Test main block/round handling [1]', (done) => {
+    const commands = [
+      ['zadd', `Bitcoin:blocks:pending`, 180, mockBuildBlock(180, "hash", 12.5, "txid", 8, "worker", false)],
+      ['zadd', `Bitcoin:blocks:pending`, 181, mockBuildBlock(181, "hash", 12.5, "txid", 8, "worker", false)],
+      ['zadd', `Bitcoin:blocks:pending`, 182, mockBuildBlock(182, "hash", 12.5, "txid", 8, "worker", false)],
+      ['zadd', `Bitcoin:blocks:pending`, 183, mockBuildBlock(183, "hash", 12.5, "txid", 8, "worker", false)]];
+    mockSetupClient(client, commands, 'Bitcoin', () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const poolPayments = new PoolPayments(logger, client);
+      const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
+      const config = poolPayments.poolConfigs["Bitcoin"];
+      poolPayments.handleBlocks(daemon, config, (error, results) => {
+        expect(error).toBe(null);
+        expect(results[0].length).toBe(4);
+        expect(results[0][0].difficulty).toBe(8);
+        expect(results[0][1].height).toBe(181);
+        expect(results[0][2].reward).toBe(12.5);
+        expect(results[0][3].transaction).toBe('txid');
+        console.log.mockClear();
+        done();
+      });
+    });
+  });
+
+  test('Test main block/round handling [2]', (done) => {
+    const commands = [
+      ['zadd', `Bitcoin:blocks:pending`, 180, mockBuildBlock(180, "hash", 12.5, "txid", 8, "worker", false)],
+      ['zadd', `Bitcoin:blocks:pending`, 180, mockBuildBlock(180, "hash2", 12.5, "txid2", 8, "worker2", false)],
+      ['zadd', `Bitcoin:blocks:pending`, 182, mockBuildBlock(182, "hash", 12.5, "txid", 8, "worker", false)],
+      ['zadd', `Bitcoin:blocks:pending`, 183, mockBuildBlock(183, "hash", 12.5, "txid", 8, "worker", false)]];
+    mockSetupClient(client, commands, 'Bitcoin', () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const poolPayments = new PoolPayments(logger, client);
+      const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
+      const config = poolPayments.poolConfigs["Bitcoin"];
+      poolPayments.handleBlocks(daemon, config, (error, results) => {
+        expect(error).toBe(true);
+        expect(results).toStrictEqual([]);
+        console.log.mockClear();
+        done();
+      });
+    });
+  });
+
+  test('Test main worker handling', (done) => {
+    const commands = [
+      ['hincrbyfloat', `Bitcoin:payments:unpaid`, 'worker1', 672.21],
+      ['hincrbyfloat', `Bitcoin:payments:unpaid`, 'worker2', 391.15]];
+    mockSetupClient(client, commands, 'Bitcoin', () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const poolPayments = new PoolPayments(logger, client);
+      poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+      const config = poolPayments.poolConfigs["Bitcoin"];
+      poolPayments.handleWorkers(config, [[]], (error, results) => {
+        expect(error).toBe(null);
+        expect(Object.keys(results[1]).length).toBe(2);
+        expect(results[1]["worker1"].balance).toBe(67221000000);
+        expect(results[1]["worker2"].balance).toBe(39115000000);
+        console.log.mockClear();
+        done();
+      });
+    });
+  })
 });

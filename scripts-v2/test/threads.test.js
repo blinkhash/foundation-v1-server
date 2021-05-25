@@ -5,6 +5,8 @@
  */
 
 const redis = require('redis-mock');
+jest.mock('redis', () => jest.requireActual('redis-mock'));
+
 const PoolThreads = require('../main/threads');
 const PoolLogger = require('../main/logger');
 const portalConfig = require('../../configs/main/example.js');
@@ -13,6 +15,7 @@ const client = redis.createClient({
   'port': portalConfig.redis.port,
   'host': portalConfig.redis.host,
 });
+client._maxListeners = 0;
 client._redisMock._maxListeners = 0;
 
 const logger = new PoolLogger(portalConfig);
@@ -22,8 +25,11 @@ const logger = new PoolLogger(portalConfig);
 describe('Test threads functionality', () => {
 
   let configCopy;
-  beforeEach(() => {
+  beforeEach((done) => {
     configCopy = Object.assign({}, portalConfig);
+    client.flushall((error, results) => {
+      done();
+    });
   });
 
   test('Test initialization of threads', () => {

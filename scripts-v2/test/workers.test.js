@@ -5,6 +5,8 @@
  */
 
 const redis = require('redis-mock');
+jest.mock('redis', () => jest.requireActual('redis-mock'));
+
 const mock = require('./daemon.mock.js');
 const nock = require('nock');
 
@@ -22,6 +24,7 @@ const client = redis.createClient({
   'port': portalConfig.redis.port,
   'host': portalConfig.redis.host,
 });
+client._maxListeners = 0;
 client._redisMock._maxListeners = 0;
 
 nock.disableNetConnect();
@@ -34,6 +37,12 @@ const logger = new PoolLogger(portalConfig);
 ////////////////////////////////////////////////////////////////////////////////
 
 describe('Test workers functionality', () => {
+
+  beforeEach((done) => {
+    client.flushall((error, results) => {
+      done();
+    });
+  });
 
   test('Test initialization of workers', () => {
     const poolWorkers = new PoolWorkers(logger, client);

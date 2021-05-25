@@ -118,10 +118,10 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       commands.push(['rename', `${ _this.coin }:rounds:current:shares:values`, `${ _this.coin }:rounds:round-${ shareData.height }:shares:values`]);
       commands.push(['rename', `${ _this.coin }:rounds:current:shares:counts`, `${ _this.coin }:rounds:round-${ shareData.height }:shares:counts`]);
       commands.push(['rename', `${ _this.coin }:rounds:current:shares:records`, `${ _this.coin }:rounds:round-${ shareData.height }:shares:records`]);
-      commands.push(['zadd', `${ _this.coin }:main:blocks:pending`, shareData.height, JSON.stringify(outputBlock)]);
-      commands.push(['hincrby', `${ _this.coin }:main:blocks:counts`, 'validBlocks', 1]);
+      commands.push(['zadd', `${ _this.coin }:blocks:pending`, shareData.height, JSON.stringify(outputBlock)]);
+      commands.push(['hincrby', `${ _this.coin }:blocks:counts`, 'validBlocks', 1]);
     } else if (shareData.hash) {
-      commands.push(['hincrby', `${ _this.coin }:main:blocks:counts`, 'invalidBlocks', 1]);
+      commands.push(['hincrby', `${ _this.coin }:blocks:counts`, 'invalidBlocks', 1]);
     }
 
     return commands;

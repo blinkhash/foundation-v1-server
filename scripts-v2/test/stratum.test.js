@@ -5,6 +5,8 @@
  */
 
 const redis = require('redis-mock');
+jest.mock('redis', () => jest.requireActual('redis-mock'));
+
 const mock = require('./daemon.mock.js');
 const nock = require('nock');
 
@@ -23,6 +25,7 @@ const client = redis.createClient({
   'port': portalConfig.redis.port,
   'host': portalConfig.redis.host,
 });
+client._maxListeners = 0;
 client._redisMock._maxListeners = 0;
 
 nock.disableNetConnect();
@@ -36,8 +39,11 @@ const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
 describe('Test stratum functionality', () => {
 
   let configCopy;
-  beforeEach(() => {
+  beforeEach((done) => {
     configCopy = Object.assign({}, poolConfig);
+    client.flushall((error, results) => {
+      done();
+    });
   });
 
   test('Test initialization of stratum', () => {

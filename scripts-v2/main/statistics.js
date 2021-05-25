@@ -42,9 +42,9 @@
 //         const hashrateWindow = _this.portalConfig.statistics.hashrateWindow
 //         const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
 //         const redisTemplates = [
-//             ['hgetall', ':main:blocks:counts'],
-//             ['smembers', ':main:blocks:pending'],
-//             ['smembers', ':main:blocks:confirmed'],
+//             ['hgetall', ':blocks:counts'],
+//             ['smembers', ':blocks:pending'],
+//             ['smembers', ':blocks:confirmed'],
 //             ['hgetall', ':rounds:current:shares:counts'],
 //             ['zrangebyscore', ':rounds:current:shares:records', windowTime, '+inf'],
 //             ['hgetall', ':rounds:current:shares:values'],
