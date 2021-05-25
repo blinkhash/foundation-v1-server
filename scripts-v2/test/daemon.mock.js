@@ -133,6 +133,46 @@ exports.mockGetBlockTemplate = function() {
     );
 };
 
+exports.mockDuplicateRounds = function() {
+  const response = [
+    {
+      id: 'nocktest',
+      error: null,
+      result: { 'confirmations': 10 }
+    },
+    {
+      id: 'nocktest',
+      error: null,
+      result: { 'confirmations': -1 }
+    },
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => (Array.isArray(body) && body.length >= 2))
+    .reply(200, JSON.stringify(response)
+    );
+}
+
+exports.mockDuplicateBlocks = function() {
+  const response = [
+    {
+      id: 'nocktest',
+      error: null,
+      result: { 'confirmations': 10 }
+    },
+    {
+      id: 'nocktest',
+      error: null,
+      result: { 'confirmations': 10 }
+    },
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => (Array.isArray(body) && body.length >= 2))
+    .reply(200, JSON.stringify(response)
+    );
+}
+
 // Mock Initial Batch Request
 exports.mockGetInitialBatch = function() {
   const response = [
@@ -262,6 +302,98 @@ exports.mockGetPeerInfo = function() {
     })
     );
 };
+
+exports.mockListUnspent = function() {
+  const response = [
+    {
+      'txid': 'ef96b2787bae51e147f6bf10bba38ce88ac45d52f8f1f1474d3a8566f97b9305',
+      'vout': 1,
+      'address': 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd',
+      'label': '',
+      'scriptPubKey': '0014ebc454c07d0059d82132d63caed0a2599e6b9589',
+      'amount': 11.875,
+      'confirmations': 20533,
+      'spendable': true,
+      'solvable': true,
+      'desc': "wpkh([e046bc57/0'/0'/1']02153745d8d712267913cf4197e6a135a9d4b32f3389b060f9ee720cf086af64b5)#pj07q5a6",
+      'safe': true
+    },
+    {
+      'txid': 'ef96b2787bae51e147f6bf10bba38ce88ac45d52f8f1f1474d3a8566f97b9305',
+      'vout': 1,
+      'address': 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd',
+      'label': '',
+      'scriptPubKey': '0014ebc454c07d0059d82132d63caed0a2599e6b9589',
+      'amount': 11.875,
+      'confirmations': 20534,
+      'spendable': true,
+      'solvable': true,
+      'desc': "wpkh([e046bc57/0'/0'/1']02153745d8d712267913cf4197e6a135a9d4b32f3389b060f9ee720cf086af64b5)#pj07q5a6",
+      'safe': true
+    },
+    {
+      'txid': 'ef96b2787bae51e147f6bf10bba38ce88ac45d52f8f1f1474d3a8566f97b9305',
+      'vout': 1,
+      'address': 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd',
+      'label': '',
+      'scriptPubKey': '0014ebc454c07d0059d82132d63caed0a2599e6b9589',
+      'amount': null,
+      'confirmations': 20535,
+      'spendable': true,
+      'solvable': true,
+      'desc': "wpkh([e046bc57/0'/0'/1']02153745d8d712267913cf4197e6a135a9d4b32f3389b060f9ee720cf086af64b5)#pj07q5a6",
+      'safe': true
+    },
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => body.method === 'listunspent')
+    .reply(200, JSON.stringify({
+      id: 'nocktest',
+      error: null,
+      result: response,
+    })
+    );
+}
+
+exports.mockListUnspentEmpty = function() {
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => body.method === 'listunspent')
+    .reply(200, JSON.stringify({
+      id: 'nocktest',
+      error: null,
+      result: [],
+    })
+    );
+}
+
+exports.mockListUnspentInvalid = function() {
+  const response = [
+    {
+      'txid': 'ef96b2787bae51e147f6bf10bba38ce88ac45d52f8f1f1474d3a8566f97b9305',
+      'vout': 1,
+      'address': null,
+      'label': '',
+      'scriptPubKey': '0014ebc454c07d0059d82132d63caed0a2599e6b9589',
+      'amount': 11.875,
+      'confirmations': 20533,
+      'spendable': true,
+      'solvable': true,
+      'desc': "wpkh([e046bc57/0'/0'/1']02153745d8d712267913cf4197e6a135a9d4b32f3389b060f9ee720cf086af64b5)#pj07q5a6",
+      'safe': true
+    },
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => body.method === 'listunspent')
+    .reply(200, JSON.stringify({
+      id: 'nocktest',
+      error: null,
+      result: response,
+    })
+    );
+}
 
 exports.mockValidateAddress = function() {
   const response = {

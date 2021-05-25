@@ -61,9 +61,9 @@ const PoolPayments = function (logger, client) {
   this.handleAddress = function(daemon, address, coin, callback) {
     _this.checkAddress(daemon, address, coin, 'validateaddress', (error,) => {
       if (error) {
-        _this.checkAddress(daemon, address, coin, 'getaddressinfo', (error, message) => {
+        _this.checkAddress(daemon, address, coin, 'getaddressinfo', (error, results) => {
           if (error) {
-            logger.error('Payments', coin, `Error with payment processing daemon: ${ message }`);
+            logger.error('Payments', coin, `Error with payment processing daemon: ${ results }`);
             callback(true, []);
           } else {
             callback(null, []);
@@ -132,7 +132,6 @@ const PoolPayments = function (logger, client) {
       if (!result || result.error || result[0].error) {
           logger.error('Payments', coin, `Error with payment processing daemon: ${ JSON.stringify(result[0].error) }`);
           callback(true, []);
-          return;
       } else {
         let balance = parseFloat(0);
         if (result[0].response != null && result[0].response.length > 0) {
@@ -151,7 +150,8 @@ const PoolPayments = function (logger, client) {
     });
   }
 
-  // Handle Duplicate Blocks
+  // Handle Duplicate Blocks/Rounds
+  /* istanbul ignore next */
   this.handleDuplicates = function(daemon, coin, rounds, callback) {
 
     const validBlocks = {};
@@ -209,7 +209,7 @@ const PoolPayments = function (logger, client) {
     if (round.solo) {
       const worker = workers[round.worker] || {};
       worker.shares = worker.shares || {}
-      const shares = parseFloat(solo[round.worker] || 0);
+      const shares = parseFloat(solo[round.worker] || 1);
       const total = Math.round(immature);
       worker.shares.round = shares;
       worker.immature = (worker.immature || 0) + total;
@@ -220,19 +220,14 @@ const PoolPayments = function (logger, client) {
 
       // Handle PPLNT Share Reduction
       Object.keys(shared).forEach((address) => {
-        let shares = parseFloat(shared[address] || 0);
+        let shares = parseFloat(shared[address]);
         const worker = workers[address] || {};
         worker.shares = worker.shares || {}
         if (times[address] != null && parseFloat(times[address]) > 0) {
-          const timePeriod = utils.roundTo((parseFloat(times[address] || 1) / maxTime), 2);
-          if (timePeriod > 1.0) {
-              logger.error(logSystem, logComponent, `Time share period is greater than 1.0 for address: ${ address }, round: ${ round }`);
-              callback(true, []);
-              return;
-          }
+          const timePeriod = utils.roundTo((parseFloat(times[address]) / maxTime), 2);
           if (timePeriod > 0 && timePeriod < 0.51) {
             const lost = shares * (1 - timePeriod);
-            shares = Math.max(shares - lost, 0);
+            shares = utils.roundTo(Math.max(shares - lost, 0), 2);
           }
         }
         totalShares += shares;
@@ -242,13 +237,8 @@ const PoolPayments = function (logger, client) {
 
       // Calculate Final Block Rewards
       Object.keys(shared).forEach((address) => {
-        const worker = workers[address] || {};
+        const worker = workers[address];
         const percent = parseFloat(worker.shares.round) / totalShares;
-        if (percent > 1.0) {
-            logger.error(logSystem, logComponent, `Share percentage is greater than 1.0 for address: ${ address }, round: ${ round }`);
-            callback(true, []);
-            return;
-        }
         const total = Math.round(immature * percent);
         worker.immature = (worker.immature || 0) + total;
         workers[address] = worker;
@@ -270,11 +260,11 @@ const PoolPayments = function (logger, client) {
     if (round.solo) {
       const worker = workers[round.worker] || {};
       worker.shares = worker.shares || {}
-      const shares = parseFloat(solo[round.worker] || 0);
+      const shares = parseFloat(solo[round.worker] || 1);
       const total = Math.round(generate);
-      worker.records = worker[round.worker].records || {};
+      worker.records = worker.records || {};
       worker.records[round.height] = {
-        amount: utils.satoshisToCoins(total, config.payments.magnitude),
+        amounts: utils.satoshisToCoins(total, config.payments.magnitude, config.payments.coinPrecision),
         shares: shares,
         times: 1,
       }
@@ -288,40 +278,31 @@ const PoolPayments = function (logger, client) {
 
       // Handle PPLNT Share Reduction
       Object.keys(shared).forEach((address) => {
-        let shares = parseFloat(shared[address] || 0);
+        let shares = parseFloat(shared[address]);
         const worker = workers[address] || {};
         worker.shares = worker.shares || {}
         worker.records = worker.records || {};
         worker.records[round.height] = {};
         if (times[address] != null && parseFloat(times[address]) > 0) {
-          const timePeriod = utils.roundTo((parseFloat(times[address] || 1) / maxTime), 2);
+          const timePeriod = utils.roundTo((parseFloat(times[address]) / maxTime), 2);
           worker.records[round.height].times = timePeriod;
-          if (timePeriod > 1.0) {
-              logger.error(logSystem, logComponent, `Time share period is greater than 1.0 for address: ${ address }, round: ${ round }`);
-              callback(true, []);
-              return;
-          }
           if (timePeriod > 0 && timePeriod < 0.51) {
             const lost = shares * (1 - timePeriod);
-            shares = Math.max(shares - lost, 0);
+            shares = utils.roundTo(Math.max(shares - lost, 0), 2);
           }
         }
         totalShares += shares;
         worker.shares.round = shares;
         worker.shares.total = parseFloat(worker.shares.total || 0) + shares;
+        worker.records[round.height].times = worker.records[round.height].times || 1;
         worker.records[round.height].shares = shares;
         workers[address] = worker;
       });
 
       // Calculate Final Block Rewards
       Object.keys(shared).forEach((address) => {
-        const worker = workers[address] || {};
+        const worker = workers[address];
         const percent = parseFloat(worker.shares.round) / totalShares;
-        if (percent > 1.0) {
-            logger.error(logSystem, logComponent, `Share percentage is greater than 1.0 for address: ${ address }, round: ${ round }`);
-            callback(true, []);
-            return;
-        }
         const total = Math.round(generate * percent);
         worker.records[round.height].amounts = utils.satoshisToCoins(total, config.payments.magnitude, config.payments.coinPrecision);
         worker.generate = (worker.generate || 0) + total;
@@ -835,6 +816,7 @@ const PoolPayments = function (logger, client) {
   }
 
   // Process Main Payment Checks
+  /* istanbul ignore next */
   this.processChecks = function(daemon, config, category, interval, callbackMain) {
 
     // Process Checks Incrementally
@@ -855,6 +837,7 @@ const PoolPayments = function (logger, client) {
   };
 
   // Process Main Payment Functionality
+  /* istanbul ignore next */
   this.processPayments = function(daemon, config, category, interval, callbackMain) {
 
     // Process Payments Incrementally
@@ -875,6 +858,7 @@ const PoolPayments = function (logger, client) {
   };
 
   // Start Payment Interval Management
+  /* istanbul ignore next */
   this.handleIntervals = function(daemon, config, callback) {
 
     // Handle Main Payment Checks
@@ -914,13 +898,14 @@ const PoolPayments = function (logger, client) {
   };
 
   // Handle Payment Processing for Enabled Pools
+  /* istanbul ignore next */
   this.handlePayments = function(coin, callback) {
 
     const poolConfig = _this.poolConfigs[coin];
     poolConfig.payments.processingFee = parseFloat(poolConfig.coin.txfee) || parseFloat(0.0004);
     poolConfig.payments.minConfirmations = Math.max((poolConfig.payments.minConfirmations || 10), 1);
-    const daemon = new Stratum.daemon([poolConfig.payments.daemon], (severity, message) => {
-      logger[severity]('Payments', coin, message);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], (severity, results) => {
+      logger[severity]('Payments', coin, results);
     });
 
     // Warn if < Recommended Config
@@ -961,6 +946,7 @@ const PoolPayments = function (logger, client) {
   };
 
   // Start Worker Capabilities
+  /* istanbul ignore next */
   this.setupPayments = function(callback) {
     _this.checkEnabled();
     async.filter(_this.coins, _this.handlePayments, (error, results) => {
