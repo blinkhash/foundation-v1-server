@@ -715,5 +715,220 @@ describe('Test payments functionality', () => {
         done();
       });
     });
-  })
+  });
+
+  test('Test main transaction handling [1]', (done) => {
+    mock.mockGetTransactionsGenerate();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
+    poolPayments.handleTransactions(daemon, config, [rounds, []], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[0][0].category).toBe("generate");
+      expect(results[0][0].reward).toBe(11.87510021);
+      expect(results[0][0].transaction).toBe('efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c');
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test main transaction handling [2]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
+    poolPayments.handleTransactions(daemon, config, [rounds, []], (error, results) => {
+      expect(error).toBe(true);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Could not get transactions from daemon'));
+      expect(results).toStrictEqual([]);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test main transaction handling [3]', (done) => {
+    mock.mockGetTransactionsImmature();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
+    poolPayments.handleTransactions(daemon, config, [rounds, []], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[0][0].category).toBe("immature");
+      expect(results[0][0].reward).toBe(11.87510021);
+      expect(results[0][0].transaction).toBe('efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c');
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test main transaction handling [4]', (done) => {
+    mock.mockGetTransactionsSplit();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
+    poolPayments.handleTransactions(daemon, config, [rounds, []], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[0][0].category).toBe("generate");
+      expect(results[0][0].reward).toBe(11.87510021);
+      expect(results[0][0].transaction).toBe('efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c');
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test main transaction handling [5]', (done) => {
+    mock.mockGetTransactionsOrphan();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    poolPayments.poolConfigs["Bitcoin"].address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
+    poolPayments.handleTransactions(daemon, config, [rounds, []], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[0][0].category).toBe("orphan");
+      expect(results[0][0].delete).toBe(true);
+      expect(results[0][0].transaction).toBe('efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c');
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test main transaction handling [6]', (done) => {
+    mock.mockGetTransactionsSingle();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
+    poolPayments.handleTransactions(daemon, config, [rounds, []], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[0][0].category).toBe("generate");
+      expect(results[0][0].reward).toBe(11.87510021);
+      expect(results[0][0].transaction).toBe('efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c');
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test main transaction handling [7]', (done) => {
+    mock.mockGetTransactionsValue();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
+    poolPayments.handleTransactions(daemon, config, [rounds, []], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[0][0].category).toBe("generate");
+      expect(results[0][0].reward).toBe(11.87510021);
+      expect(results[0][0].transaction).toBe('efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c');
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test main transaction handling [8]', (done) => {
+    mock.mockGetTransactionsError1();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
+    poolPayments.handleTransactions(daemon, config, [rounds, []], (error, results) => {
+      expect(error).toBe(null);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Daemon reports invalid transaction'));
+      expect(results[0][0].category).toBe("kicked");
+      expect(results[0][0].delete).toBe(true);
+      expect(results[0][0].transaction).toBe('efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c');
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test main transaction handling [9]', (done) => {
+    mock.mockGetTransactionsError2();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
+    poolPayments.handleTransactions(daemon, config, [rounds, []], (error, results) => {
+      expect(error).toBe(null);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Daemon reports no details for transaction'));
+      expect(results[0][0].category).toBe("kicked");
+      expect(results[0][0].delete).toBe(true);
+      expect(results[0][0].transaction).toBe('efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c');
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test main transaction handling [10]', (done) => {
+    mock.mockGetTransactionsError3();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
+    poolPayments.handleTransactions(daemon, config, [rounds, []], (error, results) => {
+      expect(error).toBe(null);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Unable to load transaction'));
+      expect(results).toStrictEqual([[], []]);
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test main transaction handling [11]', (done) => {
+    mock.mockGetTransactionsError4();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
+    poolPayments.handleTransactions(daemon, config, [rounds, []], (error, results) => {
+      expect(error).toBe(null);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Unable to load pool address details'));
+      expect(results).toStrictEqual([[], []]);
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
 });

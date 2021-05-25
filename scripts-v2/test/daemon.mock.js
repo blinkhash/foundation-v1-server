@@ -11,6 +11,46 @@ nock.enableNetConnect('127.0.0.1');
 
 ////////////////////////////////////////////////////////////////////////////////
 
+exports.mockDuplicateRounds = function() {
+  const response = [
+    {
+      id: 'nocktest',
+      error: null,
+      result: { 'confirmations': 10 }
+    },
+    {
+      id: 'nocktest',
+      error: null,
+      result: { 'confirmations': -1 }
+    },
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => (Array.isArray(body) && body.length >= 2))
+    .reply(200, JSON.stringify(response)
+    );
+}
+
+exports.mockDuplicateBlocks = function() {
+  const response = [
+    {
+      id: 'nocktest',
+      error: null,
+      result: { 'confirmations': 10 }
+    },
+    {
+      id: 'nocktest',
+      error: null,
+      result: { 'confirmations': 10 }
+    },
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => (Array.isArray(body) && body.length >= 2))
+    .reply(200, JSON.stringify(response)
+    );
+}
+
 exports.mockGetAddressInfo = function() {
   const response = {
     'address': 'tb1qa0zev5j6tpvu9sjlt3evkzzm9u2pcnfe94qm6v',
@@ -132,46 +172,6 @@ exports.mockGetBlockTemplate = function() {
     })
     );
 };
-
-exports.mockDuplicateRounds = function() {
-  const response = [
-    {
-      id: 'nocktest',
-      error: null,
-      result: { 'confirmations': 10 }
-    },
-    {
-      id: 'nocktest',
-      error: null,
-      result: { 'confirmations': -1 }
-    },
-  ];
-  nock('http://127.0.0.1:8332')
-    .persist()
-    .post('/', body => (Array.isArray(body) && body.length >= 2))
-    .reply(200, JSON.stringify(response)
-    );
-}
-
-exports.mockDuplicateBlocks = function() {
-  const response = [
-    {
-      id: 'nocktest',
-      error: null,
-      result: { 'confirmations': 10 }
-    },
-    {
-      id: 'nocktest',
-      error: null,
-      result: { 'confirmations': 10 }
-    },
-  ];
-  nock('http://127.0.0.1:8332')
-    .persist()
-    .post('/', body => (Array.isArray(body) && body.length >= 2))
-    .reply(200, JSON.stringify(response)
-    );
-}
 
 // Mock Initial Batch Request
 exports.mockGetInitialBatch = function() {
@@ -302,6 +302,351 @@ exports.mockGetPeerInfo = function() {
     })
     );
 };
+
+exports.mockGetTransactionsGenerate = function() {
+  const response = [
+    {
+      result: {
+        'amount': 12.50010548,
+        'confirmations': 8025,
+        'generated': true,
+        'blockhash': 'ec336911046ee016e65f237bea6be2d480adc199a218e04db328c840871a4050',
+        'blockindex': 0,
+        'blocktime': 1621214597,
+        'txid': 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c',
+        'walletconflicts': [],
+        'time': 1621214597,
+        'timereceived': 1621214619,
+        'bip125-replaceable': 'no',
+        'details': [
+          {
+            'address': 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd',
+            'category': 'generate',
+            'amount': 11.87510021,
+            'label': '',
+            'vout': 1
+          },
+          {
+            'address': 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd',
+            'category': 'generate',
+            'amount': 0.62500527,
+            'label': '',
+            'vout': 2
+          }
+        ],
+        'hex': '010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff400302f91c0485c5a1600840000001000000002d68747470733a2f2f6769746875622e636f6d2f626c696e6b686173682f626c696e6b686173682d73657276657200000000030000000000000000266a24aa21a9ed76be2ad9979cec5de07dd66c259327061a78a1c3c21fc770f96d5f2bbba327e105f7c74600000000160014ebc454c07d0059d82132d63caed0a2599e6b9589afaeb90300000000160014ebc454c07d0059d82132d63caed0a2599e6b95890120000000000000000000000000000000000000000000000000000000000000000000000000'
+      },
+      error: null,
+      id: 1621968566366
+    }
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => (Array.isArray(body) && body.length >= 1))
+    .reply(200, JSON.stringify(response)
+    );
+}
+
+exports.mockGetTransactionsImmature = function() {
+  const response = [
+    {
+      result: {
+        'amount': 12.50010548,
+        'confirmations': 8025,
+        'generated': true,
+        'blockhash': 'ec336911046ee016e65f237bea6be2d480adc199a218e04db328c840871a4050',
+        'blockindex': 0,
+        'blocktime': 1621214597,
+        'txid': 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c',
+        'walletconflicts': [],
+        'time': 1621214597,
+        'timereceived': 1621214619,
+        'bip125-replaceable': 'no',
+        'details': [
+          {
+            'address': 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd',
+            'category': 'immature',
+            'amount': 11.87510021,
+            'label': '',
+            'vout': 1
+          },
+          {
+            'address': 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd',
+            'category': 'immature',
+            'amount': 0.62500527,
+            'label': '',
+            'vout': 2
+          }
+        ],
+        'hex': '010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff400302f91c0485c5a1600840000001000000002d68747470733a2f2f6769746875622e636f6d2f626c696e6b686173682f626c696e6b686173682d73657276657200000000030000000000000000266a24aa21a9ed76be2ad9979cec5de07dd66c259327061a78a1c3c21fc770f96d5f2bbba327e105f7c74600000000160014ebc454c07d0059d82132d63caed0a2599e6b9589afaeb90300000000160014ebc454c07d0059d82132d63caed0a2599e6b95890120000000000000000000000000000000000000000000000000000000000000000000000000'
+      },
+      error: null,
+      id: 1621968566366
+    }
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => (Array.isArray(body) && body.length >= 1))
+    .reply(200, JSON.stringify(response)
+    );
+}
+
+exports.mockGetTransactionsOrphan = function() {
+  const response = [
+    {
+      result: {
+        'amount': 12.50010548,
+        'confirmations': 8025,
+        'generated': true,
+        'blockhash': 'ec336911046ee016e65f237bea6be2d480adc199a218e04db328c840871a4050',
+        'blockindex': 0,
+        'blocktime': 1621214597,
+        'txid': 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c',
+        'walletconflicts': [],
+        'time': 1621214597,
+        'timereceived': 1621214619,
+        'bip125-replaceable': 'no',
+        'details': [
+          {
+            'address': 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd',
+            'category': 'orphan',
+            'amount': 11.87510021,
+            'label': '',
+            'vout': 1
+          },
+          {
+            'address': 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd',
+            'category': 'orphan',
+            'amount': 0.62500527,
+            'label': '',
+            'vout': 2
+          }
+        ],
+        'hex': '010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff400302f91c0485c5a1600840000001000000002d68747470733a2f2f6769746875622e636f6d2f626c696e6b686173682f626c696e6b686173682d73657276657200000000030000000000000000266a24aa21a9ed76be2ad9979cec5de07dd66c259327061a78a1c3c21fc770f96d5f2bbba327e105f7c74600000000160014ebc454c07d0059d82132d63caed0a2599e6b9589afaeb90300000000160014ebc454c07d0059d82132d63caed0a2599e6b95890120000000000000000000000000000000000000000000000000000000000000000000000000'
+      },
+      error: null,
+      id: 1621968566366
+    }
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => (Array.isArray(body) && body.length >= 1))
+    .reply(200, JSON.stringify(response)
+    );
+}
+
+exports.mockGetTransactionsSingle = function() {
+  const response = [
+    {
+      result: {
+        'amount': 12.50010548,
+        'confirmations': 8025,
+        'generated': true,
+        'blockhash': 'ec336911046ee016e65f237bea6be2d480adc199a218e04db328c840871a4050',
+        'blockindex': 0,
+        'blocktime': 1621214597,
+        'txid': 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c',
+        'walletconflicts': [],
+        'time': 1621214597,
+        'timereceived': 1621214619,
+        'bip125-replaceable': 'no',
+        'details': [
+          {
+            'address': 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd',
+            'category': 'generate',
+            'amount': 11.87510021,
+            'label': '',
+            'vout': 1
+          },
+        ],
+        'hex': '010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff400302f91c0485c5a1600840000001000000002d68747470733a2f2f6769746875622e636f6d2f626c696e6b686173682f626c696e6b686173682d73657276657200000000030000000000000000266a24aa21a9ed76be2ad9979cec5de07dd66c259327061a78a1c3c21fc770f96d5f2bbba327e105f7c74600000000160014ebc454c07d0059d82132d63caed0a2599e6b9589afaeb90300000000160014ebc454c07d0059d82132d63caed0a2599e6b95890120000000000000000000000000000000000000000000000000000000000000000000000000'
+      },
+      error: null,
+      id: 1621968566366
+    }
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => (Array.isArray(body) && body.length >= 1))
+    .reply(200, JSON.stringify(response)
+    );
+}
+
+exports.mockGetTransactionsSplit = function() {
+  const response = [
+    {
+      result: {
+        'amount': 12.50010548,
+        'confirmations': 8025,
+        'generated': true,
+        'blockhash': 'ec336911046ee016e65f237bea6be2d480adc199a218e04db328c840871a4050',
+        'blockindex': 0,
+        'blocktime': 1621214597,
+        'txid': 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c',
+        'walletconflicts': [],
+        'time': 1621214597,
+        'timereceived': 1621214619,
+        'bip125-replaceable': 'no',
+        'details': [
+          {
+            'address': '0:tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd',
+            'category': 'generate',
+            'amount': 11.87510021,
+            'label': '',
+            'vout': 1
+          },
+          {
+            'address': '1:tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd',
+            'category': 'generate',
+            'amount': 0.62500527,
+            'label': '',
+            'vout': 2
+          }
+        ],
+        'hex': '010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff400302f91c0485c5a1600840000001000000002d68747470733a2f2f6769746875622e636f6d2f626c696e6b686173682f626c696e6b686173682d73657276657200000000030000000000000000266a24aa21a9ed76be2ad9979cec5de07dd66c259327061a78a1c3c21fc770f96d5f2bbba327e105f7c74600000000160014ebc454c07d0059d82132d63caed0a2599e6b9589afaeb90300000000160014ebc454c07d0059d82132d63caed0a2599e6b95890120000000000000000000000000000000000000000000000000000000000000000000000000'
+      },
+      error: null,
+      id: 1621968566366
+    }
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => (Array.isArray(body) && body.length >= 1))
+    .reply(200, JSON.stringify(response)
+    );
+}
+
+exports.mockGetTransactionsValue = function() {
+  const response = [
+    {
+      result: {
+        'amount': 12.50010548,
+        'confirmations': 8025,
+        'generated': true,
+        'blockhash': 'ec336911046ee016e65f237bea6be2d480adc199a218e04db328c840871a4050',
+        'blockindex': 0,
+        'blocktime': 1621214597,
+        'txid': 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c',
+        'walletconflicts': [],
+        'time': 1621214597,
+        'timereceived': 1621214619,
+        'bip125-replaceable': 'no',
+        'details': [
+          {
+            'address': 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd',
+            'category': 'generate',
+            'value': 11.87510021,
+            'label': '',
+            'vout': 1
+          },
+          {
+            'address': 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd',
+            'category': 'generate',
+            'value': 0.62500527,
+            'label': '',
+            'vout': 2
+          }
+        ],
+        'hex': '010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff400302f91c0485c5a1600840000001000000002d68747470733a2f2f6769746875622e636f6d2f626c696e6b686173682f626c696e6b686173682d73657276657200000000030000000000000000266a24aa21a9ed76be2ad9979cec5de07dd66c259327061a78a1c3c21fc770f96d5f2bbba327e105f7c74600000000160014ebc454c07d0059d82132d63caed0a2599e6b9589afaeb90300000000160014ebc454c07d0059d82132d63caed0a2599e6b95890120000000000000000000000000000000000000000000000000000000000000000000000000'
+      },
+      error: null,
+      id: 1621968566366
+    }
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => (Array.isArray(body) && body.length >= 1))
+    .reply(200, JSON.stringify(response)
+    );
+}
+
+exports.mockGetTransactionsError1 = function() {
+  const response = [
+    {
+      result: {},
+      error: { code: -5 },
+      id: 1621968566366
+    }
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => (Array.isArray(body) && body.length >= 1))
+    .reply(200, JSON.stringify(response)
+    );
+}
+
+exports.mockGetTransactionsError2 = function() {
+  const response = [
+    {
+      result: {},
+      error: null,
+      id: 1621968566366
+    }
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => (Array.isArray(body) && body.length >= 1))
+    .reply(200, JSON.stringify(response)
+    );
+}
+
+exports.mockGetTransactionsError3 = function() {
+  const response = [
+    {
+      error: null,
+      id: 1621968566366
+    }
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => (Array.isArray(body) && body.length >= 1))
+    .reply(200, JSON.stringify(response)
+    );
+}
+
+exports.mockGetTransactionsError4 = function() {
+  const response = [
+    {
+      result: {
+        'amount': 12.50010548,
+        'confirmations': 8025,
+        'generated': true,
+        'blockhash': 'ec336911046ee016e65f237bea6be2d480adc199a218e04db328c840871a4050',
+        'blockindex': 0,
+        'blocktime': 1621214597,
+        'txid': 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c',
+        'walletconflicts': [],
+        'time': 1621214597,
+        'timereceived': 1621214619,
+        'bip125-replaceable': 'no',
+        'details': [
+          {
+            'address': '',
+            'category': 'generate',
+            'amount': 11.87510021,
+            'label': '',
+            'vout': 1
+          },
+          {
+            'address': '',
+            'category': 'generate',
+            'amount': 0.62500527,
+            'label': '',
+            'vout': 2
+          }
+        ],
+        'hex': '010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff400302f91c0485c5a1600840000001000000002d68747470733a2f2f6769746875622e636f6d2f626c696e6b686173682f626c696e6b686173682d73657276657200000000030000000000000000266a24aa21a9ed76be2ad9979cec5de07dd66c259327061a78a1c3c21fc770f96d5f2bbba327e105f7c74600000000160014ebc454c07d0059d82132d63caed0a2599e6b9589afaeb90300000000160014ebc454c07d0059d82132d63caed0a2599e6b95890120000000000000000000000000000000000000000000000000000000000000000000000000'
+      },
+      error: null,
+      id: 1621968566366
+    }
+  ];
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => (Array.isArray(body) && body.length >= 1))
+    .reply(200, JSON.stringify(response)
+    );
+}
 
 exports.mockListUnspent = function() {
   const response = [

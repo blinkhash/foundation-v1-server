@@ -411,8 +411,22 @@ const PoolPayments = function (logger, client) {
       // Handle Individual Transactions
       transactions.forEach((tx, idx) => {
 
-        // Load Transaction Details
+        // Check Daemon Edge Cases
         const round = rounds[idx];
+        if (tx.error && tx.error.code === -5) {
+          logger.warning('Payments', coin, `Daemon reports invalid transaction: ${ round.transaction }`);
+          round.category = 'kicked';
+          return;
+        } else if (tx.error || !tx.result) {
+          logger.error('Payments', coin, `Unable to load transaction: ${ round.transaction } ${ JSON.stringify(tx)}`);
+          return;
+        } else if (!tx.result.details || (tx.result.details && tx.result.details.length === 0)) {
+          logger.warning('Payments', coin, `Daemon reports no details for transaction: ${ round.transaction }`);
+          round.category = 'kicked';
+          return;
+        }
+
+        // Load Transaction Details
         let generationTx = tx.result.details.filter((tx) => {
           let txAddr = tx.address;
           if (txAddr.indexOf(':') > -1) {
@@ -420,24 +434,6 @@ const PoolPayments = function (logger, client) {
           }
           return txAddr === config.address;
         })[0];
-
-        // Update Confirmations
-        if (tx && tx.result)
-          round.confirmations = parseInt((tx.result.confirmations || 0));
-
-        // Check Daemon Edge Cases
-        if (tx.error && tx.error.code === -5) {
-          logger.warning('Payments', coin, `Daemon reports invalid transaction: ${ round.transaction }`);
-          round.category = 'kicked';
-          return;
-        } else if (!tx.result.details || (tx.result.details && tx.result.details.length === 0)) {
-          logger.warning('Payments', coin, `Daemon reports no details for transaction: ${ round.transaction }`);
-          round.category = 'kicked';
-          return;
-        } else if (tx.error || !tx.result) {
-          logger.error('Payments', coin, `Unable to load transaction: ${ round.transaction } ${ JSON.stringify(tx)}`);
-          return;
-        }
 
         // Check Transaction Edge Cases
         if (!generationTx && tx.result.details.length === 1) {
@@ -448,8 +444,9 @@ const PoolPayments = function (logger, client) {
           return;
         }
 
-        // Update Round Category/Reward
+        // Update Round Details
         round.category = generationTx.category;
+        round.confirmations = parseInt(tx.result.confirmations);
         if ((round.category === 'generate') || (round.category === 'immature')) {
           const reward = parseFloat(generationTx.amount || generationTx.value);
           round.reward = utils.coinsRound(reward, config.payments.coinPrecision);
@@ -463,7 +460,7 @@ const PoolPayments = function (logger, client) {
         case 'orphan':
         case 'kicked':
           round.delete = _this.checkShares(rounds, round);
-          return false;
+          return true;
         case 'immature':
         case 'generate':
           return true;
@@ -679,8 +676,8 @@ const PoolPayments = function (logger, client) {
 
       // Manage Block Generated
       switch (round.category) {
-      case 'kicked':
       case 'orphan':
+      case 'kicked':
         round.orphanShares = shared;
         round.orphanTimes = times;
         break;

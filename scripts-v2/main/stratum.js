@@ -61,6 +61,7 @@ const PoolStratum = function (logger, poolConfig, poolShares) {
   };
 
   // Handle Share Submissions
+  /* istanbul ignore next */
   this.handleShares = function(shareData, shareValid, blockValid, callback) {
     _this.poolShares.handleShares(shareData, shareValid, blockValid, () => {
       _this.checkBlock(shareData, blockValid);
