@@ -584,30 +584,6 @@ const PoolPayments = function (logger, client) {
         const currentBalance = utils.satoshisToCoins(balance[0], config.payments.magnitude, config.payments.coinPrecision);
         const owedBalance = utils.satoshisToCoins(totalOwed, config.payments.magnitude, config.payments.coinPrecision);
         logger.error('Payments', coin, `Insufficient funds (${ currentBalance }) to process payments (${ owedBalance }), possibly waiting for transactions.`);
-        sendPayments = false;
-      } else if (balance[0] > totalOwed) {
-        sendPayments = true;
-      }
-
-      // Payments Aren't Necessary
-      if (totalOwed <= 0 || category !== 'payments') {
-        sendPayments = false;
-      }
-
-      // Ensure Payments Aren't Sent Out
-      // If Payments Aren't Necessary
-      if (!sendPayments) {
-        rounds = rounds.filter((r) => {
-          switch (r.category) {
-          case 'orphan':
-          case 'kicked':
-          case 'immature':
-            return true;
-          case 'generate':
-            r.category = 'immature';
-            return true;
-          }
-        });
       }
 
       // Return Payment Data as Callback
@@ -792,7 +768,6 @@ const PoolPayments = function (logger, client) {
     ]);
 
     const coin = config.coin.name;
-    logger.debug('Payments', coin, 'Finished payment processing checks and database maintenance.');
     callbackMain();
   };
 
@@ -813,7 +788,7 @@ const PoolPayments = function (logger, client) {
     ]);
 
     const coin = config.coin.name;
-    logger.debug('Payments', coin, 'Finished payment processing checks and attempted to send out payments.');
+    logger.debug('Payments', coin, 'Finished payment processing management and attempted to send out payments.');
     callbackMain();
   };
 
