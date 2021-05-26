@@ -231,22 +231,22 @@ describe('Test payments functionality', () => {
       ['hincrby', 'Bitcoin:rounds:current:shares:values'],
       ['zadd', 'Bitcoin:rounds:current:shares:records'],
       ['hincrbyfloat', 'Bitcoin:rounds:current:times:values', 'example', 1]];
-    poolPayments.handleOrphans([], round, "Bitcoin", (error, results) => {
+    poolPayments.handleOrphans(round, "Bitcoin", (error, results) => {
       expect(error).toBe(null);
-      expect(results[0].length).toBe(4);
-      expect(results[0][0]).toStrictEqual(expected[0]);
-      expect(results[0][1].slice(0, 2)).toStrictEqual(expected[1]);
-      expect(results[0][2].slice(0, 2)).toStrictEqual(expected[2]);
-      expect(results[0][3]).toStrictEqual(expected[3]);
+      expect(results.length).toBe(4);
+      expect(results[0]).toStrictEqual(expected[0]);
+      expect(results[1].slice(0, 2)).toStrictEqual(expected[1]);
+      expect(results[2].slice(0, 2)).toStrictEqual(expected[2]);
+      expect(results[3]).toStrictEqual(expected[3]);
       done();
     });
   });
 
   test('Test handling of orphan shares/times [2]', (done) => {
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.handleOrphans([], {}, "Bitcoin", (error, results) => {
+    poolPayments.handleOrphans({}, "Bitcoin", (error, results) => {
       expect(error).toBe(null);
-      expect(results[0]).toStrictEqual([]);
+      expect(results).toStrictEqual([]);
       done();
     });
   });
@@ -414,13 +414,12 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
     poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
-    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
     const config = poolPayments.poolConfigs["Bitcoin"];
     const round = { reward: 12.50, solo: false, worker: "example" };
     poolPayments.handleImmature(config, round, {}, { "example": 20.15 }, 20.15, {}, { "example": 8 }, (error, results) => {
       expect(error).toBe(null);
-      expect(results[0].example.immature).toBe(1249960000)
-      expect(results[0].example.shares.round).toBe(8)
+      expect(results[0]['example'].immature).toBe(1249960000)
+      expect(results[0]['example'].shares.round).toBe(8)
       console.log.mockClear();
       done();
     });
@@ -433,7 +432,6 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
     poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
-    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
     const config = poolPayments.poolConfigs["Bitcoin"];
     const round = { reward: 12.50, solo: false, worker: "example" };
     poolPayments.handleImmature(config, round, {}, { "example": 20.15 }, 20.15, {}, {}, (error, results) => {
@@ -451,13 +449,12 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
     poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
-    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
     const config = poolPayments.poolConfigs["Bitcoin"];
     const round = { reward: 12.50, solo: true, worker: "example" };
     poolPayments.handleImmature(config, round, {}, { "example": 20.15 }, 20.15, { "example": 8 }, {}, (error, results) => {
       expect(error).toBe(null);
-      expect(results[0].example.immature).toBe(1249960000)
-      expect(results[0].example.shares.round).toBe(8)
+      expect(results[0]['example'].immature).toBe(1249960000)
+      expect(results[0]['example'].shares.round).toBe(8)
       console.log.mockClear();
       done();
     });
@@ -470,13 +467,12 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
     poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
-    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
     const config = poolPayments.poolConfigs["Bitcoin"];
     const round = { reward: 12.50, solo: true, worker: "example" };
     poolPayments.handleImmature(config, round, {}, { "example": 20.15 }, 20.15, {}, {}, (error, results) => {
       expect(error).toBe(null);
-      expect(results[0].example.immature).toBe(1249960000)
-      expect(results[0].example.shares.round).toBe(1)
+      expect(results[0]['example'].immature).toBe(1249960000)
+      expect(results[0]['example'].shares.round).toBe(1)
       console.log.mockClear();
       done();
     });
@@ -489,13 +485,12 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
     poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
-    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
     const config = poolPayments.poolConfigs["Bitcoin"];
     const round = { reward: 12.50, solo: false, worker: "example" };
     poolPayments.handleImmature(config, round, {}, { "example": 8.2 }, 20.15, {}, { "example": 8 }, (error, results) => {
       expect(error).toBe(null);
-      expect(results[0].example.immature).toBe(1249960000)
-      expect(results[0].example.shares.round).toBe(3.28)
+      expect(results[0]['example'].immature).toBe(1249960000)
+      expect(results[0]['example'].shares.round).toBe(3.28)
       console.log.mockClear();
       done();
     });
@@ -508,13 +503,12 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
     poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
-    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
     const config = poolPayments.poolConfigs["Bitcoin"];
     const round = { reward: 12.50, solo: false, worker: "example" };
     poolPayments.handleImmature(config, round, {}, {}, 20.15, {}, { "example": 8 }, (error, results) => {
       expect(error).toBe(null);
-      expect(results[0].example.immature).toBe(1249960000)
-      expect(results[0].example.shares.round).toBe(8)
+      expect(results[0]['example'].immature).toBe(1249960000)
+      expect(results[0]['example'].shares.round).toBe(8)
       console.log.mockClear();
       done();
     });
@@ -527,17 +521,16 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
     poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
-    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
     const config = poolPayments.poolConfigs["Bitcoin"];
     const round = { reward: 12.50, height: 180, solo: false, worker: "example" };
     poolPayments.handleGenerate(config, round, {}, { "example": 20.15 }, 20.15, {}, { "example": 8 }, (error, results) => {
       expect(error).toBe(null);
-      expect(results[0].example.generate).toBe(1249960000);
-      expect(results[0].example.records["180"].amounts).toBe(12.4996);
-      expect(results[0].example.records["180"].shares).toBe(8);
-      expect(results[0].example.records["180"].times).toBe(1);
-      expect(results[0].example.shares.round).toBe(8);
-      expect(results[0].example.shares.total).toBe(8);
+      expect(results[0]['example'].generate).toBe(1249960000);
+      expect(results[0]['example'].records["180"].amounts).toBe(12.4996);
+      expect(results[0]['example'].records["180"].shares).toBe(8);
+      expect(results[0]['example'].records["180"].times).toBe(1);
+      expect(results[0]['example'].shares.round).toBe(8);
+      expect(results[0]['example'].shares.total).toBe(8);
       console.log.mockClear();
       done();
     });
@@ -550,7 +543,6 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
     poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
-    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
     const config = poolPayments.poolConfigs["Bitcoin"];
     const round = { reward: 12.50, height: 180, solo: false, worker: "example" };
     poolPayments.handleGenerate(config, round, {}, { "example": 20.15 }, 20.15, {}, {}, (error, results) => {
@@ -568,17 +560,16 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
     poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
-    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
     const config = poolPayments.poolConfigs["Bitcoin"];
     const round = { reward: 12.50, height: 180, solo: true, worker: "example" };
     poolPayments.handleGenerate(config, round, {}, { "example": 20.15 }, 20.15, { "example": 8 }, {}, (error, results) => {
       expect(error).toBe(null);
-      expect(results[0].example.generate).toBe(1249960000);
-      expect(results[0].example.records["180"].amounts).toBe(12.4996);
-      expect(results[0].example.records["180"].shares).toBe(8);
-      expect(results[0].example.records["180"].times).toBe(1);
-      expect(results[0].example.shares.round).toBe(8);
-      expect(results[0].example.shares.total).toBe(8);
+      expect(results[0]['example'].generate).toBe(1249960000);
+      expect(results[0]['example'].records["180"].amounts).toBe(12.4996);
+      expect(results[0]['example'].records["180"].shares).toBe(8);
+      expect(results[0]['example'].records["180"].times).toBe(1);
+      expect(results[0]['example'].shares.round).toBe(8);
+      expect(results[0]['example'].shares.total).toBe(8);
       console.log.mockClear();
       done();
     });
@@ -591,17 +582,16 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
     poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
-    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
     const config = poolPayments.poolConfigs["Bitcoin"];
     const round = { reward: 12.50, height: 180, solo: true, worker: "example" };
     poolPayments.handleGenerate(config, round, {}, { "example": 20.15 }, 20.15, {}, {}, (error, results) => {
       expect(error).toBe(null);
-      expect(results[0].example.generate).toBe(1249960000);
-      expect(results[0].example.records["180"].amounts).toBe(12.4996);
-      expect(results[0].example.records["180"].shares).toBe(1);
-      expect(results[0].example.records["180"].times).toBe(1);
-      expect(results[0].example.shares.round).toBe(1);
-      expect(results[0].example.shares.total).toBe(1);
+      expect(results[0]['example'].generate).toBe(1249960000);
+      expect(results[0]['example'].records["180"].amounts).toBe(12.4996);
+      expect(results[0]['example'].records["180"].shares).toBe(1);
+      expect(results[0]['example'].records["180"].times).toBe(1);
+      expect(results[0]['example'].shares.round).toBe(1);
+      expect(results[0]['example'].shares.total).toBe(1);
       console.log.mockClear();
       done();
     });
@@ -614,17 +604,16 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
     poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
-    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
     const config = poolPayments.poolConfigs["Bitcoin"];
     const round = { reward: 12.50, height: 180, solo: false, worker: "example" };
     poolPayments.handleGenerate(config, round, {}, { "example": 8.2 }, 20.15, {}, { "example": 8 }, (error, results) => {
       expect(error).toBe(null);
-      expect(results[0].example.generate).toBe(1249960000);
-      expect(results[0].example.records["180"].amounts).toBe(12.4996);
-      expect(results[0].example.records["180"].shares).toBe(3.28);
-      expect(results[0].example.records["180"].times).toBe(0.41);
-      expect(results[0].example.shares.round).toBe(3.28);
-      expect(results[0].example.shares.total).toBe(3.28);
+      expect(results[0]['example'].generate).toBe(1249960000);
+      expect(results[0]['example'].records["180"].amounts).toBe(12.4996);
+      expect(results[0]['example'].records["180"].shares).toBe(3.28);
+      expect(results[0]['example'].records["180"].times).toBe(0.41);
+      expect(results[0]['example'].shares.round).toBe(3.28);
+      expect(results[0]['example'].shares.total).toBe(3.28);
       console.log.mockClear();
       done();
     });
@@ -637,17 +626,16 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
     poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
-    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
     const config = poolPayments.poolConfigs["Bitcoin"];
     const round = { reward: 12.50, height: 180, solo: false, worker: "example" };
     poolPayments.handleGenerate(config, round, {}, {}, 20.15, {}, { "example": 8 }, (error, results) => {
       expect(error).toBe(null);
-      expect(results[0].example.generate).toBe(1249960000);
-      expect(results[0].example.records["180"].amounts).toBe(12.4996);
-      expect(results[0].example.records["180"].shares).toBe(8);
-      expect(results[0].example.records["180"].times).toBe(1);
-      expect(results[0].example.shares.round).toBe(8);
-      expect(results[0].example.shares.total).toBe(8);
+      expect(results[0]['example'].generate).toBe(1249960000);
+      expect(results[0]['example'].records["180"].amounts).toBe(12.4996);
+      expect(results[0]['example'].records["180"].shares).toBe(8);
+      expect(results[0]['example'].records["180"].times).toBe(1);
+      expect(results[0]['example'].shares.round).toBe(8);
+      expect(results[0]['example'].shares.total).toBe(8);
       console.log.mockClear();
       done();
     });
@@ -1018,5 +1006,594 @@ describe('Test payments functionality', () => {
         done();
       });
     });
+  });
+
+  test('Test calculation of currency owed [1]', (done) => {
+    mock.mockListUnspent();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "immature", reward: 12.5 }, { category: "generate", reward: 12.5 }];
+    poolPayments.handleOwed(daemon, config, "checks", [rounds, [], [], [], []], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[0][0].category).toBe("immature");
+      expect(results[0][0].reward).toBe(12.5);
+      expect(results[0][1].category).toBe("immature");
+      expect(results[0][1].reward).toBe(12.5);
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test calculation of currency owed [2]', (done) => {
+    mock.mockListUnspent();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "immature", reward: 12.5 }, { category: "generate", reward: 12.5 }];
+    const workers = [{ balance: 10.5 }, { balance: 10 }]
+    poolPayments.handleOwed(daemon, config, "payments", [rounds, workers, [], [], []], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[0][0].category).toBe("immature");
+      expect(results[0][0].reward).toBe(12.5);
+      expect(results[0][1].category).toBe("generate");
+      expect(results[0][1].reward).toBe(12.5);
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test calculation of currency owed [3]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "immature", reward: 12.5 }, { category: "generate", reward: 12.5 }];
+    const workers = [{ balance: 10.5 }, { balance: 10 }]
+    poolPayments.handleOwed(daemon, config, "checks", [rounds, workers, [], [], []], (error, results) => {
+      expect(error).toBe(true);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error checking pool balance before processing payments'));
+      expect(results).toStrictEqual([]);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test calculation of currency owed [4]', (done) => {
+    mock.mockListUnspent();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "orphan", reward: 12.5 }, { category: "kicked", reward: 12.5 }, { category: "other", reward: 12.5 }];
+    const workers = [{ balance: 10.5 }, { balance: 10 }]
+    poolPayments.handleOwed(daemon, config, "checks", [rounds, workers, [], [], []], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[0][0].category).toBe("orphan");
+      expect(results[0][0].reward).toBe(12.5);
+      expect(results[0][1].category).toBe("kicked");
+      expect(results[0][1].reward).toBe(12.5);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test calculation of currency owed [5]', (done) => {
+    mock.mockListUnspent();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "generate", reward: 500 }];
+    poolPayments.handleOwed(daemon, config, "checks", [rounds, [], [], [], []], (error, results) => {
+      expect(error).toBe(null);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Insufficient funds'));
+      expect(results[0][0].category).toBe("immature");
+      expect(results[0][0].reward).toBe(500);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test calculation of currency owed [6]', (done) => {
+    mock.mockListUnspent();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {})
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "generate", reward: 23.7504 }];
+    poolPayments.handleOwed(daemon, config, "checks", [rounds, [], [], [], []], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[0][0].category).toBe("immature");
+      expect(results[0][0].reward).toBe(23.7504);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test reward calculation given rounds/workers [1]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const round = { category: "immature", height: 180, reward: 12.50, solo: false, worker: "example" };
+    poolPayments.handleRewards(config, [[round], {}, [{ "example": 20.15 }], [{}], [{ "example": 8 }]], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[1]['example'].immature).toBe(1249960000);
+      expect(results[1]['example'].shares.round).toBe(8)
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test reward calculation given rounds/workers [2]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const round = { category: "generate", height: 180, reward: 12.50, solo: false, worker: "example" };
+    poolPayments.handleRewards(config, [[round], {}, [{ "example": 20.15 }], [{}], [{ "example": 8 }]], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[1]['example'].generate).toBe(1249960000);
+      expect(results[1]['example'].records["180"].amounts).toBe(12.4996);
+      expect(results[1]['example'].records["180"].shares).toBe(8);
+      expect(results[1]['example'].records["180"].times).toBe(1);
+      expect(results[1]['example'].shares.round).toBe(8);
+      expect(results[1]['example'].shares.total).toBe(8);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test reward calculation given rounds/workers [3]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const round = { category: "orphan", height: 180, reward: 12.50, solo: false, worker: "example" };
+    poolPayments.handleRewards(config, [[round], {}, [{ "example": 20.15 }], [{}], [{ "example": 8 }]], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[0][0].orphanShares['example']).toBe(8);
+      expect(results[0][0].orphanTimes['example']).toBe(20.15);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test reward calculation given rounds/workers [4]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const round = { category: "immature", height: 180, reward: 12.50, solo: false, worker: "example" };
+    poolPayments.handleRewards(config, [[round], {}, [{ "example": 20.15 }], [{}], [{}]], (error, results) => {
+      expect(error).toBe(null);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('No worker shares for round'));
+      expect(results[1]).toStrictEqual({});
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test reward calculation given rounds/workers [5]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const round = { category: "immature", height: 180, reward: 12.50, solo: false, worker: "example" };
+    const times = [{ "example1": 20.15, "example2": 15.267 }];
+    const shared = [{ "example1": 8, "example2": 16 }];
+    poolPayments.handleRewards(config, [[round], {}, times, [{}], shared], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[1]['example1'].immature).toBe(416653333);
+      expect(results[1]['example1'].shares.round).toBe(8)
+      expect(results[1]['example2'].immature).toBe(833306667);
+      expect(results[1]['example2'].shares.round).toBe(16)
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test reward calculation given rounds/workers [6]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const round = { category: "generate", height: 180, reward: 12.50, solo: false, worker: "example" };
+    const times = [{ "example1": 20.15, "example2": 4.623 }];
+    const shared = [{ "example1": 8, "example2": 16 }];
+    poolPayments.handleRewards(config, [[round], {}, times, [{}], shared], (error, results) => {
+      expect(error).toBe(null);
+      expect(results[1]['example1'].generate).toBe(856136986);
+      expect(results[1]['example1'].records["180"].amounts).toBe(8.56136986);
+      expect(results[1]['example1'].records["180"].shares).toBe(8);
+      expect(results[1]['example1'].records["180"].times).toBe(1);
+      expect(results[1]['example1'].shares.round).toBe(8);
+      expect(results[1]['example1'].shares.total).toBe(8);
+      expect(results[1]['example2'].generate).toBe(393823014);
+      expect(results[1]['example2'].records["180"].amounts).toBe(3.93823014);
+      expect(results[1]['example2'].records["180"].shares).toBe(3.68);
+      expect(results[1]['example2'].records["180"].times).toBe(0.23);
+      expect(results[1]['example2'].shares.round).toBe(3.68);
+      expect(results[1]['example2'].shares.total).toBe(3.68);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test final updates given pipeline end [1]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "immature", hash: "hash", serialized: "serialized", confirmations: 40 }];
+    const workers = { "example1": { immature: 1250000000 }};
+    poolPayments.handleUpdates(config, "checks", Date.now(), [rounds, workers], (error, results) => {
+      const expected = [
+        ["hset", "Bitcoin:payments:immature", "example1", 12.5],
+        ["hset", "Bitcoin:payments:generate", "example1", 0],
+        ["hset", "Bitcoin:blocks:confirmations", "hash", 40]];
+      expect(results[0]).toStrictEqual(expected[0]);
+      expect(results[1]).toStrictEqual(expected[1]);
+      expect(results[2]).toStrictEqual(expected[2]);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test final updates given pipeline end [2]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "immature", hash: "hash", serialized: "serialized", confirmations: 40 }];
+    const workers = { "example1": { immature: 1250000000 }};
+    poolPayments.handleUpdates(config, "payments", Date.now(), [rounds, workers], (error, results) => {
+      const expected = [
+        ["hset", "Bitcoin:payments:immature", "example1", 12.5],
+        ["hset", "Bitcoin:payments:generate", "example1", 0],
+        ["hset", "Bitcoin:blocks:confirmations", "hash", 40],
+        ["hincrbyfloat", "Bitcoin:payments:counts", "totalPaid", 0],
+        ["hset", "Bitcoin:payments:counts", "lastPaid"]];
+      expect(results[0]).toStrictEqual(expected[0]);
+      expect(results[1]).toStrictEqual(expected[1]);
+      expect(results[2]).toStrictEqual(expected[2]);
+      expect(results[3]).toStrictEqual(expected[3]);
+      expect(results[4].slice(0, 3)).toStrictEqual(expected[4]);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test final updates given pipeline end [3]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "immature", hash: "hash", serialized: "serialized", confirmations: 40 }];
+    const workers = { "example1": { generate: 1250000000 }};
+    poolPayments.handleUpdates(config, "payments", Date.now(), [rounds, workers], (error, results) => {
+      const expected = [
+        ["hset", "Bitcoin:payments:immature", "example1", 0],
+        ["hset", "Bitcoin:payments:generate", "example1", 12.5],
+        ["hset", "Bitcoin:blocks:confirmations", "hash", 40],
+        ["hincrbyfloat", "Bitcoin:payments:counts", "totalPaid", 0],
+        ["hset", "Bitcoin:payments:counts", "lastPaid"]];
+      expect(results[0]).toStrictEqual(expected[0]);
+      expect(results[1]).toStrictEqual(expected[1]);
+      expect(results[2]).toStrictEqual(expected[2]);
+      expect(results[3]).toStrictEqual(expected[3]);
+      expect(results[4].slice(0, 3)).toStrictEqual(expected[4]);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test final updates given pipeline end [4]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "generate", height: 180, hash: "hash", serialized: "serialized", confirmations: 40 }];
+    const workers = { "example1": { generate: 1250000000 }};
+    poolPayments.handleUpdates(config, "payments", Date.now(), [rounds, workers], (error, results) => {
+      const expected = [
+        ["hset", "Bitcoin:payments:immature", "example1", 0],
+        ["hset", "Bitcoin:payments:generate", "example1", 12.5],
+        ["hdel", "Bitcoin:blocks:confirmations", "hash"],
+        ["smove", "Bitcoin:blocks:pending", "Bitcoin:blocks:confirmed", "serialized"],
+        ["del", "Bitcoin:rounds:round-180:shares:counts"],
+        ["del", "Bitcoin:rounds:round-180:shares:records"],
+        ["del", "Bitcoin:rounds:round-180:shares:values"],
+        ["del", "Bitcoin:rounds:round-180:times:last"],
+        ["del", "Bitcoin:rounds:round-180:times:values"],
+        ["hincrbyfloat", "Bitcoin:payments:counts", "totalPaid", 0],
+        ["hset", "Bitcoin:payments:counts", "lastPaid"]];
+      expect(results[0]).toStrictEqual(expected[0]);
+      expect(results[1]).toStrictEqual(expected[1]);
+      expect(results[2]).toStrictEqual(expected[2]);
+      expect(results[3]).toStrictEqual(expected[3]);
+      expect(results[4]).toStrictEqual(expected[4]);
+      expect(results[5]).toStrictEqual(expected[5]);
+      expect(results[6]).toStrictEqual(expected[6]);
+      expect(results[7]).toStrictEqual(expected[7]);
+      expect(results[8]).toStrictEqual(expected[8]);
+      expect(results[9]).toStrictEqual(expected[9]);
+      expect(results[10].slice(0, 3)).toStrictEqual(expected[10]);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test final updates given pipeline end [5]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "generate", height: 180, hash: "hash", serialized: "serialized", confirmations: 40 }];
+    const workers = { "example1": { generate: 1250000000 }};
+    poolPayments.handleUpdates(config, "checks", Date.now(), [rounds, workers], (error, results) => {
+      const expected = [
+        ["hset", "Bitcoin:payments:immature", "example1", 0],
+        ["hset", "Bitcoin:payments:generate", "example1", 12.5]];
+      expect(results[0]).toStrictEqual(expected[0]);
+      expect(results[1]).toStrictEqual(expected[1]);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test final updates given pipeline end [6]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "generate", height: 180, hash: "hash", serialized: "serialized", confirmations: 40 }];
+    const workers = { "example1": { sent: 12.5 }};
+    poolPayments.handleUpdates(config, "payments", Date.now(), [rounds, workers], (error, results) => {
+      const expected = [
+        ["hincrbyfloat", "Bitcoin:payments:paid", "example1", 12.5],
+        ["hset", "Bitcoin:payments:immature", "example1", 0],
+        ["hset", "Bitcoin:payments:generate", "example1", 0],
+        ["hdel", "Bitcoin:blocks:confirmations", "hash"],
+        ["smove", "Bitcoin:blocks:pending", "Bitcoin:blocks:confirmed", "serialized"],
+        ["del", "Bitcoin:rounds:round-180:shares:counts"],
+        ["del", "Bitcoin:rounds:round-180:shares:records"],
+        ["del", "Bitcoin:rounds:round-180:shares:values"],
+        ["del", "Bitcoin:rounds:round-180:times:last"],
+        ["del", "Bitcoin:rounds:round-180:times:values"],
+        ["hincrbyfloat", "Bitcoin:payments:counts", "totalPaid", 12.5],
+        ["hset", "Bitcoin:payments:counts", "lastPaid"]];
+      expect(results[0]).toStrictEqual(expected[0]);
+      expect(results[1]).toStrictEqual(expected[1]);
+      expect(results[2]).toStrictEqual(expected[2]);
+      expect(results[3]).toStrictEqual(expected[3]);
+      expect(results[4]).toStrictEqual(expected[4]);
+      expect(results[5]).toStrictEqual(expected[5]);
+      expect(results[6]).toStrictEqual(expected[6]);
+      expect(results[7]).toStrictEqual(expected[7]);
+      expect(results[8]).toStrictEqual(expected[8]);
+      expect(results[9]).toStrictEqual(expected[9]);
+      expect(results[10]).toStrictEqual(expected[10]);
+      expect(results[11].slice(0, 3)).toStrictEqual(expected[11]);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test final updates given pipeline end [6]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "generate", height: 180, hash: "hash", serialized: "serialized", confirmations: 40 }];
+    const workers = { "example1": { sent: 12.5, change: 0 }};
+    poolPayments.handleUpdates(config, "payments", Date.now(), [rounds, workers], (error, results) => {
+      const expected = [
+        ["hincrbyfloat", "Bitcoin:payments:paid", "example1", 12.5],
+        ["hset", "Bitcoin:payments:immature", "example1", 0],
+        ["hset", "Bitcoin:payments:generate", "example1", 0],
+        ["hdel", "Bitcoin:blocks:confirmations", "hash"],
+        ["smove", "Bitcoin:blocks:pending", "Bitcoin:blocks:confirmed", "serialized"],
+        ["del", "Bitcoin:rounds:round-180:shares:counts"],
+        ["del", "Bitcoin:rounds:round-180:shares:records"],
+        ["del", "Bitcoin:rounds:round-180:shares:values"],
+        ["del", "Bitcoin:rounds:round-180:times:last"],
+        ["del", "Bitcoin:rounds:round-180:times:values"],
+        ["hincrbyfloat", "Bitcoin:payments:counts", "totalPaid", 12.5],
+        ["hset", "Bitcoin:payments:counts", "lastPaid"]];
+      expect(results[0]).toStrictEqual(expected[0]);
+      expect(results[1]).toStrictEqual(expected[1]);
+      expect(results[2]).toStrictEqual(expected[2]);
+      expect(results[3]).toStrictEqual(expected[3]);
+      expect(results[4]).toStrictEqual(expected[4]);
+      expect(results[5]).toStrictEqual(expected[5]);
+      expect(results[6]).toStrictEqual(expected[6]);
+      expect(results[7]).toStrictEqual(expected[7]);
+      expect(results[8]).toStrictEqual(expected[8]);
+      expect(results[9]).toStrictEqual(expected[9]);
+      expect(results[10]).toStrictEqual(expected[10]);
+      expect(results[11].slice(0, 3)).toStrictEqual(expected[11]);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test final updates given pipeline end [7]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "generate", height: 180, hash: "hash", serialized: "serialized", confirmations: 40 }];
+    const workers = { "example1": { sent: 12.5, change: 150000 }};
+    poolPayments.handleUpdates(config, "payments", Date.now(), [rounds, workers], (error, results) => {
+      const expected = [
+        ["hincrbyfloat", "Bitcoin:payments:unpaid", "example1", 0.0015],
+        ["hincrbyfloat", "Bitcoin:payments:paid", "example1", 12.5],
+        ["hset", "Bitcoin:payments:immature", "example1", 0],
+        ["hset", "Bitcoin:payments:generate", "example1", 0],
+        ["hdel", "Bitcoin:blocks:confirmations", "hash"],
+        ["smove", "Bitcoin:blocks:pending", "Bitcoin:blocks:confirmed", "serialized"],
+        ["del", "Bitcoin:rounds:round-180:shares:counts"],
+        ["del", "Bitcoin:rounds:round-180:shares:records"],
+        ["del", "Bitcoin:rounds:round-180:shares:values"],
+        ["del", "Bitcoin:rounds:round-180:times:last"],
+        ["del", "Bitcoin:rounds:round-180:times:values"],
+        ["hincrbyfloat", "Bitcoin:payments:counts", "totalPaid", 12.5],
+        ["hset", "Bitcoin:payments:counts", "lastPaid"]];
+      expect(results[0]).toStrictEqual(expected[0]);
+      expect(results[1]).toStrictEqual(expected[1]);
+      expect(results[2]).toStrictEqual(expected[2]);
+      expect(results[3]).toStrictEqual(expected[3]);
+      expect(results[4]).toStrictEqual(expected[4]);
+      expect(results[5]).toStrictEqual(expected[5]);
+      expect(results[6]).toStrictEqual(expected[6]);
+      expect(results[7]).toStrictEqual(expected[7]);
+      expect(results[8]).toStrictEqual(expected[8]);
+      expect(results[9]).toStrictEqual(expected[9]);
+      expect(results[10]).toStrictEqual(expected[10]);
+      expect(results[11]).toStrictEqual(expected[11]);
+      expect(results[12].slice(0, 3)).toStrictEqual(expected[12]);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test final updates given pipeline end [7]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "kicked", height: 180, hash: "hash", serialized: "serialized", confirmations: 40 }];
+    const workers = { "example1": { immature: 0 }};
+    poolPayments.handleUpdates(config, "payments", Date.now(), [rounds, workers], (error, results) => {
+      const expected = [
+        ["hset", "Bitcoin:payments:immature", "example1", 0],
+        ["hset", "Bitcoin:payments:generate", "example1", 0],
+        ["hdel", "Bitcoin:blocks:confirmations", "hash"],
+        ["smove", "Bitcoin:blocks:pending", "Bitcoin:blocks:kicked", "serialized"],
+        ["hincrbyfloat", "Bitcoin:payments:counts", "totalPaid", 0],
+        ["hset", "Bitcoin:payments:counts", "lastPaid"]];
+      expect(results[0]).toStrictEqual(expected[0]);
+      expect(results[1]).toStrictEqual(expected[1]);
+      expect(results[2]).toStrictEqual(expected[2]);
+      expect(results[3]).toStrictEqual(expected[3]);
+      expect(results[4]).toStrictEqual(expected[4]);
+      expect(results[5].slice(0, 3)).toStrictEqual(expected[5]);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test final updates given pipeline end [7]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
+    poolPayments.poolConfigs["Bitcoin"].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs["Bitcoin"].payments.coinPrecision = 8;
+    poolPayments.poolConfigs["Bitcoin"].payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs["Bitcoin"];
+    const rounds = [{ category: "kicked", delete: true, height: 180, hash: "hash", serialized: "serialized", confirmations: 40 }];
+    const workers = { "example1": { immature: 0 }};
+    poolPayments.handleUpdates(config, "payments", Date.now(), [rounds, workers], (error, results) => {
+      const expected = [
+        ["hset", "Bitcoin:payments:immature", "example1", 0],
+        ["hset", "Bitcoin:payments:generate", "example1", 0],
+        ["hdel", "Bitcoin:blocks:confirmations", "hash"],
+        ["smove", "Bitcoin:blocks:pending", "Bitcoin:blocks:kicked", "serialized"],
+        ["del", "Bitcoin:rounds:round-180:shares:counts"],
+        ["del", "Bitcoin:rounds:round-180:shares:records"],
+        ["del", "Bitcoin:rounds:round-180:shares:values"],
+        ["del", "Bitcoin:rounds:round-180:times:last"],
+        ["del", "Bitcoin:rounds:round-180:times:values"],
+        ["hincrbyfloat", "Bitcoin:payments:counts", "totalPaid", 0],
+        ["hset", "Bitcoin:payments:counts", "lastPaid"]];
+      expect(results[0]).toStrictEqual(expected[0]);
+      expect(results[1]).toStrictEqual(expected[1]);
+      expect(results[2]).toStrictEqual(expected[2]);
+      expect(results[3]).toStrictEqual(expected[3]);
+      expect(results[4]).toStrictEqual(expected[4]);
+      expect(results[5]).toStrictEqual(expected[5]);
+      expect(results[6]).toStrictEqual(expected[6]);
+      expect(results[7]).toStrictEqual(expected[7]);
+      expect(results[8]).toStrictEqual(expected[8]);
+      expect(results[9]).toStrictEqual(expected[9]);
+      expect(results[10].slice(0, 3)).toStrictEqual(expected[10]);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test info message on successful pipeline', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.outputPaymentInfo(["Bitcoin"]);
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Payment processing setup to run every'));
+    console.log.mockClear();
   });
 });
