@@ -41,9 +41,7 @@ describe('Test stratum functionality', () => {
   let configCopy;
   beforeEach((done) => {
     configCopy = Object.assign({}, poolConfig);
-    client.flushall((error, results) => {
-      done();
-    });
+    client.flushall(() => done());
   });
 
   test('Test initialization of stratum', () => {

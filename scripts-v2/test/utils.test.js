@@ -54,7 +54,7 @@ describe('Test utility functionality', () => {
   });
 
   test('Test implemented countOccurences', () => {
-    const array = [1, 5, 3, 2, 1, 2, 1, 1, 2, 3, 1]
+    const array = [1, 5, 3, 2, 1, 2, 1, 1, 2, 3, 1];
     expect(utils.countOccurences(array, 1)).toBe(5);
     expect(utils.countOccurences(array, 2)).toBe(3);
     expect(utils.countOccurences(array, 5)).toBe(1);

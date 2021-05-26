@@ -31,9 +31,7 @@ describe('Test shares functionality', () => {
   let configCopy;
   beforeEach((done) => {
     configCopy = Object.assign({}, portalConfig);
-    client.flushall((error, results) => {
-      done();
-    });
+    client.flushall(() => done());
   });
 
   test('Test initialization of shares', () => {
@@ -184,12 +182,6 @@ describe('Test shares functionality', () => {
       'reward': 10006839,
       'shareDiff': '2.35170820',
       'worker': 'example'
-    };
-    const outputShare = {
-      'time': dateNow,
-      'worker': 'example',
-      'solo': false,
-      'difficulty': 1,
     };
     const expected = [
       ['hincrbyfloat', 'Bitcoin:rounds:current:times:values', 'example'],

@@ -99,7 +99,7 @@ const PoolPayments = function (logger, client) {
 
   // Handle Shares of Orphan Blocks
   this.handleOrphans = function(round, coin, callback) {
-    const commands = []
+    const commands = [];
     const dateNow = Date.now();
     if (typeof round.orphanShares !== 'undefined') {
       logger.warning('Payments', coin, `Moving shares/times from orphaned block ${ round.height } to current round.`);
@@ -124,15 +124,15 @@ const PoolPayments = function (logger, client) {
     }
 
     callback(null, commands);
-  }
+  };
 
   // Calculate Unspent Balance in Daemon
   this.handleUnspent = function(daemon, config, category, coin, callback) {
     const args = [config.payments.minConfirmations, 99999999];
     daemon.cmd('listunspent', args, (result) => {
       if (!result || result.error || result[0].error) {
-          logger.error('Payments', coin, `Error with payment processing daemon: ${ JSON.stringify(result[0].error) }`);
-          callback(true, []);
+        logger.error('Payments', coin, `Error with payment processing daemon: ${ JSON.stringify(result[0].error) }`);
+        callback(true, []);
       } else {
         let balance = parseFloat(0);
         if (result[0].response != null && result[0].response.length > 0) {
@@ -143,13 +143,13 @@ const PoolPayments = function (logger, client) {
           });
           balance = utils.coinsRound(balance, config.payments.coinPrecision);
         }
-        if (category === "start") {
+        if (category === 'start') {
           logger.special('Payments', coin, `Payment wallet has a balance of ${ balance } ${ config.coin.symbol }`);
         }
         callback(null, [utils.coinsToSatoshis(balance, config.payments.magnitude)]);
       }
     });
-  }
+  };
 
   // Handle Duplicate Blocks/Rounds
   /* istanbul ignore next */
@@ -208,7 +208,7 @@ const PoolPayments = function (logger, client) {
     // Handle Solo Rounds
     if (round.solo) {
       const worker = workers[round.worker] || {};
-      worker.shares = worker.shares || {}
+      worker.shares = worker.shares || {};
       const shares = parseFloat(solo[round.worker] || 1);
       const total = Math.round(immature);
       worker.shares.round = shares;
@@ -222,7 +222,7 @@ const PoolPayments = function (logger, client) {
       Object.keys(shared).forEach((address) => {
         let shares = parseFloat(shared[address]);
         const worker = workers[address] || {};
-        worker.shares = worker.shares || {}
+        worker.shares = worker.shares || {};
         if (times[address] != null && parseFloat(times[address]) > 0) {
           const timePeriod = utils.roundTo((parseFloat(times[address]) / maxTime), 2);
           if (timePeriod > 0 && timePeriod < 0.51) {
@@ -247,7 +247,7 @@ const PoolPayments = function (logger, client) {
 
     // Return Updated Workers as Callback
     callback(null, [workers]);
-  }
+  };
 
   // Handle Workers for Generate Blocks
   this.handleGenerate = function(config, round, workers, times, maxTime, solo, shared, callback) {
@@ -259,7 +259,7 @@ const PoolPayments = function (logger, client) {
     // Handle Solo Rounds
     if (round.solo) {
       const worker = workers[round.worker] || {};
-      worker.shares = worker.shares || {}
+      worker.shares = worker.shares || {};
       const shares = parseFloat(solo[round.worker] || 1);
       const total = Math.round(generate);
       worker.records = worker.records || {};
@@ -267,7 +267,7 @@ const PoolPayments = function (logger, client) {
         amounts: utils.satoshisToCoins(total, config.payments.magnitude, config.payments.coinPrecision),
         shares: shares,
         times: 1,
-      }
+      };
       worker.shares.round = shares;
       worker.shares.total = parseFloat(worker.shares.total || 0) + shares;
       worker.generate = (worker.generate || 0) + total;
@@ -280,7 +280,7 @@ const PoolPayments = function (logger, client) {
       Object.keys(shared).forEach((address) => {
         let shares = parseFloat(shared[address]);
         const worker = workers[address] || {};
-        worker.shares = worker.shares || {}
+        worker.shares = worker.shares || {};
         worker.records = worker.records || {};
         worker.records[round.height] = {};
         if (times[address] != null && parseFloat(times[address]) > 0) {
@@ -312,7 +312,7 @@ const PoolPayments = function (logger, client) {
 
     // Return Updated Workers as Callback
     callback(null, [workers]);
-  }
+  };
 
   // Check Blocks for Duplicates/Issues
   /* istanbul ignore next */
@@ -564,7 +564,7 @@ const PoolPayments = function (logger, client) {
       if (round.category === 'generate') {
         totalOwed += utils.coinsToSatoshis(round.reward, config.payments.magnitude) - feeSatoshi;
       }
-    })
+    });
 
     // Add to Total Owed from Unpaid
     Object.keys(data[1]).forEach((worker) => {
@@ -590,7 +590,7 @@ const PoolPayments = function (logger, client) {
       }
 
       // Payments Aren't Necessary
-      if (totalOwed <= 0 || category !== "payments") {
+      if (totalOwed <= 0 || category !== 'payments') {
         sendPayments = false;
       }
 
@@ -613,7 +613,7 @@ const PoolPayments = function (logger, client) {
       // Return Payment Data as Callback
       callback(null, [rounds, data[1], data[2], data[3], data[4]]);
     });
-  }
+  };
 
   // Calculate Scores Given Times/Shares
   this.handleRewards = function(config, data, callback) {
@@ -626,13 +626,13 @@ const PoolPayments = function (logger, client) {
     rounds.forEach((round, i) => {
 
       let maxTime = 0;
-      const times = data[2][i]
+      const times = data[2][i];
       const solo = data[3][i];
       const shared = data[4][i];
 
       // Check if Shares Exist in Round
       if ((Object.keys(solo).length <= 0) && (Object.keys(shared).length <= 0)) {
-        _this.client.smove(`${ coin }:blocks:pending`, `${coin  }:blocks:manual`, round.serialized);
+        _this.client.smove(`${ coin }:blocks:pending`, `${coin }:blocks:manual`, round.serialized);
         logger.error('Payments', coin, `No worker shares for round: ${ round.height }, hash: ${ round.hash }. Manual payout required.`);
         return;
       }
@@ -669,7 +669,7 @@ const PoolPayments = function (logger, client) {
 
     // Return Updated Rounds/Workers as Callback
     callback(null, [rounds, workers]);
-  }
+  };
 
   // Structure and Apply Redis Updates
   /* istanbul ignore next */
@@ -686,7 +686,7 @@ const PoolPayments = function (logger, client) {
       const worker = workers[address];
 
       // Manage Worker Commands [1]
-      if (category === "payments") {
+      if (category === 'payments') {
         if (worker.change && worker.change !== 0) {
           const change = utils.satoshisToCoins(worker.change, config.payments.magnitude, config.payments.coinPrecision);
           commands.push(['hincrbyfloat', `${ coin }:payments:unpaid`, address, change]);
@@ -711,7 +711,7 @@ const PoolPayments = function (logger, client) {
       if (worker.generate > 0) {
         worker.generate = utils.satoshisToCoins(worker.generate, config.payments.magnitude, config.payments.coinPrecision);
         const generate = utils.coinsRound(worker.generate, config.payments.coinPrecision);
-        commands.push(['hset', `${ coin }:payments:generate`, address, generate])
+        commands.push(['hset', `${ coin }:payments:generate`, address, generate]);
       } else {
         commands.push(['hset', `${ coin }:payments:generate`, address, 0]);
       }
@@ -745,35 +745,35 @@ const PoolPayments = function (logger, client) {
         commands.push(['hset', `${ coin }:blocks:confirmations`, round.hash, round.confirmations]);
         break;
       case 'generate':
-        if (category === "payments") {
+        if (category === 'payments') {
           commands.push(['hdel', `${ coin }:blocks:confirmations`, round.hash]);
           commands.push(['smove', `${ coin }:blocks:pending`, `${ coin }:blocks:confirmed`, round.serialized]);
           commands = commands.concat(deleteCurrent(coin, round));
         }
         break;
       }
-    })
+    });
 
     // Update Miscellaneous Statistics
-    if ((category === "start") || (category === "payments")) {
+    if ((category === 'start') || (category === 'payments')) {
       commands.push(['hincrbyfloat', `${ coin }:payments:counts`, 'totalPaid', totalPaid]);
       commands.push(['hset', `${ coin }:payments:counts`, 'lastPaid', interval]);
     }
 
     // Manage Redis Commands
-    _this.client.multi(commands).exec(function(error, results) {
+    _this.client.multi(commands).exec((error,) => {
       if (error) {
         logger.error('Payments', coin, `Payments sent but could not update redis: ${
           JSON.stringify(error) }. Disabling payment processing to prevent double-payouts. The commands in ${
           coin.toLowerCase() }_commands.txt must be ran manually`);
-        fs.writeFile(`${ coin.toLowerCase() }_commands.txt`, JSON.stringify(commands), (error) => {
+        fs.writeFile(`${ coin.toLowerCase() }_commands.txt`, JSON.stringify(commands), () => {
           logger.error('Could not write output commands.txt, stop the program immediately.');
         });
         callback(true, []);
       }
       callback(null, commands);
     });
-  }
+  };
 
   // Process Main Payment Checks
   /* istanbul ignore next */
@@ -824,7 +824,7 @@ const PoolPayments = function (logger, client) {
     // Handle Main Payment Checks
     const checkInterval = setInterval(() => {
       try {
-        const category = "checks";
+        const category = 'checks';
         const lastInterval = Date.now();
         _this.processChecks(daemon, config, category, lastInterval, () => {});
       } catch(e) {
@@ -836,7 +836,7 @@ const PoolPayments = function (logger, client) {
     // Handle Main Payment Functionality
     const paymentInterval = setInterval(() => {
       try {
-        const category = "payments";
+        const category = 'payments';
         const lastInterval = Date.now();
         _this.processPayments(daemon, config, category, lastInterval, () => {});
       } catch(e) {
@@ -848,7 +848,7 @@ const PoolPayments = function (logger, client) {
     // Start Payment Functionality with Initial Check
     setTimeout(() => {
       try {
-        const category = "start";
+        const category = 'start';
         const lastInterval = Date.now();
         _this.processChecks(daemon, config, category, lastInterval, () => callback(null, true));
       } catch(e) {

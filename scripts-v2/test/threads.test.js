@@ -27,9 +27,7 @@ describe('Test threads functionality', () => {
   let configCopy;
   beforeEach((done) => {
     configCopy = Object.assign({}, portalConfig);
-    client.flushall((error, results) => {
-      done();
-    });
+    client.flushall(() => done());
   });
 
   test('Test initialization of threads', () => {

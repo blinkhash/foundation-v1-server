@@ -39,9 +39,7 @@ const logger = new PoolLogger(portalConfig);
 describe('Test workers functionality', () => {
 
   beforeEach((done) => {
-    client.flushall((error, results) => {
-      done();
-    });
+    client.flushall(() => done());
   });
 
   test('Test initialization of workers', () => {

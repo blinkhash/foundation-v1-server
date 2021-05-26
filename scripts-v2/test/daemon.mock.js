@@ -29,7 +29,7 @@ exports.mockDuplicateRounds = function() {
     .post('/', body => (Array.isArray(body) && body.length >= 2))
     .reply(200, JSON.stringify(response)
     );
-}
+};
 
 exports.mockDuplicateBlocks = function() {
   const response = [
@@ -49,7 +49,7 @@ exports.mockDuplicateBlocks = function() {
     .post('/', body => (Array.isArray(body) && body.length >= 2))
     .reply(200, JSON.stringify(response)
     );
-}
+};
 
 exports.mockGetAddressInfo = function() {
   const response = {
@@ -57,7 +57,7 @@ exports.mockGetAddressInfo = function() {
     'scriptPubKey': '0014ebc596525a5859c2c25f5c72cb085b2f141c4d39',
     'ismine': true,
     'solvable': true,
-    'desc': "wpkh([d62a9d16/0'/0'/0']0327f696589a4b7366ef12312a8b5a5b11ffb56f817b4b10f18eec939339f78c41)#7jenc2fq",
+    'desc': 'wpkh([d62a9d16/0\'/0\'/0\']0327f696589a4b7366ef12312a8b5a5b11ffb56f817b4b10f18eec939339f78c41)#7jenc2fq',
     'iswatchonly': false,
     'isscript': false,
     'iswitness': true,
@@ -66,7 +66,7 @@ exports.mockGetAddressInfo = function() {
     'pubkey': '0327f696589a4b7366ef12312a8b5a5b11ffb56f817b4b10f18eec939339f78c41',
     'ischange': false,
     'timestamp': 1620585313,
-    'hdkeypath': "m/0'/0'/0'",
+    'hdkeypath': 'm/0\'/0\'/0\'',
     'hdseedid': '6ef9b0dbd268f043f7c684f9ec8a45bea9b5cc72',
     'hdmasterfingerprint': 'd62a9d16',
     'labels': [ '' ]
@@ -80,7 +80,7 @@ exports.mockGetAddressInfo = function() {
       result: response,
     })
     );
-}
+};
 
 exports.mockGetBalance = function() {
   nock('http://127.0.0.1:8332')
@@ -92,7 +92,7 @@ exports.mockGetBalance = function() {
       error: null,
     })
     );
-}
+};
 
 exports.mockGetBalanceInvalid = function() {
   nock('http://127.0.0.1:8332')
@@ -100,11 +100,11 @@ exports.mockGetBalanceInvalid = function() {
     .post('/', body => body.method === 'getbalance')
     .reply(200, JSON.stringify({
       id: 'nocktest',
-      result: "687.5008/134#9138",
+      result: '687.5008/134#9138',
       error: null,
     })
     );
-}
+};
 
 // Mock GetBlockchainInfo Command
 exports.mockGetBlockchainInfo = function() {
@@ -345,7 +345,7 @@ exports.mockGetTransactionsGenerate = function() {
     .post('/', body => (Array.isArray(body) && body.length >= 1))
     .reply(200, JSON.stringify(response)
     );
-}
+};
 
 exports.mockGetTransactionsImmature = function() {
   const response = [
@@ -389,7 +389,7 @@ exports.mockGetTransactionsImmature = function() {
     .post('/', body => (Array.isArray(body) && body.length >= 1))
     .reply(200, JSON.stringify(response)
     );
-}
+};
 
 exports.mockGetTransactionsOrphan = function() {
   const response = [
@@ -433,7 +433,7 @@ exports.mockGetTransactionsOrphan = function() {
     .post('/', body => (Array.isArray(body) && body.length >= 1))
     .reply(200, JSON.stringify(response)
     );
-}
+};
 
 exports.mockGetTransactionsSingle = function() {
   const response = [
@@ -470,7 +470,7 @@ exports.mockGetTransactionsSingle = function() {
     .post('/', body => (Array.isArray(body) && body.length >= 1))
     .reply(200, JSON.stringify(response)
     );
-}
+};
 
 exports.mockGetTransactionsSplit = function() {
   const response = [
@@ -514,7 +514,7 @@ exports.mockGetTransactionsSplit = function() {
     .post('/', body => (Array.isArray(body) && body.length >= 1))
     .reply(200, JSON.stringify(response)
     );
-}
+};
 
 exports.mockGetTransactionsValue = function() {
   const response = [
@@ -558,7 +558,7 @@ exports.mockGetTransactionsValue = function() {
     .post('/', body => (Array.isArray(body) && body.length >= 1))
     .reply(200, JSON.stringify(response)
     );
-}
+};
 
 exports.mockGetTransactionsError1 = function() {
   const response = [
@@ -573,7 +573,7 @@ exports.mockGetTransactionsError1 = function() {
     .post('/', body => (Array.isArray(body) && body.length >= 1))
     .reply(200, JSON.stringify(response)
     );
-}
+};
 
 exports.mockGetTransactionsError2 = function() {
   const response = [
@@ -588,7 +588,7 @@ exports.mockGetTransactionsError2 = function() {
     .post('/', body => (Array.isArray(body) && body.length >= 1))
     .reply(200, JSON.stringify(response)
     );
-}
+};
 
 exports.mockGetTransactionsError3 = function() {
   const response = [
@@ -602,7 +602,7 @@ exports.mockGetTransactionsError3 = function() {
     .post('/', body => (Array.isArray(body) && body.length >= 1))
     .reply(200, JSON.stringify(response)
     );
-}
+};
 
 exports.mockGetTransactionsError4 = function() {
   const response = [
@@ -646,7 +646,7 @@ exports.mockGetTransactionsError4 = function() {
     .post('/', body => (Array.isArray(body) && body.length >= 1))
     .reply(200, JSON.stringify(response)
     );
-}
+};
 
 exports.mockListUnspent = function() {
   const response = [
@@ -660,7 +660,7 @@ exports.mockListUnspent = function() {
       'confirmations': 20533,
       'spendable': true,
       'solvable': true,
-      'desc': "wpkh([e046bc57/0'/0'/1']02153745d8d712267913cf4197e6a135a9d4b32f3389b060f9ee720cf086af64b5)#pj07q5a6",
+      'desc': 'wpkh([e046bc57/0\'/0\'/1\']02153745d8d712267913cf4197e6a135a9d4b32f3389b060f9ee720cf086af64b5)#pj07q5a6',
       'safe': true
     },
     {
@@ -673,7 +673,7 @@ exports.mockListUnspent = function() {
       'confirmations': 20534,
       'spendable': true,
       'solvable': true,
-      'desc': "wpkh([e046bc57/0'/0'/1']02153745d8d712267913cf4197e6a135a9d4b32f3389b060f9ee720cf086af64b5)#pj07q5a6",
+      'desc': 'wpkh([e046bc57/0\'/0\'/1\']02153745d8d712267913cf4197e6a135a9d4b32f3389b060f9ee720cf086af64b5)#pj07q5a6',
       'safe': true
     },
     {
@@ -686,7 +686,7 @@ exports.mockListUnspent = function() {
       'confirmations': 20535,
       'spendable': true,
       'solvable': true,
-      'desc': "wpkh([e046bc57/0'/0'/1']02153745d8d712267913cf4197e6a135a9d4b32f3389b060f9ee720cf086af64b5)#pj07q5a6",
+      'desc': 'wpkh([e046bc57/0\'/0\'/1\']02153745d8d712267913cf4197e6a135a9d4b32f3389b060f9ee720cf086af64b5)#pj07q5a6',
       'safe': true
     },
   ];
@@ -699,7 +699,7 @@ exports.mockListUnspent = function() {
       result: response,
     })
     );
-}
+};
 
 exports.mockListUnspentEmpty = function() {
   nock('http://127.0.0.1:8332')
@@ -711,7 +711,7 @@ exports.mockListUnspentEmpty = function() {
       result: [],
     })
     );
-}
+};
 
 exports.mockListUnspentInvalid = function() {
   const response = [
@@ -725,7 +725,7 @@ exports.mockListUnspentInvalid = function() {
       'confirmations': 20533,
       'spendable': true,
       'solvable': true,
-      'desc': "wpkh([e046bc57/0'/0'/1']02153745d8d712267913cf4197e6a135a9d4b32f3389b060f9ee720cf086af64b5)#pj07q5a6",
+      'desc': 'wpkh([e046bc57/0\'/0\'/1\']02153745d8d712267913cf4197e6a135a9d4b32f3389b060f9ee720cf086af64b5)#pj07q5a6',
       'safe': true
     },
   ];
@@ -738,7 +738,7 @@ exports.mockListUnspentInvalid = function() {
       result: response,
     })
     );
-}
+};
 
 exports.mockValidateAddress = function() {
   const response = {
