@@ -8,7 +8,8 @@ const redis = require('redis-mock');
 jest.mock('redis', () => jest.requireActual('redis-mock'));
 
 const nock = require('nock');
-const mock = require('./daemon.mock.js');
+const mockDaemon = require('./daemon.mock.js');
+const mockPayments = require('./payments.mock.js');
 
 const PoolLogger = require('../main/logger');
 const PoolPayments = require('../main/payments');
@@ -105,7 +106,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test address validation functionality [1]', (done) => {
-    mock.mockValidateAddress();
+    mockDaemon.mockValidateAddress();
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
     poolPayments.checkAddress(daemon, 'test', 'Bitcoin', 'validateaddress', (error, results) => {
@@ -117,7 +118,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test address validation functionality [2]', (done) => {
-    mock.mockValidateAddressError();
+    mockDaemon.mockValidateAddressError();
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
     poolPayments.checkAddress(daemon, 'test', 'Bitcoin', 'validateaddress', (error, results) => {
@@ -129,7 +130,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test address validation functionality [3]', (done) => {
-    mock.mockValidateAddressSecondary();
+    mockDaemon.mockValidateAddressSecondary();
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
     poolPayments.checkAddress(daemon, 'test', 'Bitcoin', 'validateaddress', (error, results) => {
@@ -141,7 +142,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test address validation functionality [4]', (done) => {
-    mock.mockGetAddressInfo();
+    mockDaemon.mockGetAddressInfo();
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
     poolPayments.handleAddress(daemon, 'test', 'Bitcoin', (error, results) => {
@@ -153,7 +154,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test address validation functionality [5]', (done) => {
-    mock.mockValidateAddressSecondary();
+    mockDaemon.mockValidateAddressSecondary();
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
     poolPayments.handleAddress(daemon, 'test', 'Bitcoin', (error, results) => {
@@ -178,7 +179,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test balance retrieval from daemon [1]', (done) => {
-    mock.mockGetBalance();
+    mockDaemon.mockGetBalance();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -207,7 +208,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test balance retrieval from daemon [3]', (done) => {
-    mock.mockGetBalanceInvalid();
+    mockDaemon.mockGetBalanceInvalid();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -249,7 +250,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test calculation of unspent inputs in daemon [1]', (done) => {
-    mock.mockListUnspent();
+    mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
@@ -280,7 +281,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test calculation of unspent inputs in daemon [3]', (done) => {
-    mock.mockListUnspentEmpty();
+    mockDaemon.mockListUnspentEmpty();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
@@ -298,7 +299,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test calculation of unspent inputs in daemon [4]', (done) => {
-    mock.mockListUnspentInvalid();
+    mockDaemon.mockListUnspentInvalid();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
@@ -316,7 +317,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test calculation of unspent inputs in daemon [5]', (done) => {
-    mock.mockListUnspent();
+    mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
@@ -335,7 +336,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test handling of duplicate rounds [1]', (done) => {
-    mock.mockDuplicateRounds();
+    mockDaemon.mockDuplicateRounds();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -365,7 +366,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test handling of duplicate rounds [3]', (done) => {
-    mock.mockDuplicateBlocks();
+    mockDaemon.mockDuplicateBlocks();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -385,7 +386,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test handling of duplicate rounds [4]', (done) => {
-    mock.mockDuplicateBlocks();
+    mockDaemon.mockDuplicateBlocks();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -682,28 +683,8 @@ describe('Test payments functionality', () => {
     });
   });
 
-  test('Test main worker handling', (done) => {
-    const commands = [
-      ['hincrbyfloat', 'Bitcoin:payments:unpaid', 'worker1', 672.21],
-      ['hincrbyfloat', 'Bitcoin:payments:unpaid', 'worker2', 391.15]];
-    mockSetupClient(client, commands, 'Bitcoin', () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-      const poolPayments = new PoolPayments(logger, client);
-      poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
-      const config = poolPayments.poolConfigs['Bitcoin'];
-      poolPayments.handleWorkers(config, [[]], (error, results) => {
-        expect(error).toBe(null);
-        expect(Object.keys(results[1]).length).toBe(2);
-        expect(results[1]['worker1'].balance).toBe(67221000000);
-        expect(results[1]['worker2'].balance).toBe(39115000000);
-        console.log.mockClear();
-        done();
-      });
-    });
-  });
-
   test('Test main transaction handling [1]', (done) => {
-    mock.mockGetTransactionsGenerate();
+    mockDaemon.mockGetTransactionsGenerate();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -740,7 +721,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test main transaction handling [3]', (done) => {
-    mock.mockGetTransactionsImmature();
+    mockDaemon.mockGetTransactionsImmature();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -762,7 +743,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test main transaction handling [4]', (done) => {
-    mock.mockGetTransactionsSplit();
+    mockDaemon.mockGetTransactionsSplit();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -784,7 +765,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test main transaction handling [5]', (done) => {
-    mock.mockGetTransactionsOrphan();
+    mockDaemon.mockGetTransactionsOrphan();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -803,7 +784,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test main transaction handling [6]', (done) => {
-    mock.mockGetTransactionsSingle();
+    mockDaemon.mockGetTransactionsSingle();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -824,7 +805,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test main transaction handling [7]', (done) => {
-    mock.mockGetTransactionsValue();
+    mockDaemon.mockGetTransactionsValue();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -846,7 +827,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test main transaction handling [8]', (done) => {
-    mock.mockGetTransactionsError1();
+    mockDaemon.mockGetTransactionsError1();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -865,7 +846,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test main transaction handling [9]', (done) => {
-    mock.mockGetTransactionsError2();
+    mockDaemon.mockGetTransactionsError2();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -884,7 +865,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test main transaction handling [10]', (done) => {
-    mock.mockGetTransactionsError3();
+    mockDaemon.mockGetTransactionsError3();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -901,7 +882,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test main transaction handling [11]', (done) => {
-    mock.mockGetTransactionsError4();
+    mockDaemon.mockGetTransactionsError4();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
@@ -1006,7 +987,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test calculation of currency owed [1]', (done) => {
-    mock.mockListUnspent();
+    mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
@@ -1029,7 +1010,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test calculation of currency owed [2]', (done) => {
-    mock.mockListUnspent();
+    mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
@@ -1073,7 +1054,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test calculation of currency owed [4]', (done) => {
-    mock.mockListUnspent();
+    mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
@@ -1096,7 +1077,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test calculation of currency owed [5]', (done) => {
-    mock.mockListUnspent();
+    mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
@@ -1231,6 +1212,144 @@ describe('Test payments functionality', () => {
       expect(results[1]['example2'].records['180'].times).toBe(0.23);
       expect(results[1]['example2'].shares.round).toBe(3.68);
       expect(results[1]['example2'].shares.total).toBe(3.68);
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test sending currency through daemon [1]', (done) => {
+    mockDaemon.mockSendMany();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Bitcoin'].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Bitcoin'].payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Bitcoin'].payments.processingFee = parseFloat(0.0004);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.handleSending(daemon, config, [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+      expect(error).toBe(null);
+      expect(results.length).toBe(3);
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test sending currency through daemon [2]', (done) => {
+    mockDaemon.mockSendMany();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Bitcoin'].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Bitcoin'].payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Bitcoin'].payments.processingFee = parseFloat(0.0004);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.handleSending(daemon, config, [mockPayments.rounds, mockPayments.workers2], (error, results) => {
+      expect(error).toBe(null);
+      expect(results.length).toBe(2);
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test sending currency through daemon [3]', (done) => {
+    mockDaemon.mockSendManyError1();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Bitcoin'].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Bitcoin'].payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Bitcoin'].payments.processingFee = parseFloat(0.0004);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.handleSending(daemon, config, [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+      expect(error).toBe(true);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('RPC command did not return txid. Disabling payments to prevent possible double-payouts'));
+      expect(results).toStrictEqual([]);
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test sending currency through daemon [4]', (done) => {
+    mockDaemon.mockSendManyError2();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Bitcoin'].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Bitcoin'].payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Bitcoin'].payments.processingFee = parseFloat(0.0004);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.handleSending(daemon, config, [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+      expect(error).toBe(true);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments {\"code\":-5}'));
+      expect(results).toStrictEqual([]);
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test sending currency through daemon [5]', (done) => {
+    mockDaemon.mockSendManyError3();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Bitcoin'].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Bitcoin'].payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Bitcoin'].payments.processingFee = parseFloat(0.0004);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.handleSending(daemon, config, [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+      expect(error).toBe(true);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Insufficient funds for payments: {\"code\":-6}'));
+      expect(results).toStrictEqual([]);
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test sending currency through daemon [6]', (done) => {
+    mockDaemon.mockSendManyError4();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Bitcoin'].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Bitcoin'].payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Bitcoin'].payments.processingFee = parseFloat(0.0004);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.handleSending(daemon, config, [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+      expect(error).toBe(true);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments {\"message\":\"error\"}'));
+      expect(results).toStrictEqual([]);
+      nock.cleanAll();
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test sending currency through daemon [7]', (done) => {
+    mockDaemon.mockSendManyError5();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Bitcoin'].payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Bitcoin'].payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Bitcoin'].payments.processingFee = parseFloat(0.0004);
+    const daemon = new Stratum.daemon([poolConfig.payments.daemon], () => {});
+    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.handleSending(daemon, config, [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+      expect(error).toBe(true);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments'));
+      expect(results).toStrictEqual([]);
+      nock.cleanAll();
       console.log.mockClear();
       done();
     });
@@ -1449,7 +1568,6 @@ describe('Test payments functionality', () => {
     const workers = { 'example1': { sent: 12.5, change: 150000 }};
     poolPayments.handleUpdates(config, 'payments', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
-        ["hincrbyfloat", "Bitcoin:payments:unpaid", "example1", 0.0015],
         ["hincrbyfloat", "Bitcoin:payments:paid", "example1", 12.5],
         ["hset", "Bitcoin:payments:generate", "example1", 0],
         ["hset", "Bitcoin:payments:immature", "example1", 0],
@@ -1471,8 +1589,7 @@ describe('Test payments functionality', () => {
       expect(results[7]).toStrictEqual(expected[7]);
       expect(results[8]).toStrictEqual(expected[8]);
       expect(results[9]).toStrictEqual(expected[9]);
-      expect(results[10]).toStrictEqual(expected[10]);
-      expect(results[11].slice(0, 3)).toStrictEqual(expected[11]);
+      expect(results[10].slice(0, 3)).toStrictEqual(expected[10]);
       console.log.mockClear();
       done();
     });

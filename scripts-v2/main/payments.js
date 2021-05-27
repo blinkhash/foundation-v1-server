@@ -130,7 +130,7 @@ const PoolPayments = function (logger, client) {
   this.handleUnspent = function(daemon, config, category, coin, callback) {
     const args = [config.payments.minConfirmations, 99999999];
     daemon.cmd('listunspent', args, (result) => {
-      if (!result || result.error || result[0].error) {
+      if (!result || result[0].error) {
         logger.error('Payments', coin, `Error with payment processing daemon: ${ JSON.stringify(result[0].error) }`);
         callback(true, []);
       } else {
@@ -189,6 +189,7 @@ const PoolPayments = function (logger, client) {
           if (error) {
             logger.error('Payments', coin, `Error could not move invalid duplicate blocks ${ JSON.stringify(error) }`);
             callback(true, []);
+            return;
           }
           callback(null, [rounds]);
         });
@@ -325,6 +326,7 @@ const PoolPayments = function (logger, client) {
       if (error) {
         logger.error('Payments', coin, `Could not get blocks from database: ${ JSON.stringify(error) }`);
         callback(true, []);
+        return;
       }
 
       // Manage Individual Rounds
@@ -359,35 +361,8 @@ const PoolPayments = function (logger, client) {
       if (duplicateFound) {
         _this.handleDuplicates(daemon, coin, rounds, callback);
       } else {
-        callback(null, [rounds]);
+        callback(null, [rounds, {}]);
       }
-    });
-  };
-
-  // Check Workers for Unpaid Balances
-  /* istanbul ignore next */
-  this.handleWorkers = function(config, data, callback) {
-
-    // Load Unpaid Workers from Database
-    const coin = config.coin.name;
-    const commands = [['hgetall', `${ coin }:payments:unpaid`]];
-    _this.client.multi(commands).exec((error, results) => {
-      if (error) {
-        logger.error('Payments', coin, `Could not get workers from database: ${ JSON.stringify(error) }`);
-        callback(true, []);
-      }
-
-      // Manage Individual Workers
-      const workers = {};
-      const magnitude = config.payments.magnitude;
-      Object.keys(results[0] || {}).forEach((worker) => {
-        workers[worker] = {
-          balance: utils.coinsToSatoshis(parseFloat(results[0][worker]), magnitude)
-        };
-      });
-
-      // Return Workers as Callback
-      callback(null, [data[0], workers]);
     });
   };
 
@@ -486,6 +461,7 @@ const PoolPayments = function (logger, client) {
       if (error) {
         logger.error('Payments', coin, `Could not load times data from database: ${ JSON.stringify(error) }`);
         callback(true, []);
+        return;
       }
 
       // Build Worker Times Data w/ Results
@@ -518,6 +494,7 @@ const PoolPayments = function (logger, client) {
       if (error) {
         logger.error('Payments', coin, `Could not load shares data from database: ${ JSON.stringify(error) }`);
         callback(true, []);
+        return;
       }
 
       // Build Worker Shares Data w/ Results
@@ -652,9 +629,7 @@ const PoolPayments = function (logger, client) {
 
     let totalSent = 0;
     let totalShares = 0;
-
     const amounts = {}
-    const unpaid = {}
     const records = {};
     const commands = []
 
@@ -671,19 +646,8 @@ const PoolPayments = function (logger, client) {
       // Determine Amounts Given Mininum Payment
       if (amount >= config.payments.minPaymentSatoshis) {
         worker.sent = utils.satoshisToCoins(amount, config.payments.magnitude, config.payments.coinPrecision);
-        worker.change = Math.min(worker.balance || 0, amount);
-        totalSent += worker.sent;
-        if (worker.change !== 0) {
-          worker.change *= -1;
-        }
         amounts[address] = utils.coinsRound(worker.sent, config.payments.coinPrecision);
-      } else {
-        worker.sent = 0;
-        worker.change = Math.max(amount - worker.balance, 0);
-        const unpaid = utils.satoshisToCoins(worker.change, config.payments.magnitude, config.payments.coinPrecision)
-        if (worker.change > 0) {
-          unpaid[address] = utils.coinsRound(unpaid, config.payments.coinPrecision);
-        }
+        totalSent += worker.sent;
       }
       workers[address] = worker;
     });
@@ -711,29 +675,28 @@ const PoolPayments = function (logger, client) {
     const rpcTracking = `sendmany "" ${  JSON.stringify(amounts)}`;
     daemon.cmd('sendmany', ['', amounts], (result) => {
 
-      // Ensure Result is Formatted Properly
-      let output = result;
-      if (Array.isArray(result)) {
-        output = result[0];
-      }
-
       // Check Error Edge Cases
+      const output = result[0];
       if (output.error && output.error.code === -5) {
         logger.warning('Payments', coin, rpcTracking);
         logger.error('Payments', coin, `Error sending payments ${  JSON.stringify(output.error)}`);
         callback(true, []);
+        return;
       } else if (output.error && output.error.code === -6) {
         logger.warning('Payments', coin, rpcTracking);
         logger.error('Payments', coin, `Insufficient funds for payments: ${  JSON.stringify(output.error)}`);
         callback(true, []);
+        return;
       } else if (output.error && output.error.message != null) {
         logger.warning('Payments', coin, rpcTracking);
         logger.error('Payments', coin, `Error sending payments ${  JSON.stringify(output.error)}`);
         callback(true, []);
+        return;
       } else if (output.error) {
         logger.warning('Payments', coin, rpcTracking);
         logger.error('Payments', coin, `Error sending payments ${  JSON.stringify(output.error)}`);
         callback(true, []);
+        return;
       }
 
       // Handle Returned Transaction ID
@@ -743,7 +706,6 @@ const PoolPayments = function (logger, client) {
         const payments = {
           time: currentDate,
           paid: totalSent,
-          unpaid: unpaid,
           transaction: transaction,
           records: records,
         };
@@ -779,10 +741,6 @@ const PoolPayments = function (logger, client) {
 
       // Manage Worker Commands [1]
       if (category === 'payments') {
-        if (worker.change && worker.change !== 0) {
-          const change = utils.satoshisToCoins(worker.change, config.payments.magnitude, config.payments.coinPrecision);
-          commands.push(['hincrbyfloat', `${ coin }:payments:unpaid`, address, change]);
-        }
         if (worker.sent > 0) {
           const sent = utils.coinsRound(worker.sent, config.payments.coinPrecision);
           totalPaid = utils.coinsRound(totalPaid + worker.sent, config.payments.coinPrecision);
@@ -859,6 +817,7 @@ const PoolPayments = function (logger, client) {
           logger.error('Could not write output commands.txt, stop the program immediately.');
         });
         callback(true, []);
+        return;
       }
       callback(null, commands);
     });
@@ -871,7 +830,6 @@ const PoolPayments = function (logger, client) {
     // Process Checks Incrementally
     async.waterfall([
       (callback) => _this.handleBlocks(daemon, config, callback),
-      (data, callback) => _this.handleWorkers(config, data, callback),
       (data, callback) => _this.handleTransactions(daemon, config, data, callback),
       (data, callback) => _this.handleTimes(config, data, callback),
       (data, callback) => _this.handleShares(config, data, callback),
@@ -894,7 +852,6 @@ const PoolPayments = function (logger, client) {
     // Process Payments Incrementally
     async.waterfall([
       (callback) => _this.handleBlocks(daemon, config, callback),
-      (data, callback) => _this.handleWorkers(config, data, callback),
       (data, callback) => _this.handleTransactions(daemon, config, data, callback),
       (data, callback) => _this.handleTimes(config, data, callback),
       (data, callback) => _this.handleShares(config, data, callback),

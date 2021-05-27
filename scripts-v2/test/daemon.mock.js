@@ -740,6 +740,78 @@ exports.mockListUnspentInvalid = function() {
     );
 };
 
+exports.mockSendMany = function() {
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => body.method === 'sendmany')
+    .reply(200, JSON.stringify({
+      id: 'nocktest',
+      result: 'transactionID',
+      error: null,
+    })
+    );
+};
+
+exports.mockSendManyError1 = function() {
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => body.method === 'sendmany')
+    .reply(200, JSON.stringify({
+      id: 'nocktest',
+      result: null,
+      error: null,
+    })
+    );
+};
+
+exports.mockSendManyError2 = function() {
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => body.method === 'sendmany')
+    .reply(200, JSON.stringify({
+      id: 'nocktest',
+      result: null,
+      error: { code: -5 },
+    })
+    );
+};
+
+exports.mockSendManyError3 = function() {
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => body.method === 'sendmany')
+    .reply(200, JSON.stringify({
+      id: 'nocktest',
+      result: null,
+      error: { code: -6 },
+    })
+    );
+};
+
+exports.mockSendManyError4 = function() {
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => body.method === 'sendmany')
+    .reply(200, JSON.stringify({
+      id: 'nocktest',
+      result: null,
+      error: { message: 'error' },
+    })
+    );
+};
+
+exports.mockSendManyError5 = function() {
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => body.method === 'sendmany')
+    .reply(200, JSON.stringify({
+      id: 'nocktest',
+      result: null,
+      error: true,
+    })
+    );
+};
+
 exports.mockValidateAddress = function() {
   const response = {
     'isvalid': true,
