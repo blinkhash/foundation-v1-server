@@ -187,7 +187,7 @@ describe('Test shares functionality', () => {
       ['hincrbyfloat', 'Bitcoin:rounds:current:times:values', 'example'],
       ['hset', 'Bitcoin:rounds:current:times:last', 'example'],
       ['hincrby', 'Bitcoin:rounds:current:shares:counts', 'validShares', 1],
-      ['hincrby', 'Bitcoin:rounds:current:shares:values'],
+      ['hincrbyfloat', 'Bitcoin:rounds:current:shares:values'],
       ['zadd', 'Bitcoin:rounds:current:shares:records']];
     const commands = poolShares.buildSharesCommands(results, shareData, true, false);
     expect(commands.length).toBe(5);
@@ -247,7 +247,7 @@ describe('Test shares functionality', () => {
       ['rename', 'Bitcoin:rounds:current:shares:values', 'Bitcoin:rounds:round-1972211:shares:values'],
       ['rename', 'Bitcoin:rounds:current:shares:counts', 'Bitcoin:rounds:round-1972211:shares:counts'],
       ['rename', 'Bitcoin:rounds:current:shares:records', 'Bitcoin:rounds:round-1972211:shares:records'],
-      ['zadd', 'Bitcoin:blocks:pending'],
+      ['sadd', 'Bitcoin:blocks:pending'],
       ['hincrby', 'Bitcoin:blocks:counts', 'validBlocks', 1]];
     const commands = poolShares.buildBlocksCommands(shareData, true, true);
     expect(commands.length).toBe(7);
@@ -344,7 +344,7 @@ describe('Test shares functionality', () => {
       ['hincrbyfloat', 'Bitcoin:rounds:current:times:values', 'example'],
       ['hset', 'Bitcoin:rounds:current:times:last', 'example'],
       ['hincrby', 'Bitcoin:rounds:current:shares:counts', 'validShares', 1],
-      ['hincrby', 'Bitcoin:rounds:current:shares:values'],
+      ['hincrbyfloat', 'Bitcoin:rounds:current:shares:values'],
       ['zadd', 'Bitcoin:rounds:current:shares:records']];
     const commands = poolShares.buildCommands(results, shareData, true, false, () => {
       return done();
@@ -392,7 +392,7 @@ describe('Test shares functionality', () => {
         poolShares.handleShares(shareData, true, false, (results) => {
           expect(results[1]).toBe(0);
           expect(results[2]).toBe(1);
-          expect(results[3]).toBe(1);
+          expect(results[3]).toBe("1");
           expect(results[4]).toBe(1);
           done();
         }, () => {});

@@ -85,6 +85,7 @@ config.ports = [];
 const ports1 = {};
 ports1.port = 3001;
 ports1.enabled = true;
+ports1.type = 'shared';
 ports1.difficulty = {};
 ports1.difficulty.initial = 32;
 ports1.difficulty.minimum = 8;

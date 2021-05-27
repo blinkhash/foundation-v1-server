@@ -11,10 +11,9 @@ const os = require('os');
 // Check to see if Solo Mining
 exports.checkSoloMining = function(poolConfig, data) {
   let isSoloMining = false;
-  if (typeof poolConfig.ports[data.port] !== 'undefined') {
-    if (poolConfig.ports[data.port].soloMining) {
-      isSoloMining = true;
-    }
+  const activePort = poolConfig.ports.filter(port => port.port === data.port);
+  if (activePort.length >= 1) {
+    isSoloMining = activePort[0].type === 'solo';
   }
   return isSoloMining;
 };
