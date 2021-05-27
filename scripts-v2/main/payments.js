@@ -529,10 +529,8 @@ const PoolPayments = function (logger, client) {
   // Calculate Amount Owed to Workers
   this.handleOwed = function(daemon, config, category, data, callback) {
 
-    let sendPayments = false;
     let totalOwed = parseInt(0);
-    let rounds = data[0];
-
+    const rounds = data[0];
     const coin = config.coin.name;
     const feeSatoshi = utils.coinsToSatoshis(config.payments.processingFee, config.payments.magnitude);
 
@@ -628,10 +626,9 @@ const PoolPayments = function (logger, client) {
   this.handleSending = function(daemon, config, data, callback) {
 
     let totalSent = 0;
-    let totalShares = 0;
-    const amounts = {}
+    const amounts = {};
     const records = {};
-    const commands = []
+    const commands = [];
 
     const rounds = data[0];
     const workers = data[1];
@@ -641,7 +638,6 @@ const PoolPayments = function (logger, client) {
     Object.keys(workers).forEach((address) => {
       const worker = workers[address];
       const amount = Math.round(worker.balance || 0 + worker.generate || 0);
-      totalShares += worker.shares.total || 0;
 
       // Determine Amounts Given Mininum Payment
       if (amount >= config.payments.minPaymentSatoshis) {
@@ -654,8 +650,8 @@ const PoolPayments = function (logger, client) {
 
     // Check if No Workers/Rounds
     if (Object.keys(amounts).length === 0) {
-        callback(null, [rounds, workers]);
-        return;
+      callback(null, [rounds, workers]);
+      return;
     }
 
     // Generate Records for Each Round Paid
@@ -672,29 +668,29 @@ const PoolPayments = function (logger, client) {
     });
 
     // Send Payments to Workers Through Daemon
-    const rpcTracking = `sendmany "" ${  JSON.stringify(amounts)}`;
+    const rpcTracking = `sendmany "" ${ JSON.stringify(amounts)}`;
     daemon.cmd('sendmany', ['', amounts], (result) => {
 
       // Check Error Edge Cases
       const output = result[0];
       if (output.error && output.error.code === -5) {
         logger.warning('Payments', coin, rpcTracking);
-        logger.error('Payments', coin, `Error sending payments ${  JSON.stringify(output.error)}`);
+        logger.error('Payments', coin, `Error sending payments ${ JSON.stringify(output.error)}`);
         callback(true, []);
         return;
       } else if (output.error && output.error.code === -6) {
         logger.warning('Payments', coin, rpcTracking);
-        logger.error('Payments', coin, `Insufficient funds for payments: ${  JSON.stringify(output.error)}`);
+        logger.error('Payments', coin, `Insufficient funds for payments: ${ JSON.stringify(output.error)}`);
         callback(true, []);
         return;
       } else if (output.error && output.error.message != null) {
         logger.warning('Payments', coin, rpcTracking);
-        logger.error('Payments', coin, `Error sending payments ${  JSON.stringify(output.error)}`);
+        logger.error('Payments', coin, `Error sending payments ${ JSON.stringify(output.error)}`);
         callback(true, []);
         return;
       } else if (output.error) {
         logger.warning('Payments', coin, rpcTracking);
-        logger.error('Payments', coin, `Error sending payments ${  JSON.stringify(output.error)}`);
+        logger.error('Payments', coin, `Error sending payments ${ JSON.stringify(output.error)}`);
         callback(true, []);
         return;
       }
@@ -718,12 +714,12 @@ const PoolPayments = function (logger, client) {
 
       // Invalid/No Transaction ID
       } else {
-        logger.error('Payments', coin, `RPC command did not return txid. Disabling payments to prevent possible double-payouts`);
+        logger.error('Payments', coin, 'RPC command did not return txid. Disabling payments to prevent possible double-payouts');
         callback(true, []);
         return;
       }
     });
-  }
+  };
 
   // Structure and Apply Redis Updates
   /* istanbul ignore next */
@@ -836,7 +832,7 @@ const PoolPayments = function (logger, client) {
       (data, callback) => _this.handleOwed(daemon, config, category, data, callback),
       (data, callback) => _this.handleRewards(config, data, callback),
       (data, callback) => _this.handleUpdates(config, category, interval, data, callback),
-    ], (error, results) => {
+    ], (error) => {
       if (error) {
         callbackMain(null, false);
         return;
@@ -859,7 +855,7 @@ const PoolPayments = function (logger, client) {
       (data, callback) => _this.handleRewards(config, data, callback),
       (data, callback) => _this.handleSending(daemon, config, data, callback),
       (data, callback) => _this.handleUpdates(config, category, interval, data, callback),
-    ], (error, results) => {
+    ], (error) => {
       if (error) {
         callbackMain(null, false);
         return;

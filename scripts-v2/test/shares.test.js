@@ -392,7 +392,7 @@ describe('Test shares functionality', () => {
         poolShares.handleShares(shareData, true, false, (results) => {
           expect(results[1]).toBe(0);
           expect(results[2]).toBe(1);
-          expect(results[3]).toBe("1");
+          expect(results[3]).toBe('1');
           expect(results[4]).toBe(1);
           done();
         }, () => {});

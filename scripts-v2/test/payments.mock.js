@@ -145,4 +145,4 @@ exports.workers2 = {
       'round': 8,
     },
   }
-}
+};
