@@ -878,10 +878,13 @@ const PoolPayments = function (logger, client) {
       (data, callback) => _this.handleOwed(daemon, config, category, data, callback),
       (data, callback) => _this.handleRewards(config, data, callback),
       (data, callback) => _this.handleUpdates(config, category, interval, data, callback),
-    ]);
-
-    const coin = config.coin.name;
-    callbackMain();
+    ], (error, results) => {
+      if (error) {
+        callbackMain(null, false);
+        return;
+      }
+      callbackMain(null, true);
+    });
   };
 
   // Process Main Payment Functionality
@@ -899,11 +902,15 @@ const PoolPayments = function (logger, client) {
       (data, callback) => _this.handleRewards(config, data, callback),
       (data, callback) => _this.handleSending(daemon, config, data, callback),
       (data, callback) => _this.handleUpdates(config, category, interval, data, callback),
-    ]);
-
-    const coin = config.coin.name;
-    logger.debug('Payments', coin, 'Finished payment processing management and attempted to send out payments.');
-    callbackMain();
+    ], (error, results) => {
+      if (error) {
+        callbackMain(null, false);
+        return;
+      }
+      const coin = config.coin.name;
+      logger.debug('Payments', coin, 'Finished payment processing management and attempted to send out payments.');
+      callbackMain(null, true);
+    });
   };
 
   // Start Payment Interval Management
@@ -912,43 +919,39 @@ const PoolPayments = function (logger, client) {
 
     // Handle Main Payment Checks
     const checkInterval = setInterval(() => {
-      try {
-        const category = 'checks';
-        const lastInterval = Date.now();
-        _this.processChecks(daemon, config, category, lastInterval, () => {});
-      } catch(e) {
-        clearInterval(checkInterval);
-        throw new Error(e);
-      }
+      _this.processChecks(daemon, config, 'checks', Date.now(), (error) => {
+        if (error) {
+          clearInterval(checkInterval);
+          throw new Error(error);
+        }
+      });
     }, config.payments.checkInterval * 1000);
 
     // Handle Main Payment Functionality
     const paymentInterval = setInterval(() => {
-      try {
-        const category = 'payments';
-        const lastInterval = Date.now();
-        _this.processPayments(daemon, config, category, lastInterval, () => {});
-      } catch(e) {
-        clearInterval(paymentInterval);
-        throw new Error(e);
-      }
+      _this.processPayments(daemon, config, 'payments', Date.now(), (error) => {
+        if (error) {
+          clearInterval(paymentInterval);
+          throw new Error(error);
+        }
+      });
     }, config.payments.paymentInterval * 1000);
 
     // Start Payment Functionality with Initial Check
     setTimeout(() => {
-      try {
-        const category = 'start';
-        const lastInterval = Date.now();
-        _this.processChecks(daemon, config, category, lastInterval, () => callback(null, true));
-      } catch(e) {
-        throw new Error(e);
-      }
+      _this.processChecks(daemon, config, 'start', Date.now(), (error, results) => {
+        if (error) {
+          callback(error, results);
+          return;
+        }
+        callback(error, results);
+      });
     }, 100);
   };
 
   // Handle Payment Processing for Enabled Pools
   /* istanbul ignore next */
-  this.handlePayments = function(coin, callback) {
+  this.handlePayments = function(coin, callbackMain) {
 
     const poolConfig = _this.poolConfigs[coin];
     poolConfig.payments.processingFee = parseFloat(poolConfig.coin.txfee) || parseFloat(0.0004);
@@ -968,14 +971,12 @@ const PoolPayments = function (logger, client) {
       (callback) => _this.handleBalance(daemon, poolConfig, coin, callback)
     ], (error, results) => {
       if (error) {
-        callback(true, false);
-        return;
+        callbackMain(null, false);
       } else {
         poolConfig.payments.magnitude = results[1][0];
         poolConfig.payments.minPaymentSatoshis = results[1][1];
         poolConfig.payments.coinPrecision = results[1][2];
-        _this.handleIntervals(daemon, poolConfig, callback);
-        return;
+        _this.handleIntervals(daemon, poolConfig, callbackMain);
       }
     });
   };
