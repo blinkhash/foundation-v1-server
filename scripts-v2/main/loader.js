@@ -26,9 +26,9 @@ const PoolLoader = function(logger, portalConfig) {
   };
 
   // Validate Pool Algorithms
-  this.validatePoolAlgorithms = function(algorithm) {
+  this.validatePoolAlgorithms = function(algorithm, coin) {
     if (!(algorithm in Algorithms)) {
-      logger.error('Builder', poolConfig.coin.name, `Cannot run a pool for unsupported algorithm "${ algorithm }"`);
+      logger.error('Builder', coin, `Cannot run a pool for unsupported algorithm "${ algorithm }"`);
       return false;
     }
     return true;
@@ -36,10 +36,11 @@ const PoolLoader = function(logger, portalConfig) {
 
   // Validate Pool Configs
   this.validatePoolConfigs = function(poolConfig) {
+    const coin = poolConfig.coin.name
     if (!poolConfig.enabled) return false;
-    if (!_this.validatePoolAlgorithms(poolConfig.coin.algorithms.mining)) return false;
-    if (!_this.validatePoolAlgorithms(poolConfig.coin.algorithms.block)) return false;
-    if (!_this.validatePoolAlgorithms(poolConfig.coin.algorithms.coinbase)) return false;
+    if (!_this.validatePoolAlgorithms(poolConfig.coin.algorithms.mining, coin)) return false;
+    if (!_this.validatePoolAlgorithms(poolConfig.coin.algorithms.block, coin)) return false;
+    if (!_this.validatePoolAlgorithms(poolConfig.coin.algorithms.coinbase, coin)) return false;
     return true;
   };
 
