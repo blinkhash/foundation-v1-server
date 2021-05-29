@@ -92,8 +92,6 @@ const PoolBuilder = function(logger, portalConfig) {
           }
         });
         break;
-      default:
-        break;
       }
     });
 

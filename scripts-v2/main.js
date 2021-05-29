@@ -24,7 +24,7 @@ try {
 
 const logger = new PoolLogger(config);
 const database = new PoolDatabase(logger, config);
-const client = database.buildRedisClient();
+const client = database.buildRedisClient({ detect_buffers: true });
 
 // Check for Redis Connection Errors
 client.on('error', () => {

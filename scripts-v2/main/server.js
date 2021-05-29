@@ -10,6 +10,7 @@ const compress = require('compression');
 const cors = require('cors');
 const express = require('express');
 const http = require('http');
+const PoolApi = require('./api.js');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,7 +28,10 @@ const PoolServer = function (logger, client) {
 
     // Build Main Server
     const app = express();
-    const cache = apicache.middleware;
+    const api = new PoolApi(logger, _this.partnerConfigs, _this.poolConfigs, _this.portalConfig);
+    const cache = apicache.options({ redisClient: _this.client }).middleware;
+
+    // Establish Middleware
     app.use(bodyParser.json());
     app.use(cache('5 minutes'));
     app.use(compress());
@@ -35,8 +39,8 @@ const PoolServer = function (logger, client) {
 
     // Handle API Requests
     /* istanbul ignore next */
-    app.get('/api/v1/:method', (req, res, next) => {
-      console.log(req, res, next);
+    app.get('/api/v1/:coin/:method/:endpoint?', (req, res, next) => {
+      api.handleApiV1(req, res, next);
     });
 
     // Handle Error Responses

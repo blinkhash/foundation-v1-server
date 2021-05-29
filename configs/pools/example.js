@@ -83,7 +83,7 @@ config.banning.purgeInterval = 300;
 config.ports = [];
 
 const ports1 = {};
-ports1.port = 3001;
+ports1.port = 3002;
 ports1.enabled = true;
 ports1.type = 'shared';
 ports1.difficulty = {};

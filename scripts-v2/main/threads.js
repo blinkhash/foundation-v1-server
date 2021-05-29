@@ -47,8 +47,6 @@ const PoolThreads = function(logger, client, portalConfig) {
       case 'worker':
         new PoolWorkers(logger, _this.client).setupWorkers(() => {});
         break;
-      default:
-        break;
       }
     }
   };
