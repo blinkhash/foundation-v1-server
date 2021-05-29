@@ -18,12 +18,17 @@ config.logo = '';
 config.coin = {};
 config.coin.name = 'Bitcoin';
 config.coin.symbol = 'BTC';
-config.coin.algorithm = 'sha256d';
 config.coin.asicBoost = true;
 config.coin.hasGetInfo = false;
 config.coin.segwit = true;
 config.coin.txFee = 0.0004;
 config.coin.rewards = '';
+
+// Algorithm Configuration
+config.coin.algorithms = {};
+config.coin.algorithms.mining = 'sha256d';
+config.coin.algorithms.block = 'sha256d';
+config.coin.algorithms.coinbase = 'sha256d';
 
 // Mainnet Configuration
 config.coin.mainnet = {};

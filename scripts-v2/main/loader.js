@@ -25,13 +25,21 @@ const PoolLoader = function(logger, portalConfig) {
     return true;
   };
 
+  // Validate Pool Algorithms
+  this.validatePoolAlgorithms = function(algorithm) {
+    if (!(algorithm in Algorithms)) {
+      logger.error('Builder', poolConfig.coin.name, `Cannot run a pool for unsupported algorithm "${ algorithm }"`);
+      return false;
+    }
+    return true;
+  }
+
   // Validate Pool Configs
   this.validatePoolConfigs = function(poolConfig) {
     if (!poolConfig.enabled) return false;
-    if (!(poolConfig.coin.algorithm in Algorithms)) {
-      logger.error('Builder', poolConfig.coin.name, `Cannot run a pool for unsupported algorithm "${ poolConfig.coin.algorithm }"`);
-      return false;
-    }
+    if (!_this.validatePoolAlgorithms(poolConfig.coin.algorithms.mining)) return false;
+    if (!_this.validatePoolAlgorithms(poolConfig.coin.algorithms.block)) return false;
+    if (!_this.validatePoolAlgorithms(poolConfig.coin.algorithms.coinbase)) return false;
     return true;
   };
 
