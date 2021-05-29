@@ -40,16 +40,18 @@ describe('Test loader functionality', () => {
   });
 
   test('Test pool configuration validation [1]', () => {
+    const algorithms = { mining: "scrypt", block: "sha256d", coinbase: "sha256d" }
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, coin: { algorithm: 'scrypt' }};
+    const poolConfig = { enabled: true, coin: { algorithms: algorithms }};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(response).toBe(true);
   });
 
   test('Test pool configuration validation [2]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const algorithms = { mining: "invalid", block: "sha256d", coinbase: "sha256d" }
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, coin: { algorithm: 'invalid' }};
+    const poolConfig = { enabled: true, coin: { algorithms: algorithms }};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(consoleSpy).toHaveBeenCalled();
     expect(response).toBe(false);
@@ -57,8 +59,30 @@ describe('Test loader functionality', () => {
   });
 
   test('Test pool configuration validation [3]', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const algorithms = { mining: "scrypt", block: "invalid", coinbase: "sha256d" }
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: false };
+    const poolConfig = { enabled: true, coin: { algorithms: algorithms }};
+    const response = poolLoader.validatePoolConfigs(poolConfig);
+    expect(consoleSpy).toHaveBeenCalled();
+    expect(response).toBe(false);
+    console.log.mockClear();
+  });
+
+  test('Test pool configuration validation [4]', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const algorithms = { mining: "scrypt", block: "sha256d", coinbase: "invalid" }
+    const poolLoader = new PoolLoader(logger, configCopy);
+    const poolConfig = { enabled: true, coin: { algorithms: algorithms }};
+    const response = poolLoader.validatePoolConfigs(poolConfig);
+    expect(consoleSpy).toHaveBeenCalled();
+    expect(response).toBe(false);
+    console.log.mockClear();
+  });
+
+  test('Test pool configuration validation [5]', () => {
+    const poolLoader = new PoolLoader(logger, configCopy);
+    const poolConfig = { enabled: false, coin: { name: 'Litecoin' }};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(response).toBe(false);
   });
