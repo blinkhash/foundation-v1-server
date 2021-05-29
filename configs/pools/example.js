@@ -37,7 +37,7 @@ config.coin.mainnet.scriptHash = Buffer.from('05', 'hex').readUInt8(0);
 config.coin.mainnet.wif = Buffer.from('80', 'hex').readUInt8(0);
 config.coin.mainnet.coin = 'btc';
 
-// Mainnet Configuration
+// Testnet Configuration
 config.coin.testnet = {};
 config.coin.testnet.bech32 = 'tb';
 config.coin.testnet.bip32 = {};

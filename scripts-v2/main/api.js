@@ -15,6 +15,10 @@ const PoolApi = function (logger, partnerConfigs, poolConfigs, portalConfig) {
   this.partnerConfigs = partnerConfigs;
   this.poolConfigs = poolConfigs;
   this.portalConfig = portalConfig;
+  this.messages = {
+      invalid: "The server was unable to handle your request. Verify your input and try again.",
+      parameters: "Your request is missing parameters. Verify your input and try again."
+  }
 
   // Build API Payload for each Endpoint
   this.buildPayload = function(endpoint, errors, data) {
@@ -27,6 +31,16 @@ const PoolApi = function (logger, partnerConfigs, poolConfigs, portalConfig) {
     res.end(JSON.stringify(payload));
     return;
   }
+
+  // Execute Redis Commands
+  this.executeCommands = function(endpoint, commands, callback) {
+    _this.client.multi(commands).exec((error, results) => {
+      if (error) {
+        _this.buildPayload(endpoint, _this.messages.invalid, null);
+      }
+      callback(results);
+    });
+  };
 
   // Determine API Endpoint Called
   this.handleApiV1 = function(req, res, next) {
