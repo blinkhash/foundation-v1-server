@@ -1,15 +1,15 @@
 # Blinkhash Server
 
+[![Codecov Coverage](https://img.shields.io/codecov/c/github/blinkhash/blinkhash-server.svg?style=flat-square)](https://codecov.io/gh/blinkhash/blinkhash-server/)
 [![Build Status](https://travis-ci.org/blinkhash/blinkhash-server.svg?branch=master)](https://travis-ci.org/blinkhash/blinkhash-server)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+[![Discord](https://img.shields.io/discord/738590795384356904)](https://discord.gg/8xtHZFKJQY)
 
 This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written entirely in Node.JS. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed as the Blinkhash Mining Pool will implement a custom-built front-end design.
 
-Documentation for the API is currently available at https://github.com/blinkhash/blinkhash-documentation. The API itself was specifically designed to be self-explanatory while still providing users with standardized JSON-formatted responses.
-
 #### Need Support?
 
-If you need help with an API or code-related matter, the first place to look is our [Discord](https://www.discord.gg/x2vgyZP), where I'll be available to answer any questions. However, please do not come to me with issues regarding how to clone/setup the server. Use Google for that.
+If you need help with a code-related matter, the first place to look is our [Discord](https://discord.gg/8xtHZFKJQY), where the developers will be available to answer any questions. However, please do not come to me with issues regarding setup. Use Google and the existing documentation for that.
 
 ---
 
@@ -17,7 +17,7 @@ If you need help with an API or code-related matter, the first place to look is 
 
 #### Features
 
-* For the pool server it uses the [blinkhash-stratum-pool](https://github.com/blinkhash/blinkhash-stratum-pool) module which supports vardiff, POW & POS, transaction messages, anti-DDoS, IP banning, [several hashing algorithms](https://github.com/blinkhash/blinkhash-stratum-pool#hashing-algorithms-supported).
+* For the pool server it uses the [blinkhash-stratum](https://github.com/blinkhash/blinkhash-stratum-pool) module, which supports vardiff, POW/POS, anti-DDoS, IP banning, [multiple hashing algorithms](https://github.com/blinkhash/blinkhash-multi-hashing).
 * Multipool ability - this software was built from the ground up to run with multiple coins simultaneously (which can have different properties and hashing algorithms). It can be used to create a pool for a single coin or for multiple coins at once. The pools use clustering to load balance across multiple CPU cores.
 * For reward/payment processing, shares are inserted into Redis (a fast NoSQL key/value store). The PPLNT reward system is used with [Redis Transactions](http://redis.io/topics/transactions) for secure and super speedy payouts. There is zero risk to the pool operator. Shares from rounds resulting in orphaned blocks will be merged into share in the current round so that each and every share will be rewarded
 * This portal does not have user accounts/logins/registrations. Instead, miners simply use their coin address for stratum authentication.
@@ -41,18 +41,6 @@ If you need help with an API or code-related matter, the first place to look is 
    * This server is not vulnerable to the low difficulty share exploits happening to other pool servers. Rather than using hardcoded max difficulties for new hashing algorithms, it dynamically generates the max difficulty for each algorithm based on values found in the coin source code.
    * IP banning feature which on a configurable threshold will ban an IP for a configurable amount of time if the miner submits over a configurable threshold of invalid shares.
 * The server is written in Node.js which uses a single thread (async) to handle connections rather than the overhead of one thread per connection. Clustering is also implemented so that all CPU cores are taken advantage of.
-
----
-
-### Configurations
-
-Each of the configurations mentioned have been confirmed to work with the current release of the software. They've either been run in a closed environment on the coin's testnet or on the Blinkhash Mining Pool. The full repository of configurations is available at https://github.com/blinkhash/blinkhash-configurations. In order to use any of these configurations, download the .json file and place it in the "configs" folder. Make sure to look over the file thoroughly and change the addresses, ports, and fees as necessary.
-
-* Bitcoin - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoin-sha256d.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoin-sha256d-testnet.json)
-* Bitcoin Cash - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoincash-sha256d.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/bitcoincash-sha256d-testnet.json)
-* Litecoin - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/litecoin-scrypt.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/litecoin-scrypt-testnet.json)
-* Dash - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dash-x11.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dash-x11-testnet.json)
-* Dogecoin - [Mainnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dogecoin-scrypt.json) / [Testnet](https://github.com/blinkhash/blinkhash-configurations/blob/master/configs/dogecoin-scrypt-testnet.json)
 
 ---
 

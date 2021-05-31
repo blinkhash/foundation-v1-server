@@ -15,19 +15,19 @@ const PoolApi = function (logger, partnerConfigs, poolConfigs, portalConfig) {
   this.partnerConfigs = partnerConfigs;
   this.poolConfigs = poolConfigs;
   this.portalConfig = portalConfig;
-  this.messages = {
-      invalid: "The server was unable to handle your request. Verify your input and try again.",
-      parameters: "Your request is missing parameters. Verify your input and try again."
+  this.errors = {
+    invalid: { code: 500, message: "The server was unable to handle your request. Try again later." },
+    parameters: { code: 400, message: "Your request is missing parameters. Verify your input and try again." },
   }
 
   // Build API Payload for each Endpoint
   this.buildPayload = function(endpoint, errors, data) {
     const payload = {
-        endpoint: endpoint,
-        errors: errors,
-        data: data,
+      endpoint: endpoint,
+      errors: errors,
+      data: data,
     }
-    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.writeHead(errors.code, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(payload));
     return;
   }
@@ -36,9 +36,10 @@ const PoolApi = function (logger, partnerConfigs, poolConfigs, portalConfig) {
   this.executeCommands = function(endpoint, commands, callback) {
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
-        _this.buildPayload(endpoint, _this.messages.invalid, null);
+        _this.buildPayload(endpoint, _this.errors.invalid, null);
+      } else {
+        callback(results);
       }
-      callback(results);
     });
   };
 
