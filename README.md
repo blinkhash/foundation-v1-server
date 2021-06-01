@@ -3,6 +3,9 @@
 [![Codecov Coverage](https://img.shields.io/codecov/c/github/blinkhash/blinkhash-server.svg?style=flat-square)](https://codecov.io/gh/blinkhash/blinkhash-server/)
 [![Build Status](https://travis-ci.org/blinkhash/blinkhash-server.svg?branch=master)](https://travis-ci.org/blinkhash/blinkhash-server)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+[![Downloads](https://img.shields.io/npm/dm/blinkhash-server.svg)](https://www.npmjs.com/package/blinkhash-server)
+[![Version](https://img.shields.io/npm/v/blinkhash-server.svg)](https://www.npmjs.com/package/blinkhash-server)
+[![Known Vulnerabilities](https://snyk.io/test/npm/blinkhash-server/badge.svg)](https://snyk.io/test/npm/blinkhash-server)
 [![Discord](https://img.shields.io/discord/738590795384356904)](https://discord.gg/8xtHZFKJQY)
 
 This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written entirely in Node.JS. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed as the Blinkhash Mining Pool will implement a custom-built front-end design.
