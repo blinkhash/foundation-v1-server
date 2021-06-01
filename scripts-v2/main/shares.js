@@ -143,7 +143,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
         logger.error(logSystem, logComponent, logSubCat, `Error with redis share processing ${ JSON.stringify(error) }`);
         handler(error);
       } else {
-        callback(results);        
+        callback(results);
       }
     });
   };

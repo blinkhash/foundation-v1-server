@@ -45,7 +45,7 @@
     "apicache": "^1.5.3",
     "async": "2.3.0",
     "bignum": "0.13.1",
-    "blinkhash-stratum": "0.1.11",
+    "blinkhash-stratum": "0.1.12",
     "body-parser": "*",
     "colors": "*",
     "compression": "*",

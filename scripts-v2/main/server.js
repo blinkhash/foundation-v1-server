@@ -28,8 +28,8 @@ const PoolServer = function (logger, client) {
 
     // Build Main Server
     const app = express();
-    const api = new PoolApi(logger, _this.partnerConfigs, _this.poolConfigs, _this.portalConfig);
-    const cache = apicache.options({ redisClient: _this.client }).middleware;
+    const api = new PoolApi(_this.client, _this.partnerConfigs, _this.poolConfigs, _this.portalConfig);
+    const cache = apicache.options({}).middleware;
 
     // Establish Middleware
     app.use(bodyParser.json());
