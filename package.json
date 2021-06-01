@@ -1,6 +1,6 @@
 {
   "name": "blinkhash-server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "An extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool",
   "main": "./scripts/init.js",
   "keywords": [
@@ -34,9 +34,7 @@
     "start-v2": "nodemon scripts-v2/main.js",
     "clean": "eslint . --ext .js --ignore-pattern node_modules/",
     "clean:fix": "eslint . --ext .js --fix --ignore-pattern node_modules/",
-    "test": "jest --coverage",
-    "prod:start": "forever start -l blinkhash-log.txt --append scripts/init.js",
-    "prod:stop": "forever stop scripts/init.js"
+    "test": "jest --coverage"
   },
   "contributors": [],
   "repository": {
@@ -47,16 +45,15 @@
     "apicache": "^1.5.3",
     "async": "2.3.0",
     "bignum": "0.13.1",
-    "blinkhash-stratum": "0.1.10",
+    "blinkhash-stratum": "0.1.11",
     "body-parser": "*",
     "colors": "*",
     "compression": "*",
     "cors": "^2.8.5",
-    "dateformat": "1.0.12",
+    "dateformat": "4.5.1",
     "dot": "*",
     "express": "*",
     "extend": "*",
-    "forever": "^3.0.4",
     "mysql": "*",
     "node-watch": "0.5.9",
     "nodemon": "*",
