@@ -19,70 +19,226 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   this.messages = {
     invalid: { code: 500, message: "The server was unable to handle your request. Try again later." },
     parameters: { code: 400, message: "Your request is missing parameters. Verify your input and try again." },
+    unknown: { code: 405, message: "The method is not currently supported. Verify your input and try again." },
     success: { code: 200, message: "" }
   }
 
-  //////////////////////////////////////////////////////////////////////////////
+  // Check if Value is a Number
+  this.checkNumber = function(value) {
+    if (typeof value !== "string") {
+      return false;
+    } else {
+      return !isNaN(value) && !isNaN(parseFloat(value));
+    }
+  }
+
+  // Handle Block Processing
+  this.processBlocks = function(blocks) {
+    return blocks
+      .map((block) => JSON.parse(block))
+      .sort((a, b) => (a.height - b.height));
+  }
+
+  // Handle Payment Processing
+  this.processPayments = function(payments) {
+    const output = {};
+    if (payments) {
+      Object.keys(payments).forEach((address) => {
+        output[address] = parseFloat(payments[address]);
+      });
+    }
+    return output;
+  }
+
+  // Handle Share Processing
+  this.processShares = function(shares) {
+    const solo = {};
+    const shared = {};
+    if (shares) {
+      Object.keys(shares).forEach((entry) => {
+        const details = JSON.parse(entry);
+        if (details.solo) {
+          if (!(details.worker in solo)) {
+            solo[details.worker] = parseFloat(shares[entry]);
+          } else {
+            solo[details.worker] += parseFloat(shares[entry]);
+          }
+        } else {
+          if (!(details.worker in shared)) {
+            shared[details.worker] = parseFloat(shares[entry]);
+          } else {
+            shared[details.worker] += parseFloat(shares[entry]);
+          }
+        }
+      });
+    }
+    return [solo, shared];
+  }
+
+  // Handle Times Processing
+  this.processTimes = function(times) {
+    const output = {};
+    if (times) {
+      Object.keys(times).forEach((address) => {
+        output[address] = parseFloat(times[address]);
+      });
+    }
+    return output;
+  }
 
   // API Endpoint for /blocks/confirmed
   this.handleBlocksConfirmed = function(coin, response) {
     const commands = [['smembers', `${ coin }:blocks:confirmed`]];
-    _this.executeCommands(`${ coin }/blocks/confirmed/`, commands, response, (results) => {
-      const blocks = results[0]
-        .map((block) => JSON.parse(block))
-        .sort((a, b) => (a.height - b.height));
-      _this.buildPayload(`${ coin }/blocks/confirmed/`, _this.messages.success, blocks, response);
+    _this.executeCommands(coin, '/blocks/confirmed/', commands, response, (results) => {
+      const blocks = _this.processBlocks(results[0]);
+      _this.buildPayload(coin, 'blocks/confirmed/', _this.messages.success, blocks, response);
     });
   }
 
   // API Endpoint for /blocks/pending
   this.handleBlocksKicked = function(coin, response) {
     const commands = [['smembers', `${ coin }:blocks:kicked`]];
-    _this.executeCommands(`${ coin }/blocks/kicked/`, commands, response, (results) => {
-      const blocks = results[0]
-        .map((block) => JSON.parse(block))
-        .sort((a, b) => (a.height - b.height));
-      _this.buildPayload(`${ coin }/blocks/kicked/`, _this.messages.success, blocks, response);
+    _this.executeCommands(coin, '/blocks/kicked/', commands, response, (results) => {
+      const blocks = _this.processBlocks(results[0]);
+      _this.buildPayload(coin, '/blocks/kicked/', _this.messages.success, blocks, response);
     });
   }
 
   // API Endpoint for /blocks/pending
   this.handleBlocksPending = function(coin, response) {
     const commands = [['smembers', `${ coin }:blocks:pending`]];
-    _this.executeCommands(`${ coin }/blocks/pending/`, commands, response, (results) => {
-      const blocks = results[0]
-        .map((block) => JSON.parse(block))
-        .sort((a, b) => (a.height - b.height));
-      _this.buildPayload(`${ coin }/blocks/pending/`, _this.messages.success, blocks, response);
+    _this.executeCommands(coin, '/blocks/pending/', commands, response, (results) => {
+      const blocks = _this.processBlocks(results[0]);
+      _this.buildPayload(coin, '/blocks/pending/', _this.messages.success, blocks, response);
     });
   }
 
-  //////////////////////////////////////////////////////////////////////////////
+  // API Endpoint for /blocks
+  this.handleBlocks = function(coin, response) {
+    const commands = [
+      ['smembers', `${ coin }:blocks:confirmed`],
+      ['smembers', `${ coin }:blocks:kicked`],
+      ['smembers', `${ coin }:blocks:pending`]];
+    _this.executeCommands(coin, '/blocks/pending/', commands, response, (results) => {
+      const blocks = {
+        confirmed: _this.processBlocks(results[0]),
+        kicked: _this.processBlocks(results[1]),
+        pending: _this.processBlocks(results[2])};
+      _this.buildPayload(coin, '/blocks/', _this.messages.success, blocks, response);
+    });
+  }
+
+  // API Endpoint for /payments/generate
+  this.handlePaymentsGenerate = function(coin, response) {
+    const commands = [['hgetall', `${ coin }:payments:generate`]];
+    _this.executeCommands(coin, '/payments/generate/', commands, response, (results) => {
+      const payments =  _this.processPayments(results[0]);
+      _this.buildPayload(coin, '/payments/generate/', _this.messages.success, payments, response);
+    });
+  }
+
+  // API Endpoint for /payments/immature
+  this.handlePaymentsImmature = function(coin, response) {
+    const commands = [['hgetall', `${ coin }:payments:immature`]];
+    _this.executeCommands(coin, '/payments/immature/', commands, response, (results) => {
+      const payments =  _this.processPayments(results[0]);
+      _this.buildPayload(coin, '/payments/immature/', _this.messages.success, payments, response);
+    });
+  }
+
+  // API Endpoint for /payments/paid
+  this.handlePaymentsPaid = function(coin, response) {
+    const commands = [['hgetall', `${ coin }:payments:paid`]];
+    _this.executeCommands(coin, '/payments/paid/', commands, response, (results) => {
+      const payments =  _this.processPayments(results[0]);
+      _this.buildPayload(coin, '/payments/paid/', _this.messages.success, payments, response);
+    });
+  }
+
+  // API Endpoint for /payments/records
+  this.handlePaymentsRecords = function(coin, response) {
+    const commands = [['zrange', `${ coin }:payments:records`, 0, -1]];
+    _this.executeCommands(coin, '/payments/records/', commands, response, (results) => {
+      const payments = results[0]
+        .map((payment) => JSON.parse(payment))
+        .sort((a, b) => (a.time - b.time));
+      _this.buildPayload(coin, '/payments/records/', _this.messages.success, payments, response);
+    });
+  }
+
+  // API Endpoint for /payments
+  this.handlePayments = function(coin, response) {
+    const commands = [
+      ['hgetall', `${ coin }:payments:generate`],
+      ['hgetall', `${ coin }:payments:immature`],
+      ['hgetall', `${ coin }:payments:paid`]];
+    _this.executeCommands(coin, '/payments/', commands, response, (results) => {
+      const payments = {
+        generate: _this.processPayments(results[0]),
+        immature: _this.processPayments(results[1]),
+        paid: _this.processPayments(results[2])};
+      _this.buildPayload(coin, '/payments/', _this.messages.success, payments, response);
+    });
+  }
+
+  // API Endpoint for /payments/paid
+  this.handleRoundsCurrent = function(coin, response) {
+    const commands = [
+      ['hgetall', `${ coin }:rounds:current:shares:values`],
+      ['hgetall', `${ coin }:rounds:current:times:values`]];
+    _this.executeCommands(coin, '/rounds/current/', commands, response, (results) => {
+      const shareData = _this.processShares(results[0]);
+      const current = {
+        solo: shareData[0],
+        shared: shareData[1],
+        times: _this.processTimes(results[1])};
+      _this.buildPayload(coin, '/rounds/current', _this.messages.success, current, response);
+    });
+  }
+
+  // API Endpoint for /payments/paid
+  this.handleRoundsHeight = function(coin, height, response) {
+    const commands = [
+      ['hgetall', `${ coin }:rounds:round-${ height }:shares:values`],
+      ['hgetall', `${ coin }:rounds:round-${ height }:times:values`]];
+    _this.executeCommands(coin, '/rounds/' + height, commands, response, (results) => {
+      const shareData = _this.processShares(results[0]);
+      const current = {
+        solo: shareData[0],
+        shared: shareData[1],
+        times: _this.processTimes(results[1])};
+      _this.buildPayload(coin, '/rounds/' + height, _this.messages.success, current, response);
+    });
+  }
+
+  // API Endpoint for /unknown
+  this.handleUnknown = function(coin, response) {
+    _this.buildPayload(coin, '/unknown/', _this.messages.unknown, null, response);
+  }
 
   // Build API Payload for each Endpoint
-  this.buildPayload = function(endpoint, errors, data, response) {
+  this.buildPayload = function(coin, endpoint, message, data, response) {
     const payload = {
+      coin: coin,
       endpoint: endpoint,
-      errors: errors,
+      response: message,
       data: data,
     }
-    response.writeHead(errors.code, { 'Content-Type': 'application/json' });
+    response.writeHead(message.code, { 'Content-Type': 'application/json' });
     response.end(JSON.stringify(payload));
     return;
   }
 
   // Execute Redis Commands
-  this.executeCommands = function(endpoint, commands, response, callback) {
+  this.executeCommands = function(coin, endpoint, commands, response, callback) {
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
-        _this.buildPayload(endpoint, _this.messages.invalid, null, response);
+        _this.buildPayload(coin, endpoint, _this.messages.invalid, null, response);
       } else {
         callback(results);
       }
     });
   };
-
-  //////////////////////////////////////////////////////////////////////////////
 
   // Determine API Endpoint Called
   this.handleApiV1 = function(req, res, next) {
@@ -106,44 +262,39 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       _this.handleBlocksPending(coin, res);
       break;
     case ((method === 'blocks') && (endpoint === "")):
-      console.log("4", coin, method, endpoint);
+      _this.handleBlocks(coin, res);
       break;
 
     // Payments Endpoints
     case (combined === 'payments/generate'):
-      console.log("5", coin, method, endpoint);
+      _this.handlePaymentsGenerate(coin, res);
       break;
     case (combined === 'payments/immature'):
-      console.log("6", coin, method, endpoint);
+      _this.handlePaymentsImmature(coin, res);
       break;
     case (combined === 'payments/paid'):
-      console.log("7", coin, method, endpoint);
+      _this.handlePaymentsPaid(coin, res);
       break;
     case (combined === 'payments/records'):
-      console.log("8", coin, method, endpoint);
+      _this.handlePaymentsRecords(coin, res);
       break;
     case ((method === 'payments') && (endpoint === "")):
-      console.log("9", coin, method, endpoint);
+      _this.handlePayments(coin, res);
+      break;
+
+    // Miscellaneous Endpoints
+    case (combined === 'rounds/current'):
+      _this.handleRoundsCurrent(coin, res);
+      break;
+    case ((method === 'rounds') && _this.checkNumber(endpoint)):
+      _this.handleRoundsHeight(coin, endpoint, res);
       break;
 
     // Unknown Endpoints
     default:
-      console.log("12", coin, method, endpoint);
+      _this.handleUnknown(coin, res);
       break;
     }
-
-    // case 'rounds/current':
-    //   console.log("8", coin, method, endpoint);
-    //   break;
-    // case 'rounds/' + endpoint:
-    //   console.log("9", coin, method, endpoint);
-    //   break;
-    // case 'statistics/main':
-    //   console.log("10", coin, method, endpoint);
-    //   break;
-    // case 'statistics/' + endpoint:
-    //   console.log("11", coin, method, endpoint);
-    //   break;
   }
 }
 
