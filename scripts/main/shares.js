@@ -1,232 +1,160 @@
 /*
  *
- * PoolShares (Updated)
+ * Shares (Updated)
  *
  */
 
-// Import Required Modules
-var redis = require('redis');
+const utils = require('./utils');
 
-// Round to # of Digits Given
-function roundTo(n, digits) {
-    if (digits === undefined) {
-        digits = 0;
+////////////////////////////////////////////////////////////////////////////////
+
+// Main Shares Function
+const PoolShares = function (logger, client, poolConfig, portalConfig) {
+
+  const _this = this;
+  this.coin = poolConfig.coin.name;
+  this.client = client;
+  this.poolConfig = poolConfig;
+  this.portalConfig = portalConfig;
+  this.forkId = process.env.forkId;
+
+  const logSystem = 'Pool';
+  const logComponent = _this.coin;
+  const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
+
+  _this.client.on('ready', () => {});
+  _this.client.on('error', (error) => {
+    logger.error(logSystem, logComponent, logSubCat, `Redis client had an error: ${ JSON.stringify(error) }`);
+  });
+  _this.client.on('end', () => {
+    logger.error(logSystem, logComponent, logSubCat, 'Connection to redis database has been ended');
+  });
+
+  // Manage Worker Times
+  this.buildTimesCommands = function(results, shareData, blockValid) {
+
+    const commands = [];
+    const dateNow = Date.now();
+    const workerAddress = shareData.worker;
+    const lastShareTimes = results[0] || {};
+
+    // Check if Worker Recently Joined
+    if (!lastShareTimes[workerAddress]) {
+      lastShareTimes[workerAddress] = dateNow;
     }
-    var multiplicator = Math.pow(10, digits);
-    n = parseFloat((n * multiplicator).toFixed(11));
-    var test =(Math.round(n) / multiplicator);
-    return +(test.toFixed(digits));
-}
 
-// Generate Redis Client
-function getRedisClient(portalConfig) {
-    redisConfig = portalConfig.redis;
-    if (redisConfig.password !== "") {
-        return redis.createClient({
-            port: redisConfig.port,
-            host: redisConfig.host,
-            password: redisConfig.password
-        });
+    // Get Last Known Worker Time
+    const lastShareTime = lastShareTimes[workerAddress];
+
+    // Check for Continous Mining
+    const timeChangeSec = utils.roundTo(Math.max(dateNow - lastShareTime, 0) / 1000, 4);
+    if (timeChangeSec < 900) {
+      commands.push(['hincrbyfloat', `${ _this.coin }:rounds:current:times:values`, workerAddress, timeChangeSec]);
     }
-    else {
-        return redis.createClient({
-            port: redisConfig.port,
-            host: redisConfig.host,
-        });
+
+    // Ensure Block Hasn't Been Found
+    if (!blockValid) {
+      commands.push(['hset', `${ _this.coin }:rounds:current:times:last`, workerAddress, dateNow]);
     }
-}
 
-// Pool Payments Main Function
-/* eslint no-unused-vars: ["error", { "args": "none" }] */
-var PoolShares = function (logger, poolConfig, portalConfig) {
+    return commands;
+  };
 
-    // Establish Shares Variables
-    var coin = poolConfig.coin.name;
-    var forkId = process.env.forkId;
+  // Manage Worker Shares
+  this.buildSharesCommands = function(results, shareData, shareValid, blockValid) {
 
-    // Establish Log Variables
-    var logSystem = 'Pool';
-    var logComponent = coin;
-    var logSubCat = `Thread ${  parseInt(forkId) + 1}`;
+    let commands = [];
+    const dateNow = Date.now();
+    const workerAddress = shareData.worker;
+    const isSoloMining = utils.checkSoloMining(_this.poolConfig, shareData);
 
-    // Establish Redis Client
-    var redisClient = getRedisClient(portalConfig);
-
-    // Manage Ready Endpoint
-    redisClient.on('ready', function() {
-        logger.debug(logSystem, logComponent, logSubCat, `Share processing setup with redis (${  redisConfig.host
-            }:${  redisConfig.port   })`);
-    });
-
-    // Manage Error Endpoint
-    redisClient.on('error', function(error) {
-        logger.error(logSystem, logComponent, logSubCat, `Redis client had an error: ${  JSON.stringify(error)}`)
-    });
-
-    // Manage End Endpoint
-    redisClient.on('end', function() {
-        logger.error(logSystem, logComponent, logSubCat, 'Connection to redis database has been ended');
-    });
-
-    // Manage Information Endpoint
-    redisClient.info(function(error, response) {
-        if (error) {
-            logger.error(logSystem, logComponent, logSubCat, 'Redis version check failed');
-            return;
-        }
-        var parts = response.split('\r\n');
-        var version;
-        var versionString;
-        for (var i = 0; i < parts.length; i++) {
-            if (parts[i].indexOf(':') !== -1) {
-                var valParts = parts[i].split(':');
-                if (valParts[0] === 'redis_version') {
-                    versionString = valParts[1];
-                    version = parseFloat(versionString);
-                    break;
-                }
-            }
-        }
-
-        // Check if Version is Unidentified
-        if (!version) {
-            logger.error(logSystem, logComponent, logSubCat, 'Could not detect redis version - but be super old or broken');
-        }
-
-        // Check if Version < 2.6
-        else if (version < 2.6) {
-            logger.error(logSystem, logComponent, logSubCat, `You're using redis version ${  versionString  } the minimum required version is 2.6. Follow the damn usage instructions...`);
-        }
-
-    });
-
-    // Manage Individual Shares
-    this.handleShare = function(isValidShare, isValidBlock, shareData) {
-
-        // Check to see if Solo Mining
-        var isSoloMining = false;
-        if (typeof poolConfig.ports[shareData.port] !== "undefined") {
-            if (poolConfig.ports[shareData.port].soloMining) {
-                isSoloMining = true;
-            }
-        }
-
-        // Establish Redis Variables
-        var dateNow = Date.now();
-        var redisCommands = [];
-        var shareLookups = [
-            ['hgetall', `${coin  }:times:timesStart`],
-            ['hgetall', `${coin  }:times:timesShare`],
-            ['hgetall', `${coin  }:shares:roundCurrent`],
-            ['hgetall', `${coin  }:times:timesCurrent`]
-        ]
-
-        // Get Current Start/Share Times
-        redisClient.multi(shareLookups).exec(function(error, results) {
-            if (error) {
-                logger.error(logSystem, logComponent, `Could not get time data from database: ${  JSON.stringify(error)}`);
-                return;
-            }
-
-            // Establish Current Values
-            var currentShares = results[2] || {}
-            var currentTimes = results[3] || {}
-
-            // Handle Valid Share
-            if (isValidShare) {
-
-                var lastStartTimes = results[0] || {};
-                var lastShareTimes = results[1] || {};
-                var lastShareTime = dateNow;
-                var lastStartTime = dateNow;
-
-                var workerAddress = shareData.worker;
-                var combinedShare = {
-                    time: dateNow,
-                    worker: workerAddress,
-                    soloMined: isSoloMining,
-                }
-
-                // Check Regarding Worker Join Time
-                if (!lastStartTimes[workerAddress] || !lastStartTimes[workerAddress]) {
-                    lastShareTimes[workerAddress] = dateNow;
-                    lastStartTimes[workerAddress] = dateNow;
-                }
-                if (lastShareTimes[workerAddress] != null && lastShareTimes[workerAddress] > 0) {
-                    lastShareTime = lastShareTimes[workerAddress];
-                    lastStartTime = lastStartTimes[workerAddress];
-                }
-
-                // Check Regarding Continuous Mining
-                var timeChangeSec = roundTo(Math.max(dateNow - lastShareTime, 0) / 1000, 4);
-
-                // Add New Data to Round Times
-                if (timeChangeSec < 900) {
-                    redisCommands.push(['hincrbyfloat', `${coin  }:times:timesCurrent`, workerAddress, timeChangeSec]);
-                }
-
-                // Update Current Round Shares/Times
-                currentShares[JSON.stringify(combinedShare)] = shareData.difficulty;
-                currentTimes[workerAddress] = timeChangeSec;
-
-                // Check to Ensure Block Not Found
-                if (!isValidBlock) {
-                    redisCommands.push(['hset', `${coin  }:times:timesStart`, workerAddress, lastStartTime]);
-                    redisCommands.push(['hset', `${coin  }:times:timesShare`, workerAddress, lastShareTime]);
-                }
-
-                // Handle Redis Updates
-                redisCommands.push(['hincrby', `${coin  }:shares:roundCurrent`, JSON.stringify(combinedShare), shareData.difficulty]);
-                redisCommands.push(['hincrby', `${coin  }:statistics:basic`, 'validShares', 1]);
-            }
-            else {
-                redisCommands.push(['hincrby', `${coin  }:statistics:basic`, 'invalidShares', 1]);
-            }
-
-            // Push Block Data to Main Array
-            if (isValidBlock) {
-                const blockData = {
-                    time: dateNow,
-                    height: shareData.height,
-                    blockHash: shareData.blockHash,
-                    blockReward: shareData.blockReward,
-                    txHash: shareData.txHash,
-                    difficulty: difficulty,
-                    worker: shareData.worker,
-                    soloMined: isSoloMining,
-                }
-
-                // Handle Redis Updates
-                redisCommands.push(['del', `${coin  }:times:timesStart`]);
-                redisCommands.push(['del', `${coin  }:times:timesShare`]);
-                redisCommands.push(['rename', `${coin  }:shares:roundCurrent`, `${coin  }:shares:round${  shareData.height}`]);
-                redisCommands.push(['rename', `${coin  }:times:timesCurrent`, `${coin  }:times:times${  shareData.height}`]);
-                redisCommands.push(['sadd', `${coin  }:blocks:pending`, JSON.stringify(blockData)])
-                redisCommands.push(['hincrby', `${coin  }:statistics:basic`, 'validBlocks', 1]);
-            }
-            else if (shareData.blockHash) {
-                redisCommands.push(['hincrby', `${coin  }:statistics:basic`, 'invalidBlocks', 1]);
-            }
-
-            // Push Hashrate Data to Database
-            var difficulty = (isValidShare ? shareData.difficulty : -shareData.difficulty)
-            var hashrateData = {
-                time: dateNow,
-                difficulty: difficulty,
-                worker: shareData.worker,
-                soloMined: isSoloMining,
-            }
-            redisCommands.push(['zadd', `${coin  }:statistics:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateData)])
-
-            // Write Share Information to Redis Database
-            redisClient.multi(redisCommands).exec(function(error, replies) {
-                if (error) {
-                    logger.error(logSystem, logComponent, logSubCat, `Error with share processor multi ${  JSON.stringify(error)}`);
-                }
-            });
-        });
+    // Build Output Share
+    const outputShare = {
+      time: dateNow,
+      worker: workerAddress,
+      solo: isSoloMining
     };
+
+    // Handle Valid/Invalid Shares
+    if (shareValid) {
+      commands = commands.concat(_this.buildTimesCommands(results, shareData, blockValid));
+      commands.push(['hincrby', `${ _this.coin }:rounds:current:shares:counts`, 'validShares', 1]);
+      outputShare.difficulty = shareData.difficulty;
+      commands.push(['hincrbyfloat', `${ _this.coin }:rounds:current:shares:values`, JSON.stringify(outputShare), shareData.difficulty]);
+      commands.push(['zadd', `${ _this.coin }:rounds:current:shares:records`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
+    } else {
+      commands.push(['hincrby', `${ _this.coin }:rounds:current:shares:counts`, 'invalidShares', 1]);
+      outputShare.difficulty = -shareData.difficulty;
+      commands.push(['zadd', `${ _this.coin }:rounds:current:shares:records`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
+    }
+
+    return commands;
+  };
+
+  // Manage Worker Blocks
+  this.buildBlocksCommands = function(shareData, shareValid, blockValid) {
+
+    const commands = [];
+    const dateNow = Date.now();
+    const difficulty = (shareValid ? shareData.difficulty : -shareData.difficulty);
+    const isSoloMining = utils.checkSoloMining(_this.poolConfig, shareData);
+
+    // Build Output Block
+    const outputBlock = {
+      time: dateNow,
+      height: shareData.height,
+      hash: shareData.hash,
+      reward: shareData.reward,
+      transaction: shareData.transaction,
+      difficulty: difficulty,
+      worker: shareData.worker,
+      solo: isSoloMining,
+    };
+
+    // Handle Valid/Invalid Blocks
+    if (blockValid) {
+      commands.push(['rename', `${ _this.coin }:rounds:current:times:last`, `${ _this.coin }:rounds:round-${ shareData.height }:times:last`]);
+      commands.push(['rename', `${ _this.coin }:rounds:current:times:values`, `${ _this.coin }:rounds:round-${ shareData.height }:times:values`]);
+      commands.push(['rename', `${ _this.coin }:rounds:current:shares:values`, `${ _this.coin }:rounds:round-${ shareData.height }:shares:values`]);
+      commands.push(['rename', `${ _this.coin }:rounds:current:shares:counts`, `${ _this.coin }:rounds:round-${ shareData.height }:shares:counts`]);
+      commands.push(['rename', `${ _this.coin }:rounds:current:shares:records`, `${ _this.coin }:rounds:round-${ shareData.height }:shares:records`]);
+      commands.push(['sadd', `${ _this.coin }:blocks:pending`, JSON.stringify(outputBlock)]);
+      commands.push(['hincrby', `${ _this.coin }:blocks:counts`, 'validBlocks', 1]);
+    } else if (shareData.hash) {
+      commands.push(['hincrby', `${ _this.coin }:blocks:counts`, 'invalidBlocks', 1]);
+    }
+
+    return commands;
+  };
+
+  // Build Redis Commands
+  this.buildCommands = function(results, shareData, shareValid, blockValid, callback, handler) {
+    let commands = [];
+    commands = commands.concat(_this.buildSharesCommands(results, shareData, shareValid, blockValid));
+    commands = commands.concat(_this.buildBlocksCommands(shareData, shareValid, blockValid));
+    this.executeCommands(commands, callback, handler);
+    return commands;
+  };
+
+  // Execute Redis Commands
+  this.executeCommands = function(commands, callback, handler) {
+    _this.client.multi(commands).exec((error, results) => {
+      if (error) {
+        logger.error(logSystem, logComponent, logSubCat, `Error with redis share processing ${ JSON.stringify(error) }`);
+        handler(error);
+      } else {
+        callback(results);
+      }
+    });
+  };
+
+  // Handle Share Submissions
+  this.handleShares = function(shareData, shareValid, blockValid, callback, handler) {
+    const shareLookups = [['hgetall', `${ _this.coin }:rounds:current:times:last`]];
+    this.executeCommands(shareLookups, (results) => {
+      _this.buildCommands(results, shareData, shareValid, blockValid, callback, handler);
+    }, handler);
+  };
 };
 
-// Export Pool Shares
 module.exports = PoolShares;

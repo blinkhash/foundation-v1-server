@@ -1,93 +1,63 @@
 /*
  *
- * PoolLogger (Updated)
+ * Logger (Updated)
  *
  */
 
-// Import Required Modules
 /* eslint-disable no-unused-vars */
-var dateFormat = require('dateformat');
-var colors = require('colors');
+const colors = require('colors');
+const dateFormat = require('dateformat');
+const utils = require('./utils');
 
-// Establish Severity Values
-var severityValues = {
-    'debug': 1,
-    'warning': 2,
-    'error': 3,
-    'special': 4
-};
+////////////////////////////////////////////////////////////////////////////////
 
-// Indicate Severity By Colors
-var severityColors = function(severity, text) {
-    switch (severity) {
-        case 'special':
-            return text.cyan.underline;
-        case 'debug':
-            return text.green;
-        case 'warning':
-            return text.yellow;
-        case 'error':
-            return text.red;
-        default:
-            console.log(`Unknown severity ${  severity}`);
-            return text.italic;
+// Main Logger Function
+const PoolLogger = function (portalConfig) {
+
+  const _this = this;
+  this.logLevel = utils.loggerSeverity[portalConfig.logger.logLevel];
+  this.logColors = portalConfig.logger.logColors;
+
+  // Start Logging Capabilities
+  this.logText = function(severity, system, component, text, subcat) {
+    if (utils.loggerSeverity[severity] < _this.logLevel) {
+      return;
     }
-};
+    if (subcat) {
+      const realText = subcat;
+      const realSubCat = text;
+      text = realText;
+      subcat = realSubCat;
+    }
+    let entryDesc = `${ dateFormat(new Date(), 'yyyy-mm-dd HH:MM:ss') } [${ system }]\t`;
 
-// Pool Logger Main Function
-var PoolLogger = function (configuration) {
+    // Handle Logging Colors
+    if (_this.logColors) {
+      entryDesc = utils.loggerColors(severity, entryDesc);
+      let logString = entryDesc + (`[${ component }] `).italic;
+      if (subcat) {
+        logString += (`(${ subcat }) `).bold.grey;
+      }
+      logString += text.grey;
+      console.log(logString);
+    } else {
+      let logString = `${ entryDesc }[${ component }] `;
+      if (subcat) {
+        logString += `(${ subcat }) `;
+      }
+      logString += text;
+      console.log(logString);
+    }
+  };
 
-    // Establish Initial Severity
-    var logLevelInt = severityValues[configuration.logLevel];
-    var logColors = configuration.logColors;
-
-    // Establish Log Main Functon
-    var log = function(severity, system, component, text, subcat) {
-
-        // Check Regarding Current Severity Valued
-        if (severityValues[severity] < logLevelInt) return;
-
-        // Check if SubCategory
-        if (subcat) {
-            var realText = subcat;
-            var realSubCat = text;
-            text = realText;
-            subcat = realSubCat;
-        }
-
-        // Manage Logger Message
-        var entryDesc = `${dateFormat(new Date(), 'yyyy-mm-dd HH:MM:ss')  } [${  system  }]\t`;
-        if (logColors) {
-            entryDesc = severityColors(severity, entryDesc);
-            // Format Logger Message
-            var logString = entryDesc + (`[${  component  }] `).italic;
-            if (subcat)
-                logString += (`(${  subcat  }) `).bold.grey;
-            logString += text.grey;
-        }
-        else {
-            // Format Logger Message
-            var logString = `${entryDesc  }[${  component  }] `;
-            if (subcat)
-                logString += `(${  subcat  }) `;
-            logString += text;
-        }
-
-        // Print Formatted Logger Message
-        console.log(logString);
+  // Manage Logger Events
+  Object.keys(utils.loggerSeverity).forEach((logType) => {
+    _this[logType] = function() {
+      const args = Array.prototype.slice.call(arguments, 0);
+      args.unshift(logType);
+      _this.logText.apply(this, args);
     };
-
-    // Manage Logger Messages
-    var _this = this;
-    Object.keys(severityValues).forEach(function(logType) {
-        _this[logType] = function() {
-            var args = Array.prototype.slice.call(arguments, 0);
-            args.unshift(logType);
-            log.apply(this, args);
-        };
-    });
-
+  });
 };
 
-// Export Pool Logger
 module.exports = PoolLogger;

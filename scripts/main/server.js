@@ -1,71 +1,69 @@
 /*
  *
- * PoolServer (Updated)
+ * Server (Updated)
  *
  */
 
-// Import Network Modules
-var apicache = require('apicache')
-var bodyParser = require('body-parser');
-var compress = require('compression');
-var cors = require('cors')
-var express = require('express');
+const apicache = require('apicache');
+const bodyParser = require('body-parser');
+const compress = require('compression');
+const cors = require('cors');
+const express = require('express');
+const http = require('http');
+const PoolApi = require('./api.js');
 
-// Import Pool Functionality
-var PoolAPI = require('./api.js');
+////////////////////////////////////////////////////////////////////////////////
 
-// Pool Server Main Function
-/* eslint no-unused-vars: ["error", { "args": "none" }] */
-var PoolServer = function (logger) {
+// Main Server Function
+const PoolServer = function (logger, client) {
 
-    // Load Useful Data from Process
-    var partnerConfigs = JSON.parse(process.env.partners);
-    var poolConfigs = JSON.parse(process.env.pools);
-    var portalConfig = JSON.parse(process.env.portalConfig);
+  const _this = this;
+  this.client = client;
+  this.partnerConfigs = JSON.parse(process.env.partnerConfigs);
+  this.poolConfigs = JSON.parse(process.env.poolConfigs);
+  this.portalConfig = JSON.parse(process.env.portalConfig);
 
-    // Establish Server Variables
-    var portalApi = new PoolAPI(logger, partnerConfigs, poolConfigs, portalConfig);
-    var portalStats = portalApi.poolStats;
-    var logSystem = 'Server';
-
-    // Gather Global Statistics
-    portalStats.getGlobalStats(function() {});
-
-    // Establish Global Statistics Interval
-    var globalInterval = setInterval(function() {
-        portalStats.getGlobalStats(function() {});
-    }, portalConfig.stats.updateInterval * 1000);
+  // Build Server w/ Middleware
+  this.buildServer = function() {
 
     // Build Main Server
-    var app = express();
-    var cache = apicache.middleware
+    const app = express();
+    const api = new PoolApi(_this.client, _this.partnerConfigs, _this.poolConfigs, _this.portalConfig);
+    const cache = apicache.options({}).middleware;
+
+    // Establish Middleware
     app.use(bodyParser.json());
-    app.use(cache('2 minutes'));
+    app.use(cache('5 minutes'));
     app.use(compress());
     app.use(cors());
-    app.get('/api/v1/:method', function(req, res, next) {
-        portalApi.handleApiRequest(req, res, next);
-    });
-    app.use(function(err, req, res, next) {
-        console.error(err.stack);
-        res.send(500, 'Something broke!');
+
+    // Handle API Requests
+    /* istanbul ignore next */
+    app.get('/api/v1/:coin/:method/:endpoint?', (req, res, next) => {
+      api.handleApiV1(req, res, next);
     });
 
-    try {
-        // Main Server is Running
-        app.listen(portalConfig.server.port, portalConfig.server.host, function() {
-            logger.debug(logSystem, 'Server', `Website started on ${
-            portalConfig.server.host  }:${  portalConfig.server.port}`);
-        });
-    }
-    catch(e) {
-        // Error Starting Main Server
-        clearInterval(globalInterval);
-        logger.error(logSystem, 'Server', `Could not start website on ${
-        portalConfig.server.host  }:${  portalConfig.server.port
-        } - its either in use or you do not have permission`);
-    }
-}
+    // Handle Error Responses
+    /* istanbul ignore next */
+    /* eslint-disable-next-line no-unused-vars */
+    app.use((err, req, res, next) => {
+      console.error(err.stack);
+      res.send(500, 'Something broke!');
+    });
 
-// Export Pool Server
+    // Set Existing Server Variable
+    this.server = http.createServer(app);
+  };
+
+  // Start Worker Capabilities
+  this.setupServer = function(callback) {
+    _this.buildServer();
+    _this.server.listen(_this.portalConfig.server.port, _this.portalConfig.server.host, () => {
+      logger.debug('Server', 'Website',
+        `Website started on ${ _this.portalConfig.server.host }:${ _this.portalConfig.server.port}`);
+      callback();
+    });
+  };
+};
+
 module.exports = PoolServer;

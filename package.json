@@ -31,7 +31,6 @@
   },
   "scripts": {
     "start": "nodemon scripts/main.js",
-    "start-v2": "nodemon scripts-v2/main.js",
     "clean": "eslint . --ext .js --ignore-pattern node_modules/",
     "clean:fix": "eslint . --ext .js --fix --ignore-pattern node_modules/",
     "test": "jest --coverage"
