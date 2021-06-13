@@ -469,7 +469,9 @@ const PoolPayments = function (logger, client) {
         Object.keys(round).forEach((entry) => {
           const addr = entry.split(".")[0];
           if (addr in timesRound) {
-            timesRound[addr] += parseFloat(round[entry]);
+            if (parseFloat(round[entry]) >= timesRound[addr]) {
+              timesRound[addr] = parseFloat(round[entry]);              
+            }
           } else {
             timesRound[addr] = parseFloat(round[entry]);
           }
