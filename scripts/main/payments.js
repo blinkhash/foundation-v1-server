@@ -112,14 +112,13 @@ const PoolPayments = function (logger, client) {
           solo: false,
           difficulty: round.orphanShares[address],
         };
-        commands.push(['hincrby', `${ coin }:rounds:current:shares:counts`, 'validShares', 1]);
-        commands.push(['hincrby', `${ coin }:rounds:current:shares:values`, JSON.stringify(outputShare), round.orphanShares[address]]);
-        commands.push(['zadd', `${ coin }:rounds:current:shares:records`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
+        commands.push(['hincrby', `${ coin }:rounds:current:counts`, 'valid', 1]);
+        commands.push(['hincrby', `${ coin }:rounds:current:shares`, JSON.stringify(outputShare), round.orphanShares[address]]);
       });
 
       // Move Orphaned Times to Following Round
       Object.keys(round.orphanTimes).forEach((address) => {
-        commands.push(['hincrbyfloat', `${ coin }:rounds:current:times:values`, address, round.orphanTimes[address]]);
+        commands.push(['hincrbyfloat', `${ coin }:rounds:current:times`, address, round.orphanTimes[address]]);
       });
     }
 
@@ -286,7 +285,7 @@ const PoolPayments = function (logger, client) {
         worker.records[round.height] = {};
         if (times[address] != null && parseFloat(times[address]) > 0) {
           const timePeriod = utils.roundTo((parseFloat(times[address]) / maxTime), 2);
-          worker.records[round.height].times = timePeriod;
+          worker.records[round.height].times = parseFloat(times[address]);
           if (timePeriod > 0 && timePeriod < 0.51) {
             const lost = shares * (1 - timePeriod);
             shares = utils.roundTo(Math.max(shares - lost, 0), 2);
@@ -453,7 +452,7 @@ const PoolPayments = function (logger, client) {
     const times = [];
     const coin = config.coin.name;
     const commands = data[0].map((round) => {
-      return ['hgetall', `${ coin }:rounds:round-${ round.height }:times:values`];
+      return ['hgetall', `${ coin }:rounds:round-${ round.height }:times`];
     });
 
     // Build Commands from Rounds
@@ -468,7 +467,12 @@ const PoolPayments = function (logger, client) {
       results.forEach((round) => {
         const timesRound = {};
         Object.keys(round).forEach((entry) => {
-          timesRound[entry] = parseFloat(round[entry]);
+          const addr = entry.split(".")[0];
+          if (addr in timesRound) {
+            timesRound[addr] += parseFloat(round[entry]);
+          } else {
+            timesRound[addr] = parseFloat(round[entry]);
+          }
         });
         times.push(timesRound);
       });
@@ -486,7 +490,7 @@ const PoolPayments = function (logger, client) {
     const shared = [];
     const coin = config.coin.name;
     const commands = data[0].map((round) => {
-      return ['hgetall', `${ coin }:rounds:round-${ round.height }:shares:values`];
+      return ['hgetall', `${ coin }:rounds:round-${ round.height }:shares`];
     });
 
     // Build Commands from Rounds
@@ -503,17 +507,18 @@ const PoolPayments = function (logger, client) {
         const sharedRound = {};
         Object.keys(round).forEach((entry) => {
           const details = JSON.parse(entry);
+          const addr = details.worker.split(".")[0];
           if (details.solo) {
-            if (!(details.worker in soloRound)) {
-              soloRound[details.worker] = parseFloat(round[entry]);
+            if (addr in soloRound) {
+              soloRound[addr] += parseFloat(round[entry]);
             } else {
-              soloRound[details.worker] += parseFloat(round[entry]);
+              soloRound[addr] = parseFloat(round[entry]);
             }
           } else {
-            if (!(details.worker in sharedRound)) {
-              sharedRound[details.worker] = parseFloat(round[entry]);
+            if (addr in sharedRound) {
+              sharedRound[addr] += parseFloat(round[entry]);
             } else {
-              sharedRound[details.worker] += parseFloat(round[entry]);
+              sharedRound[addr] = parseFloat(round[entry]);
             }
           }
         });
@@ -766,11 +771,10 @@ const PoolPayments = function (logger, client) {
     // Update Worker Shares
     const deleteCurrent = function(coin, round) {
       return [
-        ['del', `${ coin }:rounds:round-${ round.height }:shares:counts`],
-        ['del', `${ coin }:rounds:round-${ round.height }:shares:records`],
-        ['del', `${ coin }:rounds:round-${ round.height }:shares:values`],
-        ['del', `${ coin }:rounds:round-${ round.height }:times:last`],
-        ['del', `${ coin }:rounds:round-${ round.height }:times:values`]];
+        ['del', `${ coin }:rounds:round-${ round.height }:counts`],
+        ['del', `${ coin }:rounds:round-${ round.height }:shares`],
+        ['del', `${ coin }:rounds:round-${ round.height }:submissions`],
+        ['del', `${ coin }:rounds:round-${ round.height }:times`]];
     };
 
     // Update Round Shares/Times

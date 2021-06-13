@@ -49,6 +49,27 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     return output;
   }
 
+  // Handle Record Processing
+  this.processRecords = function(records) {
+    return records
+      .map((record) => JSON.parse(record))
+      .sort((a, b) => (a.time - b.time));
+  }
+
+  // Combine Payment Records
+  this.combinePayments = function(totals, payments) {
+    if (payments) {
+      Object.keys(payments).forEach((worker) => {
+        if (worker in totals) {
+          totals[worker] += parseFloat(payments[worker]);
+        } else {
+          totals[worker] = parseFloat(payments[worker]);
+        }
+      });
+    }
+    return totals;
+  }
+
   // Handle Share Processing
   this.processShares = function(shares) {
     const solo = {};
@@ -57,16 +78,16 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       Object.keys(shares).forEach((entry) => {
         const details = JSON.parse(entry);
         if (details.solo) {
-          if (!(details.worker in solo)) {
-            solo[details.worker] = parseFloat(shares[entry]);
-          } else {
+          if (details.worker in solo) {
             solo[details.worker] += parseFloat(shares[entry]);
+          } else {
+            solo[details.worker] = parseFloat(shares[entry]);
           }
         } else {
-          if (!(details.worker in shared)) {
-            shared[details.worker] = parseFloat(shares[entry]);
-          } else {
+          if (details.worker in shared) {
             shared[details.worker] += parseFloat(shares[entry]);
+          } else {
+            shared[details.worker] = parseFloat(shares[entry]);
           }
         }
       });
@@ -94,7 +115,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     });
   }
 
-  // API Endpoint for /blocks/pending
+  // API Endpoint for /blocks/kicked
   this.handleBlocksKicked = function(coin, response) {
     const commands = [['smembers', `${ coin }:blocks:kicked`]];
     _this.executeCommands(coin, '/blocks/kicked/', commands, response, (results) => {
@@ -118,12 +139,12 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       ['smembers', `${ coin }:blocks:confirmed`],
       ['smembers', `${ coin }:blocks:kicked`],
       ['smembers', `${ coin }:blocks:pending`]];
-    _this.executeCommands(coin, '/blocks/pending/', commands, response, (results) => {
+    _this.executeCommands(coin, '/blocks/combined/', commands, response, (results) => {
       const blocks = {
         confirmed: _this.processBlocks(results[0]),
         kicked: _this.processBlocks(results[1]),
         pending: _this.processBlocks(results[2])};
-      _this.buildPayload(coin, '/blocks/', _this.messages.success, blocks, response);
+      _this.buildPayload(coin, '/blocks/combined', _this.messages.success, blocks, response);
     });
   }
 
@@ -158,33 +179,31 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   this.handlePaymentsRecords = function(coin, response) {
     const commands = [['zrange', `${ coin }:payments:records`, 0, -1]];
     _this.executeCommands(coin, '/payments/records/', commands, response, (results) => {
-      const payments = results[0]
-        .map((payment) => JSON.parse(payment))
-        .sort((a, b) => (a.time - b.time));
+      const payments =  _this.processRecords(results[0]);
       _this.buildPayload(coin, '/payments/records/', _this.messages.success, payments, response);
     });
   }
 
-  // API Endpoint for /payments
+  // API Endpoint for /payments/combined
   this.handlePayments = function(coin, response) {
     const commands = [
       ['hgetall', `${ coin }:payments:generate`],
       ['hgetall', `${ coin }:payments:immature`],
       ['hgetall', `${ coin }:payments:paid`]];
-    _this.executeCommands(coin, '/payments/', commands, response, (results) => {
+    _this.executeCommands(coin, '/payments/combined', commands, response, (results) => {
       const payments = {
         generate: _this.processPayments(results[0]),
         immature: _this.processPayments(results[1]),
         paid: _this.processPayments(results[2])};
-      _this.buildPayload(coin, '/payments/', _this.messages.success, payments, response);
+      _this.buildPayload(coin, '/payments/combined', _this.messages.success, payments, response);
     });
   }
 
-  // API Endpoint for /payments/paid
+  // API Endpoint for /rounds/current
   this.handleRoundsCurrent = function(coin, response) {
     const commands = [
-      ['hgetall', `${ coin }:rounds:current:shares:values`],
-      ['hgetall', `${ coin }:rounds:current:times:values`]];
+      ['hgetall', `${ coin }:rounds:current:shares`],
+      ['hgetall', `${ coin }:rounds:current:times`]];
     _this.executeCommands(coin, '/rounds/current/', commands, response, (results) => {
       const shareData = _this.processShares(results[0]);
       const current = {
@@ -195,11 +214,11 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     });
   }
 
-  // API Endpoint for /payments/paid
+  // API Endpoint for /rounds/[height]
   this.handleRoundsHeight = function(coin, height, response) {
     const commands = [
-      ['hgetall', `${ coin }:rounds:round-${ height }:shares:values`],
-      ['hgetall', `${ coin }:rounds:round-${ height }:times:values`]];
+      ['hgetall', `${ coin }:rounds:round-${ height }:shares`],
+      ['hgetall', `${ coin }:rounds:round-${ height }:times`]];
     _this.executeCommands(coin, '/rounds/' + height, commands, response, (results) => {
       const shareData = _this.processShares(results[0]);
       const current = {
@@ -207,6 +226,52 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
         shared: shareData[1],
         times: _this.processTimes(results[1])};
       _this.buildPayload(coin, '/rounds/' + height, _this.messages.success, current, response);
+    });
+  }
+
+  // API Endpoint for /rounds/combined
+  this.handleRounds = function(coin, response) {
+    const keys = [['keys', `${ coin }:rounds:round-*:shares`]];
+    _this.executeCommands(coin, '/rounds/combined/', keys, response, (results) => {
+      const combined = {}
+      const rounds = results[0].map((key) => key.split(":")[2].split("-")[1]);
+      const handler = new Promise((resolve, reject) => {
+        rounds.forEach((height, idx) => {
+          const commands = [
+            ['hgetall', `${ coin }:rounds:round-${ height }:shares`],
+            ['hgetall', `${ coin }:rounds:round-${ height }:times`]];
+          _this.executeCommands(coin, '/rounds/combined/', commands, response, (results) => {
+            const shareData = _this.processShares(results[0]);
+            combined[height] = {
+              solo: shareData[0],
+              shared: shareData[1],
+              times: _this.processTimes(results[1])};
+            if (idx === rounds.length - 1) {
+              resolve();
+            }
+          });
+        });
+      });
+      handler.then(() => {
+        _this.buildPayload(coin, '/rounds/combined/', _this.messages.success, combined, response);
+      });
+    });
+  }
+
+  // API Endpoint for /statistics
+  this.handleStatistics = function(coin, response) {
+
+  }
+
+  // API Endpoint for /workers
+  this.handleWorkers = function(coin, response) {
+    const commands = [['hgetall', `${ coin }:rounds:current:shares`]];
+    _this.executeCommands(coin, '/workers/', commands, response, (results) => {
+      const shareData = _this.processShares(results[0]);
+      const workers = {
+        solo: Object.keys(shareData[0]),
+        shared: Object.keys(shareData[1])};
+      _this.buildPayload(coin, '/workers/', _this.messages.success, workers, response);
     });
   }
 
@@ -281,12 +346,25 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       _this.handlePayments(coin, res);
       break;
 
-    // Miscellaneous Endpoints
+    // Rounds Endpoints
     case (combined === 'rounds/current'):
       _this.handleRoundsCurrent(coin, res);
       break;
     case ((method === 'rounds') && _this.checkNumber(endpoint)):
       _this.handleRoundsHeight(coin, endpoint, res);
+      break;
+    case ((method === 'rounds') && (endpoint === "")):
+      _this.handleRounds(coin, res);
+      break;
+
+    // Statistics Endpoints
+    case ((method === 'statistics') && (endpoint === "")):
+      _this.handleStatistics(coin, res);
+      break;
+
+    // Workers Endpoints
+    case ((method === 'workers') && (endpoint === "")):
+      _this.handleWorkers(coin, res);
       break;
 
     // Unknown Endpoints

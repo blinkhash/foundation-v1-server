@@ -76,8 +76,8 @@ describe('Test shares functionality', () => {
       'worker': 'example'
     };
     const expected = [
-      ['hincrbyfloat', 'Bitcoin:rounds:current:times:values', 'example'],
-      ['hset', 'Bitcoin:rounds:current:times:last', 'example']];
+      ['hincrbyfloat', 'Bitcoin:rounds:current:times', 'example'],
+      ['hset', 'Bitcoin:rounds:current:submissions', 'example']];
     const commands = poolShares.buildTimesCommands(results, shareData, false);
     expect(commands.length).toBe(2);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
@@ -105,8 +105,8 @@ describe('Test shares functionality', () => {
       'worker': 'example'
     };
     const expected = [
-      ['hincrbyfloat', 'Bitcoin:rounds:current:times:values', 'example'],
-      ['hset', 'Bitcoin:rounds:current:times:last', 'example']];
+      ['hincrbyfloat', 'Bitcoin:rounds:current:times', 'example'],
+      ['hset', 'Bitcoin:rounds:current:submissions', 'example']];
     const commands = poolShares.buildTimesCommands(results, shareData, false);
     expect(commands.length).toBe(2);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
@@ -133,7 +133,7 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
       'worker': 'example'
     };
-    const expected = [['hset', 'Bitcoin:rounds:current:times:last', 'example']];
+    const expected = [['hset', 'Bitcoin:rounds:current:submissions', 'example']];
     const commands = poolShares.buildTimesCommands(results, shareData, false);
     expect(commands.length).toBe(1);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
@@ -158,7 +158,7 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
       'worker': 'example'
     };
-    const expected = [['hincrbyfloat', 'Bitcoin:rounds:current:times:values', 'example']];
+    const expected = [['hincrbyfloat', 'Bitcoin:rounds:current:times', 'example']];
     const commands = poolShares.buildTimesCommands(results, shareData, true);
     expect(commands.length).toBe(1);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
@@ -184,18 +184,16 @@ describe('Test shares functionality', () => {
       'worker': 'example'
     };
     const expected = [
-      ['hincrbyfloat', 'Bitcoin:rounds:current:times:values', 'example'],
-      ['hset', 'Bitcoin:rounds:current:times:last', 'example'],
-      ['hincrby', 'Bitcoin:rounds:current:shares:counts', 'validShares', 1],
-      ['hincrbyfloat', 'Bitcoin:rounds:current:shares:values'],
-      ['zadd', 'Bitcoin:rounds:current:shares:records']];
+      ['hincrbyfloat', 'Bitcoin:rounds:current:times', 'example'],
+      ['hset', 'Bitcoin:rounds:current:submissions', 'example'],
+      ['hincrby', 'Bitcoin:rounds:current:counts', 'valid', 1],
+      ['hincrbyfloat', 'Bitcoin:rounds:current:shares']]
     const commands = poolShares.buildSharesCommands(results, shareData, true, false);
-    expect(commands.length).toBe(5);
+    expect(commands.length).toBe(4);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
     expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
     expect(commands[2]).toStrictEqual(expected[2]);
     expect(commands[3].slice(0, 2)).toStrictEqual(expected[3]);
-    expect(commands[4].slice(0, 2)).toStrictEqual(expected[4]);
   });
 
   test('Test share command handling [2]', () => {
@@ -217,12 +215,10 @@ describe('Test shares functionality', () => {
       'worker': 'example'
     };
     const expected = [
-      ['hincrby', 'Bitcoin:rounds:current:shares:counts', 'invalidShares', 1],
-      ['zadd', 'Bitcoin:rounds:current:shares:records']];
+      ['hincrby', 'Bitcoin:rounds:current:counts', 'invalid', 1]]
     const commands = poolShares.buildSharesCommands(results, shareData, false, true);
-    expect(commands.length).toBe(2);
+    expect(commands.length).toBe(1);
     expect(commands[0]).toStrictEqual(expected[0]);
-    expect(commands[1].slice(0, 2)).toStrictEqual(expected[1]);
   });
 
   test('Test block command handling [1]', () => {
@@ -242,22 +238,20 @@ describe('Test shares functionality', () => {
       'worker': 'example'
     };
     const expected = [
-      ['rename', 'Bitcoin:rounds:current:times:last', 'Bitcoin:rounds:round-1972211:times:last'],
-      ['rename', 'Bitcoin:rounds:current:times:values', 'Bitcoin:rounds:round-1972211:times:values'],
-      ['rename', 'Bitcoin:rounds:current:shares:values', 'Bitcoin:rounds:round-1972211:shares:values'],
-      ['rename', 'Bitcoin:rounds:current:shares:counts', 'Bitcoin:rounds:round-1972211:shares:counts'],
-      ['rename', 'Bitcoin:rounds:current:shares:records', 'Bitcoin:rounds:round-1972211:shares:records'],
+      ['rename', 'Bitcoin:rounds:current:submissions', 'Bitcoin:rounds:round-1972211:submissions'],
+      ['rename', 'Bitcoin:rounds:current:times', 'Bitcoin:rounds:round-1972211:times'],
+      ['rename', 'Bitcoin:rounds:current:shares', 'Bitcoin:rounds:round-1972211:shares'],
+      ['rename', 'Bitcoin:rounds:current:counts', 'Bitcoin:rounds:round-1972211:counts'],
       ['sadd', 'Bitcoin:blocks:pending'],
       ['hincrby', 'Bitcoin:blocks:counts', 'validBlocks', 1]];
     const commands = poolShares.buildBlocksCommands(shareData, true, true);
-    expect(commands.length).toBe(7);
+    expect(commands.length).toBe(6);
     expect(commands[0]).toStrictEqual(expected[0]);
     expect(commands[1]).toStrictEqual(expected[1]);
     expect(commands[2]).toStrictEqual(expected[2]);
     expect(commands[3]).toStrictEqual(expected[3]);
-    expect(commands[4]).toStrictEqual(expected[4]);
-    expect(commands[5].slice(0, 2)).toStrictEqual(expected[5]);
-    expect(commands[6]).toStrictEqual(expected[6]);
+    expect(commands[4].slice(0, 2)).toStrictEqual(expected[4]);
+    expect(commands[5]).toStrictEqual(expected[5]);
   });
 
   test('Test block command handling [2]', () => {
@@ -341,20 +335,18 @@ describe('Test shares functionality', () => {
       'worker': 'example'
     };
     const expected = [
-      ['hincrbyfloat', 'Bitcoin:rounds:current:times:values', 'example'],
-      ['hset', 'Bitcoin:rounds:current:times:last', 'example'],
-      ['hincrby', 'Bitcoin:rounds:current:shares:counts', 'validShares', 1],
-      ['hincrbyfloat', 'Bitcoin:rounds:current:shares:values'],
-      ['zadd', 'Bitcoin:rounds:current:shares:records']];
+      ['hincrbyfloat', 'Bitcoin:rounds:current:times', 'example'],
+      ['hset', 'Bitcoin:rounds:current:submissions', 'example'],
+      ['hincrby', 'Bitcoin:rounds:current:counts', 'valid', 1],
+      ['hincrbyfloat', 'Bitcoin:rounds:current:shares']];
     const commands = poolShares.buildCommands(results, shareData, true, false, () => {
       return done();
     });
-    expect(commands.length).toBe(5);
+    expect(commands.length).toBe(4);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
     expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
     expect(commands[2]).toStrictEqual(expected[2]);
     expect(commands[3].slice(0, 2)).toStrictEqual(expected[3]);
-    expect(commands[4].slice(0, 2)).toStrictEqual(expected[4]);
   });
 
   test('Test command execution w/ errors', (done) => {
@@ -371,7 +363,7 @@ describe('Test shares functionality', () => {
   test('Test command execution on shares handler start', (done) => {
     const dateNow = Date.now();
     const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
-    const commands = [['hset', 'Bitcoin:rounds:current:times:last', 'example', dateNow - 300000]];
+    const commands = [['hset', 'Bitcoin:rounds:current:submissions', 'example', dateNow - 300000]];
     const shareData = {
       'job': '4',
       'ip': '::1',
@@ -393,7 +385,6 @@ describe('Test shares functionality', () => {
           expect(results[1]).toBe(0);
           expect(results[2]).toBe(1);
           expect(results[3]).toBe('1');
-          expect(results[4]).toBe(1);
           done();
         }, () => {});
       } else {

@@ -49,12 +49,12 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Check for Continous Mining
     const timeChangeSec = utils.roundTo(Math.max(dateNow - lastShareTime, 0) / 1000, 4);
     if (timeChangeSec < 900) {
-      commands.push(['hincrbyfloat', `${ _this.coin }:rounds:current:times:values`, workerAddress, timeChangeSec]);
+      commands.push(['hincrbyfloat', `${ _this.coin }:rounds:current:times`, workerAddress, timeChangeSec]);
     }
 
     // Ensure Block Hasn't Been Found
     if (!blockValid) {
-      commands.push(['hset', `${ _this.coin }:rounds:current:times:last`, workerAddress, dateNow]);
+      commands.push(['hset', `${ _this.coin }:rounds:current:submissions`, workerAddress, dateNow]);
     }
 
     return commands;
@@ -72,20 +72,17 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const outputShare = {
       time: dateNow,
       worker: workerAddress,
-      solo: isSoloMining
+      solo: isSoloMining,
+      difficulty: shareData.difficulty
     };
 
     // Handle Valid/Invalid Shares
     if (shareValid) {
       commands = commands.concat(_this.buildTimesCommands(results, shareData, blockValid));
-      commands.push(['hincrby', `${ _this.coin }:rounds:current:shares:counts`, 'validShares', 1]);
-      outputShare.difficulty = shareData.difficulty;
-      commands.push(['hincrbyfloat', `${ _this.coin }:rounds:current:shares:values`, JSON.stringify(outputShare), shareData.difficulty]);
-      commands.push(['zadd', `${ _this.coin }:rounds:current:shares:records`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
+      commands.push(['hincrby', `${ _this.coin }:rounds:current:counts`, 'valid', 1]);
+      commands.push(['hincrbyfloat', `${ _this.coin }:rounds:current:shares`, JSON.stringify(outputShare), shareData.difficulty]);
     } else {
-      commands.push(['hincrby', `${ _this.coin }:rounds:current:shares:counts`, 'invalidShares', 1]);
-      outputShare.difficulty = -shareData.difficulty;
-      commands.push(['zadd', `${ _this.coin }:rounds:current:shares:records`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
+      commands.push(['hincrby', `${ _this.coin }:rounds:current:counts`, 'invalid', 1]);
     }
 
     return commands;
@@ -113,11 +110,10 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Handle Valid/Invalid Blocks
     if (blockValid) {
-      commands.push(['rename', `${ _this.coin }:rounds:current:times:last`, `${ _this.coin }:rounds:round-${ shareData.height }:times:last`]);
-      commands.push(['rename', `${ _this.coin }:rounds:current:times:values`, `${ _this.coin }:rounds:round-${ shareData.height }:times:values`]);
-      commands.push(['rename', `${ _this.coin }:rounds:current:shares:values`, `${ _this.coin }:rounds:round-${ shareData.height }:shares:values`]);
-      commands.push(['rename', `${ _this.coin }:rounds:current:shares:counts`, `${ _this.coin }:rounds:round-${ shareData.height }:shares:counts`]);
-      commands.push(['rename', `${ _this.coin }:rounds:current:shares:records`, `${ _this.coin }:rounds:round-${ shareData.height }:shares:records`]);
+      commands.push(['rename', `${ _this.coin }:rounds:current:submissions`, `${ _this.coin }:rounds:round-${ shareData.height }:submissions`]);
+      commands.push(['rename', `${ _this.coin }:rounds:current:times`, `${ _this.coin }:rounds:round-${ shareData.height }:times`]);
+      commands.push(['rename', `${ _this.coin }:rounds:current:shares`, `${ _this.coin }:rounds:round-${ shareData.height }:shares`]);
+      commands.push(['rename', `${ _this.coin }:rounds:current:counts`, `${ _this.coin }:rounds:round-${ shareData.height }:counts`]);
       commands.push(['sadd', `${ _this.coin }:blocks:pending`, JSON.stringify(outputBlock)]);
       commands.push(['hincrby', `${ _this.coin }:blocks:counts`, 'validBlocks', 1]);
     } else if (shareData.hash) {
@@ -150,7 +146,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
   // Handle Share Submissions
   this.handleShares = function(shareData, shareValid, blockValid, callback, handler) {
-    const shareLookups = [['hgetall', `${ _this.coin }:rounds:current:times:last`]];
+    const shareLookups = [['hgetall', `${ _this.coin }:rounds:current:submissions`]];
     this.executeCommands(shareLookups, (results) => {
       _this.buildCommands(results, shareData, shareValid, blockValid, callback, handler);
     }, handler);

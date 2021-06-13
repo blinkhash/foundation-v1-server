@@ -225,17 +225,15 @@ describe('Test payments functionality', () => {
     const poolPayments = new PoolPayments(logger, client);
     const round = { orphanShares: { 'example': 8 }, orphanTimes: { 'example': 1 }};
     const expected = [
-      ['hincrby', 'Bitcoin:rounds:current:shares:counts', 'validShares', 1],
-      ['hincrby', 'Bitcoin:rounds:current:shares:values'],
-      ['zadd', 'Bitcoin:rounds:current:shares:records'],
-      ['hincrbyfloat', 'Bitcoin:rounds:current:times:values', 'example', 1]];
+      ['hincrby', 'Bitcoin:rounds:current:counts', 'valid', 1],
+      ['hincrby', 'Bitcoin:rounds:current:shares'],
+      ['hincrbyfloat', 'Bitcoin:rounds:current:times', 'example', 1]];
     poolPayments.handleOrphans(round, 'Bitcoin', (error, results) => {
       expect(error).toBe(null);
-      expect(results.length).toBe(4);
+      expect(results.length).toBe(3);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1].slice(0, 2)).toStrictEqual(expected[1]);
-      expect(results[2].slice(0, 2)).toStrictEqual(expected[2]);
-      expect(results[3]).toStrictEqual(expected[3]);
+      expect(results[2]).toStrictEqual(expected[2]);
       done();
     });
   });
@@ -526,7 +524,7 @@ describe('Test payments functionality', () => {
       expect(results[0]['example'].generate).toBe(1249960000);
       expect(results[0]['example'].records['180'].amounts).toBe(12.4996);
       expect(results[0]['example'].records['180'].shares).toBe(8);
-      expect(results[0]['example'].records['180'].times).toBe(1);
+      expect(results[0]['example'].records['180'].times).toBe(20.15);
       expect(results[0]['example'].shares.round).toBe(8);
       expect(results[0]['example'].shares.total).toBe(8);
       console.log.mockClear();
@@ -609,7 +607,7 @@ describe('Test payments functionality', () => {
       expect(results[0]['example'].generate).toBe(1249960000);
       expect(results[0]['example'].records['180'].amounts).toBe(12.4996);
       expect(results[0]['example'].records['180'].shares).toBe(3.28);
-      expect(results[0]['example'].records['180'].times).toBe(0.41);
+      expect(results[0]['example'].records['180'].times).toBe(8.2);
       expect(results[0]['example'].shares.round).toBe(3.28);
       expect(results[0]['example'].shares.total).toBe(3.28);
       console.log.mockClear();
@@ -900,8 +898,8 @@ describe('Test payments functionality', () => {
 
   test('Test main times handling [1]', (done) => {
     const commands = [
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:times:values', 'worker1', 20.15],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:times:values', 'worker2', 163.50]];
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:times', 'worker1', 20.15],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:times', 'worker2', 163.50]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
@@ -919,10 +917,10 @@ describe('Test payments functionality', () => {
 
   test('Test main times handling [2]', (done) => {
     const commands = [
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:times:values', 'worker1', 20.15],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:times:values', 'worker2', 163.50],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-181:times:values', 'worker1', 80.43],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-181:times:values', 'worker2', 121.637]];
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:times', 'worker1', 20.15],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:times', 'worker2', 163.50],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-181:times', 'worker1', 80.43],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-181:times', 'worker2', 121.637]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
@@ -942,9 +940,9 @@ describe('Test payments functionality', () => {
 
   test('Test main shares handling [1]', (done) => {
     const commands = [
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares:values', JSON.stringify({ date: 0, worker: 'worker1', 'solo': true }), 8],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares:values', JSON.stringify({ date: 0, worker: 'worker2', 'solo': false }), 16],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares:values', JSON.stringify({ date: 1, worker: 'worker2', 'solo': false }), 12]];
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ date: 0, worker: 'worker1', 'solo': true }), 8],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ date: 0, worker: 'worker2', 'solo': false }), 16],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ date: 1, worker: 'worker2', 'solo': false }), 12]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
@@ -962,13 +960,13 @@ describe('Test payments functionality', () => {
 
   test('Test main shares handling [2]', (done) => {
     const commands = [
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares:values', JSON.stringify({ date: 0, worker: 'worker1', 'solo': true }), 8],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares:values', JSON.stringify({ date: 0, worker: 'worker2', 'solo': false }), 16],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares:values', JSON.stringify({ date: 1, worker: 'worker2', 'solo': false }), 12],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares:values', JSON.stringify({ date: 0, worker: 'worker1', 'solo': true }), 16],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares:values', JSON.stringify({ date: 1, worker: 'worker1', 'solo': true }), 10],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares:values', JSON.stringify({ date: 0, worker: 'worker2', 'solo': false }), 28],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares:values', JSON.stringify({ date: 1, worker: 'worker2', 'solo': false }), 12]];
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ date: 0, worker: 'worker1', 'solo': true }), 8],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ date: 0, worker: 'worker2', 'solo': false }), 16],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ date: 1, worker: 'worker2', 'solo': false }), 12],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares', JSON.stringify({ date: 0, worker: 'worker1', 'solo': true }), 16],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares', JSON.stringify({ date: 1, worker: 'worker1', 'solo': true }), 10],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares', JSON.stringify({ date: 0, worker: 'worker2', 'solo': false }), 28],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares', JSON.stringify({ date: 1, worker: 'worker2', 'solo': false }), 12]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
@@ -1129,7 +1127,7 @@ describe('Test payments functionality', () => {
       expect(results[1]['example'].generate).toBe(1249960000);
       expect(results[1]['example'].records['180'].amounts).toBe(12.4996);
       expect(results[1]['example'].records['180'].shares).toBe(8);
-      expect(results[1]['example'].records['180'].times).toBe(1);
+      expect(results[1]['example'].records['180'].times).toBe(20.15);
       expect(results[1]['example'].shares.round).toBe(8);
       expect(results[1]['example'].shares.total).toBe(8);
       console.log.mockClear();
@@ -1203,13 +1201,13 @@ describe('Test payments functionality', () => {
       expect(results[1]['example1'].generate).toBe(856136986);
       expect(results[1]['example1'].records['180'].amounts).toBe(8.56136986);
       expect(results[1]['example1'].records['180'].shares).toBe(8);
-      expect(results[1]['example1'].records['180'].times).toBe(1);
+      expect(results[1]['example1'].records['180'].times).toBe(20.15);
       expect(results[1]['example1'].shares.round).toBe(8);
       expect(results[1]['example1'].shares.total).toBe(8);
       expect(results[1]['example2'].generate).toBe(393823014);
       expect(results[1]['example2'].records['180'].amounts).toBe(3.93823014);
       expect(results[1]['example2'].records['180'].shares).toBe(3.68);
-      expect(results[1]['example2'].records['180'].times).toBe(0.23);
+      expect(results[1]['example2'].records['180'].times).toBe(4.623);
       expect(results[1]['example2'].shares.round).toBe(3.68);
       expect(results[1]['example2'].shares.total).toBe(3.68);
       console.log.mockClear();
@@ -1436,11 +1434,10 @@ describe('Test payments functionality', () => {
       const expected = [
         ['hset', 'Bitcoin:payments:immature', 'example1', 0],
         ['smove', 'Bitcoin:blocks:pending', 'Bitcoin:blocks:confirmed', 'serialized'],
-        ['del', 'Bitcoin:rounds:round-180:shares:counts'],
-        ['del', 'Bitcoin:rounds:round-180:shares:records'],
-        ['del', 'Bitcoin:rounds:round-180:shares:values'],
-        ['del', 'Bitcoin:rounds:round-180:times:last'],
-        ['del', 'Bitcoin:rounds:round-180:times:values'],
+        ['del', 'Bitcoin:rounds:round-180:counts'],
+        ['del', 'Bitcoin:rounds:round-180:shares'],
+        ['del', 'Bitcoin:rounds:round-180:submissions'],
+        ['del', 'Bitcoin:rounds:round-180:times'],
         ['hincrbyfloat', 'Bitcoin:payments:counts', 'totalPaid', 0],
         ['hset', 'Bitcoin:payments:counts', 'lastPaid']];
       expect(results[0]).toStrictEqual(expected[0]);
@@ -1450,8 +1447,7 @@ describe('Test payments functionality', () => {
       expect(results[4]).toStrictEqual(expected[4]);
       expect(results[5]).toStrictEqual(expected[5]);
       expect(results[6]).toStrictEqual(expected[6]);
-      expect(results[7]).toStrictEqual(expected[7]);
-      expect(results[8].slice(0, 3)).toStrictEqual(expected[8]);
+      expect(results[7].slice(0, 3)).toStrictEqual(expected[7]);
       console.log.mockClear();
       done();
     });
@@ -1494,11 +1490,10 @@ describe('Test payments functionality', () => {
         ['hset', 'Bitcoin:payments:generate', 'example1', 0],
         ['hset', 'Bitcoin:payments:immature', 'example1', 0],
         ['smove', 'Bitcoin:blocks:pending', 'Bitcoin:blocks:confirmed', 'serialized'],
-        ['del', 'Bitcoin:rounds:round-180:shares:counts'],
-        ['del', 'Bitcoin:rounds:round-180:shares:records'],
-        ['del', 'Bitcoin:rounds:round-180:shares:values'],
-        ['del', 'Bitcoin:rounds:round-180:times:last'],
-        ['del', 'Bitcoin:rounds:round-180:times:values'],
+        ['del', 'Bitcoin:rounds:round-180:counts'],
+        ['del', 'Bitcoin:rounds:round-180:shares'],
+        ['del', 'Bitcoin:rounds:round-180:submissions'],
+        ['del', 'Bitcoin:rounds:round-180:times'],
         ['hincrbyfloat', 'Bitcoin:payments:counts', 'totalPaid', 12.5],
         ['hset', 'Bitcoin:payments:counts', 'lastPaid']];
       expect(results[0]).toStrictEqual(expected[0]);
@@ -1510,8 +1505,7 @@ describe('Test payments functionality', () => {
       expect(results[6]).toStrictEqual(expected[6]);
       expect(results[7]).toStrictEqual(expected[7]);
       expect(results[8]).toStrictEqual(expected[8]);
-      expect(results[9]).toStrictEqual(expected[9]);
-      expect(results[10].slice(0, 3)).toStrictEqual(expected[10]);
+      expect(results[9].slice(0, 3)).toStrictEqual(expected[9]);
       console.log.mockClear();
       done();
     });
@@ -1533,11 +1527,10 @@ describe('Test payments functionality', () => {
         ['hset', 'Bitcoin:payments:generate', 'example1', 0],
         ['hset', 'Bitcoin:payments:immature', 'example1', 0],
         ['smove', 'Bitcoin:blocks:pending', 'Bitcoin:blocks:confirmed', 'serialized'],
-        ['del', 'Bitcoin:rounds:round-180:shares:counts'],
-        ['del', 'Bitcoin:rounds:round-180:shares:records'],
-        ['del', 'Bitcoin:rounds:round-180:shares:values'],
-        ['del', 'Bitcoin:rounds:round-180:times:last'],
-        ['del', 'Bitcoin:rounds:round-180:times:values'],
+        ['del', 'Bitcoin:rounds:round-180:counts'],
+        ['del', 'Bitcoin:rounds:round-180:shares'],
+        ['del', 'Bitcoin:rounds:round-180:submissions'],
+        ['del', 'Bitcoin:rounds:round-180:times'],
         ['hincrbyfloat', 'Bitcoin:payments:counts', 'totalPaid', 12.5],
         ['hset', 'Bitcoin:payments:counts', 'lastPaid']];
       expect(results[0]).toStrictEqual(expected[0]);
@@ -1549,8 +1542,7 @@ describe('Test payments functionality', () => {
       expect(results[6]).toStrictEqual(expected[6]);
       expect(results[7]).toStrictEqual(expected[7]);
       expect(results[8]).toStrictEqual(expected[8]);
-      expect(results[9]).toStrictEqual(expected[9]);
-      expect(results[10].slice(0, 3)).toStrictEqual(expected[10]);
+      expect(results[9].slice(0, 3)).toStrictEqual(expected[9]);
       console.log.mockClear();
       done();
     });
@@ -1572,11 +1564,10 @@ describe('Test payments functionality', () => {
         ['hset', 'Bitcoin:payments:generate', 'example1', 0],
         ['hset', 'Bitcoin:payments:immature', 'example1', 0],
         ['smove', 'Bitcoin:blocks:pending', 'Bitcoin:blocks:confirmed', 'serialized'],
-        ['del', 'Bitcoin:rounds:round-180:shares:counts'],
-        ['del', 'Bitcoin:rounds:round-180:shares:records'],
-        ['del', 'Bitcoin:rounds:round-180:shares:values'],
-        ['del', 'Bitcoin:rounds:round-180:times:last'],
-        ['del', 'Bitcoin:rounds:round-180:times:values'],
+        ['del', 'Bitcoin:rounds:round-180:counts'],
+        ['del', 'Bitcoin:rounds:round-180:shares'],
+        ['del', 'Bitcoin:rounds:round-180:submissions'],
+        ['del', 'Bitcoin:rounds:round-180:times'],
         ['hincrbyfloat', 'Bitcoin:payments:counts', 'totalPaid', 12.5],
         ['hset', 'Bitcoin:payments:counts', 'lastPaid']];
       expect(results[0]).toStrictEqual(expected[0]);
@@ -1588,8 +1579,7 @@ describe('Test payments functionality', () => {
       expect(results[6]).toStrictEqual(expected[6]);
       expect(results[7]).toStrictEqual(expected[7]);
       expect(results[8]).toStrictEqual(expected[8]);
-      expect(results[9]).toStrictEqual(expected[9]);
-      expect(results[10].slice(0, 3)).toStrictEqual(expected[10]);
+      expect(results[9].slice(0, 3)).toStrictEqual(expected[9]);
       console.log.mockClear();
       done();
     });
@@ -1634,11 +1624,10 @@ describe('Test payments functionality', () => {
       const expected = [
         ['hset', 'Bitcoin:payments:immature', 'example1', 0],
         ['smove', 'Bitcoin:blocks:pending', 'Bitcoin:blocks:kicked', 'serialized'],
-        ['del', 'Bitcoin:rounds:round-180:shares:counts'],
-        ['del', 'Bitcoin:rounds:round-180:shares:records'],
-        ['del', 'Bitcoin:rounds:round-180:shares:values'],
-        ['del', 'Bitcoin:rounds:round-180:times:last'],
-        ['del', 'Bitcoin:rounds:round-180:times:values'],
+        ['del', 'Bitcoin:rounds:round-180:counts'],
+        ['del', 'Bitcoin:rounds:round-180:shares'],
+        ['del', 'Bitcoin:rounds:round-180:submissions'],
+        ['del', 'Bitcoin:rounds:round-180:times'],
         ['hincrbyfloat', 'Bitcoin:payments:counts', 'totalPaid', 0],
         ['hset', 'Bitcoin:payments:counts', 'lastPaid']];
       expect(results[0]).toStrictEqual(expected[0]);
@@ -1648,8 +1637,7 @@ describe('Test payments functionality', () => {
       expect(results[4]).toStrictEqual(expected[4]);
       expect(results[5]).toStrictEqual(expected[5]);
       expect(results[6]).toStrictEqual(expected[6]);
-      expect(results[7]).toStrictEqual(expected[7]);
-      expect(results[8].slice(0, 3)).toStrictEqual(expected[8]);
+      expect(results[7].slice(0, 3)).toStrictEqual(expected[7]);
       console.log.mockClear();
       done();
     });

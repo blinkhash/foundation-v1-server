@@ -27,9 +27,5 @@ config.server = {};
 config.server.host = '127.0.0.1';
 config.server.port = 3001;
 
-// Statistics Configuration
-config.statistics = {};
-config.statistics.hashrateWindow = 300;
-
 // Export Configuration
 module.exports = config;
