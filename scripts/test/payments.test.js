@@ -226,14 +226,16 @@ describe('Test payments functionality', () => {
     const round = { orphanShares: { 'example': 8 }, orphanTimes: { 'example': 1 }};
     const expected = [
       ['hincrby', 'Bitcoin:rounds:current:counts', 'valid', 1],
+      ['zadd', 'Bitcoin:rounds:current:hashrate'],
       ['hincrby', 'Bitcoin:rounds:current:shares'],
       ['hincrbyfloat', 'Bitcoin:rounds:current:times', 'example', 1]];
     poolPayments.handleOrphans(round, 'Bitcoin', (error, results) => {
       expect(error).toBe(null);
-      expect(results.length).toBe(3);
+      expect(results.length).toBe(4);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1].slice(0, 2)).toStrictEqual(expected[1]);
-      expect(results[2]).toStrictEqual(expected[2]);
+      expect(results[2].slice(0, 2)).toStrictEqual(expected[2]);
+      expect(results[3]).toStrictEqual(expected[3]);
       done();
     });
   });
@@ -1366,9 +1368,12 @@ describe('Test payments functionality', () => {
     poolPayments.handleUpdates(config, 'checks', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
         ['hset', 'Bitcoin:payments:generate', 'example1', 0],
-        ['hset', 'Bitcoin:payments:immature', 'example1', 12.5]];
+        ['hset', 'Bitcoin:payments:immature', 'example1', 12.5],
+        ['zremrangebyscore', 'Bitcoin:rounds:current:hashrate', 0]];
+      expect(results.length).toBe(3);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
+      expect(results[2].slice(0, 3)).toStrictEqual(expected[2]);
       console.log.mockClear();
       done();
     });
@@ -1387,11 +1392,16 @@ describe('Test payments functionality', () => {
     poolPayments.handleUpdates(config, 'payments', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
         ['hset', 'Bitcoin:payments:immature', 'example1', 12.5],
-        ['hincrbyfloat', 'Bitcoin:payments:counts', 'totalPaid', 0],
-        ['hset', 'Bitcoin:payments:counts', 'lastPaid']];
+        ['zremrangebyscore', 'Bitcoin:rounds:current:hashrate', 0],
+        ['hincrbyfloat', 'Bitcoin:payments:counts', 'total', 0],
+        ['hset', 'Bitcoin:payments:counts', 'last'],
+        ['hset', 'Bitcoin:payments:counts', 'next']];
+      expect(results.length).toBe(5);
       expect(results[0]).toStrictEqual(expected[0]);
-      expect(results[1]).toStrictEqual(expected[1]);
-      expect(results[2].slice(0, 3)).toStrictEqual(expected[2]);
+      expect(results[1].slice(0, 3)).toStrictEqual(expected[1]);
+      expect(results[2]).toStrictEqual(expected[2]);
+      expect(results[3].slice(0, 3)).toStrictEqual(expected[3]);
+      expect(results[4].slice(0, 3)).toStrictEqual(expected[4]);
       console.log.mockClear();
       done();
     });
@@ -1410,11 +1420,16 @@ describe('Test payments functionality', () => {
     poolPayments.handleUpdates(config, 'payments', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
         ['hset', 'Bitcoin:payments:immature', 'example1', 0],
-        ['hincrbyfloat', 'Bitcoin:payments:counts', 'totalPaid', 0],
-        ['hset', 'Bitcoin:payments:counts', 'lastPaid']];
+        ['zremrangebyscore', 'Bitcoin:rounds:current:hashrate', 0],
+        ['hincrbyfloat', 'Bitcoin:payments:counts', 'total', 0],
+        ['hset', 'Bitcoin:payments:counts', 'last'],
+        ['hset', 'Bitcoin:payments:counts', 'next']];
+      expect(results.length).toBe(5);
       expect(results[0]).toStrictEqual(expected[0]);
-      expect(results[1]).toStrictEqual(expected[1]);
-      expect(results[2].slice(0, 3)).toStrictEqual(expected[2]);
+      expect(results[1].slice(0, 3)).toStrictEqual(expected[1]);
+      expect(results[2]).toStrictEqual(expected[2]);
+      expect(results[3].slice(0, 3)).toStrictEqual(expected[3]);
+      expect(results[4].slice(0, 3)).toStrictEqual(expected[4]);
       console.log.mockClear();
       done();
     });
@@ -1436,18 +1451,21 @@ describe('Test payments functionality', () => {
         ['smove', 'Bitcoin:blocks:pending', 'Bitcoin:blocks:confirmed', 'serialized'],
         ['del', 'Bitcoin:rounds:round-180:counts'],
         ['del', 'Bitcoin:rounds:round-180:shares'],
-        ['del', 'Bitcoin:rounds:round-180:submissions'],
         ['del', 'Bitcoin:rounds:round-180:times'],
-        ['hincrbyfloat', 'Bitcoin:payments:counts', 'totalPaid', 0],
-        ['hset', 'Bitcoin:payments:counts', 'lastPaid']];
+        ['zremrangebyscore', 'Bitcoin:rounds:current:hashrate', 0],
+        ['hincrbyfloat', 'Bitcoin:payments:counts', 'total', 0],
+        ['hset', 'Bitcoin:payments:counts', 'last'],
+        ['hset', 'Bitcoin:payments:counts', 'next']];
+      expect(results.length).toBe(9);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2]).toStrictEqual(expected[2]);
       expect(results[3]).toStrictEqual(expected[3]);
       expect(results[4]).toStrictEqual(expected[4]);
-      expect(results[5]).toStrictEqual(expected[5]);
+      expect(results[5].slice(0, 3)).toStrictEqual(expected[5]);
       expect(results[6]).toStrictEqual(expected[6]);
       expect(results[7].slice(0, 3)).toStrictEqual(expected[7]);
+      expect(results[8].slice(0, 3)).toStrictEqual(expected[8]);
       console.log.mockClear();
       done();
     });
@@ -1466,9 +1484,12 @@ describe('Test payments functionality', () => {
     poolPayments.handleUpdates(config, 'checks', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
         ['hset', 'Bitcoin:payments:generate', 'example1', 12.5],
-        ['hset', 'Bitcoin:payments:immature', 'example1', 0]];
+        ['hset', 'Bitcoin:payments:immature', 'example1', 0],
+        ['zremrangebyscore', 'Bitcoin:rounds:current:hashrate', 0]];
+      expect(results.length).toBe(3);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
+      expect(results[2].slice(0, 3)).toStrictEqual(expected[2]);
       console.log.mockClear();
       done();
     });
@@ -1492,10 +1513,12 @@ describe('Test payments functionality', () => {
         ['smove', 'Bitcoin:blocks:pending', 'Bitcoin:blocks:confirmed', 'serialized'],
         ['del', 'Bitcoin:rounds:round-180:counts'],
         ['del', 'Bitcoin:rounds:round-180:shares'],
-        ['del', 'Bitcoin:rounds:round-180:submissions'],
         ['del', 'Bitcoin:rounds:round-180:times'],
-        ['hincrbyfloat', 'Bitcoin:payments:counts', 'totalPaid', 12.5],
-        ['hset', 'Bitcoin:payments:counts', 'lastPaid']];
+        ['zremrangebyscore', 'Bitcoin:rounds:current:hashrate', 0],
+        ['hincrbyfloat', 'Bitcoin:payments:counts', 'total', 12.5],
+        ['hset', 'Bitcoin:payments:counts', 'last'],
+        ['hset', 'Bitcoin:payments:counts', 'next']];
+      expect(results.length).toBe(11);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2]).toStrictEqual(expected[2]);
@@ -1503,9 +1526,10 @@ describe('Test payments functionality', () => {
       expect(results[4]).toStrictEqual(expected[4]);
       expect(results[5]).toStrictEqual(expected[5]);
       expect(results[6]).toStrictEqual(expected[6]);
-      expect(results[7]).toStrictEqual(expected[7]);
+      expect(results[7].slice(0, 3)).toStrictEqual(expected[7]);
       expect(results[8]).toStrictEqual(expected[8]);
       expect(results[9].slice(0, 3)).toStrictEqual(expected[9]);
+      expect(results[10].slice(0, 3)).toStrictEqual(expected[10]);
       console.log.mockClear();
       done();
     });
@@ -1529,10 +1553,12 @@ describe('Test payments functionality', () => {
         ['smove', 'Bitcoin:blocks:pending', 'Bitcoin:blocks:confirmed', 'serialized'],
         ['del', 'Bitcoin:rounds:round-180:counts'],
         ['del', 'Bitcoin:rounds:round-180:shares'],
-        ['del', 'Bitcoin:rounds:round-180:submissions'],
         ['del', 'Bitcoin:rounds:round-180:times'],
-        ['hincrbyfloat', 'Bitcoin:payments:counts', 'totalPaid', 12.5],
-        ['hset', 'Bitcoin:payments:counts', 'lastPaid']];
+        ['zremrangebyscore', 'Bitcoin:rounds:current:hashrate', 0],
+        ['hincrbyfloat', 'Bitcoin:payments:counts', 'total', 12.5],
+        ['hset', 'Bitcoin:payments:counts', 'last'],
+        ['hset', 'Bitcoin:payments:counts', 'next']];
+      expect(results.length).toBe(11);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2]).toStrictEqual(expected[2]);
@@ -1540,9 +1566,10 @@ describe('Test payments functionality', () => {
       expect(results[4]).toStrictEqual(expected[4]);
       expect(results[5]).toStrictEqual(expected[5]);
       expect(results[6]).toStrictEqual(expected[6]);
-      expect(results[7]).toStrictEqual(expected[7]);
+      expect(results[7].slice(0, 3)).toStrictEqual(expected[7]);
       expect(results[8]).toStrictEqual(expected[8]);
       expect(results[9].slice(0, 3)).toStrictEqual(expected[9]);
+      expect(results[10].slice(0, 3)).toStrictEqual(expected[10]);
       console.log.mockClear();
       done();
     });
@@ -1566,10 +1593,12 @@ describe('Test payments functionality', () => {
         ['smove', 'Bitcoin:blocks:pending', 'Bitcoin:blocks:confirmed', 'serialized'],
         ['del', 'Bitcoin:rounds:round-180:counts'],
         ['del', 'Bitcoin:rounds:round-180:shares'],
-        ['del', 'Bitcoin:rounds:round-180:submissions'],
         ['del', 'Bitcoin:rounds:round-180:times'],
-        ['hincrbyfloat', 'Bitcoin:payments:counts', 'totalPaid', 12.5],
-        ['hset', 'Bitcoin:payments:counts', 'lastPaid']];
+        ['zremrangebyscore', 'Bitcoin:rounds:current:hashrate', 0],
+        ['hincrbyfloat', 'Bitcoin:payments:counts', 'total', 12.5],
+        ['hset', 'Bitcoin:payments:counts', 'last'],
+        ['hset', 'Bitcoin:payments:counts', 'next']];
+      expect(results.length).toBe(11);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2]).toStrictEqual(expected[2]);
@@ -1577,9 +1606,10 @@ describe('Test payments functionality', () => {
       expect(results[4]).toStrictEqual(expected[4]);
       expect(results[5]).toStrictEqual(expected[5]);
       expect(results[6]).toStrictEqual(expected[6]);
-      expect(results[7]).toStrictEqual(expected[7]);
+      expect(results[7].slice(0, 3)).toStrictEqual(expected[7]);
       expect(results[8]).toStrictEqual(expected[8]);
       expect(results[9].slice(0, 3)).toStrictEqual(expected[9]);
+      expect(results[10].slice(0, 3)).toStrictEqual(expected[10]);
       console.log.mockClear();
       done();
     });
@@ -1599,12 +1629,17 @@ describe('Test payments functionality', () => {
       const expected = [
         ['hset', 'Bitcoin:payments:immature', 'example1', 0],
         ['smove', 'Bitcoin:blocks:pending', 'Bitcoin:blocks:kicked', 'serialized'],
-        ['hincrbyfloat', 'Bitcoin:payments:counts', 'totalPaid', 0],
-        ['hset', 'Bitcoin:payments:counts', 'lastPaid']];
+        ['zremrangebyscore', 'Bitcoin:rounds:current:hashrate', 0],
+        ['hincrbyfloat', 'Bitcoin:payments:counts', 'total', 0],
+        ['hset', 'Bitcoin:payments:counts', 'last'],
+        ['hset', 'Bitcoin:payments:counts', 'next']];
+      expect(results.length).toBe(6);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
-      expect(results[2]).toStrictEqual(expected[2]);
-      expect(results[3].slice(0, 3)).toStrictEqual(expected[3]);
+      expect(results[2].slice(0, 3)).toStrictEqual(expected[2]);
+      expect(results[3]).toStrictEqual(expected[3]);
+      expect(results[4].slice(0, 3)).toStrictEqual(expected[4]);
+      expect(results[5].slice(0, 3)).toStrictEqual(expected[5]);
       console.log.mockClear();
       done();
     });
@@ -1626,18 +1661,21 @@ describe('Test payments functionality', () => {
         ['smove', 'Bitcoin:blocks:pending', 'Bitcoin:blocks:kicked', 'serialized'],
         ['del', 'Bitcoin:rounds:round-180:counts'],
         ['del', 'Bitcoin:rounds:round-180:shares'],
-        ['del', 'Bitcoin:rounds:round-180:submissions'],
         ['del', 'Bitcoin:rounds:round-180:times'],
-        ['hincrbyfloat', 'Bitcoin:payments:counts', 'totalPaid', 0],
-        ['hset', 'Bitcoin:payments:counts', 'lastPaid']];
+        ['zremrangebyscore', 'Bitcoin:rounds:current:hashrate', 0],
+        ['hincrbyfloat', 'Bitcoin:payments:counts', 'total', 0],
+        ['hset', 'Bitcoin:payments:counts', 'last'],
+        ['hset', 'Bitcoin:payments:counts', 'next']];
+      expect(results.length).toBe(9);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2]).toStrictEqual(expected[2]);
       expect(results[3]).toStrictEqual(expected[3]);
       expect(results[4]).toStrictEqual(expected[4]);
-      expect(results[5]).toStrictEqual(expected[5]);
+      expect(results[5].slice(0, 3)).toStrictEqual(expected[5]);
       expect(results[6]).toStrictEqual(expected[6]);
       expect(results[7].slice(0, 3)).toStrictEqual(expected[7]);
+      expect(results[8].slice(0, 3)).toStrictEqual(expected[8]);
       console.log.mockClear();
       done();
     });

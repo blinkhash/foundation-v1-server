@@ -73,16 +73,19 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       time: dateNow,
       worker: workerAddress,
       solo: isSoloMining,
-      difficulty: shareData.difficulty
     };
 
     // Handle Valid/Invalid Shares
     if (shareValid) {
+      outputShare.difficulty = shareData.difficulty;
       commands = commands.concat(_this.buildTimesCommands(results, shareData, blockValid));
       commands.push(['hincrby', `${ _this.coin }:rounds:current:counts`, 'valid', 1]);
+      commands.push(['zadd', `${ _this.coin }:rounds:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
       commands.push(['hincrbyfloat', `${ _this.coin }:rounds:current:shares`, JSON.stringify(outputShare), shareData.difficulty]);
     } else {
+      outputShare.difficulty = -shareData.difficulty;
       commands.push(['hincrby', `${ _this.coin }:rounds:current:counts`, 'invalid', 1]);
+      commands.push(['zadd', `${ _this.coin }:rounds:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
     }
 
     return commands;
@@ -110,14 +113,14 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Handle Valid/Invalid Blocks
     if (blockValid) {
-      commands.push(['rename', `${ _this.coin }:rounds:current:submissions`, `${ _this.coin }:rounds:round-${ shareData.height }:submissions`]);
-      commands.push(['rename', `${ _this.coin }:rounds:current:times`, `${ _this.coin }:rounds:round-${ shareData.height }:times`]);
-      commands.push(['rename', `${ _this.coin }:rounds:current:shares`, `${ _this.coin }:rounds:round-${ shareData.height }:shares`]);
+      commands.push(['del', `${ _this.coin }:rounds:current:submissions`]),
       commands.push(['rename', `${ _this.coin }:rounds:current:counts`, `${ _this.coin }:rounds:round-${ shareData.height }:counts`]);
+      commands.push(['rename', `${ _this.coin }:rounds:current:shares`, `${ _this.coin }:rounds:round-${ shareData.height }:shares`]);
+      commands.push(['rename', `${ _this.coin }:rounds:current:times`, `${ _this.coin }:rounds:round-${ shareData.height }:times`]);
       commands.push(['sadd', `${ _this.coin }:blocks:pending`, JSON.stringify(outputBlock)]);
-      commands.push(['hincrby', `${ _this.coin }:blocks:counts`, 'validBlocks', 1]);
+      commands.push(['hincrby', `${ _this.coin }:blocks:counts`, 'valid', 1]);
     } else if (shareData.hash) {
-      commands.push(['hincrby', `${ _this.coin }:blocks:counts`, 'invalidBlocks', 1]);
+      commands.push(['hincrby', `${ _this.coin }:blocks:counts`, 'invalid', 1]);
     }
 
     return commands;

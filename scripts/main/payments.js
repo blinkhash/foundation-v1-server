@@ -113,6 +113,7 @@ const PoolPayments = function (logger, client) {
           difficulty: round.orphanShares[address],
         };
         commands.push(['hincrby', `${ coin }:rounds:current:counts`, 'valid', 1]);
+        commands.push(['zadd', `${ coin }:rounds:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
         commands.push(['hincrby', `${ coin }:rounds:current:shares`, JSON.stringify(outputShare), round.orphanShares[address]]);
       });
 
@@ -122,6 +123,7 @@ const PoolPayments = function (logger, client) {
       });
     }
 
+    // Return Commands as Callback
     callback(null, commands);
   };
 
@@ -264,9 +266,9 @@ const PoolPayments = function (logger, client) {
       const total = Math.round(generate);
       worker.records = worker.records || {};
       worker.records[round.height] = {
-        amounts: utils.satoshisToCoins(total, config.payments.magnitude, config.payments.coinPrecision),
-        shares: shares,
         times: 1,
+        shares: shares,
+        amounts: utils.satoshisToCoins(total, config.payments.magnitude, config.payments.coinPrecision),
       };
       worker.shares.round = shares;
       worker.shares.total = parseFloat(worker.shares.total || 0) + shares;
@@ -401,11 +403,11 @@ const PoolPayments = function (logger, client) {
 
         // Load Transaction Details
         let generationTx = tx.result.details.filter((tx) => {
-          let txAddr = tx.address;
-          if (txAddr.indexOf(':') > -1) {
-            txAddr = txAddr.split(':')[1];
+          let txAddress = tx.address;
+          if (txAddress.indexOf(':') > -1) {
+            txAddress = txAddress.split(':')[1];
           }
-          return txAddr === config.address;
+          return txAddress === config.address;
         })[0];
 
         // Check Transaction Edge Cases
@@ -467,13 +469,13 @@ const PoolPayments = function (logger, client) {
       results.forEach((round) => {
         const timesRound = {};
         Object.keys(round).forEach((entry) => {
-          const addr = entry.split(".")[0];
-          if (addr in timesRound) {
-            if (parseFloat(round[entry]) >= timesRound[addr]) {
-              timesRound[addr] = parseFloat(round[entry]);              
+          const address = entry.split('.')[0];
+          if (address in timesRound) {
+            if (parseFloat(round[entry]) >= timesRound[address]) {
+              timesRound[address] = parseFloat(round[entry]);
             }
           } else {
-            timesRound[addr] = parseFloat(round[entry]);
+            timesRound[address] = parseFloat(round[entry]);
           }
         });
         times.push(timesRound);
@@ -509,18 +511,18 @@ const PoolPayments = function (logger, client) {
         const sharedRound = {};
         Object.keys(round).forEach((entry) => {
           const details = JSON.parse(entry);
-          const addr = details.worker.split(".")[0];
+          const address = details.worker.split('.')[0];
           if (details.solo) {
-            if (addr in soloRound) {
-              soloRound[addr] += parseFloat(round[entry]);
+            if (address in soloRound) {
+              soloRound[address] += parseFloat(round[entry]);
             } else {
-              soloRound[addr] = parseFloat(round[entry]);
+              soloRound[address] = parseFloat(round[entry]);
             }
           } else {
-            if (addr in sharedRound) {
-              sharedRound[addr] += parseFloat(round[entry]);
+            if (address in sharedRound) {
+              sharedRound[address] += parseFloat(round[entry]);
             } else {
-              sharedRound[addr] = parseFloat(round[entry]);
+              sharedRound[address] = parseFloat(round[entry]);
             }
           }
         });
@@ -775,7 +777,6 @@ const PoolPayments = function (logger, client) {
       return [
         ['del', `${ coin }:rounds:round-${ round.height }:counts`],
         ['del', `${ coin }:rounds:round-${ round.height }:shares`],
-        ['del', `${ coin }:rounds:round-${ round.height }:submissions`],
         ['del', `${ coin }:rounds:round-${ round.height }:times`]];
     };
 
@@ -803,10 +804,17 @@ const PoolPayments = function (logger, client) {
       }
     });
 
+    // Update Hashrate Calculation
+    const hashrateWindow = config.settings.hashrateWindow;
+    const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
+    commands.push(['zremrangebyscore', `${ coin }:rounds:current:hashrate`, 0, '(' + windowTime]);
+
     // Update Miscellaneous Statistics
     if ((category === 'start') || (category === 'payments')) {
-      commands.push(['hincrbyfloat', `${ coin }:payments:counts`, 'totalPaid', totalPaid]);
-      commands.push(['hset', `${ coin }:payments:counts`, 'lastPaid', interval]);
+      const nextInterval = interval + (config.payments.paymentInterval * 1000);
+      commands.push(['hincrbyfloat', `${ coin }:payments:counts`, 'total', totalPaid]);
+      commands.push(['hset', `${ coin }:payments:counts`, 'last', interval]);
+      commands.push(['hset', `${ coin }:payments:counts`, 'next', nextInterval]);
     }
 
     // Manage Redis Commands

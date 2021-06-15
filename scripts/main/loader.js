@@ -32,11 +32,11 @@ const PoolLoader = function(logger, portalConfig) {
       return false;
     }
     return true;
-  }
+  };
 
   // Validate Pool Configs
   this.validatePoolConfigs = function(poolConfig) {
-    const coin = poolConfig.coin.name
+    const coin = poolConfig.coin.name;
     if (!poolConfig.enabled) return false;
     if (!_this.validatePoolAlgorithms(poolConfig.coin.algorithms.mining, coin)) return false;
     if (!_this.validatePoolAlgorithms(poolConfig.coin.algorithms.block, coin)) return false;

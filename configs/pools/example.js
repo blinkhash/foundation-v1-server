@@ -118,11 +118,12 @@ config.p2p.disableTransactions = true;
 // Settings Configuration
 config.settings = {};
 config.settings.blockRefreshInterval = 1000;
-config.settings.jobRebroadcastTimeout = 60;
 config.settings.connectionTimeout = 600;
 config.settings.emitInvalidBlockHashes = false;
-config.settings.validateWorkerUsername = true;
+config.settings.hashrateWindow = 300;
+config.settings.jobRebroadcastTimeout = 60;
 config.settings.tcpProxyProtocol = false;
+config.settings.validateWorkerUsername = true;
 
 // Export Configuration
 module.exports = config;

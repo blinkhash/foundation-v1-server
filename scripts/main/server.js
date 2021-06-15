@@ -39,16 +39,18 @@ const PoolServer = function (logger, client) {
 
     // Handle API Requests
     /* istanbul ignore next */
-    app.get('/api/v1/:coin/:method/:endpoint?', (req, res, next) => {
-      api.handleApiV1(req, res, next);
+    /* eslint-disable-next-line no-unused-vars */
+    app.get('/api/v1/:coin/:endpoint?/:method?', (req, res, next) => {
+      api.handleApiV1(req, res);
     });
 
     // Handle Error Responses
     /* istanbul ignore next */
     /* eslint-disable-next-line no-unused-vars */
     app.use((err, req, res, next) => {
-      console.error(err.stack);
-      res.send(500, 'Something broke!');
+      api.buildPayload('', '/error/', api.messages.invalid, null, res);
+      logger.error('Server', 'Website', `API call threw an unknown error: (${ err })`);
+      next();
     });
 
     // Set Existing Server Variable

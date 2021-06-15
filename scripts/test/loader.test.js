@@ -40,7 +40,7 @@ describe('Test loader functionality', () => {
   });
 
   test('Test pool configuration validation [1]', () => {
-    const algorithms = { mining: "scrypt", block: "sha256d", coinbase: "sha256d" }
+    const algorithms = { mining: 'scrypt', block: 'sha256d', coinbase: 'sha256d' };
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: true, coin: { algorithms: algorithms }};
     const response = poolLoader.validatePoolConfigs(poolConfig);
@@ -49,7 +49,7 @@ describe('Test loader functionality', () => {
 
   test('Test pool configuration validation [2]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const algorithms = { mining: "invalid", block: "sha256d", coinbase: "sha256d" }
+    const algorithms = { mining: 'invalid', block: 'sha256d', coinbase: 'sha256d' };
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: true, coin: { algorithms: algorithms }};
     const response = poolLoader.validatePoolConfigs(poolConfig);
@@ -60,7 +60,7 @@ describe('Test loader functionality', () => {
 
   test('Test pool configuration validation [3]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const algorithms = { mining: "scrypt", block: "invalid", coinbase: "sha256d" }
+    const algorithms = { mining: 'scrypt', block: 'invalid', coinbase: 'sha256d' };
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: true, coin: { algorithms: algorithms }};
     const response = poolLoader.validatePoolConfigs(poolConfig);
@@ -71,7 +71,7 @@ describe('Test loader functionality', () => {
 
   test('Test pool configuration validation [4]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const algorithms = { mining: "scrypt", block: "sha256d", coinbase: "invalid" }
+    const algorithms = { mining: 'scrypt', block: 'sha256d', coinbase: 'invalid' };
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: true, coin: { algorithms: algorithms }};
     const response = poolLoader.validatePoolConfigs(poolConfig);
