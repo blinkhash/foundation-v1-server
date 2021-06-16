@@ -66,14 +66,50 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     });
   };
 
-  // API Endpoint for /workers
+  // API Endpoint for /miners/[miner]
+  this.handleMinersSpecific = function(coin, miner, response) {
+    const algorithm = _this.poolConfigs[coin].coin.algorithms.mining;
+    const hashrateWindow = _this.poolConfigs[coin].settings.hashrateWindow;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
+    const commands = [
+      ['hgetall', `${ coin }:payments:generate`],
+      ['hgetall', `${ coin }:payments:immature`],
+      ['hgetall', `${ coin }:payments:paid`],
+      ['hgetall', `${ coin }:rounds:current:shares`],
+      ['hgetall', `${ coin }:rounds:current:times`],
+      ['zrangebyscore', `${ coin }:rounds:current:hashrate`, windowTime, '+inf']];
+    _this.executeCommands(coin, '/miners/' + miner, commands, response, (results) => {
+      const shareData = utils.processShares(results[3], miner);
+      const difficulty = utils.processDifficulty(results[5], miner);
+      const statistics = {
+        current: {
+          solo: shareData[0][miner] || 0,
+          shared: shareData[1][miner] || 0,
+          times: utils.processTimes(results[4], miner)[miner] || 0,
+        },
+        status: {
+          hashrate: (multiplier * difficulty) / hashrateWindow,
+          workers: utils.countWorkers(results[5], miner),
+        },
+        payments: {
+          generate: utils.processPayments(results[0], miner)[miner] || 0,
+          immature: utils.processPayments(results[1], miner)[miner] || 0,
+          paid: utils.processPayments(results[2], miner)[miner] || 0,
+        },
+        workers: utils.processWorkers(results[5]),
+      };
+      _this.buildPayload(coin, '/miners/' + miner, _this.messages.success, statistics, response);
+    });
+  }
+
+  // API Endpoint for /miners
   this.handleMiners = function(coin, response) {
     const hashrateWindow = _this.poolConfigs[coin].settings.hashrateWindow;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [['zrangebyscore', `${ coin }:rounds:current:hashrate`, windowTime, '+inf']];
     _this.executeCommands(coin, '/miners/', commands, response, (results) => {
-      const workers = utils.processWorkers(results[0]);
-      const miners = [...new Set(workers.map((worker) => worker.split('.')[0]))];
+      const miners = utils.processMiners(results[0]);
       _this.buildPayload(coin, '/miners/', _this.messages.success, miners, response);
     });
   };
@@ -165,26 +201,30 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     _this.executeCommands(coin, '/rounds/', keys, response, (results) => {
       const combined = {};
       const rounds = results[0].map((key) => key.split(':')[2].split('-')[1]);
-      const handler = new Promise((resolve,) => {
-        rounds.forEach((height, idx) => {
-          const commands = [
-            ['hgetall', `${ coin }:rounds:round-${ height }:shares`],
-            ['hgetall', `${ coin }:rounds:round-${ height }:times`]];
-          _this.executeCommands(coin, '/rounds/', commands, response, (results) => {
-            const shareData = utils.processShares(results[0]);
-            combined[height] = {
-              solo: shareData[0],
-              shared: shareData[1],
-              times: utils.processTimes(results[1])};
-            if (idx === rounds.length - 1) {
-              resolve();
-            }
+      if (rounds.length >= 1) {
+        const handler = new Promise((resolve,) => {
+          rounds.forEach((height, idx) => {
+            const commands = [
+              ['hgetall', `${ coin }:rounds:round-${ height }:shares`],
+              ['hgetall', `${ coin }:rounds:round-${ height }:times`]];
+            _this.executeCommands(coin, '/rounds/', commands, response, (results) => {
+              const shareData = utils.processShares(results[0]);
+              combined[height] = {
+                solo: shareData[0],
+                shared: shareData[1],
+                times: utils.processTimes(results[1])};
+              if (idx === rounds.length - 1) {
+                resolve();
+              }
+            });
           });
         });
-      });
-      handler.then(() => {
+        handler.then(() => {
+          _this.buildPayload(coin, '/rounds/', _this.messages.success, combined, response);
+        });
+      } else {
         _this.buildPayload(coin, '/rounds/', _this.messages.success, combined, response);
-      });
+      }
     });
   };
 
@@ -209,12 +249,12 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
           logo: _this.poolConfigs[coin].logo
         },
         blocks: {
-          valid: parseFloat(results[0].valid || 0),
-          invalid: parseFloat(results[0].invalid || 0),
+          valid: parseFloat(results[0] ? results[0].valid || 0 : 0),
+          invalid: parseFloat(results[0] ? results[0].invalid || 0 : 0),
         },
         shares: {
-          valid: parseFloat(results[2].valid || 0),
-          invalid: parseFloat(results[2].invalid || 0),
+          valid: parseFloat(results[2] ? results[2].valid || 0 : 0),
+          invalid: parseFloat(results[2] ? results[2].invalid || 0 : 0),
         },
         status: {
           hashrate: (multiplier * utils.processDifficulty(results[3])) / hashrateWindow,
@@ -222,15 +262,52 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
           workers: utils.countWorkers(results[3]),
         },
         payments: {
-          last: parseFloat(results[1].last || 0),
-          next: parseFloat(results[1].next || 0),
-          total: parseFloat(results[1].total || 0),
+          last: parseFloat(results[1] ? results[1].last || 0 : 0),
+          next: parseFloat(results[1] ? results[1].next || 0 : 0),
+          total: parseFloat(results[1] ? results[1].total || 0 : 0),
         }
       };
       _this.buildPayload(coin, '/statistics/', _this.messages.success, statistics, response);
     });
   };
 
+  // API Endpoint for /workers/[worker]
+  this.handleWorkersSpecific = function(coin, worker, response) {
+    const algorithm = _this.poolConfigs[coin].coin.algorithms.mining;
+    const hashrateWindow = _this.poolConfigs[coin].settings.hashrateWindow;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
+    const commands = [
+      ['hgetall', `${ coin }:rounds:current:shares`],
+      ['hgetall', `${ coin }:rounds:current:times`],
+      ['zrangebyscore', `${ coin }:rounds:current:hashrate`, windowTime, '+inf']];
+    _this.executeCommands(coin, '/workers/' + worker, commands, response, (results) => {
+      const shareData = utils.processShares(results[0], worker);
+      const difficulty = utils.processDifficulty(results[2], worker);
+      const statistics = {
+        current: {
+          solo: shareData[0][worker] || 0,
+          shared: shareData[1][worker] || 0,
+          times: utils.processTimes(results[1], worker)[worker] || 0,
+        },
+        status: {
+          hashrate: (multiplier * difficulty) / hashrateWindow,
+        },
+      };
+      _this.buildPayload(coin, '/workers/' + worker, _this.messages.success, statistics, response);
+    });
+  };
+
+  // API Endpoint for /workers
+  this.handleWorkers = function(coin, response) {
+    const hashrateWindow = _this.poolConfigs[coin].settings.hashrateWindow;
+    const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
+    const commands = [['zrangebyscore', `${ coin }:rounds:current:hashrate`, windowTime, '+inf']];
+    _this.executeCommands(coin, '/workers/', commands, response, (results) => {
+      const workers = utils.processWorkers(results[0]);
+      _this.buildPayload(coin, '/workers/', _this.messages.success, workers, response);
+    });
+  };
 
   // Build API Payload for each Endpoint
   this.buildPayload = function(coin, endpoint, message, data, response) {
@@ -260,9 +337,9 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   // Determine API Endpoint Called
   this.handleApiV1 = function(req, res) {
 
-    const coin = req.params.coin;
-    const endpoint = req.params.endpoint || '';
-    const method = req.params.method || '';
+    const coin = utils.validateInput(req.params.coin || '');
+    const endpoint = utils.validateInput(req.params.endpoint || '');
+    const method = utils.validateInput(req.params.method || '');
     const combined = endpoint + '/' + method;
 
     // Unknown Coins
@@ -289,6 +366,9 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       break;
 
     // Miners Endpoints
+    case (endpoint === 'miners' && method.length >= 1):
+      _this.handleMinersSpecific(coin, method, res);
+      break;
     case (endpoint === 'miners' && method === ''):
       _this.handleMiners(coin, res);
       break;
@@ -327,6 +407,14 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       break;
     case (endpoint === '' && method === ''):
       _this.handleStatistics(coin, res);
+      break;
+
+    // Workers Endpoints
+    case (endpoint === 'workers' && method.length >= 1):
+      _this.handleWorkersSpecific(coin, method, res);
+      break;
+    case (endpoint === 'workers' && method === ''):
+      _this.handleWorkers(coin, res);
       break;
 
     // Unknown Endpoints

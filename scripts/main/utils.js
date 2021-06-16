@@ -38,17 +38,21 @@ exports.coinsToSatoshis = function(coins, magnitude) {
 };
 
 // Count Number of Miners
-exports.countMiners = function(shares) {
+exports.countMiners = function(shares, miner) {
   let count = 0;
   const miners = [];
-  shares = shares.map((share) => JSON.parse(share));
-  shares.forEach((share) => {
-    const address = share.worker.split('.')[0];
-    if (!(miners.includes(address))) {
-      count += 1;
-      miners.push(address);
-    }
-  });
+  if (shares) {
+    shares = shares.map((share) => JSON.parse(share));
+    shares.forEach((share) => {
+      const address = share.worker.split('.')[0];
+      if (!miner || miner === address) {
+        if (!(miners.includes(address))) {
+          count += 1;
+          miners.push(address);
+        }
+      }
+    });
+  }
   return count;
 };
 
@@ -63,17 +67,21 @@ exports.countOccurences = function(array, value) {
 };
 
 // Count Number of Miners
-exports.countWorkers = function(shares) {
+exports.countWorkers = function(shares, miner) {
   let count = 0;
   const miners = [];
-  shares = shares.map((share) => JSON.parse(share));
-  shares.forEach((share) => {
-    const address = share.worker;
-    if (!(miners.includes(address))) {
-      count += 1;
-      miners.push(address);
-    }
-  });
+  if (shares) {
+    shares = shares.map((share) => JSON.parse(share));
+    shares.forEach((share) => {
+      const address = share.worker.split('.')[0];
+      if (!miner || miner === address) {
+        if (!(miners.includes(share.worker))) {
+          count += 1;
+          miners.push(share.worker);
+        }
+      }
+    });
+  }
   return count;
 };
 
@@ -122,25 +130,47 @@ exports.processBlocks = function(blocks) {
   return output;
 };
 
-// Process Hashrate for API Endpoints
-exports.processDifficulty = function(shares) {
+// Process Difficulty for API Endpoints
+exports.processDifficulty = function(shares, miner) {
   let count = 0;
   if (shares) {
     shares = shares.map((share) => JSON.parse(share));
     shares.forEach((share) => {
-      count += parseFloat(share.difficulty);
+      const address = (miner && miner.includes('.')) ? share.worker : share.worker.split('.')[0];
+      if (!miner || miner === address) {
+        count += parseFloat(share.difficulty);
+      }
     });
   }
   return count;
 };
 
+// Process Miners for API Endpoints
+exports.processMiners = function(shares, miner) {
+  const miners = [];
+  if (shares) {
+    shares = shares.map((share) => JSON.parse(share));
+    shares.forEach((share) => {
+      const address = (miner && miner.includes('.')) ? share.worker.split('.')[0] : share.worker;
+      if (!miner || miner === address) {
+        if (!(miners.includes(share.worker.split('.')[0]))) {
+          miners.push(share.worker.split('.')[0]);
+        }
+      }
+    });
+  }
+  return miners;
+};
+
 // Process Payments for API Endpoints
-exports.processPayments = function(payments) {
+exports.processPayments = function(payments, miner) {
   const output = {};
   if (payments) {
     Object.keys(payments).forEach((address) => {
       if (payments[address] > 0) {
-        output[address] = parseFloat(payments[address]);
+        if (!miner || miner === address) {
+          output[address] = parseFloat(payments[address]);
+        }
       }
     });
   }
@@ -155,25 +185,27 @@ exports.processRecords = function(records) {
 };
 
 // Process Shares for API Endpoints
-exports.processShares = function(shares) {
+exports.processShares = function(shares, miner) {
   const solo = {};
   const shared = {};
   if (shares) {
     Object.keys(shares).forEach((entry) => {
       const details = JSON.parse(entry);
-      const address = details.worker.split('.')[0];
-      if (shares[entry] > 0) {
-        if (details.solo) {
-          if (address in solo) {
-            solo[address] += parseFloat(shares[entry]);
+      const address = (miner && miner.includes('.')) ? details.worker : details.worker.split('.')[0];
+      if (!miner || miner === address) {
+        if (shares[entry] > 0) {
+          if (details.solo) {
+            if (address in solo) {
+              solo[address] += parseFloat(shares[entry]);
+            } else {
+              solo[address] = parseFloat(shares[entry]);
+            }
           } else {
-            solo[address] = parseFloat(shares[entry]);
-          }
-        } else {
-          if (address in shared) {
-            shared[address] += parseFloat(shares[entry]);
-          } else {
-            shared[address] = parseFloat(shares[entry]);
+            if (address in shared) {
+              shared[address] += parseFloat(shares[entry]);
+            } else {
+              shared[address] = parseFloat(shares[entry]);
+            }
           }
         }
       }
@@ -194,17 +226,21 @@ exports.processStatistics = function(statistics) {
 };
 
 // Process Times for API Endpoints
-exports.processTimes = function(times) {
+exports.processTimes = function(times, miner) {
   const output = {};
   if (times) {
     Object.keys(times).forEach((address) => {
       const amount = times[address];
-      address = address.split('.')[0];
-      if (times[address] > 0) {
-        if (address in output) {
-          output[address] += parseFloat(amount);
-        } else {
-          output[address] = parseFloat(amount);
+      address = (miner && miner.includes('.')) ? address : address.split('.')[0];
+      if (!miner || miner === address) {
+        if (amount > 0) {
+          if (address in output) {
+            if (amount >= output[address]) {
+              output[address] = parseFloat(amount);
+            }
+          } else {
+            output[address] = parseFloat(amount);
+          }
         }
       }
     });
@@ -212,13 +248,17 @@ exports.processTimes = function(times) {
   return output;
 };
 
-exports.processWorkers = function(shares) {
+// Process Workers for API Endpoints
+exports.processWorkers = function(shares, worker) {
   const workers = [];
   if (shares) {
-    shares.forEach((entry) => {
-      const details = JSON.parse(entry);
-      if (!(workers.includes(details.worker))) {
-        workers.push(details.worker);
+    shares = shares.map((share) => JSON.parse(share));
+    shares.forEach((share) => {
+      const address = (worker && worker.includes('.')) ? share.worker : share.worker.split('.')[0];
+      if (!worker || worker === address) {
+        if (!(workers.includes(share.worker))) {
+          workers.push(share.worker);
+        }
       }
     });
   }
@@ -240,3 +280,11 @@ exports.roundTo = function(n, digits) {
 exports.satoshisToCoins = function(satoshis, magnitude, precision) {
   return exports.roundTo((satoshis / magnitude), precision);
 };
+
+// Validate Entered Address
+exports.validateInput = function(address) {
+  if (address.length >= 1) {
+    address = address.toString().replace(/[^a-zA-Z0-9.]+/g, '');
+  }
+  return address;
+}
