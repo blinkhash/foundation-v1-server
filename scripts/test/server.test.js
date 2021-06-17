@@ -4,6 +4,9 @@
  *
  */
 
+const redis = require('redis-mock');
+jest.mock('redis', () => jest.requireActual('redis-mock'));
+
 const PoolServer = require('../main/server');
 const PoolLogger = require('../main/logger');
 const poolConfig = require('../../configs/pools/example.js');
@@ -13,9 +16,6 @@ process.env.partnerConfigs = JSON.stringify({});
 process.env.poolConfigs = JSON.stringify({ Bitcoin: poolConfig });
 process.env.portalConfig = JSON.stringify(portalConfig);
 const logger = new PoolLogger(portalConfig);
-
-// Mock Redis w/ Redis-Mock Functionality
-jest.mock('redis', () => require('redis-mock'));
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -136,6 +136,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Execute Redis Commands
+  /* istanbul ignore next */
   this.executeCommands = function(commands, callback, handler) {
     _this.client.multi(commands).exec((error, results) => {
       if (error) {

@@ -942,9 +942,9 @@ describe('Test payments functionality', () => {
 
   test('Test main shares handling [1]', (done) => {
     const commands = [
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ date: 0, worker: 'worker1', 'solo': true }), 8],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ date: 0, worker: 'worker2', 'solo': false }), 16],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ date: 1, worker: 'worker2', 'solo': false }), 12]];
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ time: 0, worker: 'worker1', solo: true }), 8],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ time: 0, worker: 'worker2', solo: false }), 16],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ time: 1, worker: 'worker2', solo: false }), 12]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
@@ -962,13 +962,13 @@ describe('Test payments functionality', () => {
 
   test('Test main shares handling [2]', (done) => {
     const commands = [
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ date: 0, worker: 'worker1', 'solo': true }), 8],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ date: 0, worker: 'worker2', 'solo': false }), 16],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ date: 1, worker: 'worker2', 'solo': false }), 12],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares', JSON.stringify({ date: 0, worker: 'worker1', 'solo': true }), 16],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares', JSON.stringify({ date: 1, worker: 'worker1', 'solo': true }), 10],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares', JSON.stringify({ date: 0, worker: 'worker2', 'solo': false }), 28],
-      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares', JSON.stringify({ date: 1, worker: 'worker2', 'solo': false }), 12]];
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ time: 0, worker: 'worker1', solo: true }), 8],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ time: 0, worker: 'worker2', solo: false }), 16],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-180:shares', JSON.stringify({ time: 1, worker: 'worker2', solo: false }), 12],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares', JSON.stringify({ time: 0, worker: 'worker1', solo: true }), 16],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares', JSON.stringify({ time: 1, worker: 'worker1', solo: true }), 10],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares', JSON.stringify({ time: 0, worker: 'worker2', solo: false }), 28],
+      ['hincrbyfloat', 'Bitcoin:rounds:round-181:shares', JSON.stringify({ time: 1, worker: 'worker2', solo: false }), 12]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);

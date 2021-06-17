@@ -4,13 +4,13 @@
  *
  */
 
+const redis = require('redis-mock');
+jest.mock('redis', () => jest.requireActual('redis-mock'));
+
 const PoolDatabase = require('../main/database');
 const PoolLogger = require('../main/logger');
 const portalConfig = require('../../configs/main/example.js');
 const logger = new PoolLogger(portalConfig);
-
-// Mock Redis w/ Redis-Mock Functionality
-jest.mock('redis', () => require('redis-mock'));
 
 ////////////////////////////////////////////////////////////////////////////////
 

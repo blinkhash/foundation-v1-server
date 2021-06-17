@@ -65,17 +65,17 @@ exports.countOccurences = function(array, value) {
 };
 
 // Count Number of Miners
-exports.countWorkers = function(shares, miner) {
+exports.countWorkers = function(shares, worker) {
   let count = 0;
-  const miners = [];
+  const workers = [];
   if (shares) {
     shares = shares.map((share) => JSON.parse(share));
     shares.forEach((share) => {
       const address = share.worker.split('.')[0];
-      if (!miner || miner === address) {
-        if (!(miners.includes(share.worker))) {
+      if (!worker || worker === address) {
+        if (!(workers.includes(share.worker))) {
           count += 1;
-          miners.push(share.worker);
+          workers.push(share.worker);
         }
       }
     });

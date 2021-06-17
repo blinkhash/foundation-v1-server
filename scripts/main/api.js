@@ -1,8 +1,8 @@
-// /*
-//  *
-//  * API (Updated)
-//  *
-//  */
+/*
+ *
+ * API (Updated)
+ *
+ */
 
 const utils = require('./utils');
 const Algorithms = require('blinkhash-stratum').algorithms;
@@ -29,7 +29,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     const commands = [['smembers', `${ coin }:blocks:confirmed`]];
     _this.executeCommands(coin, '/blocks/confirmed/', commands, response, (results) => {
       const blocks = utils.processBlocks(results[0]);
-      _this.buildPayload(coin, 'blocks/confirmed/', _this.messages.success, blocks, response);
+      _this.buildPayload(coin, '/blocks/confirmed/', _this.messages.success, blocks, response);
     });
   };
 
@@ -79,7 +79,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       ['hgetall', `${ coin }:rounds:current:shares`],
       ['hgetall', `${ coin }:rounds:current:times`],
       ['zrangebyscore', `${ coin }:rounds:current:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(coin, '/miners/' + miner, commands, response, (results) => {
+    _this.executeCommands(coin, '/miners/' + miner + "/", commands, response, (results) => {
       const shareData = utils.processShares(results[3], miner);
       const difficulty = utils.processDifficulty(results[5], miner);
       const statistics = {
@@ -97,9 +97,9 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
           immature: utils.processPayments(results[1], miner)[miner] || 0,
           paid: utils.processPayments(results[2], miner)[miner] || 0,
         },
-        workers: utils.processWorkers(results[5]),
+        workers: utils.processWorkers(results[5], miner),
       };
-      _this.buildPayload(coin, '/miners/' + miner, _this.messages.success, statistics, response);
+      _this.buildPayload(coin, '/miners/' + miner + "/", _this.messages.success, statistics, response);
     });
   }
 
@@ -229,6 +229,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /statistics
+  /* istanbul ignore next */
   this.handleStatistics = function(coin, response) {
     const algorithm = _this.poolConfigs[coin].coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[coin].settings.hashrateWindow;
@@ -281,7 +282,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       ['hgetall', `${ coin }:rounds:current:shares`],
       ['hgetall', `${ coin }:rounds:current:times`],
       ['zrangebyscore', `${ coin }:rounds:current:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(coin, '/workers/' + worker, commands, response, (results) => {
+    _this.executeCommands(coin, '/workers/' + worker + '/', commands, response, (results) => {
       const shareData = utils.processShares(results[0], worker);
       const difficulty = utils.processDifficulty(results[2], worker);
       const statistics = {
@@ -294,7 +295,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
           hashrate: (multiplier * difficulty) / hashrateWindow,
         },
       };
-      _this.buildPayload(coin, '/workers/' + worker, _this.messages.success, statistics, response);
+      _this.buildPayload(coin, '/workers/' + worker + '/', _this.messages.success, statistics, response);
     });
   };
 
@@ -324,6 +325,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   };
 
   // Execute Redis Commands
+  /* istanbul ignore next */
   this.executeCommands = function(coin, endpoint, commands, response, callback) {
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
