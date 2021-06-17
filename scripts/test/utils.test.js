@@ -14,11 +14,11 @@ const utils = require('../main/utils');
 describe('Test utility functionality', () => {
 
   test('Test implemented checkNumber', () => {
-    expect(utils.checkNumber("1")).toBe(true);
-    expect(utils.checkNumber("test")).toBe(false);
-    expect(utils.checkNumber("2.05")).toBe(true);
-    expect(utils.checkNumber("73")).toBe(true);
-    expect(utils.checkNumber("73a")).toBe(false);
+    expect(utils.checkNumber('1')).toBe(true);
+    expect(utils.checkNumber('test')).toBe(false);
+    expect(utils.checkNumber('2.05')).toBe(true);
+    expect(utils.checkNumber('73')).toBe(true);
+    expect(utils.checkNumber('73a')).toBe(false);
     expect(utils.checkNumber(5353)).toBe(false);
   });
 
@@ -133,7 +133,7 @@ describe('Test utility functionality', () => {
       '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":8}',
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3d.worker1","solo":false,"difficulty":8}'];
-    expect(utils.countWorkers(shares, "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a")).toBe(1);
+    expect(utils.countWorkers(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a')).toBe(1);
   });
 
   test('Test implemented countWorkers [5]', () => {
@@ -178,12 +178,12 @@ describe('Test utility functionality', () => {
   test('Test implemented processBlocks', () => {
     const blocks = [
       '{"time":1623901893184,"height":1928855,"hash":"f5026aa6116665d3e18a4219d9ae93dab3a016feee7921726258bedee418af8d","reward":1250006928,"transaction":"2c81c6aed147484ca41cd977338826875b5e142f94321b1a508b71f29e515a63","difficulty":8,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false}',
-      '{"time":1623862569773,"height":1928702,"hash":"1a26babf21149764100660b6e75bff1e6d34926aa52366dc8323fa7456378943","reward":1250008474,"transaction":"61f857486100d35f5ccb447f55847924d463f7507c54882e5f518c6acdee7328","difficulty":8,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false}']
+      '{"time":1623862569773,"height":1928702,"hash":"1a26babf21149764100660b6e75bff1e6d34926aa52366dc8323fa7456378943","reward":1250008474,"transaction":"61f857486100d35f5ccb447f55847924d463f7507c54882e5f518c6acdee7328","difficulty":8,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false}'];
     const processed = utils.processBlocks(blocks);
     expect(processed.length).toBe(2);
     expect(processed[0].height).toBe(1928702);
-    expect(processed[0].hash).toBe("1a26babf21149764100660b6e75bff1e6d34926aa52366dc8323fa7456378943");
-    expect(processed[1].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a");
+    expect(processed[0].hash).toBe('1a26babf21149764100660b6e75bff1e6d34926aa52366dc8323fa7456378943');
+    expect(processed[1].worker).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
   });
 
   test('Test implemented processDifficulty [1]', () => {
@@ -201,7 +201,7 @@ describe('Test utility functionality', () => {
       '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}'];
-    expect(utils.processDifficulty(shares, "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2")).toBe(16);
+    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2')).toBe(16);
   });
 
   test('Test implemented processDifficulty [3]', () => {
@@ -210,7 +210,7 @@ describe('Test utility functionality', () => {
       '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}',
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}'];
-    expect(utils.processDifficulty(shares, "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a")).toBe(16);
+    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a')).toBe(16);
   });
 
   test('Test implemented processDifficulty [4]', () => {
@@ -225,7 +225,7 @@ describe('Test utility functionality', () => {
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}'];
     const processed = utils.processMiners(shares);
     expect(processed.length).toBe(1);
-    expect(processed[0]).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a");
+    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
   });
 
   test('Test implemented processMiners [2]', () => {
@@ -236,8 +236,8 @@ describe('Test utility functionality', () => {
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
     const processed = utils.processMiners(shares);
     expect(processed.length).toBe(2);
-    expect(processed[0]).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a");
-    expect(processed[1]).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b");
+    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
+    expect(processed[1]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b');
   });
 
   test('Test implemented processMiners [3]', () => {
@@ -258,7 +258,7 @@ describe('Test utility functionality', () => {
     const payments = {
       tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a: '11.87468051',
       tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b: '11.87468051'};
-    const processed = utils.processPayments(payments, "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a");
+    const processed = utils.processPayments(payments, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
     expect(Object.keys(processed).length).toBe(1);
     expect(processed['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a']).toBe(11.87468051);
   });
@@ -281,12 +281,12 @@ describe('Test utility functionality', () => {
   test('Test implemented processRecords', () => {
     const records = [
       '{"time":1623883249513,"paid":11.8746,"transaction":"31f5978a31a2bac842e383170b019e17415c12fd425f155269bafe7b4bb00a21","records":{"1928656":{"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a":{"times":118.44,"shares":81.84905658,"amounts":11.8746}}}}',
-      '{"time":1623883249510,"paid":11.8749,"transaction":"31f5978a31a2bac842e383170b019e17415c12fd425f155269bafe7b4bb00a22","records":{"1928657":{"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b":{"times":93.44,"shares":81.89905658,"amounts":11.8146}}}}']
+      '{"time":1623883249510,"paid":11.8749,"transaction":"31f5978a31a2bac842e383170b019e17415c12fd425f155269bafe7b4bb00a22","records":{"1928657":{"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b":{"times":93.44,"shares":81.89905658,"amounts":11.8146}}}}'];
     const processed = utils.processRecords(records);
     expect(processed.length).toBe(2);
     expect(processed[0].paid).toBe(11.8749);
-    expect(processed[0].transaction).toBe("31f5978a31a2bac842e383170b019e17415c12fd425f155269bafe7b4bb00a22");
-    expect(processed[1].transaction).toBe("31f5978a31a2bac842e383170b019e17415c12fd425f155269bafe7b4bb00a21");
+    expect(processed[0].transaction).toBe('31f5978a31a2bac842e383170b019e17415c12fd425f155269bafe7b4bb00a22');
+    expect(processed[1].transaction).toBe('31f5978a31a2bac842e383170b019e17415c12fd425f155269bafe7b4bb00a21');
   });
 
   test('Test implemented processShares [1]', () => {
@@ -295,15 +295,15 @@ describe('Test utility functionality', () => {
       '{"time":1623862569776,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}': '8',
       '{"time":1623862569776,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}': '8',
       '{"time":1623862569778,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":true,"difficulty":8}': '16'
-    }
+    };
     const processed = utils.processShares(shares);
     expect(Object.keys(processed).length).toBe(2);
     expect(Object.keys(processed[0]).length).toBe(1);
     expect(Object.keys(processed[1]).length).toBe(2);
-    expect(processed[0]["tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b"]).toBe(16);
-    expect(processed[1]["tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a"]).toBe(16);
-    expect(processed[1]["tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b"]).toBe(8);
-  })
+    expect(processed[0]['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b']).toBe(16);
+    expect(processed[1]['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a']).toBe(16);
+    expect(processed[1]['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b']).toBe(8);
+  });
 
   test('Test implemented processShares [2]', () => {
     const shares = {
@@ -311,13 +311,13 @@ describe('Test utility functionality', () => {
       '{"time":1623862569776,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}': '8',
       '{"time":1623862569776,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}': '8',
       '{"time":1623862569778,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":true,"difficulty":8}': '16'
-    }
-    const processed = utils.processShares(shares, "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a");
+    };
+    const processed = utils.processShares(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
     expect(Object.keys(processed).length).toBe(2);
     expect(Object.keys(processed[0]).length).toBe(0);
     expect(Object.keys(processed[1]).length).toBe(1);
-    expect(processed[1]["tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a"]).toBe(16);
-  })
+    expect(processed[1]['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a']).toBe(16);
+  });
 
   test('Test implemented processShares [3]', () => {
     const shares = {
@@ -326,15 +326,15 @@ describe('Test utility functionality', () => {
       '{"time":1623862569776,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}': '8',
       '{"time":1623862569778,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":true,"difficulty":8}': '16',
       '{"time":1623862569778,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":true,"difficulty":8}': '8'
-    }
+    };
     const processed = utils.processShares(shares);
     expect(Object.keys(processed).length).toBe(2);
     expect(Object.keys(processed[0]).length).toBe(1);
     expect(Object.keys(processed[1]).length).toBe(2);
-    expect(processed[0]["tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b"]).toBe(24);
-    expect(processed[1]["tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a"]).toBe(8);
-    expect(processed[1]["tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b"]).toBe(8);
-  })
+    expect(processed[0]['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b']).toBe(24);
+    expect(processed[1]['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a']).toBe(8);
+    expect(processed[1]['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b']).toBe(8);
+  });
 
   test('Test implemented processShares [4]', () => {
     const shares = {
@@ -342,13 +342,13 @@ describe('Test utility functionality', () => {
       '{"time":1623862569776,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}': '8',
       '{"time":1623862569776,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}': '8',
       '{"time":1623862569778,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":true,"difficulty":8}': '16'
-    }
-    const processed = utils.processShares(shares, "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1");
+    };
+    const processed = utils.processShares(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
     expect(Object.keys(processed).length).toBe(2);
     expect(Object.keys(processed[0]).length).toBe(0);
     expect(Object.keys(processed[1]).length).toBe(1);
-    expect(processed[1]["tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1"]).toBe(8);
-  })
+    expect(processed[1]['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1']).toBe(8);
+  });
 
   test('Test implemented processShares [5]', () => {
     const processed = utils.processShares(null);
@@ -415,7 +415,7 @@ describe('Test utility functionality', () => {
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}'];
     const processed = utils.processWorkers(shares);
     expect(processed.length).toBe(1);
-    expect(processed[0]).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2");
+    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2');
   });
 
   test('Test implemented processWorkers [2]', () => {
@@ -426,9 +426,9 @@ describe('Test utility functionality', () => {
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
     const processed = utils.processWorkers(shares);
     expect(processed.length).toBe(3);
-    expect(processed[0]).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1");
-    expect(processed[1]).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2");
-    expect(processed[2]).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2");
+    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+    expect(processed[1]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2');
+    expect(processed[2]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2');
   });
 
   test('Test implemented processWorkers [3]', () => {
@@ -437,10 +437,10 @@ describe('Test utility functionality', () => {
       '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
-    const processed = utils.processWorkers(shares, "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a");
+    const processed = utils.processWorkers(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
     expect(processed.length).toBe(2);
-    expect(processed[0]).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1");
-    expect(processed[1]).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2");
+    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+    expect(processed[1]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2');
   });
 
   test('Test implemented processWorkers [4]', () => {
@@ -449,9 +449,9 @@ describe('Test utility functionality', () => {
       '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
-    const processed = utils.processWorkers(shares, "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1");
+    const processed = utils.processWorkers(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
     expect(processed.length).toBe(1);
-    expect(processed[0]).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1");
+    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
   });
 
   test('Test implemented processWorkers [5]', () => {
@@ -473,8 +473,8 @@ describe('Test utility functionality', () => {
   });
 
   test('Test implemented validateInput', () => {
-    expect(utils.validateInput("test")).toBe("test");
-    expect(utils.validateInput("example!@#$%^&")).toBe("example");
-    expect(utils.validateInput("")).toBe("");
+    expect(utils.validateInput('test')).toBe('test');
+    expect(utils.validateInput('example!@#$%^&')).toBe('example');
+    expect(utils.validateInput('')).toBe('');
   });
 });

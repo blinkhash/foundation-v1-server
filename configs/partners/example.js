@@ -15,8 +15,8 @@ config.partner.tier = 4;
 
 // Subscription Configuration
 config.subscription = {};
-config.subscription.startDate = '01/01/2021'; // MM/DD/YYYY
-config.subscription.endDate = '06/01/2021'; // MM/DD/YYYY
+config.subscription.startDate = '01/01/2000'; // MM/DD/YYYY
+config.subscription.endDate = '01/01/3000'; // MM/DD/YYYY
 
 // Export Configuration
 module.exports = config;

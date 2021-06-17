@@ -150,8 +150,8 @@ exports.processMiners = function(shares) {
     shares = shares.map((share) => JSON.parse(share));
     shares.forEach((share) => {
       const address = share.worker.split('.')[0];
-      if (!(miners.includes(share.worker.split('.')[0]))) {
-        miners.push(share.worker.split('.')[0]);
+      if (!(miners.includes(address))) {
+        miners.push(address);
       }
     });
   }
@@ -272,4 +272,4 @@ exports.validateInput = function(address) {
     address = address.toString().replace(/[^a-zA-Z0-9.]+/g, '');
   }
   return address;
-}
+};

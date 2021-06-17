@@ -1,6 +1,6 @@
 {
   "name": "blinkhash-server",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "An extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool",
   "main": "./scripts/init.js",
   "keywords": [
@@ -50,15 +50,9 @@
     "compression": "*",
     "cors": "^2.8.5",
     "dateformat": "4.5.1",
-    "dot": "*",
     "express": "*",
-    "extend": "*",
-    "mysql": "*",
-    "node-watch": "0.5.9",
     "nodemon": "*",
-    "nonce": "*",
-    "redis": "^3.1.1",
-    "request": "2.88.2"
+    "redis": "^3.1.1"
   },
   "devDependencies": {
     "codecov": "^3.8.1",

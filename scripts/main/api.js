@@ -66,6 +66,12 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     });
   };
 
+  // API Endpoint for /coins
+  this.handleCoins = function(response) {
+    const coins = Object.keys(_this.poolConfigs);
+    _this.buildPayload('Pool', '/coins/', _this.messages.success, coins, response);
+  };
+
   // API Endpoint for /miners/[miner]
   this.handleMinersSpecific = function(coin, miner, response) {
     const algorithm = _this.poolConfigs[coin].coin.algorithms.mining;
@@ -79,7 +85,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       ['hgetall', `${ coin }:rounds:current:shares`],
       ['hgetall', `${ coin }:rounds:current:times`],
       ['zrangebyscore', `${ coin }:rounds:current:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(coin, '/miners/' + miner + "/", commands, response, (results) => {
+    _this.executeCommands(coin, '/miners/' + miner + '/', commands, response, (results) => {
       const shareData = utils.processShares(results[3], miner);
       const difficulty = utils.processDifficulty(results[5], miner);
       const statistics = {
@@ -99,9 +105,9 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
         },
         workers: utils.processWorkers(results[5], miner),
       };
-      _this.buildPayload(coin, '/miners/' + miner + "/", _this.messages.success, statistics, response);
+      _this.buildPayload(coin, '/miners/' + miner + '/', _this.messages.success, statistics, response);
     });
-  }
+  };
 
   // API Endpoint for /miners
   this.handleMiners = function(coin, response) {
@@ -112,6 +118,12 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       const miners = utils.processMiners(results[0]);
       _this.buildPayload(coin, '/miners/', _this.messages.success, miners, response);
     });
+  };
+
+  // API Endpoint for /partners
+  this.handlePartners = function(response) {
+    const partners = Object.values(_this.partnerConfigs);
+    _this.buildPayload('Pool', '/partners/', _this.messages.success, partners, response);
   };
 
   // API Endpoint for /payments/generate
@@ -345,7 +357,8 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     const combined = endpoint + '/' + method;
 
     // Unknown Coins
-    if (!(coin in _this.poolConfigs)) {
+    const miscellaneous = ['coins', 'partners'];
+    if (!(coin in _this.poolConfigs) && !(miscellaneous.includes(coin))) {
       _this.buildPayload(coin, '/unknown/', _this.messages.coin, null, res);
       return;
     }
@@ -407,9 +420,6 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     case (endpoint === 'statistics' && method === ''):
       _this.handleStatistics(coin, res);
       break;
-    case (endpoint === '' && method === ''):
-      _this.handleStatistics(coin, res);
-      break;
 
     // Workers Endpoints
     case (endpoint === 'workers' && method.length >= 1):
@@ -417,6 +427,17 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       break;
     case (endpoint === 'workers' && method === ''):
       _this.handleWorkers(coin, res);
+      break;
+
+    // Miscellaneous Endpoints
+    case (endpoint === '' && method === '' && coin === 'partners'):
+      _this.handlePartners(res);
+      break;
+    case (endpoint === '' && method === '' && coin === 'coins'):
+      _this.handleCoins(res);
+      break;
+    case (endpoint === '' && method === '' && !(miscellaneous.includes(coin))):
+      _this.handleStatistics(coin, res);
       break;
 
     // Unknown Endpoints
