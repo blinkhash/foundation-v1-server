@@ -38,18 +38,16 @@ exports.coinsToSatoshis = function(coins, magnitude) {
 };
 
 // Count Number of Miners
-exports.countMiners = function(shares, miner) {
+exports.countMiners = function(shares) {
   let count = 0;
   const miners = [];
   if (shares) {
     shares = shares.map((share) => JSON.parse(share));
     shares.forEach((share) => {
       const address = share.worker.split('.')[0];
-      if (!miner || miner === address) {
-        if (!(miners.includes(address))) {
-          count += 1;
-          miners.push(address);
-        }
+      if (!(miners.includes(address))) {
+        count += 1;
+        miners.push(address);
       }
     });
   }
@@ -146,16 +144,14 @@ exports.processDifficulty = function(shares, miner) {
 };
 
 // Process Miners for API Endpoints
-exports.processMiners = function(shares, miner) {
+exports.processMiners = function(shares) {
   const miners = [];
   if (shares) {
     shares = shares.map((share) => JSON.parse(share));
     shares.forEach((share) => {
-      const address = (miner && miner.includes('.')) ? share.worker.split('.')[0] : share.worker;
-      if (!miner || miner === address) {
-        if (!(miners.includes(share.worker.split('.')[0]))) {
-          miners.push(share.worker.split('.')[0]);
-        }
+      const address = share.worker.split('.')[0];
+      if (!(miners.includes(share.worker.split('.')[0]))) {
+        miners.push(share.worker.split('.')[0]);
       }
     });
   }
@@ -167,7 +163,7 @@ exports.processPayments = function(payments, miner) {
   const output = {};
   if (payments) {
     Object.keys(payments).forEach((address) => {
-      if (payments[address] > 0) {
+      if (parseFloat(payments[address]) > 0) {
         if (!miner || miner === address) {
           output[address] = parseFloat(payments[address]);
         }
@@ -212,17 +208,6 @@ exports.processShares = function(shares, miner) {
     });
   }
   return [solo, shared];
-};
-
-// Process Shares for API Endpoints
-exports.processStatistics = function(statistics) {
-  const output = {};
-  if (statistics) {
-    Object.keys(statistics).forEach((option) => {
-      output[option] = parseFloat(statistics[option]);
-    });
-  }
-  return output;
 };
 
 // Process Times for API Endpoints
