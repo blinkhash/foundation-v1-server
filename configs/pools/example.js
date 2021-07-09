@@ -60,7 +60,7 @@ config.daemons = [];
 const daemons1 = {};
 daemons1.host = '127.0.0.1';
 daemons1.port = 8332;
-daemons1.user = '';
+daemons1.username = '';
 daemons1.password = '';
 config.daemons.push(daemons1);
 
@@ -74,7 +74,7 @@ config.payments.minPayment = 0.005;
 config.payments.daemon = {};
 config.payments.daemon.host = '127.0.0.1';
 config.payments.daemon.port = 8332;
-config.payments.daemon.user = '';
+config.payments.daemon.username = '';
 config.payments.daemon.password = '';
 
 // Banning Configuration

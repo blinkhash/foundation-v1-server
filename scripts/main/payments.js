@@ -955,7 +955,7 @@ const PoolPayments = function (logger, client) {
       const processingConfig = poolOptions.payments;
       logger.debug('Payments', coin, `Payment processing setup to run every ${
         processingConfig.paymentInterval } second(s) with daemon (${
-        processingConfig.daemon.user }@${ processingConfig.daemon.host }:${
+        processingConfig.daemon.username }@${ processingConfig.daemon.host }:${
         processingConfig.daemon.port }) and redis (${ _this.portalConfig.redis.host }:${
         _this.portalConfig.redis.port })`
       );
