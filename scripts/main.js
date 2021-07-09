@@ -13,7 +13,7 @@ const PoolThreads = require('./main/threads');
 ////////////////////////////////////////////////////////////////////////////////
 
 let config;
-const normalizedPath = path.join(__dirname, '../configs/main/example.js');
+const normalizedPath = path.join(__dirname, '../configs/main/config.js');
 
 // Check to Ensure Config Exists
 try {
