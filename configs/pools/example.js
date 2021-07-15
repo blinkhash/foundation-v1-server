@@ -21,7 +21,6 @@ config.coin.symbol = 'BTC';
 config.coin.asicBoost = true;
 config.coin.getInfo = false;
 config.coin.segwit = true;
-config.coin.txFee = 0.0004;
 config.coin.rewards = '';
 
 // Algorithm Configuration
@@ -71,6 +70,7 @@ config.payments.checkInterval = 20;
 config.payments.paymentInterval = 7200;
 config.payments.minConfirmations = 10;
 config.payments.minPayment = 0.005;
+config.payments.transactionFee = 0.0004;
 config.payments.daemon = {};
 config.payments.daemon.host = '127.0.0.1';
 config.payments.daemon.port = 8332;

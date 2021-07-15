@@ -959,7 +959,7 @@ const PoolPayments = function (logger, client) {
   this.handlePayments = function(coin, callbackMain) {
 
     const poolConfig = _this.poolConfigs[coin];
-    poolConfig.payments.processingFee = parseFloat(poolConfig.coin.txfee) || parseFloat(0.0004);
+    poolConfig.payments.processingFee = parseFloat(poolConfig.payments.transactionFee) || parseFloat(0.0004);
     poolConfig.payments.minConfirmations = Math.max((poolConfig.payments.minConfirmations || 10), 1);
     const daemon = new Stratum.daemon([poolConfig.payments.daemon], (severity, results) => {
       logger[severity]('Payments', coin, results);
