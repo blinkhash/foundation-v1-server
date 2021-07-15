@@ -79,6 +79,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
+      ['hgetall', `${ coin }:payments:balances`],
       ['hgetall', `${ coin }:payments:generate`],
       ['hgetall', `${ coin }:payments:immature`],
       ['hgetall', `${ coin }:payments:paid`],
@@ -86,24 +87,25 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       ['hgetall', `${ coin }:rounds:current:times`],
       ['zrangebyscore', `${ coin }:rounds:current:hashrate`, windowTime, '+inf']];
     _this.executeCommands(coin, '/miners/' + miner + '/', commands, response, (results) => {
-      const shareData = utils.processShares(results[3], miner);
-      const difficulty = utils.processDifficulty(results[5], miner);
+      const shareData = utils.processShares(results[4], miner);
+      const difficulty = utils.processDifficulty(results[6], miner);
       const statistics = {
         current: {
           solo: shareData[0][miner] || 0,
           shared: shareData[1][miner] || 0,
-          times: utils.processTimes(results[4], miner)[miner] || 0,
+          times: utils.processTimes(results[5], miner)[miner] || 0,
         },
         status: {
           hashrate: (multiplier * difficulty) / hashrateWindow,
-          workers: utils.countWorkers(results[5], miner),
+          workers: utils.countWorkers(results[6], miner),
         },
         payments: {
-          generate: utils.processPayments(results[0], miner)[miner] || 0,
-          immature: utils.processPayments(results[1], miner)[miner] || 0,
-          paid: utils.processPayments(results[2], miner)[miner] || 0,
+          balances: utils.processPayments(results[0], miner)[miner] || 0,
+          generate: utils.processPayments(results[1], miner)[miner] || 0,
+          immature: utils.processPayments(results[2], miner)[miner] || 0,
+          paid: utils.processPayments(results[3], miner)[miner] || 0,
         },
-        workers: utils.processWorkers(results[5], miner),
+        workers: utils.processWorkers(results[6], miner),
       };
       _this.buildPayload(coin, '/miners/' + miner + '/', _this.messages.success, statistics, response);
     });
@@ -124,6 +126,15 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   this.handlePartners = function(response) {
     const partners = Object.values(_this.partnerConfigs);
     _this.buildPayload('Pool', '/partners/', _this.messages.success, partners, response);
+  };
+
+  // API Endpoint for /payments/balances
+  this.handlePaymentsBalances = function(coin, response) {
+    const commands = [['hgetall', `${ coin }:payments:balances`]];
+    _this.executeCommands(coin, '/payments/balances/', commands, response, (results) => {
+      const payments = utils.processPayments(results[0]);
+      _this.buildPayload(coin, '/payments/balances/', _this.messages.success, payments, response);
+    });
   };
 
   // API Endpoint for /payments/generate
@@ -165,14 +176,16 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   // API Endpoint for /payments
   this.handlePayments = function(coin, response) {
     const commands = [
+      ['hgetall', `${ coin }:payments:balances`],
       ['hgetall', `${ coin }:payments:generate`],
       ['hgetall', `${ coin }:payments:immature`],
       ['hgetall', `${ coin }:payments:paid`]];
     _this.executeCommands(coin, '/payments/', commands, response, (results) => {
       const payments = {
-        generate: utils.processPayments(results[0]),
-        immature: utils.processPayments(results[1]),
-        paid: utils.processPayments(results[2])};
+        balances: utils.processPayments(results[0]),
+        generate: utils.processPayments(results[1]),
+        immature: utils.processPayments(results[2]),
+        paid: utils.processPayments(results[3])};
       _this.buildPayload(coin, '/payments/', _this.messages.success, payments, response);
     });
   };
@@ -389,6 +402,9 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       break;
 
     // Payments Endpoints
+    case (combined === 'payments/balances'):
+      _this.handlePaymentsBalances(coin, res);
+      break;
     case (combined === 'payments/generate'):
       _this.handlePaymentsGenerate(coin, res);
       break;

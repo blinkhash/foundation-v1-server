@@ -362,8 +362,35 @@ const PoolPayments = function (logger, client) {
       if (duplicateFound) {
         _this.handleDuplicates(daemon, coin, rounds, callback);
       } else {
-        callback(null, [rounds, {}]);
+        callback(null, [rounds]);
       }
+    });
+  };
+
+  // Check Workers for Unpaid Balances
+  /* istanbul ignore next */
+  this.handleWorkers = function(config, data, callback) {
+
+    // Load Unpaid Workers from Database
+    const coin = config.coin.name;
+    const commands = [['hgetall', `${ coin }:payments:balances`]];
+    _this.client.multi(commands).exec((error, results) => {
+      if (error) {
+        logger.error('Payments', coin, `Could not get workers from database: ${ JSON.stringify(error) }`);
+        callback(true, []);
+      }
+
+      // Manage Individual Workers
+      const workers = {};
+      const magnitude = config.payments.magnitude;
+      Object.keys(results[0] || {}).forEach((worker) => {
+        workers[worker] = {
+          balance: utils.coinsToSatoshis(parseFloat(results[0][worker]), magnitude)
+        };
+      });
+
+      // Return Workers as Callback
+      callback(null, [data[0], workers]);
     });
   };
 
@@ -653,7 +680,11 @@ const PoolPayments = function (logger, client) {
         worker.sent = utils.satoshisToCoins(amount, config.payments.magnitude, config.payments.coinPrecision);
         amounts[address] = utils.coinsRound(worker.sent, config.payments.coinPrecision);
         totalSent += worker.sent;
+      } else {
+        worker.sent = 0;
+        worker.change = utils.satoshisToCoins(amount, config.payments.magnitude, config.payments.coinPrecision);
       }
+
       workers[address] = worker;
     });
 
@@ -750,6 +781,11 @@ const PoolPayments = function (logger, client) {
           const sent = utils.coinsRound(worker.sent, config.payments.coinPrecision);
           totalPaid = utils.coinsRound(totalPaid + worker.sent, config.payments.coinPrecision);
           commands.push(['hincrbyfloat', `${ coin }:payments:paid`, address, sent]);
+          commands.push(['hset', `${ coin }:payments:balances`, address, 0]);
+          commands.push(['hset', `${ coin }:payments:generate`, address, 0]);
+        } else if (worker.change > 0) {
+          const change = utils.coinsRound(worker.change, config.payments.coinPrecision);
+          commands.push(['hset', `${ coin }:payments:balances`, address, change]);
           commands.push(['hset', `${ coin }:payments:generate`, address, 0]);
         }
       } else {
@@ -840,6 +876,7 @@ const PoolPayments = function (logger, client) {
     // Process Checks Incrementally
     async.waterfall([
       (callback) => _this.handleBlocks(daemon, config, callback),
+      (data, callback) => _this.handleWorkers(config, data, callback),
       (data, callback) => _this.handleTransactions(daemon, config, data, callback),
       (data, callback) => _this.handleTimes(config, data, callback),
       (data, callback) => _this.handleShares(config, data, callback),
@@ -862,6 +899,7 @@ const PoolPayments = function (logger, client) {
     // Process Payments Incrementally
     async.waterfall([
       (callback) => _this.handleBlocks(daemon, config, callback),
+      (data, callback) => _this.handleWorkers(config, data, callback),
       (data, callback) => _this.handleTransactions(daemon, config, data, callback),
       (data, callback) => _this.handleTimes(config, data, callback),
       (data, callback) => _this.handleShares(config, data, callback),

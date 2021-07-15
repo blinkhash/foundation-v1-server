@@ -228,6 +228,7 @@ describe('Test API functionality', () => {
 
   test('Test handleMinersSpecific API endpoint [1]', (done) => {
     const commands = [
+      ['hset', 'Bitcoin:payments:balances', 'worker2', 37.43],
       ['hset', 'Bitcoin:payments:generate', 'worker1', 134.3],
       ['hset', 'Bitcoin:payments:generate', 'worker2', 255.17],
       ['hset', 'Bitcoin:payments:generate', 'worker3', 0],
@@ -259,6 +260,7 @@ describe('Test API functionality', () => {
       expect(processed.data.current.shared).toBe(108);
       expect(processed.data.current.solo).toBe(0);
       expect(processed.data.current.times).toBe(0);
+      expect(processed.data.payments.balances).toBe(37.43);
       expect(processed.data.payments.generate).toBe(255.17);
       expect(processed.data.payments.immature).toBe(12.17);
       expect(processed.data.payments.paid).toBe(123.5);
@@ -368,6 +370,30 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, [], 'Bitcoin', () => {
       const request = mockRequest('partners');
+      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      poolApi.handleApiV1(request, response);
+    });
+  });
+
+  test('Test handlePaymentsBalances API endpoint', (done) => {
+    const commands = [
+      ['hset', 'Bitcoin:payments:balances', 'worker1', 134.3],
+      ['hset', 'Bitcoin:payments:balances', 'worker2', 255.17],
+      ['hset', 'Bitcoin:payments:balances', 'worker3', 0]];
+    const response = mockResponse();
+    response.on('end', (payload) => {
+      const processed = JSON.parse(payload);
+      expect(processed.coin).toBe('Bitcoin');
+      expect(processed.endpoint).toBe('/payments/balances/');
+      expect(processed.response.code).toBe(200);
+      expect(processed.response.message).toBe('');
+      expect(typeof processed.data).toBe('object');
+      expect(processed.data.worker1).toBe(134.3);
+      expect(processed.data.worker2).toBe(255.17);
+      done();
+    });
+    mockSetupClient(client, commands, 'Bitcoin', () => {
+      const request = mockRequest('Bitcoin', 'payments', 'balances');
       const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
