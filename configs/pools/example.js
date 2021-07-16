@@ -97,7 +97,7 @@ ports1.difficulty.minimum = 8;
 ports1.difficulty.maximum = 512;
 ports1.difficulty.targetTime = 15;
 ports1.difficulty.retargetTime = 90;
-ports1.difficulty.variance = 30;
+ports1.difficulty.variance = 0.3;
 config.ports.push(ports1);
 
 // Recipients Configuration
