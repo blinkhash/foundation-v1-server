@@ -80,7 +80,7 @@ config.payments.daemon.password = '';
 // Banning Configuration
 config.banning = {};
 config.banning.time = 600;
-config.banning.invalidPercent = 50;
+config.banning.invalidPercent = 0.5;
 config.banning.checkThreshold = 500;
 config.banning.purgeInterval = 300;
 

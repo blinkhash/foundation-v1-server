@@ -1,6 +1,6 @@
 {
   "name": "blinkhash-server",
-  "version": "0.0.10",
+  "version": "0.0.12",
   "description": "An extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool",
   "main": "./scripts/init.js",
   "keywords": [
@@ -44,7 +44,7 @@
     "apicache": "^1.5.3",
     "async": "2.3.0",
     "bignum": "0.13.1",
-    "blinkhash-stratum": "0.1.19",
+    "blinkhash-stratum": "0.1.20",
     "body-parser": "*",
     "colors": "*",
     "compression": "*",
