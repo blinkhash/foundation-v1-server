@@ -113,7 +113,6 @@ config.p2p = {};
 config.p2p.enabled = true;
 config.p2p.host = '127.0.0.1';
 config.p2p.port = 8333;
-config.p2p.disableTransactions = true;
 
 // Settings Configuration
 config.settings = {};
