@@ -8,7 +8,9 @@
 [![Known Vulnerabilities](https://snyk.io/test/npm/blinkhash-server/badge.svg)](https://snyk.io/test/npm/blinkhash-server)
 [![Discord](https://img.shields.io/discord/738590795384356904)](https://discord.gg/8xtHZFKJQY)
 
-This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written entirely in Node.JS. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed in lieu of a client that will be developed in a separate repository.
+This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining platform written entirely in Node.JS. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed in lieu of a client that will be developed in a separate repository.
+
+For help with getting started, you can check out the documentation for the platform at https://docs.blinkhash.com. Sample configuration files for individual coins are also located at https://github.com/blinkhash/blinkhash-configurations.
 
 #### Need Support?
 
