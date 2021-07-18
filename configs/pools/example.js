@@ -122,7 +122,6 @@ config.settings.emitInvalidBlockHashes = false;
 config.settings.hashrateWindow = 300;
 config.settings.jobRebroadcastTimeout = 60;
 config.settings.tcpProxyProtocol = false;
-config.settings.validateWorkerUsername = true;
 
 // Export Configuration
 module.exports = config;
