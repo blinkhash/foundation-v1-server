@@ -26,7 +26,10 @@ const poolConfigs = { Bitcoin: poolConfig };
 ////////////////////////////////////////////////////////////////////////////////
 
 function mockRequest(coin, endpoint, method) {
-  return { params: { coin: coin, endpoint: endpoint, method: method }};
+  return {
+    params: { coin: coin, endpoint: endpoint },
+    query: { method: method }
+  };
 }
 
 function mockResponse() {
@@ -101,6 +104,23 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, [], 'Bitcoin', () => {
       const request = mockRequest('Bitcoin', 'unknown', 'unknown');
+      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      poolApi.handleApiV1(request, response);
+    });
+  });
+
+  test('Test request without parameters', (done) => {
+    const response = mockResponse();
+    response.on('end', (payload) => {
+      const processed = JSON.parse(payload);
+      expect(processed.endpoint).toBe('/unknown/');
+      expect(processed.response.code).toBe(405);
+      expect(processed.response.message).toBe('The requested coin was not found. Verify your input and try again.');
+      expect(processed.data).toBe(null);
+      done();
+    });
+    mockSetupClient(client, [], 'Bitcoin', () => {
+      const request = {};
       const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });

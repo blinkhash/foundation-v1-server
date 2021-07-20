@@ -364,12 +364,20 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   // Determine API Endpoint Called
   this.handleApiV1 = function(req, res) {
 
-    const coin = utils.validateInput(req.params.coin || '');
-    const endpoint = utils.validateInput(req.params.endpoint || '');
-    const method = utils.validateInput(req.params.method || '');
-    const combined = endpoint + '/' + method;
+    let coin, endpoint, method;
 
-    // Unknown Coins
+    // If Path Params Exist
+    if (req.params) {
+      coin = utils.validateInput(req.params.coin || '');
+      endpoint = utils.validateInput(req.params.endpoint || '');
+    }
+
+    // If Query Params Exist
+    if (req.query) {
+      method = utils.validateInput(req.query.method || '');
+    }
+
+    const combined = endpoint + '/' + method;
     const miscellaneous = ['coins', 'partners'];
     if (!(coin in _this.poolConfigs) && !(miscellaneous.includes(coin))) {
       _this.buildPayload(coin, '/unknown/', _this.messages.coin, null, res);

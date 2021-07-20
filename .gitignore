@@ -9,3 +9,4 @@ configs/partners/*
 configs/pools/*
 !configs/pools/example.js
 coverage/
+.DS_Store
