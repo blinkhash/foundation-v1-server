@@ -9,6 +9,7 @@ const bodyParser = require('body-parser');
 const compress = require('compression');
 const cors = require('cors');
 const express = require('express');
+const rateLimit = require("express-rate-limit");
 const http = require('http');
 const PoolApi = require('./api.js');
 
@@ -29,10 +30,14 @@ const PoolServer = function (logger, client) {
     // Build Main Server
     const app = express();
     const api = new PoolApi(_this.client, _this.partnerConfigs, _this.poolConfigs, _this.portalConfig);
+    const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
     const cache = apicache.options({}).middleware;
 
+
     // Establish Middleware
+    app.set('trust proxy', 1);
     app.use(bodyParser.json());
+    app.use(limiter);
     app.use(cache('5 minutes'));
     app.use(compress());
     app.use(cors());
