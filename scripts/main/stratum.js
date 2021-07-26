@@ -4,7 +4,7 @@
  *
  */
 
-const Stratum = require('blinkhash-stratum');
+const Stratum = require('foundation-stratum');
 
 ////////////////////////////////////////////////////////////////////////////////
 

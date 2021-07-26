@@ -1,16 +1,16 @@
-# Blinkhash Server
+# Foundation Server
 
-[![Codecov Coverage](https://img.shields.io/codecov/c/github/blinkhash/blinkhash-server.svg?style=flat-square)](https://codecov.io/gh/blinkhash/blinkhash-server/)
-[![Blinkhash CI](https://github.com/blinkhash/blinkhash-server/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/blinkhash/blinkhash-server/actions/workflows/build.yml)
+[![Codecov Coverage](https://img.shields.io/codecov/c/github/blinkhash/foundation-server.svg?style=flat-square)](https://codecov.io/gh/blinkhash/foundation-server/)
+[![Foundation CI](https://github.com/blinkhash/foundation-server/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/blinkhash/foundation-server/actions/workflows/build.yml)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
-[![Downloads](https://img.shields.io/npm/dm/blinkhash-server.svg)](https://www.npmjs.com/package/blinkhash-server)
-[![Version](https://img.shields.io/npm/v/blinkhash-server.svg)](https://www.npmjs.com/package/blinkhash-server)
-[![Known Vulnerabilities](https://snyk.io/test/npm/blinkhash-server/badge.svg)](https://snyk.io/test/npm/blinkhash-server)
+[![Downloads](https://img.shields.io/npm/dm/foundation-server.svg)](https://www.npmjs.com/package/foundation-server)
+[![Version](https://img.shields.io/npm/v/foundation-server.svg)](https://www.npmjs.com/package/foundation-server)
+[![Known Vulnerabilities](https://snyk.io/test/npm/foundation-server/badge.svg)](https://snyk.io/test/npm/foundation-server)
 [![Discord](https://img.shields.io/discord/738590795384356904)](https://discord.gg/8xtHZFKJQY)
 
 This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining platform written entirely in Node.JS. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed in lieu of a client that will be developed in a separate repository.
 
-For help with getting started, you can check out the documentation for the platform at https://docs.blinkhash.com. Sample configuration files for individual coins are also located at https://github.com/blinkhash/blinkhash-configurations.
+For help with getting started, you can check out the documentation for the platform at https://blinkhash.com/docs. Sample configuration files for individual coins are also located at https://github.com/blinkhash/foundation-configurations.
 
 #### Need Support?
 
@@ -22,7 +22,7 @@ If you need help with a code-related matter, the first place to look is our [Dis
 
 #### Features
 
-* For the pool server it uses the [blinkhash-stratum](https://github.com/blinkhash/blinkhash-stratum-pool) module, which supports vardiff, POW/POS, anti-DDoS, IP banning, [multiple hashing algorithms](https://github.com/blinkhash/blinkhash-multi-hashing).
+* For the pool server it uses the [foundation-stratum](https://github.com/blinkhash/foundation-stratum-pool) module, which supports vardiff, POW/POS, anti-DDoS, IP banning, [multiple hashing algorithms](https://github.com/blinkhash/foundation-multi-hashing).
 * Multipool ability - this software was built from the ground up to run with multiple coins simultaneously (which can have different properties and hashing algorithms). It can be used to create a pool for a single coin or for multiple coins at once. The pools use clustering to load balance across multiple CPU cores.
 * For reward/payment processing, shares are inserted into Redis (a fast NoSQL key/value store). The PPLNT reward system is used with [Redis Transactions](http://redis.io/topics/transactions) for secure and super speedy payouts. There is zero risk to the pool operator. Shares from rounds resulting in orphaned blocks will be merged into share in the current round so that each and every share will be rewarded
 * This portal does not have user accounts/logins/registrations. Instead, miners simply use their coin address for stratum authentication.

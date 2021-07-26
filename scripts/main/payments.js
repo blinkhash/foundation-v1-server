@@ -7,7 +7,7 @@
 const fs = require('fs');
 const async = require('async');
 const utils = require('./utils');
-const Stratum = require('blinkhash-stratum');
+const Stratum = require('foundation-stratum');
 
 ////////////////////////////////////////////////////////////////////////////////
 

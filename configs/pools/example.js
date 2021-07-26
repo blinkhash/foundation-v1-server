@@ -11,7 +11,7 @@ config.enabled = false;
 config.featured = false;
 config.address = 'example';
 config.debug = false;
-config.identifier = 'https://github.com/blinkhash/blinkhash-server';
+config.identifier = 'https://github.com/blinkhash/foundation-server';
 config.logo = '';
 
 // Coin Configuration

@@ -13,7 +13,7 @@ const mockPayments = require('./payments.mock.js');
 
 const PoolLogger = require('../main/logger');
 const PoolPayments = require('../main/payments');
-const Stratum = require('blinkhash-stratum');
+const Stratum = require('foundation-stratum');
 
 const poolConfig = require('../../configs/pools/example.js');
 const portalConfig = require('../../configs/main/example.js');

@@ -1,4 +1,4 @@
-name: Blinkhash CI
+name: Foundation CI
 
 on:
   push:

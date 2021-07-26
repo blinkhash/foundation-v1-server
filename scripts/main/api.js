@@ -5,7 +5,7 @@
  */
 
 const utils = require('./utils');
-const Algorithms = require('blinkhash-stratum').algorithms;
+const Algorithms = require('foundation-stratum').algorithms;
 
 ////////////////////////////////////////////////////////////////////////////////
 

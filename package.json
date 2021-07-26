@@ -1,6 +1,6 @@
 {
-  "name": "blinkhash-server",
-  "version": "0.0.12",
+  "name": "foundation-server",
+  "version": "0.0.1",
   "description": "An extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool",
   "main": "./scripts/init.js",
   "keywords": [
@@ -13,9 +13,9 @@
     "litecoin",
     "scrypt"
   ],
-  "homepage": "https://github.com/blinkhash/blinkhash-server",
+  "homepage": "https://github.com/blinkhash/foundation-server",
   "bugs": {
-    "url": "https://github.com/blinkhash/blinkhash-server/issues"
+    "url": "https://github.com/blinkhash/foundation-server/issues"
   },
   "license": "GPL-2.0",
   "author": {
@@ -38,13 +38,13 @@
   "contributors": [],
   "repository": {
     "type": "git",
-    "url": "https://github.com/blinkhash/blinkhash-server.git"
+    "url": "https://github.com/blinkhash/foundation-server.git"
   },
   "dependencies": {
     "apicache": "^1.5.3",
     "async": "2.3.0",
     "bignum": "0.13.1",
-    "blinkhash-stratum": "0.1.23",
+    "foundation-stratum": "0.0.1",
     "body-parser": "*",
     "colors": "*",
     "compression": "*",
