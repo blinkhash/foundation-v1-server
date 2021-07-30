@@ -17,8 +17,8 @@ const PoolStratum = require('../main/stratum');
 const poolConfig = require('../../configs/pools/example.js');
 const portalConfig = require('../../configs/main/example.js');
 
-poolConfig.address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
-poolConfig.recipients[0].address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
+poolConfig.primary.address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
+poolConfig.primary.recipients[0].address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
 poolConfig.p2p.enabled = false;
 
 const client = redis.createClient({
@@ -40,7 +40,7 @@ describe('Test stratum functionality', () => {
 
   let configCopy;
   beforeEach((done) => {
-    configCopy = Object.assign({}, poolConfig);
+    configCopy = JSON.parse(JSON.stringify(poolConfig));
     client.flushall(() => done());
   });
 

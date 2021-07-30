@@ -74,7 +74,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
 
   // API Endpoint for /miners/[miner]
   this.handleMinersSpecific = function(coin, miner, response) {
-    const algorithm = _this.poolConfigs[coin].coin.algorithms.mining;
+    const algorithm = _this.poolConfigs[coin].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[coin].settings.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
@@ -256,7 +256,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   // API Endpoint for /statistics
   /* istanbul ignore next */
   this.handleStatistics = function(coin, response) {
-    const algorithm = _this.poolConfigs[coin].coin.algorithms.mining;
+    const algorithm = _this.poolConfigs[coin].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[coin].settings.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
@@ -268,9 +268,9 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     _this.executeCommands(coin, '/statistics/', commands, response, (results) => {
       const statistics = {
         config: {
-          name: _this.poolConfigs[coin].coin.name,
-          symbol: _this.poolConfigs[coin].coin.symbol,
-          algorithm: _this.poolConfigs[coin].coin.algorithms.mining,
+          name: _this.poolConfigs[coin].primary.coin.name,
+          symbol: _this.poolConfigs[coin].primary.coin.symbol,
+          algorithm: _this.poolConfigs[coin].primary.coin.algorithms.mining,
           featured: _this.poolConfigs[coin].featured,
           logo: _this.poolConfigs[coin].logo
         },
@@ -299,7 +299,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
 
   // API Endpoint for /workers/[worker]
   this.handleWorkersSpecific = function(coin, worker, response) {
-    const algorithm = _this.poolConfigs[coin].coin.algorithms.mining;
+    const algorithm = _this.poolConfigs[coin].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[coin].settings.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();

@@ -12,7 +12,7 @@ const utils = require('./utils');
 const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
   const _this = this;
-  this.coin = poolConfig.coin.name;
+  this.coin = poolConfig.primary.coin.name;
   this.client = client;
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;

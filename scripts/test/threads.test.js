@@ -26,7 +26,7 @@ describe('Test threads functionality', () => {
 
   let configCopy;
   beforeEach((done) => {
-    configCopy = Object.assign({}, portalConfig);
+    configCopy = JSON.parse(JSON.stringify(portalConfig));
     client.flushall(() => done());
   });
 

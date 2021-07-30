@@ -15,7 +15,7 @@ describe('Test loader functionality', () => {
 
   let configCopy;
   beforeEach(() => {
-    configCopy = Object.assign({}, portalConfig);
+    configCopy = JSON.parse(JSON.stringify(portalConfig));
   });
 
   test('Test initialization of builder', () => {
@@ -42,7 +42,7 @@ describe('Test loader functionality', () => {
   test('Test pool configuration validation [1]', () => {
     const algorithms = { mining: 'scrypt', block: 'sha256d', coinbase: 'sha256d' };
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, coin: { algorithms: algorithms }};
+    const poolConfig = { enabled: true, primary: { coin: { algorithms: algorithms }}};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(response).toBe(true);
   });
@@ -51,7 +51,7 @@ describe('Test loader functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const algorithms = { mining: 'invalid', block: 'sha256d', coinbase: 'sha256d' };
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, coin: { algorithms: algorithms }};
+    const poolConfig = { enabled: true, primary: { coin: { algorithms: algorithms }}};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(consoleSpy).toHaveBeenCalled();
     expect(response).toBe(false);
@@ -62,7 +62,7 @@ describe('Test loader functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const algorithms = { mining: 'scrypt', block: 'invalid', coinbase: 'sha256d' };
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, coin: { algorithms: algorithms }};
+    const poolConfig = { enabled: true, primary: { coin: { algorithms: algorithms }}};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(consoleSpy).toHaveBeenCalled();
     expect(response).toBe(false);
@@ -73,7 +73,7 @@ describe('Test loader functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const algorithms = { mining: 'scrypt', block: 'sha256d', coinbase: 'invalid' };
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, coin: { algorithms: algorithms }};
+    const poolConfig = { enabled: true, primary: { coin: { algorithms: algorithms }}};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(consoleSpy).toHaveBeenCalled();
     expect(response).toBe(false);
@@ -82,23 +82,23 @@ describe('Test loader functionality', () => {
 
   test('Test pool configuration validation [5]', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: false, coin: { name: 'Litecoin' }};
+    const poolConfig = { enabled: false, primary: { coin: { name: 'Litecoin' }}};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(response).toBe(false);
   });
 
   test('Test pool name validation [1]', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, coin: { name: 'Litecoin' }};
-    const poolConfigs = { Bitcoin: { enabled: true, coin: { name: 'Bitcoin' }}};
+    const poolConfig = { enabled: true, primary: { coin: { name: 'Litecoin' }}};
+    const poolConfigs = { Bitcoin: { enabled: true, primary: { coin: { name: 'Bitcoin' }}}};
     const response = poolLoader.validatePoolNames(poolConfigs, poolConfig);
     expect(response).toBe(true);
   });
 
   test('Test pool name validation [2]', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, coin: { name: 'Bitcoin' }};
-    const poolConfigs = { Bitcoin: { enabled: true, coin: { name: 'Bitcoin' }}};
+    const poolConfig = { enabled: true, primary: { coin: { name: 'Bitcoin' }}};
+    const poolConfigs = { Bitcoin: { enabled: true, primary: { coin: { name: 'Bitcoin' }}}};
     const response = poolLoader.validatePoolNames(poolConfigs, poolConfig);
     expect(response).toBe(false);
   });

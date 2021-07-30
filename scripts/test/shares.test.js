@@ -20,8 +20,8 @@ const client = redis.createClient({
 client._maxListeners = 0;
 client._redisMock._maxListeners = 0;
 
-poolConfig.address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
-poolConfig.recipients[0].address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
+poolConfig.primary.address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
+poolConfig.primary.recipients[0].address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
 const logger = new PoolLogger(portalConfig);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -30,7 +30,7 @@ describe('Test shares functionality', () => {
 
   let configCopy;
   beforeEach((done) => {
-    configCopy = Object.assign({}, portalConfig);
+    configCopy = JSON.parse(JSON.stringify(portalConfig));
     client.flushall(() => done());
   });
 

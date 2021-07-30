@@ -25,7 +25,7 @@ const PoolPayments = function (logger, client) {
   this.checkEnabled = function() {
     Object.keys(_this.poolConfigs).forEach((coin) => {
       const poolConfig = _this.poolConfigs[coin];
-      if (poolConfig.payments && poolConfig.payments.enabled) {
+      if (poolConfig.primary.payments && poolConfig.primary.payments.enabled) {
         _this.coins.push(coin);
       }
     });
@@ -78,7 +78,7 @@ const PoolPayments = function (logger, client) {
 
   // Calculate Current Balance in Daemon
   this.handleBalance = function(daemon, config, coin, callback) {
-    const processingConfig = config.payments;
+    const processingConfig = config.primary.payments;
     daemon.cmd('getbalance', [], (result) => {
       if (result.error) {
         logger.error('Payments', coin, `Error with payment processing daemon: ${ JSON.stringify(result.error) }`);
@@ -129,7 +129,7 @@ const PoolPayments = function (logger, client) {
 
   // Calculate Unspent Balance in Daemon
   this.handleUnspent = function(daemon, config, category, coin, callback) {
-    const args = [config.payments.minConfirmations, 99999999];
+    const args = [config.primary.payments.minConfirmations, 99999999];
     daemon.cmd('listunspent', args, (result) => {
       if (!result || result[0].error) {
         logger.error('Payments', coin, `Error with payment processing daemon: ${ JSON.stringify(result[0].error) }`);
@@ -142,12 +142,12 @@ const PoolPayments = function (logger, client) {
               balance += parseFloat(instance.amount || 0);
             }
           });
-          balance = utils.coinsRound(balance, config.payments.coinPrecision);
+          balance = utils.coinsRound(balance, config.primary.payments.coinPrecision);
         }
         if (category === 'start') {
-          logger.special('Payments', coin, `Payment wallet has a balance of ${ balance } ${ config.coin.symbol }`);
+          logger.special('Payments', coin, `Payment wallet has a balance of ${ balance } ${ config.primary.coin.symbol }`);
         }
-        callback(null, [utils.coinsToSatoshis(balance, config.payments.magnitude)]);
+        callback(null, [utils.coinsToSatoshis(balance, config.primary.payments.magnitude)]);
       }
     });
   };
@@ -204,8 +204,8 @@ const PoolPayments = function (logger, client) {
   this.handleImmature = function(config, round, workers, times, maxTime, solo, shared, callback) {
 
     let totalShares = parseFloat(0);
-    const feeSatoshi = utils.coinsToSatoshis(config.payments.processingFee, config.payments.magnitude);
-    const immature = Math.round(utils.coinsToSatoshis(round.reward, config.payments.magnitude)) - feeSatoshi;
+    const feeSatoshi = utils.coinsToSatoshis(config.primary.payments.processingFee, config.primary.payments.magnitude);
+    const immature = Math.round(utils.coinsToSatoshis(round.reward, config.primary.payments.magnitude)) - feeSatoshi;
 
     // Handle Solo Rounds
     if (round.solo) {
@@ -255,8 +255,8 @@ const PoolPayments = function (logger, client) {
   this.handleGenerate = function(config, round, workers, times, maxTime, solo, shared, callback) {
 
     let totalShares = parseFloat(0);
-    const feeSatoshi = utils.coinsToSatoshis(config.payments.processingFee, config.payments.magnitude);
-    const generate = Math.round(utils.coinsToSatoshis(round.reward, config.payments.magnitude)) - feeSatoshi;
+    const feeSatoshi = utils.coinsToSatoshis(config.primary.payments.processingFee, config.primary.payments.magnitude);
+    const generate = Math.round(utils.coinsToSatoshis(round.reward, config.primary.payments.magnitude)) - feeSatoshi;
 
     // Handle Solo Rounds
     if (round.solo) {
@@ -268,7 +268,7 @@ const PoolPayments = function (logger, client) {
       worker.records[round.height] = {
         times: 1,
         shares: shares,
-        amounts: utils.satoshisToCoins(total, config.payments.magnitude, config.payments.coinPrecision),
+        amounts: utils.satoshisToCoins(total, config.primary.payments.magnitude, config.primary.payments.coinPrecision),
       };
       worker.shares.round = shares;
       worker.shares.total = parseFloat(worker.shares.total || 0) + shares;
@@ -306,7 +306,7 @@ const PoolPayments = function (logger, client) {
         const worker = workers[address];
         const percent = parseFloat(worker.shares.round) / totalShares;
         const total = Math.round(generate * percent);
-        worker.records[round.height].amounts = utils.satoshisToCoins(total, config.payments.magnitude, config.payments.coinPrecision);
+        worker.records[round.height].amounts = utils.satoshisToCoins(total, config.primary.payments.magnitude, config.primary.payments.coinPrecision);
         worker.generate = (worker.generate || 0) + total;
         workers[address] = worker;
       });
@@ -321,7 +321,7 @@ const PoolPayments = function (logger, client) {
   this.handleBlocks = function(daemon, config, callback) {
 
     // Load Blocks from Database
-    const coin = config.coin.name;
+    const coin = config.primary.coin.name;
     const commands = [['smembers', `${ coin }:blocks:pending`]];
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
@@ -372,7 +372,7 @@ const PoolPayments = function (logger, client) {
   this.handleWorkers = function(config, data, callback) {
 
     // Load Unpaid Workers from Database
-    const coin = config.coin.name;
+    const coin = config.primary.coin.name;
     const commands = [['hgetall', `${ coin }:payments:balances`]];
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
@@ -382,7 +382,7 @@ const PoolPayments = function (logger, client) {
 
       // Manage Individual Workers
       const workers = {};
-      const magnitude = config.payments.magnitude;
+      const magnitude = config.primary.payments.magnitude;
       Object.keys(results[0] || {}).forEach((worker) => {
         workers[worker] = {
           balance: utils.coinsToSatoshis(parseFloat(results[0][worker]), magnitude)
@@ -399,7 +399,7 @@ const PoolPayments = function (logger, client) {
 
     // Get Hashes for Each Transaction
     let rounds = data[0];
-    const coin = config.coin.name;
+    const coin = config.primary.coin.name;
     const commands = rounds.map((round) => ['gettransaction', [round.transaction]]);
 
     // Query Daemon Regarding Transactions
@@ -434,7 +434,7 @@ const PoolPayments = function (logger, client) {
           if (txAddress.indexOf(':') > -1) {
             txAddress = txAddress.split(':')[1];
           }
-          return txAddress === config.address;
+          return txAddress === config.primary.address;
         })[0];
 
         // Check Transaction Edge Cases
@@ -451,7 +451,7 @@ const PoolPayments = function (logger, client) {
         round.confirmations = parseInt(tx.result.confirmations);
         if ((round.category === 'generate') || (round.category === 'immature')) {
           const reward = parseFloat(generationTx.amount || generationTx.value);
-          round.reward = utils.coinsRound(reward, config.payments.coinPrecision);
+          round.reward = utils.coinsRound(reward, config.primary.payments.coinPrecision);
           return;
         }
       });
@@ -479,7 +479,7 @@ const PoolPayments = function (logger, client) {
   this.handleTimes = function(config, data, callback) {
 
     const times = [];
-    const coin = config.coin.name;
+    const coin = config.primary.coin.name;
     const commands = data[0].map((round) => {
       return ['hgetall', `${ coin }:rounds:round-${ round.height }:times`];
     });
@@ -519,7 +519,7 @@ const PoolPayments = function (logger, client) {
 
     const solo = [];
     const shared = [];
-    const coin = config.coin.name;
+    const coin = config.primary.coin.name;
     const commands = data[0].map((round) => {
       return ['hgetall', `${ coin }:rounds:round-${ round.height }:shares`];
     });
@@ -567,13 +567,13 @@ const PoolPayments = function (logger, client) {
 
     let totalOwed = parseInt(0);
     const rounds = data[0];
-    const coin = config.coin.name;
-    const feeSatoshi = utils.coinsToSatoshis(config.payments.processingFee, config.payments.magnitude);
+    const coin = config.primary.coin.name;
+    const feeSatoshi = utils.coinsToSatoshis(config.primary.payments.processingFee, config.primary.payments.magnitude);
 
     // Add to Total Owed from Rounds
     rounds.forEach((round) => {
       if (round.category === 'generate') {
-        totalOwed += utils.coinsToSatoshis(round.reward, config.payments.magnitude) - feeSatoshi;
+        totalOwed += utils.coinsToSatoshis(round.reward, config.primary.payments.magnitude) - feeSatoshi;
       }
     });
 
@@ -592,8 +592,8 @@ const PoolPayments = function (logger, client) {
 
       // Check Balance for Payments
       if (balance[0] < totalOwed) {
-        const currentBalance = utils.satoshisToCoins(balance[0], config.payments.magnitude, config.payments.coinPrecision);
-        const owedBalance = utils.satoshisToCoins(totalOwed, config.payments.magnitude, config.payments.coinPrecision);
+        const currentBalance = utils.satoshisToCoins(balance[0], config.primary.payments.magnitude, config.primary.payments.coinPrecision);
+        const owedBalance = utils.satoshisToCoins(totalOwed, config.primary.payments.magnitude, config.primary.payments.coinPrecision);
         logger.error('Payments', coin, `Insufficient funds (${ currentBalance }) to process payments (${ owedBalance }), possibly waiting for transactions.`);
       }
 
@@ -607,7 +607,7 @@ const PoolPayments = function (logger, client) {
 
     let workers = data[1];
     const rounds = data[0];
-    const coin = config.coin.name;
+    const coin = config.primary.coin.name;
 
     // Manage Shares in each Round
     rounds.forEach((round, i) => {
@@ -668,7 +668,7 @@ const PoolPayments = function (logger, client) {
 
     const rounds = data[0];
     const workers = data[1];
-    const coin = config.coin.name;
+    const coin = config.primary.coin.name;
 
     // Calculate Amount to Send to Workers
     Object.keys(workers).forEach((address) => {
@@ -676,13 +676,13 @@ const PoolPayments = function (logger, client) {
       const amount = Math.round(worker.balance || 0 + worker.generate || 0);
 
       // Determine Amounts Given Mininum Payment
-      if (amount >= config.payments.minPaymentSatoshis) {
-        worker.sent = utils.satoshisToCoins(amount, config.payments.magnitude, config.payments.coinPrecision);
-        amounts[address] = utils.coinsRound(worker.sent, config.payments.coinPrecision);
+      if (amount >= config.primary.payments.minPaymentSatoshis) {
+        worker.sent = utils.satoshisToCoins(amount, config.primary.payments.magnitude, config.primary.payments.coinPrecision);
+        amounts[address] = utils.coinsRound(worker.sent, config.primary.payments.coinPrecision);
         totalSent += worker.sent;
       } else {
         worker.sent = 0;
-        worker.change = utils.satoshisToCoins(amount, config.payments.magnitude, config.payments.coinPrecision);
+        worker.change = utils.satoshisToCoins(amount, config.primary.payments.magnitude, config.primary.payments.coinPrecision);
       }
 
       workers[address] = worker;
@@ -747,7 +747,7 @@ const PoolPayments = function (logger, client) {
         };
 
         // Update Redis Database with Payment Record
-        logger.special('Payments', coin, `Sent ${ totalSent } ${ config.coin.symbol } to ${ Object.keys(amounts).length } workers, txid: ${ transaction }`);
+        logger.special('Payments', coin, `Sent ${ totalSent } ${ config.primary.coin.symbol } to ${ Object.keys(amounts).length } workers, txid: ${ transaction }`);
         commands.push(['zadd', `${ coin }:payments:records`, Date.now(), JSON.stringify(payments)]);
         callback(null, [rounds, workers, commands]);
         return;
@@ -769,7 +769,7 @@ const PoolPayments = function (logger, client) {
     let totalPaid = 0;
     const rounds = data[0];
     const workers = data[1];
-    const coin = config.coin.name;
+    const coin = config.primary.coin.name;
 
     // Update Worker Payouts/Balances
     Object.keys(workers).forEach((address) => {
@@ -778,20 +778,20 @@ const PoolPayments = function (logger, client) {
       // Manage Worker Commands [1]
       if (category === 'payments') {
         if (worker.sent > 0) {
-          const sent = utils.coinsRound(worker.sent, config.payments.coinPrecision);
-          totalPaid = utils.coinsRound(totalPaid + worker.sent, config.payments.coinPrecision);
+          const sent = utils.coinsRound(worker.sent, config.primary.payments.coinPrecision);
+          totalPaid = utils.coinsRound(totalPaid + worker.sent, config.primary.payments.coinPrecision);
           commands.push(['hincrbyfloat', `${ coin }:payments:paid`, address, sent]);
           commands.push(['hset', `${ coin }:payments:balances`, address, 0]);
           commands.push(['hset', `${ coin }:payments:generate`, address, 0]);
         } else if (worker.change > 0) {
-          const change = utils.coinsRound(worker.change, config.payments.coinPrecision);
+          const change = utils.coinsRound(worker.change, config.primary.payments.coinPrecision);
           commands.push(['hset', `${ coin }:payments:balances`, address, change]);
           commands.push(['hset', `${ coin }:payments:generate`, address, 0]);
         }
       } else {
         if (worker.generate > 0) {
-          worker.generate = utils.satoshisToCoins(worker.generate, config.payments.magnitude, config.payments.coinPrecision);
-          const generate = utils.coinsRound(worker.generate, config.payments.coinPrecision);
+          worker.generate = utils.satoshisToCoins(worker.generate, config.primary.payments.magnitude, config.primary.payments.coinPrecision);
+          const generate = utils.coinsRound(worker.generate, config.primary.payments.coinPrecision);
           commands.push(['hset', `${ coin }:payments:generate`, address, generate]);
         } else {
           commands.push(['hset', `${ coin }:payments:generate`, address, 0]);
@@ -800,8 +800,8 @@ const PoolPayments = function (logger, client) {
 
       // Manage Worker Commands [2]
       if (worker.immature > 0) {
-        worker.immature = utils.satoshisToCoins(worker.immature, config.payments.magnitude, config.payments.coinPrecision);
-        const immature = utils.coinsRound(worker.immature, config.payments.coinPrecision);
+        worker.immature = utils.satoshisToCoins(worker.immature, config.primary.payments.magnitude, config.primary.payments.coinPrecision);
+        const immature = utils.coinsRound(worker.immature, config.primary.payments.coinPrecision);
         commands.push(['hset', `${ coin }:payments:immature`, address, immature]);
       } else {
         commands.push(['hset', `${ coin }:payments:immature`, address, 0]);
@@ -847,7 +847,7 @@ const PoolPayments = function (logger, client) {
 
     // Update Miscellaneous Statistics
     if ((category === 'start') || (category === 'payments')) {
-      const nextInterval = interval + (config.payments.paymentInterval * 1000);
+      const nextInterval = interval + (config.primary.payments.paymentInterval * 1000);
       commands.push(['hincrbyfloat', `${ coin }:payments:counts`, 'total', totalPaid]);
       commands.push(['hset', `${ coin }:payments:counts`, 'last', interval]);
       commands.push(['hset', `${ coin }:payments:counts`, 'next', nextInterval]);
@@ -912,7 +912,7 @@ const PoolPayments = function (logger, client) {
         callbackMain(null, false);
         return;
       }
-      const coin = config.coin.name;
+      const coin = config.primary.coin.name;
       logger.debug('Payments', coin, 'Finished payment processing management and attempted to send out payments.');
       callbackMain(null, true);
     });
@@ -930,7 +930,7 @@ const PoolPayments = function (logger, client) {
           throw new Error(error);
         }
       });
-    }, config.payments.checkInterval * 1000);
+    }, config.primary.payments.checkInterval * 1000);
 
     // Handle Main Payment Functionality
     const paymentInterval = setInterval(() => {
@@ -940,7 +940,7 @@ const PoolPayments = function (logger, client) {
           throw new Error(error);
         }
       });
-    }, config.payments.paymentInterval * 1000);
+    }, config.primary.payments.paymentInterval * 1000);
 
     // Start Payment Functionality with Initial Check
     setTimeout(() => {
@@ -959,28 +959,28 @@ const PoolPayments = function (logger, client) {
   this.handlePayments = function(coin, callbackMain) {
 
     const poolConfig = _this.poolConfigs[coin];
-    poolConfig.payments.processingFee = parseFloat(poolConfig.payments.transactionFee) || parseFloat(0.0004);
-    poolConfig.payments.minConfirmations = Math.max((poolConfig.payments.minConfirmations || 10), 1);
-    const daemon = new Stratum.daemon([poolConfig.payments.daemon], (severity, results) => {
+    poolConfig.primary.payments.processingFee = parseFloat(poolConfig.primary.payments.transactionFee) || parseFloat(0.0004);
+    poolConfig.primary.payments.minConfirmations = Math.max((poolConfig.primary.payments.minConfirmations || 10), 1);
+    const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], (severity, results) => {
       logger[severity]('Payments', coin, results);
     });
 
     // Warn if < Recommended Config
-    if (poolConfig.payments.minConfirmations < 3) {
+    if (poolConfig.primary.payments.minConfirmations < 3) {
       logger.warning('Payments', coin, 'The recommended number of confirmations is >= 3.');
     }
 
     // Handle Initial Validation
     async.parallel([
-      (callback) => _this.handleAddress(daemon, poolConfig.address, coin, callback),
+      (callback) => _this.handleAddress(daemon, poolConfig.primary.address, coin, callback),
       (callback) => _this.handleBalance(daemon, poolConfig, coin, callback)
     ], (error, results) => {
       if (error) {
         callbackMain(null, false);
       } else {
-        poolConfig.payments.magnitude = results[1][0];
-        poolConfig.payments.minPaymentSatoshis = results[1][1];
-        poolConfig.payments.coinPrecision = results[1][2];
+        poolConfig.primary.payments.magnitude = results[1][0];
+        poolConfig.primary.payments.minPaymentSatoshis = results[1][1];
+        poolConfig.primary.payments.coinPrecision = results[1][2];
         _this.handleIntervals(daemon, poolConfig, callbackMain);
       }
     });
@@ -990,7 +990,7 @@ const PoolPayments = function (logger, client) {
   this.outputPaymentInfo = function(pools) {
     pools.forEach((coin) => {
       const poolOptions = _this.poolConfigs[coin];
-      const processingConfig = poolOptions.payments;
+      const processingConfig = poolOptions.primary.payments;
       logger.debug('Payments', coin, `Payment processing setup to run every ${
         processingConfig.paymentInterval } second(s) with daemon (${
         processingConfig.daemon.username }@${ processingConfig.daemon.host }:${

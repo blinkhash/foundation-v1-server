@@ -15,7 +15,7 @@ describe('Test builder functionality', () => {
 
   let configCopy;
   beforeEach(() => {
-    configCopy = Object.assign({}, portalConfig);
+    configCopy = JSON.parse(JSON.stringify(portalConfig));
   });
 
   test('Test initialization of builder', () => {

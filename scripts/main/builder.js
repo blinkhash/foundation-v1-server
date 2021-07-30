@@ -23,7 +23,7 @@ const PoolBuilder = function(logger, portalConfig) {
     let enabled = false;
     Object.keys(_this.poolConfigs).forEach(coin => {
       const poolConfig = _this.poolConfigs[coin];
-      if (poolConfig.enabled && poolConfig.payments && poolConfig.payments.enabled) {
+      if (poolConfig.enabled && poolConfig.primary.payments && poolConfig.primary.payments.enabled) {
         enabled = true;
       }
     });
@@ -120,7 +120,7 @@ const PoolBuilder = function(logger, portalConfig) {
     // Check if Daemons Configured
     Object.keys(_this.poolConfigs).forEach(config => {
       const pool = _this.poolConfigs[config];
-      if (!Array.isArray(pool.daemons) || pool.daemons.length < 1) {
+      if (!Array.isArray(pool.primary.daemons) || pool.primary.daemons.length < 1) {
         logger.error('Builder', config, 'No daemons configured so a pool cannot be started for this coin.');
         delete _this.poolConfigs[config];
       }

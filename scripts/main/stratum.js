@@ -12,7 +12,7 @@ const Stratum = require('foundation-stratum');
 const PoolStratum = function (logger, poolConfig, poolShares) {
 
   const _this = this;
-  this.coin = poolConfig.coin.name;
+  this.coin = poolConfig.primary.coin.name;
   this.poolConfig = poolConfig;
   this.poolShares = poolShares;
   this.forkId = process.env.forkId;

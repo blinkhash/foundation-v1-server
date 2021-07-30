@@ -19,7 +19,7 @@ describe('Test database functionality', () => {
 
   let configCopy;
   beforeEach(() => {
-    configCopy = Object.assign({}, portalConfig);
+    configCopy = JSON.parse(JSON.stringify(portalConfig));
   });
 
   test('Test initialization of database', () => {
@@ -38,7 +38,6 @@ describe('Test database functionality', () => {
   });
 
   test('Test database events [2]', () => {
-    configCopy.redis = Object.assign({}, portalConfig.redis);
     configCopy.redis.password = 'example';
     const database = new PoolDatabase(logger, configCopy);
     const client = database.buildRedisClient();

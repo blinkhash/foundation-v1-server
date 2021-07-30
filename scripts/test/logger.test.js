@@ -19,7 +19,7 @@ describe('Test logger functionality', () => {
 
   let configCopy;
   beforeEach(() => {
-    configCopy = Object.assign({}, portalConfig);
+    configCopy = JSON.parse(JSON.stringify(portalConfig));
   });
 
   test('Test initialization of logger', () => {
@@ -63,7 +63,6 @@ describe('Test logger functionality', () => {
 
   test('Test logger events [5]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    configCopy.logger = Object.assign({}, portalConfig.logger);
     configCopy.logger.logColors = false;
     const logger = new PoolLogger(configCopy);
     logger.debug(logSystem, logComponent, logSubCat, 'Example Text');
@@ -73,7 +72,6 @@ describe('Test logger functionality', () => {
 
   test('Test logger events [6]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    configCopy.logger = Object.assign({}, portalConfig.logger);
     configCopy.logger.logLevel = 'error';
     const logger = new PoolLogger(configCopy);
     logger.debug(logSystem, logComponent, logSubCat, 'Example Text');
@@ -91,7 +89,6 @@ describe('Test logger functionality', () => {
 
   test('Test logger events [8]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    configCopy.logger = Object.assign({}, portalConfig.logger);
     configCopy.logger.logColors = false;
     const logger = new PoolLogger(configCopy);
     logger.debug(logSystem, logComponent, 'Example Text');
