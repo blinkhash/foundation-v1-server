@@ -685,18 +685,18 @@ describe('Test payments functionality', () => {
 
   test('Test main worker handling', (done) => {
     const commands = [
-      ['hincrbyfloat', `Bitcoin:payments:balances`, 'worker1', 672.21],
-      ['hincrbyfloat', `Bitcoin:payments:balances`, 'worker2', 391.15]];
+      ['hincrbyfloat', 'Bitcoin:payments:balances', 'worker1', 672.21],
+      ['hincrbyfloat', 'Bitcoin:payments:balances', 'worker2', 391.15]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
-      poolPayments.poolConfigs["Bitcoin"].payments.magnitude = 100000000;
-      const config = poolPayments.poolConfigs["Bitcoin"];
+      poolPayments.poolConfigs['Bitcoin'].payments.magnitude = 100000000;
+      const config = poolPayments.poolConfigs['Bitcoin'];
       poolPayments.handleWorkers(config, [[]], (error, results) => {
         expect(error).toBe(null);
         expect(Object.keys(results[1]).length).toBe(2);
-        expect(results[1]["worker1"].balance).toBe(67221000000);
-        expect(results[1]["worker2"].balance).toBe(39115000000);
+        expect(results[1]['worker1'].balance).toBe(67221000000);
+        expect(results[1]['worker2'].balance).toBe(39115000000);
         console.log.mockClear();
         done();
       });

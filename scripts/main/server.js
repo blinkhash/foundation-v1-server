@@ -9,7 +9,7 @@ const bodyParser = require('body-parser');
 const compress = require('compression');
 const cors = require('cors');
 const express = require('express');
-const rateLimit = require("express-rate-limit");
+const rateLimit = require('express-rate-limit');
 const http = require('http');
 const PoolApi = require('./api.js');
 
