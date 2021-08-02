@@ -20,6 +20,7 @@ const PoolWorkers = function (logger, client) {
   this.forkId = process.env.forkId;
 
   // Build Promise from Input Configuration
+  /* istanbul ignore next */
   this.createPromises = function(configName) {
     return new Promise((resolve, reject) => {
       const poolConfig = _this.poolConfigs[configName];

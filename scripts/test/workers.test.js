@@ -49,7 +49,7 @@ describe('Test workers functionality', () => {
     expect(typeof poolWorkers.setupWorkers).toBe('function');
   });
 
-  test('Test worker stratum creation [1]', (done) => {
+  test('Test worker stratum creation', (done) => {
     mock.mockDaemon();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolWorkers = new PoolWorkers(logger, client);
@@ -59,19 +59,6 @@ describe('Test workers functionality', () => {
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Stratum pool server started for Bitcoin'));
       const poolStratum = poolWorkers.pools.Bitcoin;
       poolStratum.poolStratum.stratum.stopServer();
-      console.log.mockClear();
-      nock.cleanAll();
-      done();
-    });
-  });
-
-  test('Test worker stratum creation [2]', (done) => {
-    mock.mockGetInitialBatch();
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolWorkers = new PoolWorkers(logger, client);
-    poolWorkers.setupWorkers(() => {
-      expect(consoleSpy).toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Failed to connect daemon'));
       console.log.mockClear();
       nock.cleanAll();
       done();

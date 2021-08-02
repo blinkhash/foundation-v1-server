@@ -27,14 +27,14 @@ describe('Test loader functionality', () => {
 
   test('Test partner configuration validation [1]', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
-    const partnerConfig = { subscription: { endDate: '08/01/2021' }};
+    const partnerConfig = { subscription: { endDate: '01/01/3000' }};
     const response = poolLoader.validatePartnerConfigs(partnerConfig);
     expect(response).toBe(true);
   });
 
   test('Test partner configuration validation [2]', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
-    const partnerConfig = { subscription: { endDate: '01/01/2021' }};
+    const partnerConfig = { subscription: { endDate: '01/01/2000' }};
     const response = poolLoader.validatePartnerConfigs(partnerConfig);
     expect(response).toBe(false);
   });

@@ -53,7 +53,7 @@ const PoolStratum = function (logger, poolConfig, poolShares) {
   // Check for Valid Worker Address
   this.checkWorker = function(workerName, callback) {
     const address = workerName.split('.')[0];
-    _this.poolStratum.daemon.cmd('validateaddress', [address], (results) => {
+    _this.poolStratum.primary.daemon.cmd('validateaddress', [address], (results) => {
       const isValid = results.filter((result) => {
         return result.response.isvalid;
       }).length > 0;
