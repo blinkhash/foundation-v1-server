@@ -12,7 +12,6 @@ const config = {};
 config.enabled = false;
 config.featured = false;
 config.debug = false;
-config.identifier = 'https://github.com/blinkhash/blinkhash-server';
 config.logo = '';
 
 // Banning Configuration
