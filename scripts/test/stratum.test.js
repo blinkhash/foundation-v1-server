@@ -71,7 +71,7 @@ describe('Test stratum functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
     poolStratum.checkShare({}, false);
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Share rejected by the daemon'));
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('We thought a share was found but it was rejected by the daemon'));
     console.log.mockClear();
   });
 

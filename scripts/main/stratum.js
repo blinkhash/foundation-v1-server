@@ -23,9 +23,8 @@ const PoolStratum = function (logger, poolConfig, poolShares) {
 
   // Determine Block Viability
   this.checkBlock = function(shareData, blockValid) {
-    const serializedData = JSON.stringify(shareData);
     if (shareData.hash && !blockValid) {
-      logger.debug(logSystem, logComponent, logSubCat, `We thought a block was found but it was rejected by the daemon: ${ serializedData }`);
+      logger.debug(logSystem, logComponent, logSubCat, `We thought a block was found but it was rejected by the daemon.`);
     } else if (blockValid) {
       logger.debug(logSystem, logComponent, logSubCat, `Block found: ${ shareData.hash } by ${ shareData.worker }`);
     }
@@ -33,9 +32,8 @@ const PoolStratum = function (logger, poolConfig, poolShares) {
 
   // Determine Share Viability
   this.checkShare = function(shareData, shareValid) {
-    const serializedData = JSON.stringify(shareData);
     if (!shareValid) {
-      logger.debug(logSystem, logComponent, logSubCat, `Share rejected by the daemon: ${ serializedData }`);
+      logger.debug(logSystem, logComponent, logSubCat, `We thought a share was found but it was rejected by the daemon.`);
     } else {
       logger.debug(logSystem, logComponent, logSubCat, `Share accepted at difficulty ${ shareData.difficulty }/${ shareData.shareDiff } by ${ shareData.worker } [${ shareData.ip }]`);
     }
