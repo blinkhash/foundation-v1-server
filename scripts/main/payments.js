@@ -618,7 +618,7 @@ const PoolPayments = function (logger, client) {
       const shared = data[4][i];
 
       // Check if Shares Exist in Round
-      if ((Object.keys(solo).length <= 0) && (Object.keys(shared).length <= 0)) {
+      if (Object.keys(solo).length <= 0 && Object.keys(shared).length <= 0) {
         _this.client.smove(`${ coin }:blocks:pending`, `${coin }:blocks:manual`, round.serialized);
         logger.error('Payments', coin, `No worker shares for round: ${ round.height }, hash: ${ round.hash }. Manual payout required.`);
         return;
@@ -843,7 +843,7 @@ const PoolPayments = function (logger, client) {
     // Update Hashrate Calculation
     const hashrateWindow = config.settings.hashrateWindow;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
-    commands.push(['zremrangebyscore', `${ coin }:rounds:current:hashrate`, 0, '(' + windowTime]);
+    commands.push(['zremrangebyscore', `${ coin }:rounds:current:hashrate`, 0, `(${windowTime}`]);
 
     // Update Miscellaneous Statistics
     if ((category === 'start') || (category === 'payments')) {

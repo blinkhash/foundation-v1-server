@@ -28,22 +28,23 @@ const logger = new PoolLogger(portalConfig);
 
 describe('Test shares functionality', () => {
 
-  let configCopy;
+  let poolConfigCopy, configCopy;
   beforeEach((done) => {
+    poolConfigCopy = JSON.parse(JSON.stringify(poolConfig));
     configCopy = JSON.parse(JSON.stringify(portalConfig));
     client.flushall(() => done());
   });
 
   test('Test initialization of shares', () => {
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     expect(typeof poolShares.poolConfig).toBe('object');
-    expect(typeof poolShares.buildBlocksCommands).toBe('function');
+    expect(typeof poolShares.calculateBlocks).toBe('function');
     expect(typeof poolShares.buildSharesCommands).toBe('function');
   });
 
   test('Test redis client error handling', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     poolShares.client.emit('error', 'example error');
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Redis client had an error'));
     console.log.mockClear();
@@ -51,7 +52,7 @@ describe('Test shares functionality', () => {
 
   test('Test redis client ending handling', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     poolShares.client.emit('end');
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Connection to redis database has been ended'));
     console.log.mockClear();
@@ -59,26 +60,28 @@ describe('Test shares functionality', () => {
 
   test('Test timing command handling [1]', () => {
     const dateNow = Date.now();
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const results = [{ 'example': dateNow - 300000 }];
     const shareData = {
       'job': '4',
       'ip': '::1',
       'port': 3001,
+      'addrPrimary': 'example',
+      'addrAuxiliary': null,
       'blockDiff': 137403310.58987552,
       'blockDiffActual': 137403310.58987552,
+      'blockType': 'share',
       'difficulty': 1,
       'hash': null,
       'hashInvalid': null,
       'height': 1972211,
       'reward': 10006839,
       'shareDiff': '2.35170820',
-      'worker': 'example'
     };
     const expected = [
-      ['hincrbyfloat', 'Bitcoin:rounds:current:times', 'example'],
-      ['hset', 'Bitcoin:rounds:current:submissions', 'example']];
-    const commands = poolShares.buildTimesCommands(results, shareData, false);
+      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example'],
+      ['hset', 'Bitcoin:rounds:primary:current:submissions', 'example']];
+    const commands = poolShares.buildTimesCommands(results, shareData, true, false);
     expect(commands.length).toBe(2);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
     expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
@@ -88,26 +91,28 @@ describe('Test shares functionality', () => {
 
   test('Test timing command handling [2]', () => {
     const dateNow = Date.now();
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const results = [];
     const shareData = {
       'job': '4',
       'ip': '::1',
       'port': 3001,
+      'addrPrimary': 'example',
+      'addrAuxiliary': null,
       'blockDiff': 137403310.58987552,
       'blockDiffActual': 137403310.58987552,
+      'blockType': 'share',
       'difficulty': 1,
       'hash': null,
       'hashInvalid': null,
       'height': 1972211,
       'reward': 10006839,
       'shareDiff': '2.35170820',
-      'worker': 'example'
     };
     const expected = [
-      ['hincrbyfloat', 'Bitcoin:rounds:current:times', 'example'],
-      ['hset', 'Bitcoin:rounds:current:submissions', 'example']];
-    const commands = poolShares.buildTimesCommands(results, shareData, false);
+      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example'],
+      ['hset', 'Bitcoin:rounds:primary:current:submissions', 'example']];
+    const commands = poolShares.buildTimesCommands(results, shareData, true, false);
     expect(commands.length).toBe(2);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
     expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
@@ -117,24 +122,26 @@ describe('Test shares functionality', () => {
 
   test('Test timing command handling [3]', () => {
     const dateNow = Date.now();
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const results = [{ 'example': dateNow - 1000000 }];
     const shareData = {
       'job': '4',
       'ip': '::1',
       'port': 3001,
+      'addrPrimary': 'example',
+      'addrAuxiliary': null,
       'blockDiff': 137403310.58987552,
       'blockDiffActual': 137403310.58987552,
+      'blockType': 'share',
       'difficulty': 1,
       'hash': null,
       'hashInvalid': null,
       'height': 1972211,
       'reward': 10006839,
       'shareDiff': '2.35170820',
-      'worker': 'example'
     };
-    const expected = [['hset', 'Bitcoin:rounds:current:submissions', 'example']];
-    const commands = poolShares.buildTimesCommands(results, shareData, false);
+    const expected = [['hset', 'Bitcoin:rounds:primary:current:submissions', 'example']];
+    const commands = poolShares.buildTimesCommands(results, shareData, true, false);
     expect(commands.length).toBe(1);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
     expect(utils.roundTo(commands[0].slice(3)[0] / 1000)).toBe(utils.roundTo(dateNow / 1000));
@@ -142,113 +149,203 @@ describe('Test shares functionality', () => {
 
   test('Test timing command handling [4]', () => {
     const dateNow = Date.now();
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const results = [{ 'example': dateNow - 300000 }];
     const shareData = {
       'job': '4',
       'ip': '::1',
       'port': 3001,
+      'addrPrimary': 'example',
+      'addrAuxiliary': null,
       'blockDiff': 137403310.58987552,
       'blockDiffActual': 137403310.58987552,
+      'blockType': 'primary',
       'difficulty': 1,
       'hash': null,
       'hashInvalid': null,
       'height': 1972211,
       'reward': 10006839,
       'shareDiff': '2.35170820',
-      'worker': 'example'
     };
-    const expected = [['hincrbyfloat', 'Bitcoin:rounds:current:times', 'example']];
-    const commands = poolShares.buildTimesCommands(results, shareData, true);
+    const expected = [['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example']];
+    const commands = poolShares.buildTimesCommands(results, shareData, true, true);
     expect(commands.length).toBe(1);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
     expect(utils.roundTo(commands[0].slice(3)[0])).toBe(300);
   });
 
-  test('Test share command handling [1]', () => {
+  test('Test timing command handling [5]', () => {
     const dateNow = Date.now();
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
-    const results = [{ 'example': dateNow - 300000 }];
+    poolConfigCopy.auxiliary = { enabled: 'true' };
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const results = [{ 'example1': dateNow - 300000 }, { 'example2': dateNow - 300000 }];
     const shareData = {
       'job': '4',
       'ip': '::1',
       'port': 3001,
+      'addrPrimary': 'example1',
+      'addrAuxiliary': 'example2',
       'blockDiff': 137403310.58987552,
       'blockDiffActual': 137403310.58987552,
+      'blockType': 'auxiliary',
       'difficulty': 1,
       'hash': null,
       'hashInvalid': null,
       'height': 1972211,
       'reward': 10006839,
       'shareDiff': '2.35170820',
-      'worker': 'example'
     };
     const expected = [
-      ['hincrbyfloat', 'Bitcoin:rounds:current:times', 'example'],
-      ['hset', 'Bitcoin:rounds:current:submissions', 'example'],
-      ['hincrby', 'Bitcoin:rounds:current:counts', 'valid', 1],
-      ['zadd', 'Bitcoin:rounds:current:hashrate'],
-      ['hincrbyfloat', 'Bitcoin:rounds:current:shares']];
+      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example1'],
+      ['hset', 'Bitcoin:rounds:primary:current:submissions', 'example1'],
+      ['hincrbyfloat', 'Bitcoin:rounds:auxiliary:current:times', 'example2'],
+      ['hset', 'Bitcoin:rounds:auxiliary:current:submissions', 'example2']];
+    const commands = poolShares.buildTimesCommands(results, shareData, true, false);
+    expect(commands.length).toBe(4);
+    expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
+    expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
+    expect(commands[2].slice(0, 3)).toStrictEqual(expected[2]);
+    expect(commands[3].slice(0, 3)).toStrictEqual(expected[3]);
+    expect(utils.roundTo(commands[0].slice(3)[0])).toBe(300);
+    expect(utils.roundTo(commands[2].slice(3)[0])).toBe(300);
+    expect(utils.roundTo(commands[1].slice(3)[0] / 1000)).toBe(utils.roundTo(dateNow / 1000));
+    expect(utils.roundTo(commands[3].slice(3)[0] / 1000)).toBe(utils.roundTo(dateNow / 1000));
+  });
+
+  test('Test share command handling [1]', () => {
+    const dateNow = Date.now();
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const results = [{ 'example': dateNow - 300000 }];
+    const shareData = {
+      'job': '4',
+      'ip': '::1',
+      'port': 3001,
+      'addrPrimary': 'example',
+      'addrAuxiliary': null,
+      'blockDiff': 137403310.58987552,
+      'blockDiffActual': 137403310.58987552,
+      'blockType': 'share',
+      'difficulty': 1,
+      'hash': null,
+      'hashInvalid': null,
+      'height': 1972211,
+      'reward': 10006839,
+      'shareDiff': '2.35170820',
+    };
+    const expected = [
+      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example'],
+      ['hset', 'Bitcoin:rounds:primary:current:submissions', 'example'],
+      ['zadd', 'Bitcoin:rounds:primary:current:hashrate'],
+      ['hincrby', 'Bitcoin:rounds:primary:current:counts', 'valid', 1],
+      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:shares']];
     const commands = poolShares.buildSharesCommands(results, shareData, true, false);
     expect(commands.length).toBe(5);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
     expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
-    expect(commands[2]).toStrictEqual(expected[2]);
-    expect(commands[3].slice(0, 2)).toStrictEqual(expected[3]);
+    expect(commands[2].slice(0, 2)).toStrictEqual(expected[2]);
+    expect(commands[3]).toStrictEqual(expected[3]);
     expect(commands[4].slice(0, 2)).toStrictEqual(expected[4]);
   });
 
   test('Test share command handling [2]', () => {
     const dateNow = Date.now();
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const results = [{ 'example': dateNow - 300000 }];
     const shareData = {
       'job': '4',
       'ip': '::1',
       'port': 3001,
+      'addrPrimary': 'example',
+      'addrAuxiliary': null,
       'blockDiff': 137403310.58987552,
       'blockDiffActual': 137403310.58987552,
+      'blockType': 'primary',
       'difficulty': 1,
       'hash': null,
       'hashInvalid': null,
       'height': 1972211,
       'reward': 10006839,
       'shareDiff': '2.35170820',
-      'worker': 'example'
     };
     const expected = [
-      ['hincrby', 'Bitcoin:rounds:current:counts', 'invalid', 1],
-      ['zadd', 'Bitcoin:rounds:current:hashrate']];
+      ['zadd', 'Bitcoin:rounds:primary:current:hashrate'],
+      ['hincrby', 'Bitcoin:rounds:primary:current:counts', 'invalid', 1]];
     const commands = poolShares.buildSharesCommands(results, shareData, false, true);
     expect(commands.length).toBe(2);
-    expect(commands[0]).toStrictEqual(expected[0]);
-    expect(commands[1].slice(0, 2)).toStrictEqual(expected[1]);
+    expect(commands[0].slice(0, 2)).toStrictEqual(expected[0]);
+    expect(commands[1]).toStrictEqual(expected[1]);
   });
 
-  test('Test block command handling [1]', () => {
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
+  test('Test share command handling [3]', () => {
+    const dateNow = Date.now();
+    poolConfigCopy.auxiliary = { enabled: 'true' };
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const results = [{ 'example1': dateNow - 300000 }, { 'example2': dateNow - 300000 }];
     const shareData = {
       'job': '4',
       'ip': '::1',
       'port': 3001,
+      'addrPrimary': 'example1',
+      'addrAuxiliary': 'example2',
       'blockDiff': 137403310.58987552,
       'blockDiffActual': 137403310.58987552,
+      'blockType': 'auxiliary',
       'difficulty': 1,
       'hash': null,
       'hashInvalid': null,
       'height': 1972211,
       'reward': 10006839,
       'shareDiff': '2.35170820',
-      'worker': 'example'
     };
     const expected = [
-      ['del', 'Bitcoin:rounds:current:submissions'],
-      ['rename', 'Bitcoin:rounds:current:counts', 'Bitcoin:rounds:round-1972211:counts'],
-      ['rename', 'Bitcoin:rounds:current:shares', 'Bitcoin:rounds:round-1972211:shares'],
-      ['rename', 'Bitcoin:rounds:current:times', 'Bitcoin:rounds:round-1972211:times'],
-      ['sadd', 'Bitcoin:blocks:pending'],
-      ['hincrby', 'Bitcoin:blocks:counts', 'valid', 1]];
-    const commands = poolShares.buildBlocksCommands(shareData, true, true);
+      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example1'],
+      ['hset', 'Bitcoin:rounds:primary:current:submissions', 'example1'],
+      ['hincrbyfloat', 'Bitcoin:rounds:auxiliary:current:times', 'example2'],
+      ['hset', 'Bitcoin:rounds:auxiliary:current:submissions', 'example2'],
+      ['zadd', 'Bitcoin:rounds:primary:current:hashrate'],
+      ['hincrby', 'Bitcoin:rounds:primary:current:counts', 'valid', 1],
+      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:shares'],
+      ['hincrby', 'Bitcoin:rounds:auxiliary:current:counts', 'valid', 1],
+      ['hincrbyfloat', 'Bitcoin:rounds:auxiliary:current:shares']];
+    const commands = poolShares.buildSharesCommands(results, shareData, true, false);
+    expect(commands.length).toBe(9);
+    expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
+    expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
+    expect(commands[2].slice(0, 3)).toStrictEqual(expected[2]);
+    expect(commands[3].slice(0, 3)).toStrictEqual(expected[3]);
+    expect(commands[4].slice(0, 2)).toStrictEqual(expected[4]);
+    expect(commands[5]).toStrictEqual(expected[5]);
+    expect(commands[6].slice(0, 2)).toStrictEqual(expected[6]);
+    expect(commands[7]).toStrictEqual(expected[7]);
+    expect(commands[8].slice(0, 2)).toStrictEqual(expected[8]);
+  });
+
+  test('Test block command handling [1]', () => {
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const shareData = {
+      'job': '4',
+      'ip': '::1',
+      'port': 3001,
+      'addrPrimary': 'example',
+      'addrAuxiliary': null,
+      'blockDiff': 137403310.58987552,
+      'blockDiffActual': 137403310.58987552,
+      'blockType': 'primary',
+      'difficulty': 1,
+      'hash': null,
+      'hashInvalid': null,
+      'height': 1972211,
+      'reward': 10006839,
+      'shareDiff': '2.35170820',
+    };
+    const expected = [
+      ['del', 'Bitcoin:rounds:primary:current:submissions'],
+      ['rename', 'Bitcoin:rounds:primary:current:counts', 'Bitcoin:rounds:primary:round-1972211:counts'],
+      ['rename', 'Bitcoin:rounds:primary:current:shares', 'Bitcoin:rounds:primary:round-1972211:shares'],
+      ['rename', 'Bitcoin:rounds:primary:current:times', 'Bitcoin:rounds:primary:round-1972211:times'],
+      ['sadd', 'Bitcoin:blocks:primary:pending'],
+      ['hincrby', 'Bitcoin:blocks:primary:counts', 'valid', 1]];
+    const commands = poolShares.calculateBlocks(shareData, true, true);
     expect(commands.length).toBe(6);
     expect(commands[0]).toStrictEqual(expected[0]);
     expect(commands[1]).toStrictEqual(expected[1]);
@@ -259,146 +356,108 @@ describe('Test shares functionality', () => {
   });
 
   test('Test block command handling [2]', () => {
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const shareData = {
       'job': '4',
       'ip': '::1',
       'port': 3001,
+      'addrPrimary': 'example',
+      'addrAuxiliary': null,
       'blockDiff': 137403310.58987552,
       'blockDiffActual': 137403310.58987552,
+      'blockType': 'primary',
       'difficulty': 1,
       'hash': 'example',
       'hashInvalid': null,
       'height': 1972211,
       'reward': 10006839,
       'shareDiff': '2.35170820',
-      'worker': 'example'
+      'transaction': 'example',
     };
-    const expected = [['hincrby', 'Bitcoin:blocks:counts', 'invalid', 1]];
-    const commands = poolShares.buildBlocksCommands(shareData, true, false);
+    const expected = [['hincrby', 'Bitcoin:blocks:primary:counts', 'invalid', 1]];
+    const commands = poolShares.calculateBlocks(shareData, true, false);
     expect(commands.length).toBe(1);
     expect(commands[0]).toStrictEqual(expected[0]);
   });
 
   test('Test block command handling [3]', () => {
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const shareData = {
       'job': '4',
       'ip': '::1',
       'port': 3001,
+      'addrPrimary': 'example',
+      'addrAuxiliary': null,
       'blockDiff': 137403310.58987552,
       'blockDiffActual': 137403310.58987552,
+      'blockType': 'share',
       'difficulty': 1,
       'hash': null,
       'hashInvalid': null,
       'height': 1972211,
       'reward': 10006839,
       'shareDiff': '2.35170820',
-      'worker': 'example'
     };
-    const commands = poolShares.buildBlocksCommands(shareData, true, false);
+    const commands = poolShares.calculateBlocks(shareData, true, false);
     expect(commands.length).toBe(0);
   });
 
   test('Test block command handling [4]', () => {
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const shareData = {
       'job': '4',
       'ip': '::1',
       'port': 3001,
+      'addrPrimary': 'example',
+      'addrAuxiliary': null,
       'blockDiff': 137403310.58987552,
       'blockDiffActual': 137403310.58987552,
+      'blockType': 'share',
       'difficulty': 1,
       'hash': null,
       'hashInvalid': null,
       'height': 1972211,
       'reward': 10006839,
       'shareDiff': '2.35170820',
-      'worker': 'example'
     };
-    const commands = poolShares.buildBlocksCommands(shareData, false, false);
+    const commands = poolShares.calculateBlocks(shareData, false, false);
     expect(commands.length).toBe(0);
   });
 
   test('Test command handling and execution', (done) => {
     const dateNow = Date.now();
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const results = [{ 'example': dateNow - 300000 }];
     const shareData = {
       'job': '4',
       'ip': '::1',
       'port': 3001,
+      'addrPrimary': 'example',
+      'addrAuxiliary': null,
       'blockDiff': 137403310.58987552,
       'blockDiffActual': 137403310.58987552,
+      'blockType': 'share',
       'difficulty': 1,
       'hash': null,
       'hashInvalid': null,
       'height': 1972211,
       'reward': 10006839,
       'shareDiff': '2.35170820',
-      'worker': 'example'
     };
     const expected = [
-      ['hincrbyfloat', 'Bitcoin:rounds:current:times', 'example'],
-      ['hset', 'Bitcoin:rounds:current:submissions', 'example'],
-      ['hincrby', 'Bitcoin:rounds:current:counts', 'valid', 1],
-      ['zadd', 'Bitcoin:rounds:current:hashrate'],
-      ['hincrbyfloat', 'Bitcoin:rounds:current:shares']];
+      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example'],
+      ['hset', 'Bitcoin:rounds:primary:current:submissions', 'example'],
+      ['zadd', 'Bitcoin:rounds:primary:current:hashrate'],
+      ['hincrby', 'Bitcoin:rounds:primary:current:counts', 'valid', 1],
+      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:shares']];
     const commands = poolShares.buildCommands(results, shareData, true, false, () => {
       return done();
     });
     expect(commands.length).toBe(5);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
     expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
-    expect(commands[2]).toStrictEqual(expected[2]);
-    expect(commands[3].slice(0, 2)).toStrictEqual(expected[3]);
+    expect(commands[2].slice(0, 2)).toStrictEqual(expected[2]);
+    expect(commands[3]).toStrictEqual(expected[3]);
     expect(commands[4].slice(0, 2)).toStrictEqual(expected[4]);
-  });
-
-  test('Test command execution w/ errors', (done) => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
-    const commands = [['rename', 'Bitcoin:example1', 'Bitcoin:example2']];
-    poolShares.executeCommands(commands, () => {}, () => {
-      expect(consoleSpy).toHaveBeenCalled();
-      console.log.mockClear();
-      done();
-    });
-  });
-
-  test('Test command execution on shares handler start', (done) => {
-    const dateNow = Date.now();
-    const poolShares = new PoolShares(logger, client, poolConfig, configCopy);
-    const commands = [['hset', 'Bitcoin:rounds:current:submissions', 'example', dateNow - 300000]];
-    const shareData = {
-      'job': '4',
-      'ip': '::1',
-      'port': 3001,
-      'blockDiff': 137403310.58987552,
-      'blockDiffActual': 137403310.58987552,
-      'difficulty': 1,
-      'hash': null,
-      'hashInvalid': null,
-      'height': 1972211,
-      'reward': 10006839,
-      'shareDiff': '2.35170820',
-      'worker': 'example'
-    };
-    /* eslint-disable-next-line no-unused-vars */
-    poolShares.client.multi(commands).exec((error, results) => {
-      if (!error) {
-        poolShares.handleShares(shareData, true, false, (results) => {
-          expect(results[1]).toBe(0);
-          expect(results[2]).toBe(1);
-          expect(results[3]).toBe(1);
-          expect(results[4]).toBe('1');
-          done();
-        }, () => {});
-      } else {
-        // Indicates Error thrown in Redis Client
-        expect(true).toBe(false);
-        done();
-      }
-    });
   });
 });

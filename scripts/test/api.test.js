@@ -567,7 +567,7 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.coin).toBe('Bitcoin');
-      expect(processed.endpoint).toBe('/rounds/current');
+      expect(processed.endpoint).toBe('/rounds/current/');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
       expect(typeof processed.data).toBe('object');
@@ -592,7 +592,7 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.coin).toBe('Bitcoin');
-      expect(processed.endpoint).toBe('/rounds/180');
+      expect(processed.endpoint).toBe('/rounds/180/');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
       expect(typeof processed.data).toBe('object');

@@ -21,6 +21,16 @@ poolConfig.primary.address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
 poolConfig.primary.recipients[0].address = 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw';
 poolConfig.p2p.enabled = false;
 
+const auxiliary = {
+  'enabled': true,
+  'daemons': [{
+    'host': '127.0.0.1',
+    'port': 8336,
+    'username': '',
+    'password': ''
+  }]
+};
+
 const client = redis.createClient({
   'port': portalConfig.redis.port,
   'host': portalConfig.redis.host,
@@ -36,6 +46,7 @@ const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* eslint-disable no-unused-vars */
 describe('Test stratum functionality', () => {
 
   let configCopy;
@@ -47,23 +58,39 @@ describe('Test stratum functionality', () => {
   test('Test initialization of stratum', () => {
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
     expect(typeof poolStratum.poolConfig).toBe('object');
-    expect(typeof poolStratum.checkBlock).toBe('function');
+    expect(typeof poolStratum.checkPrimary).toBe('function');
     expect(typeof poolStratum.authorizeWorker).toBe('function');
   });
 
   test('Test block viability checker [1]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
-    poolStratum.checkBlock({ hash: 'example' }, false);
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('We thought a block was found but it was rejected by the daemon'));
+    poolStratum.checkPrimary({ hash: 'example', blockType: 'primary', transaction: 'example' }, false);
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('We thought a primary block was found but it was rejected by the daemon'));
     console.log.mockClear();
   });
 
   test('Test block viability checker [2]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
-    poolStratum.checkBlock({ hash: 'example' }, true);
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Block found'));
+    poolStratum.checkPrimary({ hash: 'example', blockType: 'primary' }, true);
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Primary block found'));
+    console.log.mockClear();
+  });
+
+  test('Test block viability checker [3]', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolStratum = new PoolStratum(logger, configCopy, poolShares);
+    poolStratum.checkAuxiliary({ hash: 'example', blockType: 'auxiliary' }, false);
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('We thought an auxiliary block was found but it was rejected by the daemon'));
+    console.log.mockClear();
+  });
+
+  test('Test block viability checker [4]', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolStratum = new PoolStratum(logger, configCopy, poolShares);
+    poolStratum.checkAuxiliary({ hash: 'example', blockType: 'auxiliary' }, true);
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Auxiliary block found'));
     console.log.mockClear();
   });
 
@@ -80,6 +107,14 @@ describe('Test stratum functionality', () => {
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
     poolStratum.checkShare({}, true);
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Share accepted at difficulty'));
+    console.log.mockClear();
+  });
+
+  test('Test share viability checker [3]', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolStratum = new PoolStratum(logger, configCopy, poolShares);
+    poolStratum.checkShare({ blockType: 'auxiliary' }, true);
+    expect(consoleSpy).not.toHaveBeenCalled();
     console.log.mockClear();
   });
 
@@ -103,7 +138,7 @@ describe('Test stratum functionality', () => {
     mock.mockValidateAddress();
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
     poolStratum.setupStratum(() => {
-      poolStratum.checkWorker('tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw', (authorized) => {
+      poolStratum.checkPrimaryWorker('tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw', (authorized) => {
         expect(authorized).toBe(true);
         poolStratum.poolStratum.stratum.stopServer();
         nock.cleanAll();
@@ -118,7 +153,7 @@ describe('Test stratum functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
     poolStratum.setupStratum(() => {
-      poolStratum.authorizeWorker('00.00.00.00', 3001, 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw', '', (results) => {
+      poolStratum.authorizeWorker('00.00.00.00', 3001, 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw', 'auxiliary', '', (results) => {
         expect(results.authorized).toBe(true);
         expect(results.disconnect).toBe(false);
         expect(results.error).toBe(null);
@@ -137,12 +172,48 @@ describe('Test stratum functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
     poolStratum.setupStratum(() => {
-      poolStratum.authorizeWorker('00.00.00.00', 3001, 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw', '', (results) => {
+      poolStratum.authorizeWorker('00.00.00.00', 3001, 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw', 'auxiliary', '', (results) => {
         expect(results.authorized).toBe(false);
         expect(results.disconnect).toBe(false);
         expect(results.error).toBe(null);
         expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Unauthorized'));
         poolStratum.poolStratum.stratum.stopServer();
+        console.log.mockClear();
+        nock.cleanAll();
+        done();
+      });
+    });
+  });
+
+  test('Test worker authorization method [3]', (done) => {
+    mock.mockDaemon();
+    mock.mockAuxiliaryValidateAddressError();
+    configCopy.auxiliary = auxiliary;
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolStratum = new PoolStratum(logger, configCopy, poolShares);
+    poolStratum.setupStratum(() => {
+      poolStratum.authorizeWorker('00.00.00.00', 3001, 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw', 'auxiliary', '', (results) => {
+        expect(results.authorized).toBe(false);
+        expect(results.disconnect).toBe(false);
+        expect(results.error).toBe(null);
+        console.log.mockClear();
+        nock.cleanAll();
+        done();
+      });
+    });
+  });
+
+  test('Test worker authorization method [3]', (done) => {
+    mock.mockDaemon();
+    mock.mockAuxiliaryValidateAddressError();
+    configCopy.auxiliary = auxiliary;
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolStratum = new PoolStratum(logger, configCopy, poolShares);
+    poolStratum.setupStratum(() => {
+      poolStratum.authorizeWorker('00.00.00.00', 3001, 'tb1qcc0lzt4fftzmpxuye6q8vnfngu03yuwpasu0dw', null, '', (results) => {
+        expect(results.authorized).toBe(false);
+        expect(results.disconnect).toBe(false);
+        expect(results.error).toBe(null);
         console.log.mockClear();
         nock.cleanAll();
         done();

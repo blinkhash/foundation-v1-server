@@ -30,74 +30,75 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     logger.error(logSystem, logComponent, logSubCat, 'Connection to redis database has been ended');
   });
 
-  // Manage Worker Times
-  this.buildTimesCommands = function(results, shareData, blockValid) {
+  // Manage Times Calculations
+  this.calculateTimes = function(results, address, blockValid, blockType) {
 
     const commands = [];
     const dateNow = Date.now();
-    const workerAddress = shareData.worker;
-    const lastShareTimes = results[0] || {};
+    const lastTimes = results || {};
 
     // Check if Worker Recently Joined
-    if (!lastShareTimes[workerAddress]) {
-      lastShareTimes[workerAddress] = dateNow;
+    if (!lastTimes[address]) {
+      lastTimes[address] = dateNow;
     }
 
-    // Get Last Known Worker Time
-    const lastShareTime = lastShareTimes[workerAddress];
-
-    // Check for Continous Mining
-    const timeChangeSec = utils.roundTo(Math.max(dateNow - lastShareTime, 0) / 1000, 4);
-    if (timeChangeSec < 900) {
-      commands.push(['hincrbyfloat', `${ _this.coin }:rounds:current:times`, workerAddress, timeChangeSec]);
+    // Check for Continous Primary Mining
+    const lastTime = lastTimes[address];
+    const timeChange = utils.roundTo(Math.max(dateNow - lastTime, 0) / 1000, 4);
+    if (timeChange < 900) {
+      commands.push(['hincrbyfloat', `${ _this.coin }:rounds:${ blockType }:current:times`, address, timeChange]);
     }
 
     // Ensure Block Hasn't Been Found
     if (!blockValid) {
-      commands.push(['hset', `${ _this.coin }:rounds:current:submissions`, workerAddress, dateNow]);
+      commands.push(['hset', `${ _this.coin }:rounds:${ blockType }:current:submissions`, address, dateNow]);
     }
 
     return commands;
   };
 
-  // Manage Worker Shares
-  this.buildSharesCommands = function(results, shareData, shareValid, blockValid) {
-
-    let commands = [];
-    const dateNow = Date.now();
-    const workerAddress = shareData.worker;
-    const isSoloMining = utils.checkSoloMining(_this.poolConfig, shareData);
-
-    // Build Output Share
-    const outputShare = {
-      time: dateNow,
-      worker: workerAddress,
-      solo: isSoloMining,
-    };
-
-    // Handle Valid/Invalid Shares
-    if (shareValid) {
-      outputShare.difficulty = shareData.difficulty;
-      commands = commands.concat(_this.buildTimesCommands(results, shareData, blockValid));
-      commands.push(['hincrby', `${ _this.coin }:rounds:current:counts`, 'valid', 1]);
-      commands.push(['zadd', `${ _this.coin }:rounds:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
-      commands.push(['hincrbyfloat', `${ _this.coin }:rounds:current:shares`, JSON.stringify(outputShare), shareData.difficulty]);
-    } else {
-      outputShare.difficulty = -shareData.difficulty;
-      commands.push(['hincrby', `${ _this.coin }:rounds:current:counts`, 'invalid', 1]);
-      commands.push(['zadd', `${ _this.coin }:rounds:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
-    }
-
-    return commands;
-  };
-
-  // Manage Worker Blocks
-  this.buildBlocksCommands = function(shareData, shareValid, blockValid) {
+  // Manage Shares Calculations
+  this.calculateShares = function(results, shareData, shareValid, blockValid, blockType) {
 
     const commands = [];
     const dateNow = Date.now();
     const difficulty = (shareValid ? shareData.difficulty : -shareData.difficulty);
     const isSoloMining = utils.checkSoloMining(_this.poolConfig, shareData);
+    const worker = blockType === 'primary' ? shareData.addrPrimary : shareData.addrAuxiliary;
+
+    // Build Primary Output
+    const outputShare = {
+      time: dateNow,
+      difficulty: difficulty,
+      worker: worker,
+      solo: isSoloMining,
+    };
+
+    // Handle Hashrate Data
+    if (blockType === 'primary') {
+      commands.push(['zadd', `${ _this.coin }:rounds:${ blockType }:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
+    }
+
+    // Handle Valid/Invalid Shares
+    if (shareValid) {
+      commands.push(['hincrby', `${ _this.coin }:rounds:${ blockType }:current:counts`, 'valid', 1]);
+      commands.push(['hincrbyfloat', `${ _this.coin }:rounds:${ blockType }:current:shares`, JSON.stringify(outputShare), shareData.difficulty]);
+    } else {
+      commands.push(['hincrby', `${ _this.coin }:rounds:${ blockType }:current:counts`, 'invalid', 1]);
+    }
+
+    return commands;
+  };
+
+  // Manage Blocks Calculations
+  this.calculateBlocks = function(shareData, shareValid, blockValid) {
+
+    const commands = [];
+    const dateNow = Date.now();
+    const blockType = shareData.blockType;
+    const difficulty = (shareValid ? shareData.difficulty : -shareData.difficulty);
+    const isSoloMining = utils.checkSoloMining(_this.poolConfig, shareData);
+    const worker = blockType === 'primary' ? shareData.addrPrimary : shareData.addrAuxiliary;
 
     // Build Output Block
     const outputBlock = {
@@ -107,30 +108,54 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       reward: shareData.reward,
       transaction: shareData.transaction,
       difficulty: difficulty,
-      worker: shareData.worker,
+      worker: worker,
       solo: isSoloMining,
     };
 
     // Handle Valid/Invalid Blocks
     if (blockValid) {
-      commands.push(['del', `${ _this.coin }:rounds:current:submissions`]),
-      commands.push(['rename', `${ _this.coin }:rounds:current:counts`, `${ _this.coin }:rounds:round-${ shareData.height }:counts`]);
-      commands.push(['rename', `${ _this.coin }:rounds:current:shares`, `${ _this.coin }:rounds:round-${ shareData.height }:shares`]);
-      commands.push(['rename', `${ _this.coin }:rounds:current:times`, `${ _this.coin }:rounds:round-${ shareData.height }:times`]);
-      commands.push(['sadd', `${ _this.coin }:blocks:pending`, JSON.stringify(outputBlock)]);
-      commands.push(['hincrby', `${ _this.coin }:blocks:counts`, 'valid', 1]);
-    } else if (shareData.hash) {
-      commands.push(['hincrby', `${ _this.coin }:blocks:counts`, 'invalid', 1]);
+      commands.push(['del', `${ _this.coin }:rounds:${ blockType }:current:submissions`]),
+      commands.push(['rename', `${ _this.coin }:rounds:${ blockType }:current:counts`, `${ _this.coin }:rounds:${ blockType }:round-${ shareData.height }:counts`]);
+      commands.push(['rename', `${ _this.coin }:rounds:${ blockType }:current:shares`, `${ _this.coin }:rounds:${ blockType }:round-${ shareData.height }:shares`]);
+      commands.push(['rename', `${ _this.coin }:rounds:${ blockType }:current:times`, `${ _this.coin }:rounds:${ blockType }:round-${ shareData.height }:times`]);
+      commands.push(['sadd', `${ _this.coin }:blocks:${ blockType }:pending`, JSON.stringify(outputBlock)]);
+      commands.push(['hincrby', `${ _this.coin }:blocks:${ blockType }:counts`, 'valid', 1]);
+    } else if (shareData.transaction) {
+      commands.push(['hincrby', `${ _this.coin }:blocks:${ blockType }:counts`, 'invalid', 1]);
     }
 
     return commands;
   };
 
+  // Manage Worker Times
+  this.buildTimesCommands = function(results, shareData, shareValid, blockValid) {
+    let commands = [];
+    if (shareValid) {
+      commands = commands.concat(_this.calculateTimes(results[0], shareData.addrPrimary, blockValid, 'primary'));
+      if (_this.poolConfig.auxiliary && _this.poolConfig.auxiliary.enabled) {
+        commands = commands.concat(_this.calculateTimes(results[1], shareData.addrAuxiliary, blockValid, 'auxiliary'));
+      }
+    }
+    return commands;
+  };
+
+  // Manage Worker Times
+  this.buildSharesCommands = function(results, shareData, shareValid, blockValid) {
+    let commands = [];
+    commands = commands.concat(_this.buildTimesCommands(results, shareData, shareValid, blockValid));
+    commands = commands.concat(_this.calculateShares(results, shareData, shareValid, blockValid, 'primary'));
+    if (_this.poolConfig.auxiliary && _this.poolConfig.auxiliary.enabled) {
+      commands = commands.concat(_this.calculateShares(results, shareData, shareValid, blockValid, 'auxiliary'));
+    }
+    return commands;
+  };
+
+
   // Build Redis Commands
   this.buildCommands = function(results, shareData, shareValid, blockValid, callback, handler) {
     let commands = [];
     commands = commands.concat(_this.buildSharesCommands(results, shareData, shareValid, blockValid));
-    commands = commands.concat(_this.buildBlocksCommands(shareData, shareValid, blockValid));
+    commands = commands.concat(_this.calculateBlocks(shareData, shareValid, blockValid));
     this.executeCommands(commands, callback, handler);
     return commands;
   };
@@ -149,8 +174,11 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Handle Share Submissions
+  /* istanbul ignore next */
   this.handleShares = function(shareData, shareValid, blockValid, callback, handler) {
-    const shareLookups = [['hgetall', `${ _this.coin }:rounds:current:submissions`]];
+    const shareLookups = [
+      ['hgetall', `${ _this.coin }:rounds:primary:current:submissions`],
+      ['hgetall', `${ _this.coin }:rounds:auxiliary:current:submissions`]];
     this.executeCommands(shareLookups, (results) => {
       _this.buildCommands(results, shareData, shareValid, blockValid, callback, handler);
     }, handler);

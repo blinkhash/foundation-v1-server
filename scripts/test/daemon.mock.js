@@ -845,6 +845,18 @@ exports.mockValidateAddressError = function() {
     );
 };
 
+exports.mockAuxiliaryValidateAddressError = function() {
+  nock('http://127.0.0.1:8336')
+    .persist()
+    .post('/', body => body.method === 'validateaddress')
+    .reply(200, JSON.stringify({
+      id: 'nocktest',
+      error: { error: true },
+      result: {},
+    })
+    );
+};
+
 exports.mockValidateAddressInvalid = function() {
   const response = {
     'isvalid': false,

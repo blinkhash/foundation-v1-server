@@ -86,7 +86,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       ['hgetall', `${ coin }:rounds:current:shares`],
       ['hgetall', `${ coin }:rounds:current:times`],
       ['zrangebyscore', `${ coin }:rounds:current:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(coin, '/miners/' + miner + '/', commands, response, (results) => {
+    _this.executeCommands(coin, `/miners/${ miner }/`, commands, response, (results) => {
       const shareData = utils.processShares(results[4], miner);
       const difficulty = utils.processDifficulty(results[6], miner);
       const statistics = {
@@ -107,7 +107,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
         },
         workers: utils.processWorkers(results[6], miner),
       };
-      _this.buildPayload(coin, '/miners/' + miner + '/', _this.messages.success, statistics, response);
+      _this.buildPayload(coin, `/miners/${ miner }/`, _this.messages.success, statistics, response);
     });
   };
 
@@ -201,7 +201,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
         solo: shareData[0],
         shared: shareData[1],
         times: utils.processTimes(results[1])};
-      _this.buildPayload(coin, '/rounds/current', _this.messages.success, current, response);
+      _this.buildPayload(coin, '/rounds/current/', _this.messages.success, current, response);
     });
   };
 
@@ -210,13 +210,13 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     const commands = [
       ['hgetall', `${ coin }:rounds:round-${ height }:shares`],
       ['hgetall', `${ coin }:rounds:round-${ height }:times`]];
-    _this.executeCommands(coin, '/rounds/' + height, commands, response, (results) => {
+    _this.executeCommands(coin, `/rounds/${ height }/`, commands, response, (results) => {
       const shareData = utils.processShares(results[0]);
       const current = {
         solo: shareData[0],
         shared: shareData[1],
         times: utils.processTimes(results[1])};
-      _this.buildPayload(coin, '/rounds/' + height, _this.messages.success, current, response);
+      _this.buildPayload(coin, `/rounds/${ height }/`, _this.messages.success, current, response);
     });
   };
 
@@ -307,7 +307,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       ['hgetall', `${ coin }:rounds:current:shares`],
       ['hgetall', `${ coin }:rounds:current:times`],
       ['zrangebyscore', `${ coin }:rounds:current:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(coin, '/workers/' + worker + '/', commands, response, (results) => {
+    _this.executeCommands(coin, `/workers/${ worker }/`, commands, response, (results) => {
       const shareData = utils.processShares(results[0], worker);
       const difficulty = utils.processDifficulty(results[2], worker);
       const statistics = {
@@ -320,7 +320,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
           hashrate: (multiplier * difficulty) / hashrateWindow,
         },
       };
-      _this.buildPayload(coin, '/workers/' + worker + '/', _this.messages.success, statistics, response);
+      _this.buildPayload(coin, `/workers/${ worker }/`, _this.messages.success, statistics, response);
     });
   };
 
@@ -377,7 +377,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       method = utils.validateInput(req.query.method || '');
     }
 
-    const combined = endpoint + '/' + method;
+    const combined = `${ endpoint }/${ method }`;
     const miscellaneous = ['coins', 'partners'];
     if (!(coin in _this.poolConfigs) && !(miscellaneous.includes(coin))) {
       _this.buildPayload(coin, '/unknown/', _this.messages.coin, null, res);
