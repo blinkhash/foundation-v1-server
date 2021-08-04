@@ -74,16 +74,13 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       solo: isSoloMining,
     };
 
-    // Handle Hashrate Data
-    if (blockType === 'primary') {
-      commands.push(['zadd', `${ _this.coin }:rounds:${ blockType }:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
-    }
-
     // Handle Valid/Invalid Shares
     if (shareValid) {
+      commands.push(['zadd', `${ _this.coin }:rounds:${ blockType }:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
       commands.push(['hincrby', `${ _this.coin }:rounds:${ blockType }:current:counts`, 'valid', 1]);
       commands.push(['hincrbyfloat', `${ _this.coin }:rounds:${ blockType }:current:shares`, JSON.stringify(outputShare), shareData.difficulty]);
     } else {
+      commands.push(['zadd', `${ _this.coin }:rounds:${ blockType }:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
       commands.push(['hincrby', `${ _this.coin }:rounds:${ blockType }:current:counts`, 'invalid', 1]);
     }
 

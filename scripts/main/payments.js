@@ -507,7 +507,7 @@ const PoolPayments = function (logger, client) {
       // Build Worker Times Data w/ Results
       results.forEach((round) => {
         const timesRound = {};
-        Object.keys(round).forEach((entry) => {
+        Object.keys(round || {}).forEach((entry) => {
           const address = entry.split('.')[0];
           if (address in timesRound) {
             if (parseFloat(round[entry]) >= timesRound[address]) {
@@ -548,7 +548,7 @@ const PoolPayments = function (logger, client) {
       results.forEach((round) => {
         const soloRound = {};
         const sharedRound = {};
-        Object.keys(round).forEach((entry) => {
+        Object.keys(round || {}).forEach((entry) => {
           const details = JSON.parse(entry);
           const address = details.worker.split('.')[0];
           if (details.solo) {
@@ -609,7 +609,6 @@ const PoolPayments = function (logger, client) {
         const currentBalance = utils.satoshisToCoins(balance[0], processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
         const owedBalance = utils.satoshisToCoins(totalOwed, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
         logger.error('Payments', coin, `Insufficient funds (${ currentBalance }) to process payments (${ owedBalance }), possibly waiting for transactions.`);
-        console.log(currentBalance, owedBalance);
       }
 
       // Return Payment Data as Callback
@@ -862,7 +861,7 @@ const PoolPayments = function (logger, client) {
     // Update Hashrate Calculation
     const hashrateWindow = config.settings.hashrateWindow;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
-    commands.push(['zremrangebyscore', `${ coin }:rounds:primary:current:hashrate`, 0, `(${ windowTime }`]);
+    commands.push(['zremrangebyscore', `${ coin }:rounds:${ blockType }:current:hashrate`, 0, `(${ windowTime }`]);
 
     // Update Miscellaneous Statistics
     if ((category === 'start') || (category === 'payments')) {
@@ -902,7 +901,7 @@ const PoolPayments = function (logger, client) {
       (data, callback) => _this.handleOwed(daemon, config, category, blockType, data, callback),
       (data, callback) => _this.handleRewards(config, blockType, data, callback),
       (data, callback) => _this.handleUpdates(config, category, blockType, interval, data, callback),
-    ], (error, results) => {
+    ], (error) => {
       if (error) {
         callbackMain(null, false);
         return;
@@ -971,11 +970,11 @@ const PoolPayments = function (logger, client) {
         }
       });
     }, 100);
-  }
+  };
 
   // Start Payment Interval Management
   /* istanbul ignore next */
-  this.handleManagement = function(data, callback) {
+  this.handleManagement = function(data) {
 
     const daemons = data[0];
     const config = data[1];
@@ -1015,7 +1014,7 @@ const PoolPayments = function (logger, client) {
         config.primary.payments.magnitude = results[1][0];
         config.primary.payments.minPaymentSatoshis = results[1][1];
         config.primary.payments.coinPrecision = results[1][2];
-        callbackMain(null, [[daemon], config])
+        callbackMain(null, [[daemon], config]);
       }
     });
   };
@@ -1024,7 +1023,7 @@ const PoolPayments = function (logger, client) {
   /* istanbul ignore next */
   this.handleAuxiliary = function(coin, data, callbackMain) {
 
-    const config = data[1]
+    const config = data[1];
     if (config.auxiliary && config.auxiliary.enabled) {
       config.auxiliary.payments.processingFee = parseFloat(config.auxiliary.payments.transactionFee) || parseFloat(0.0004);
       config.auxiliary.payments.minConfirmations = Math.max((config.auxiliary.payments.minConfirmations || 10), 1);
@@ -1043,17 +1042,17 @@ const PoolPayments = function (logger, client) {
         (callback) => _this.handleBalance(daemon, config, coin, 'auxiliary', callback),
       ], (error, results) => {
         if (error) {
-          callbackMain(null, [daemons, config]);
+          callbackMain(null, [data[0], config]);
         } else {
           data[0].push(daemon);
           config.auxiliary.payments.magnitude = results[0][0];
           config.auxiliary.payments.minPaymentSatoshis = results[0][1];
           config.auxiliary.payments.coinPrecision = results[0][2];
-          callbackMain(null, [data[0], config])
+          callbackMain(null, [data[0], config]);
         }
       });
     } else {
-      callbackMain(null, [data[0], config])
+      callbackMain(null, [data[0], config]);
     }
   };
 
@@ -1067,7 +1066,7 @@ const PoolPayments = function (logger, client) {
       if (error) {
         callbackMain(null, false);
       } else {
-        _this.handleManagement(results, callbackMain);
+        _this.handleManagement(results);
       }
     });
   };

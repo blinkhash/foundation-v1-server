@@ -305,10 +305,11 @@ describe('Test shares functionality', () => {
       ['zadd', 'Bitcoin:rounds:primary:current:hashrate'],
       ['hincrby', 'Bitcoin:rounds:primary:current:counts', 'valid', 1],
       ['hincrbyfloat', 'Bitcoin:rounds:primary:current:shares'],
+      ['zadd', 'Bitcoin:rounds:auxiliary:current:hashrate'],
       ['hincrby', 'Bitcoin:rounds:auxiliary:current:counts', 'valid', 1],
       ['hincrbyfloat', 'Bitcoin:rounds:auxiliary:current:shares']];
     const commands = poolShares.buildSharesCommands(results, shareData, true, false);
-    expect(commands.length).toBe(9);
+    expect(commands.length).toBe(10);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
     expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
     expect(commands[2].slice(0, 3)).toStrictEqual(expected[2]);
@@ -316,8 +317,9 @@ describe('Test shares functionality', () => {
     expect(commands[4].slice(0, 2)).toStrictEqual(expected[4]);
     expect(commands[5]).toStrictEqual(expected[5]);
     expect(commands[6].slice(0, 2)).toStrictEqual(expected[6]);
-    expect(commands[7]).toStrictEqual(expected[7]);
-    expect(commands[8].slice(0, 2)).toStrictEqual(expected[8]);
+    expect(commands[7].slice(0, 2)).toStrictEqual(expected[7]);
+    expect(commands[8]).toStrictEqual(expected[8]);
+    expect(commands[9].slice(0, 2)).toStrictEqual(expected[9]);
   });
 
   test('Test block command handling [1]', () => {

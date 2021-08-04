@@ -1865,13 +1865,13 @@ describe('Test payments functionality', () => {
     const workers = { 'example1': { immature: 1250000000, change: 50000000 }};
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
-        ["hset", "Bitcoin:payments:primary:balances", "example1", 0.5],
-        ["hset", "Bitcoin:payments:primary:generate", "example1", 0],
-        ["hset", "Bitcoin:payments:primary:immature", "example1", 12.5],
-        ["zremrangebyscore", "Bitcoin:rounds:primary:current:hashrate", 0],
-        ["hincrbyfloat", "Bitcoin:payments:primary:counts", "total", 0],
-        ["hset", "Bitcoin:payments:primary:counts", "last"],
-        ["hset", "Bitcoin:payments:primary:counts", "next"]];
+        ['hset', 'Bitcoin:payments:primary:balances', 'example1', 0.5],
+        ['hset', 'Bitcoin:payments:primary:generate', 'example1', 0],
+        ['hset', 'Bitcoin:payments:primary:immature', 'example1', 12.5],
+        ['zremrangebyscore', 'Bitcoin:rounds:primary:current:hashrate', 0],
+        ['hincrbyfloat', 'Bitcoin:payments:primary:counts', 'total', 0],
+        ['hset', 'Bitcoin:payments:primary:counts', 'last'],
+        ['hset', 'Bitcoin:payments:primary:counts', 'next']];
       expect(results.length).toBe(7);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
@@ -1900,7 +1900,7 @@ describe('Test payments functionality', () => {
       const expected = [
         ['hset', 'Bitcoin:payments:auxiliary:generate', 'example1', 0],
         ['hset', 'Bitcoin:payments:auxiliary:immature', 'example1', 12.5],
-        ['zremrangebyscore', 'Bitcoin:rounds:primary:current:hashrate', 0]];
+        ['zremrangebyscore', 'Bitcoin:rounds:auxiliary:current:hashrate', 0]];
       expect(results.length).toBe(3);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
