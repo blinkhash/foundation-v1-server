@@ -33,7 +33,7 @@ nock.disableNetConnect();
 nock.enableNetConnect('127.0.0.1');
 
 process.env.partnerConfigs = JSON.stringify({});
-process.env.poolConfigs = JSON.stringify({ Bitcoin: poolConfig });
+process.env.poolConfigs = JSON.stringify({ Pool1: poolConfig });
 process.env.portalConfig = JSON.stringify(portalConfig);
 const logger = new PoolLogger(portalConfig);
 
@@ -75,15 +75,15 @@ describe('Test payments functionality', () => {
   test('Test checking for enabled configurations [1]', () => {
     const poolPayments = new PoolPayments(logger, client);
     poolPayments.checkEnabled();
-    expect(poolPayments.coins.length).toBe(1);
-    expect(poolPayments.coins[0]).toBe('Bitcoin');
+    expect(poolPayments.pools.length).toBe(1);
+    expect(poolPayments.pools[0]).toBe('Pool1');
   });
 
   test('Test checking for enabled configurations [2]', () => {
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.enabled = false;
+    poolPayments.poolConfigs['Pool1'].primary.payments.enabled = false;
     poolPayments.checkEnabled();
-    expect(poolPayments.coins.length).toBe(0);
+    expect(poolPayments.pools.length).toBe(0);
   });
 
   test('Test round shares if deleteable [1]', () => {
@@ -109,7 +109,7 @@ describe('Test payments functionality', () => {
     mockDaemon.mockValidateAddress();
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    poolPayments.checkAddress(daemon, 'test', 'Bitcoin', 'validateaddress', (error, results) => {
+    poolPayments.checkAddress(daemon, 'test', 'validateaddress', (error, results) => {
       expect(error).toBe(true);
       expect(results).toBe('The daemon does not own the pool address listed');
       nock.cleanAll();
@@ -121,7 +121,7 @@ describe('Test payments functionality', () => {
     mockDaemon.mockValidateAddressError();
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    poolPayments.checkAddress(daemon, 'test', 'Bitcoin', 'validateaddress', (error, results) => {
+    poolPayments.checkAddress(daemon, 'test', 'validateaddress', (error, results) => {
       expect(error).toBe(true);
       expect(results).toBe('{"error":true}');
       nock.cleanAll();
@@ -133,7 +133,7 @@ describe('Test payments functionality', () => {
     mockDaemon.mockValidateAddressSecondary();
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    poolPayments.checkAddress(daemon, 'test', 'Bitcoin', 'validateaddress', (error, results) => {
+    poolPayments.checkAddress(daemon, 'test', 'validateaddress', (error, results) => {
       expect(error).toBe(null);
       expect(typeof results).toBe('undefined');
       nock.cleanAll();
@@ -239,11 +239,11 @@ describe('Test payments functionality', () => {
     const poolPayments = new PoolPayments(logger, client);
     const round = { orphanShares: { 'example': 8 }, orphanTimes: { 'example': 1 }};
     const expected = [
-      ['hincrby', 'Bitcoin:rounds:primary:current:counts', 'valid', 1],
-      ['zadd', 'Bitcoin:rounds:primary:current:hashrate'],
-      ['hincrby', 'Bitcoin:rounds:primary:current:shares'],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example', 1]];
-    poolPayments.handleOrphans(round, 'Bitcoin', 'primary', (error, results) => {
+      ['hincrby', 'Pool1:rounds:primary:current:counts', 'valid', 1],
+      ['zadd', 'Pool1:rounds:primary:current:hashrate'],
+      ['hincrby', 'Pool1:rounds:primary:current:shares'],
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'example', 1]];
+    poolPayments.handleOrphans(round, 'Pool1', 'primary', (error, results) => {
       expect(error).toBe(null);
       expect(results.length).toBe(4);
       expect(results[0]).toStrictEqual(expected[0]);
@@ -267,11 +267,11 @@ describe('Test payments functionality', () => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleUnspent(daemon, config, 'checks', 'Bitcoin', 'primary', (error, results) => {
       expect(results[0]).toBe(2375000000);
       console.log.mockClear();
@@ -284,7 +284,7 @@ describe('Test payments functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleUnspent(daemon, config, 'checks', 'Bitcoin', 'primary', (error, results) => {
       expect(error).toBe(true);
       expect(results.length).toBe(0);
@@ -298,11 +298,11 @@ describe('Test payments functionality', () => {
     mockDaemon.mockListUnspentEmpty();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleUnspent(daemon, config, 'checks', 'Bitcoin', 'primary', (error, results) => {
       expect(error).toBe(null);
       expect(results[0]).toBe(0);
@@ -316,11 +316,11 @@ describe('Test payments functionality', () => {
     mockDaemon.mockListUnspentInvalid();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleUnspent(daemon, config, 'checks', 'Bitcoin', 'primary', (error, results) => {
       expect(error).toBe(null);
       expect(results[0]).toBe(0);
@@ -334,11 +334,11 @@ describe('Test payments functionality', () => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleUnspent(daemon, config, 'start', 'Bitcoin', 'primary', (error, results) => {
       expect(error).toBe(null);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Bitcoin wallet has a balance of 23.75 BTC'));
@@ -353,12 +353,12 @@ describe('Test payments functionality', () => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].auxiliary = { coin: { name: 'Bitcoin', symbol: 'BTC' }, payments: {} };
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].auxiliary = { coin: { name: 'Bitcoin', symbol: 'BTC' }, payments: {} };
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.coinPrecision = 8;
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleUnspent(daemon, config, 'start', 'Bitcoin', 'auxiliary', (error, results) => {
       expect(error).toBe(null);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Bitcoin wallet has a balance of 23.75 BTC'));
@@ -442,11 +442,11 @@ describe('Test payments functionality', () => {
   test('Test handling of immature blocks [1]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { reward: 12.50, solo: false, worker: 'example' };
     poolPayments.handleImmature(config, round, {}, { 'example': 20.15 }, 20.15, {}, { 'example': 8 }, 'primary', (error, results) => {
       expect(error).toBe(null);
@@ -460,11 +460,11 @@ describe('Test payments functionality', () => {
   test('Test handling of immature blocks [2]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { reward: 12.50, solo: false, worker: 'example' };
     poolPayments.handleImmature(config, round, {}, { 'example': 20.15 }, 20.15, {}, {}, 'primary', (error, results) => {
       expect(error).toBe(null);
@@ -477,11 +477,11 @@ describe('Test payments functionality', () => {
   test('Test handling of immature blocks [3]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { reward: 12.50, solo: true, worker: 'example' };
     poolPayments.handleImmature(config, round, {}, { 'example': 20.15 }, 20.15, { 'example': 8 }, {}, 'primary', (error, results) => {
       expect(error).toBe(null);
@@ -495,11 +495,11 @@ describe('Test payments functionality', () => {
   test('Test handling of immature blocks [4]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { reward: 12.50, solo: true, worker: 'example' };
     poolPayments.handleImmature(config, round, {}, { 'example': 20.15 }, 20.15, {}, {}, 'primary', (error, results) => {
       expect(error).toBe(null);
@@ -513,11 +513,11 @@ describe('Test payments functionality', () => {
   test('Test handling of immature blocks [5]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { reward: 12.50, solo: false, worker: 'example' };
     poolPayments.handleImmature(config, round, {}, { 'example': 8.2 }, 20.15, {}, { 'example': 8 }, 'primary', (error, results) => {
       expect(error).toBe(null);
@@ -531,11 +531,11 @@ describe('Test payments functionality', () => {
   test('Test handling of immature blocks [6]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { reward: 12.50, solo: false, worker: 'example' };
     poolPayments.handleImmature(config, round, {}, {}, 20.15, {}, { 'example': 8 }, 'primary', (error, results) => {
       expect(error).toBe(null);
@@ -549,12 +549,12 @@ describe('Test payments functionality', () => {
   test('Test handling of immature blocks [6]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].auxiliary = { payments: {} };
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].auxiliary = { payments: {} };
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { reward: 12.50, solo: false, worker: 'example' };
     poolPayments.handleImmature(config, round, {}, {}, 20.15, {}, { 'example': 8 }, 'auxiliary', (error, results) => {
       expect(error).toBe(null);
@@ -568,11 +568,11 @@ describe('Test payments functionality', () => {
   test('Test handling of generate blocks [1]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { reward: 12.50, height: 180, solo: false, worker: 'example' };
     poolPayments.handleGenerate(config, round, {}, { 'example': 20.15 }, 20.15, {}, { 'example': 8 }, 'primary', (error, results) => {
       expect(error).toBe(null);
@@ -590,11 +590,11 @@ describe('Test payments functionality', () => {
   test('Test handling of generate blocks [2]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { reward: 12.50, height: 180, solo: false, worker: 'example' };
     poolPayments.handleGenerate(config, round, {}, { 'example': 20.15 }, 20.15, {}, {}, 'primary', (error, results) => {
       expect(error).toBe(null);
@@ -607,11 +607,11 @@ describe('Test payments functionality', () => {
   test('Test handling of generate blocks [3]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { reward: 12.50, height: 180, solo: true, worker: 'example' };
     poolPayments.handleGenerate(config, round, {}, { 'example': 20.15 }, 20.15, { 'example': 8 }, {}, 'primary', (error, results) => {
       expect(error).toBe(null);
@@ -629,11 +629,11 @@ describe('Test payments functionality', () => {
   test('Test handling of generate blocks [4]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { reward: 12.50, height: 180, solo: true, worker: 'example' };
     poolPayments.handleGenerate(config, round, {}, { 'example': 20.15 }, 20.15, {}, {}, 'primary', (error, results) => {
       expect(error).toBe(null);
@@ -651,11 +651,11 @@ describe('Test payments functionality', () => {
   test('Test handling of generate blocks [5]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { reward: 12.50, height: 180, solo: false, worker: 'example' };
     poolPayments.handleGenerate(config, round, {}, { 'example': 8.2 }, 20.15, {}, { 'example': 8 }, 'primary', (error, results) => {
       expect(error).toBe(null);
@@ -673,11 +673,11 @@ describe('Test payments functionality', () => {
   test('Test handling of immature blocks [6]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { reward: 12.50, height: 180, solo: false, worker: 'example' };
     poolPayments.handleGenerate(config, round, {}, {}, 20.15, {}, { 'example': 8 }, 'primary', (error, results) => {
       expect(error).toBe(null);
@@ -695,12 +695,12 @@ describe('Test payments functionality', () => {
   test('Test handling of immature blocks [6]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].auxiliary = { payments: {} };
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].auxiliary = { payments: {} };
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { reward: 12.50, height: 180, solo: false, worker: 'example' };
     poolPayments.handleGenerate(config, round, {}, {}, 20.15, {}, { 'example': 8 }, 'auxiliary', (error, results) => {
       expect(error).toBe(null);
@@ -717,15 +717,15 @@ describe('Test payments functionality', () => {
 
   test('Test main block/round handling [1]', (done) => {
     const commands = [
-      ['sadd', 'Bitcoin:blocks:primary:pending', mockBuildBlock(180, 'hash', 12.5, 'txid', 8, 'worker', false)],
-      ['sadd', 'Bitcoin:blocks:primary:pending', mockBuildBlock(181, 'hash', 12.5, 'txid', 8, 'worker', false)],
-      ['sadd', 'Bitcoin:blocks:primary:pending', mockBuildBlock(182, 'hash', 12.5, 'txid', 8, 'worker', false)],
-      ['sadd', 'Bitcoin:blocks:primary:pending', mockBuildBlock(183, 'hash', 12.5, 'txid', 8, 'worker', false)]];
+      ['sadd', 'Pool1:blocks:primary:pending', mockBuildBlock(180, 'hash', 12.5, 'txid', 8, 'worker', false)],
+      ['sadd', 'Pool1:blocks:primary:pending', mockBuildBlock(181, 'hash', 12.5, 'txid', 8, 'worker', false)],
+      ['sadd', 'Pool1:blocks:primary:pending', mockBuildBlock(182, 'hash', 12.5, 'txid', 8, 'worker', false)],
+      ['sadd', 'Pool1:blocks:primary:pending', mockBuildBlock(183, 'hash', 12.5, 'txid', 8, 'worker', false)]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
       const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-      const config = poolPayments.poolConfigs['Bitcoin'];
+      const config = poolPayments.poolConfigs['Pool1'];
       poolPayments.handleBlocks(daemon, config, 'primary', (error, results) => {
         expect(error).toBe(null);
         expect(results[0].length).toBe(4);
@@ -741,15 +741,15 @@ describe('Test payments functionality', () => {
 
   test('Test main block/round handling [2]', (done) => {
     const commands = [
-      ['sadd', 'Bitcoin:blocks:primary:pending', mockBuildBlock(180, 'hash', 12.5, 'txid', 8, 'worker', false)],
-      ['sadd', 'Bitcoin:blocks:primary:pending', mockBuildBlock(180, 'hash2', 12.5, 'txid2', 8, 'worker2', false)],
-      ['sadd', 'Bitcoin:blocks:primary:pending', mockBuildBlock(182, 'hash', 12.5, 'txid', 8, 'worker', false)],
-      ['sadd', 'Bitcoin:blocks:primary:pending', mockBuildBlock(183, 'hash', 12.5, 'txid', 8, 'worker', false)]];
+      ['sadd', 'Pool1:blocks:primary:pending', mockBuildBlock(180, 'hash', 12.5, 'txid', 8, 'worker', false)],
+      ['sadd', 'Pool1:blocks:primary:pending', mockBuildBlock(180, 'hash2', 12.5, 'txid2', 8, 'worker2', false)],
+      ['sadd', 'Pool1:blocks:primary:pending', mockBuildBlock(182, 'hash', 12.5, 'txid', 8, 'worker', false)],
+      ['sadd', 'Pool1:blocks:primary:pending', mockBuildBlock(183, 'hash', 12.5, 'txid', 8, 'worker', false)]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
       const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-      const config = poolPayments.poolConfigs['Bitcoin'];
+      const config = poolPayments.poolConfigs['Pool1'];
       poolPayments.handleBlocks(daemon, config, 'primary', (error, results) => {
         expect(error).toBe(true);
         expect(results).toStrictEqual([]);
@@ -761,13 +761,13 @@ describe('Test payments functionality', () => {
 
   test('Test main worker handling [1]', (done) => {
     const commands = [
-      ['hincrbyfloat', 'Bitcoin:payments:primary:balances', 'worker1', 672.21],
-      ['hincrbyfloat', 'Bitcoin:payments:primary:balances', 'worker2', 391.15]];
+      ['hincrbyfloat', 'Pool1:payments:primary:balances', 'worker1', 672.21],
+      ['hincrbyfloat', 'Pool1:payments:primary:balances', 'worker2', 391.15]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
-      poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-      const config = poolPayments.poolConfigs['Bitcoin'];
+      poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+      const config = poolPayments.poolConfigs['Pool1'];
       poolPayments.handleWorkers(config, 'primary', [[]], (error, results) => {
         expect(error).toBe(null);
         expect(Object.keys(results[1]).length).toBe(2);
@@ -781,14 +781,14 @@ describe('Test payments functionality', () => {
 
   test('Test main worker handling [2]', (done) => {
     const commands = [
-      ['hincrbyfloat', 'Bitcoin:payments:auxiliary:balances', 'worker1', 672.21],
-      ['hincrbyfloat', 'Bitcoin:payments:auxiliary:balances', 'worker2', 391.15]];
+      ['hincrbyfloat', 'Pool1:payments:auxiliary:balances', 'worker1', 672.21],
+      ['hincrbyfloat', 'Pool1:payments:auxiliary:balances', 'worker2', 391.15]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
-      poolPayments.poolConfigs['Bitcoin'].auxiliary = { payments: {} };
-      poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.magnitude = 100000000;
-      const config = poolPayments.poolConfigs['Bitcoin'];
+      poolPayments.poolConfigs['Pool1'].auxiliary = { payments: {} };
+      poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
+      const config = poolPayments.poolConfigs['Pool1'];
       poolPayments.handleWorkers(config, 'auxiliary', [[]], (error, results) => {
         expect(error).toBe(null);
         expect(Object.keys(results[1]).length).toBe(2);
@@ -805,11 +805,11 @@ describe('Test payments functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
     poolPayments.handleTransactions(daemon, config, 'primary', [rounds, []], (error, results) => {
       expect(error).toBe(null);
@@ -826,7 +826,7 @@ describe('Test payments functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
     poolPayments.handleTransactions(daemon, config, 'primary', [rounds, []], (error, results) => {
       expect(error).toBe(true);
@@ -842,11 +842,11 @@ describe('Test payments functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
     poolPayments.handleTransactions(daemon, config, 'primary', [rounds, []], (error, results) => {
       expect(error).toBe(null);
@@ -864,11 +864,11 @@ describe('Test payments functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
     poolPayments.handleTransactions(daemon, config, 'primary', [rounds, []], (error, results) => {
       expect(error).toBe(null);
@@ -886,8 +886,8 @@ describe('Test payments functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    poolPayments.poolConfigs['Bitcoin'].primary.address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
     poolPayments.handleTransactions(daemon, config, 'primary', [rounds, []], (error, results) => {
       expect(error).toBe(null);
@@ -905,10 +905,10 @@ describe('Test payments functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
     poolPayments.handleTransactions(daemon, config, 'primary', [rounds, []], (error, results) => {
       expect(error).toBe(null);
@@ -926,11 +926,11 @@ describe('Test payments functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
     poolPayments.handleTransactions(daemon, config, 'primary', [rounds, []], (error, results) => {
       expect(error).toBe(null);
@@ -948,7 +948,7 @@ describe('Test payments functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
     poolPayments.handleTransactions(daemon, config, 'primary', [rounds, []], (error, results) => {
       expect(error).toBe(null);
@@ -967,7 +967,7 @@ describe('Test payments functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
     poolPayments.handleTransactions(daemon, config, 'primary', [rounds, []], (error, results) => {
       expect(error).toBe(null);
@@ -986,7 +986,7 @@ describe('Test payments functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
     poolPayments.handleTransactions(daemon, config, 'primary', [rounds, []], (error, results) => {
       expect(error).toBe(null);
@@ -1003,11 +1003,11 @@ describe('Test payments functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    poolPayments.poolConfigs['Bitcoin'].auxiliary = { payments: {} };
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.coinPrecision = 8;
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].auxiliary = { payments: {} };
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.coinPrecision = 8;
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
     poolPayments.handleTransactions(daemon, config, 'auxiliary', [rounds, []], (error, results) => {
       expect(error).toBe(null);
@@ -1022,12 +1022,12 @@ describe('Test payments functionality', () => {
 
   test('Test main times handling [1]', (done) => {
     const commands = [
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-180:times', 'worker1', 20.15],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-180:times', 'worker2', 163.50]];
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:times', 'worker1', 20.15],
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:times', 'worker2', 163.50]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
-      const config = poolPayments.poolConfigs['Bitcoin'];
+      const config = poolPayments.poolConfigs['Pool1'];
       const rounds = [{ height: 180 }];
       poolPayments.handleTimes(config, 'primary', [rounds, []], (error, results) => {
         expect(error).toBe(null);
@@ -1041,14 +1041,14 @@ describe('Test payments functionality', () => {
 
   test('Test main times handling [2]', (done) => {
     const commands = [
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-180:times', 'worker1', 20.15],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-180:times', 'worker2', 163.50],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-181:times', 'worker1', 80.43],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-181:times', 'worker2', 121.637]];
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:times', 'worker1', 20.15],
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:times', 'worker2', 163.50],
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-181:times', 'worker1', 80.43],
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-181:times', 'worker2', 121.637]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
-      const config = poolPayments.poolConfigs['Bitcoin'];
+      const config = poolPayments.poolConfigs['Pool1'];
       const rounds = [{ height: 180 }, { height: 181 }];
       poolPayments.handleTimes(config, 'primary', [rounds, []], (error, results) => {
         expect(error).toBe(null);
@@ -1064,13 +1064,13 @@ describe('Test payments functionality', () => {
 
   test('Test main shares handling [1]', (done) => {
     const commands = [
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-180:shares', JSON.stringify({ time: 0, worker: 'worker1', solo: true }), 8],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-180:shares', JSON.stringify({ time: 0, worker: 'worker2', solo: false }), 16],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-180:shares', JSON.stringify({ time: 1, worker: 'worker2', solo: false }), 12]];
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:shares', JSON.stringify({ time: 0, worker: 'worker1', solo: true }), 8],
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:shares', JSON.stringify({ time: 0, worker: 'worker2', solo: false }), 16],
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:shares', JSON.stringify({ time: 1, worker: 'worker2', solo: false }), 12]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
-      const config = poolPayments.poolConfigs['Bitcoin'];
+      const config = poolPayments.poolConfigs['Pool1'];
       const rounds = [{ height: 180 }];
       poolPayments.handleShares(config, 'primary', [rounds, [], []], (error, results) => {
         expect(error).toBe(null);
@@ -1084,17 +1084,17 @@ describe('Test payments functionality', () => {
 
   test('Test main shares handling [2]', (done) => {
     const commands = [
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-180:shares', JSON.stringify({ time: 0, worker: 'worker1', solo: true }), 8],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-180:shares', JSON.stringify({ time: 0, worker: 'worker2', solo: false }), 16],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-180:shares', JSON.stringify({ time: 1, worker: 'worker2', solo: false }), 12],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-181:shares', JSON.stringify({ time: 0, worker: 'worker1', solo: true }), 16],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-181:shares', JSON.stringify({ time: 1, worker: 'worker1', solo: true }), 10],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-181:shares', JSON.stringify({ time: 0, worker: 'worker2', solo: false }), 28],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:round-181:shares', JSON.stringify({ time: 1, worker: 'worker2', solo: false }), 12]];
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:shares', JSON.stringify({ time: 0, worker: 'worker1', solo: true }), 8],
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:shares', JSON.stringify({ time: 0, worker: 'worker2', solo: false }), 16],
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:shares', JSON.stringify({ time: 1, worker: 'worker2', solo: false }), 12],
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-181:shares', JSON.stringify({ time: 0, worker: 'worker1', solo: true }), 16],
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-181:shares', JSON.stringify({ time: 1, worker: 'worker1', solo: true }), 10],
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-181:shares', JSON.stringify({ time: 0, worker: 'worker2', solo: false }), 28],
+      ['hincrbyfloat', 'Pool1:rounds:primary:round-181:shares', JSON.stringify({ time: 1, worker: 'worker2', solo: false }), 12]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
-      const config = poolPayments.poolConfigs['Bitcoin'];
+      const config = poolPayments.poolConfigs['Pool1'];
       const rounds = [{ height: 180 }, { height: 181 }];
       poolPayments.handleShares(config, 'primary', [rounds, [], []], (error, results) => {
         expect(error).toBe(null);
@@ -1112,12 +1112,12 @@ describe('Test payments functionality', () => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'immature', reward: 12.5 }, { category: 'generate', reward: 12.5 }];
     poolPayments.handleOwed(daemon, config, 'checks', 'primary', [rounds, [], [], [], []], (error, results) => {
       expect(error).toBe(null);
@@ -1135,12 +1135,12 @@ describe('Test payments functionality', () => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'immature', reward: 12.5 }, { category: 'generate', reward: 12.5 }];
     const workers = [{ balance: 10.5 }, { balance: 10 }];
     poolPayments.handleOwed(daemon, config, 'payments', 'primary', [rounds, workers, [], [], []], (error, results) => {
@@ -1158,12 +1158,12 @@ describe('Test payments functionality', () => {
   test('Test calculation of currency owed [3]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'immature', reward: 12.5 }, { category: 'generate', reward: 12.5 }];
     const workers = [{ balance: 10.5 }, { balance: 10 }];
     poolPayments.handleOwed(daemon, config, 'checks', 'primary', [rounds, workers, [], [], []], (error, results) => {
@@ -1179,12 +1179,12 @@ describe('Test payments functionality', () => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'orphan', reward: 12.5 }, { category: 'kicked', reward: 12.5 }, { category: 'other', reward: 12.5 }];
     const workers = [{ balance: 10.5 }, { balance: 10 }];
     poolPayments.handleOwed(daemon, config, 'checks', 'primary', [rounds, workers, [], [], []], (error, results) => {
@@ -1202,12 +1202,12 @@ describe('Test payments functionality', () => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'generate', reward: 500 }];
     poolPayments.handleOwed(daemon, config, 'checks', 'primary', [rounds, [], [], [], []], (error, results) => {
       expect(error).toBe(null);
@@ -1223,13 +1223,13 @@ describe('Test payments functionality', () => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].auxiliary = { payments: {} };
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.processingFee = parseFloat(0.0004);
+    poolPayments.poolConfigs['Pool1'].auxiliary = { payments: {} };
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'immature', reward: 12.5 }, { category: 'generate', reward: 12.5 }];
     poolPayments.handleOwed(daemon, config, 'checks', 'auxiliary', [rounds, [], [], [], []], (error, results) => {
       expect(error).toBe(null);
@@ -1246,11 +1246,11 @@ describe('Test payments functionality', () => {
   test('Test reward calculation given rounds/workers [1]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'immature', height: 180, reward: 12.50, solo: false, worker: 'example' };
     poolPayments.handleRewards(config, 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
       expect(error).toBe(null);
@@ -1264,11 +1264,11 @@ describe('Test payments functionality', () => {
   test('Test reward calculation given rounds/workers [2]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'generate', height: 180, reward: 12.50, solo: false, worker: 'example' };
     poolPayments.handleRewards(config, 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
       expect(error).toBe(null);
@@ -1286,7 +1286,7 @@ describe('Test payments functionality', () => {
   test('Test reward calculation given rounds/workers [3]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'orphan', height: 180, reward: 12.50, solo: false, worker: 'example' };
     poolPayments.handleRewards(config, 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
       expect(error).toBe(null);
@@ -1300,7 +1300,7 @@ describe('Test payments functionality', () => {
   test('Test reward calculation given rounds/workers [4]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'immature', height: 180, reward: 12.50, solo: false, worker: 'example' };
     poolPayments.handleRewards(config, 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{}]], (error, results) => {
       expect(error).toBe(null);
@@ -1314,11 +1314,11 @@ describe('Test payments functionality', () => {
   test('Test reward calculation given rounds/workers [5]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'immature', height: 180, reward: 12.50, solo: false, worker: 'example' };
     const times = [{ 'example1': 20.15, 'example2': 15.267 }];
     const shared = [{ 'example1': 8, 'example2': 16 }];
@@ -1336,11 +1336,11 @@ describe('Test payments functionality', () => {
   test('Test reward calculation given rounds/workers [6]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'generate', height: 180, reward: 12.50, solo: false, worker: 'example' };
     const times = [{ 'example1': 20.15, 'example2': 4.623 }];
     const shared = [{ 'example1': 8, 'example2': 16 }];
@@ -1367,12 +1367,12 @@ describe('Test payments functionality', () => {
     mockDaemon.mockSendMany();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(null);
       expect(results.length).toBe(3);
@@ -1386,12 +1386,12 @@ describe('Test payments functionality', () => {
     mockDaemon.mockSendMany();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers2], (error, results) => {
       expect(error).toBe(null);
       expect(results.length).toBe(2);
@@ -1405,12 +1405,12 @@ describe('Test payments functionality', () => {
     mockDaemon.mockSendManyError1();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('RPC command did not return txid. Disabling payments to prevent possible double-payouts'));
@@ -1425,12 +1425,12 @@ describe('Test payments functionality', () => {
     mockDaemon.mockSendManyError2();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments {"code":-5}'));
@@ -1445,12 +1445,12 @@ describe('Test payments functionality', () => {
     mockDaemon.mockSendManyError3();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Insufficient funds for payments: {"code":-6}'));
@@ -1465,12 +1465,12 @@ describe('Test payments functionality', () => {
     mockDaemon.mockSendManyError4();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments {"message":"error"}'));
@@ -1485,12 +1485,12 @@ describe('Test payments functionality', () => {
     mockDaemon.mockSendManyError5();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments'));
@@ -1505,13 +1505,13 @@ describe('Test payments functionality', () => {
     mockDaemon.mockSendMany();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].auxiliary = { coin: { symbol: 'BTC' }, payments: {} };
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.processingFee = parseFloat(0.0004);
+    poolPayments.poolConfigs['Pool1'].auxiliary = { coin: { symbol: 'BTC' }, payments: {} };
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleSending(daemon, config, 'auxiliary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(null);
       expect(results.length).toBe(3);
@@ -1524,18 +1524,18 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [1]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'immature', hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { immature: 1250000000 }};
     poolPayments.handleUpdates(config, 'checks', 'primary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
-        ['hset', 'Bitcoin:payments:primary:generate', 'example1', 0],
-        ['hset', 'Bitcoin:payments:primary:immature', 'example1', 12.5],
-        ['zremrangebyscore', 'Bitcoin:rounds:primary:current:hashrate', 0]];
+        ['hset', 'Pool1:payments:primary:generate', 'example1', 0],
+        ['hset', 'Pool1:payments:primary:immature', 'example1', 12.5],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0]];
       expect(results.length).toBe(3);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
@@ -1548,20 +1548,20 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [2]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'immature', hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { immature: 1250000000 }};
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
-        ['hset', 'Bitcoin:payments:primary:immature', 'example1', 12.5],
-        ['zremrangebyscore', 'Bitcoin:rounds:primary:current:hashrate', 0],
-        ['hincrbyfloat', 'Bitcoin:payments:primary:counts', 'total', 0],
-        ['hset', 'Bitcoin:payments:primary:counts', 'last'],
-        ['hset', 'Bitcoin:payments:primary:counts', 'next']];
+        ['hset', 'Pool1:payments:primary:immature', 'example1', 12.5],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
+        ['hset', 'Pool1:payments:primary:counts', 'last'],
+        ['hset', 'Pool1:payments:primary:counts', 'next']];
       expect(results.length).toBe(5);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1].slice(0, 3)).toStrictEqual(expected[1]);
@@ -1576,20 +1576,20 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [3]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'immature', hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { generate: 1250000000 }};
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
-        ['hset', 'Bitcoin:payments:primary:immature', 'example1', 0],
-        ['zremrangebyscore', 'Bitcoin:rounds:primary:current:hashrate', 0],
-        ['hincrbyfloat', 'Bitcoin:payments:primary:counts', 'total', 0],
-        ['hset', 'Bitcoin:payments:primary:counts', 'last'],
-        ['hset', 'Bitcoin:payments:primary:counts', 'next']];
+        ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
+        ['hset', 'Pool1:payments:primary:counts', 'last'],
+        ['hset', 'Pool1:payments:primary:counts', 'next']];
       expect(results.length).toBe(5);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1].slice(0, 3)).toStrictEqual(expected[1]);
@@ -1604,24 +1604,24 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [4]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'generate', height: 180, hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { generate: 1250000000 }};
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
-        ['hset', 'Bitcoin:payments:primary:immature', 'example1', 0],
-        ['smove', 'Bitcoin:blocks:primary:pending', 'Bitcoin:blocks:primary:confirmed', 'serialized'],
-        ['del', 'Bitcoin:rounds:primary:round-180:counts'],
-        ['del', 'Bitcoin:rounds:primary:round-180:shares'],
-        ['del', 'Bitcoin:rounds:primary:round-180:times'],
-        ['zremrangebyscore', 'Bitcoin:rounds:primary:current:hashrate', 0],
-        ['hincrbyfloat', 'Bitcoin:payments:primary:counts', 'total', 0],
-        ['hset', 'Bitcoin:payments:primary:counts', 'last'],
-        ['hset', 'Bitcoin:payments:primary:counts', 'next']];
+        ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+        ['smove', 'Pool1:blocks:primary:pending', 'Pool1:blocks:primary:confirmed', 'serialized'],
+        ['del', 'Pool1:rounds:primary:round-180:counts'],
+        ['del', 'Pool1:rounds:primary:round-180:shares'],
+        ['del', 'Pool1:rounds:primary:round-180:times'],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
+        ['hset', 'Pool1:payments:primary:counts', 'last'],
+        ['hset', 'Pool1:payments:primary:counts', 'next']];
       expect(results.length).toBe(9);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
@@ -1640,18 +1640,18 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [5]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'generate', height: 180, hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { generate: 1250000000 }};
     poolPayments.handleUpdates(config, 'checks', 'primary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
-        ['hset', 'Bitcoin:payments:primary:generate', 'example1', 12.5],
-        ['hset', 'Bitcoin:payments:primary:immature', 'example1', 0],
-        ['zremrangebyscore', 'Bitcoin:rounds:primary:current:hashrate', 0]];
+        ['hset', 'Pool1:payments:primary:generate', 'example1', 12.5],
+        ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0]];
       expect(results.length).toBe(3);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
@@ -1664,27 +1664,27 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [6]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'generate', height: 180, hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { sent: 12.5 }};
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
-        ['hincrbyfloat', 'Bitcoin:payments:primary:paid', 'example1', 12.5],
-        ['hset', 'Bitcoin:payments:primary:balances', 'example1', 0],
-        ['hset', 'Bitcoin:payments:primary:generate', 'example1', 0],
-        ['hset', 'Bitcoin:payments:primary:immature', 'example1', 0],
-        ['smove', 'Bitcoin:blocks:primary:pending', 'Bitcoin:blocks:primary:confirmed', 'serialized'],
-        ['del', 'Bitcoin:rounds:primary:round-180:counts'],
-        ['del', 'Bitcoin:rounds:primary:round-180:shares'],
-        ['del', 'Bitcoin:rounds:primary:round-180:times'],
-        ['zremrangebyscore', 'Bitcoin:rounds:primary:current:hashrate', 0],
-        ['hincrbyfloat', 'Bitcoin:payments:primary:counts', 'total', 12.5],
-        ['hset', 'Bitcoin:payments:primary:counts', 'last'],
-        ['hset', 'Bitcoin:payments:primary:counts', 'next']];
+        ['hincrbyfloat', 'Pool1:payments:primary:paid', 'example1', 12.5],
+        ['hset', 'Pool1:payments:primary:balances', 'example1', 0],
+        ['hset', 'Pool1:payments:primary:generate', 'example1', 0],
+        ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+        ['smove', 'Pool1:blocks:primary:pending', 'Pool1:blocks:primary:confirmed', 'serialized'],
+        ['del', 'Pool1:rounds:primary:round-180:counts'],
+        ['del', 'Pool1:rounds:primary:round-180:shares'],
+        ['del', 'Pool1:rounds:primary:round-180:times'],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 12.5],
+        ['hset', 'Pool1:payments:primary:counts', 'last'],
+        ['hset', 'Pool1:payments:primary:counts', 'next']];
       expect(results.length).toBe(12);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
@@ -1706,27 +1706,27 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [7]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'generate', height: 180, hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { sent: 12.5, change: 0 }};
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
-        ['hincrbyfloat', 'Bitcoin:payments:primary:paid', 'example1', 12.5],
-        ['hset', 'Bitcoin:payments:primary:balances', 'example1', 0],
-        ['hset', 'Bitcoin:payments:primary:generate', 'example1', 0],
-        ['hset', 'Bitcoin:payments:primary:immature', 'example1', 0],
-        ['smove', 'Bitcoin:blocks:primary:pending', 'Bitcoin:blocks:primary:confirmed', 'serialized'],
-        ['del', 'Bitcoin:rounds:primary:round-180:counts'],
-        ['del', 'Bitcoin:rounds:primary:round-180:shares'],
-        ['del', 'Bitcoin:rounds:primary:round-180:times'],
-        ['zremrangebyscore', 'Bitcoin:rounds:primary:current:hashrate', 0],
-        ['hincrbyfloat', 'Bitcoin:payments:primary:counts', 'total', 12.5],
-        ['hset', 'Bitcoin:payments:primary:counts', 'last'],
-        ['hset', 'Bitcoin:payments:primary:counts', 'next']];
+        ['hincrbyfloat', 'Pool1:payments:primary:paid', 'example1', 12.5],
+        ['hset', 'Pool1:payments:primary:balances', 'example1', 0],
+        ['hset', 'Pool1:payments:primary:generate', 'example1', 0],
+        ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+        ['smove', 'Pool1:blocks:primary:pending', 'Pool1:blocks:primary:confirmed', 'serialized'],
+        ['del', 'Pool1:rounds:primary:round-180:counts'],
+        ['del', 'Pool1:rounds:primary:round-180:shares'],
+        ['del', 'Pool1:rounds:primary:round-180:times'],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 12.5],
+        ['hset', 'Pool1:payments:primary:counts', 'last'],
+        ['hset', 'Pool1:payments:primary:counts', 'next']];
       expect(results.length).toBe(12);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
@@ -1748,27 +1748,27 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [8]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'generate', height: 180, hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { sent: 12.5, change: 150000 }};
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
-        ['hincrbyfloat', 'Bitcoin:payments:primary:paid', 'example1', 12.5],
-        ['hset', 'Bitcoin:payments:primary:balances', 'example1', 0],
-        ['hset', 'Bitcoin:payments:primary:generate', 'example1', 0],
-        ['hset', 'Bitcoin:payments:primary:immature', 'example1', 0],
-        ['smove', 'Bitcoin:blocks:primary:pending', 'Bitcoin:blocks:primary:confirmed', 'serialized'],
-        ['del', 'Bitcoin:rounds:primary:round-180:counts'],
-        ['del', 'Bitcoin:rounds:primary:round-180:shares'],
-        ['del', 'Bitcoin:rounds:primary:round-180:times'],
-        ['zremrangebyscore', 'Bitcoin:rounds:primary:current:hashrate', 0],
-        ['hincrbyfloat', 'Bitcoin:payments:primary:counts', 'total', 12.5],
-        ['hset', 'Bitcoin:payments:primary:counts', 'last'],
-        ['hset', 'Bitcoin:payments:primary:counts', 'next']];
+        ['hincrbyfloat', 'Pool1:payments:primary:paid', 'example1', 12.5],
+        ['hset', 'Pool1:payments:primary:balances', 'example1', 0],
+        ['hset', 'Pool1:payments:primary:generate', 'example1', 0],
+        ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+        ['smove', 'Pool1:blocks:primary:pending', 'Pool1:blocks:primary:confirmed', 'serialized'],
+        ['del', 'Pool1:rounds:primary:round-180:counts'],
+        ['del', 'Pool1:rounds:primary:round-180:shares'],
+        ['del', 'Pool1:rounds:primary:round-180:times'],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 12.5],
+        ['hset', 'Pool1:payments:primary:counts', 'last'],
+        ['hset', 'Pool1:payments:primary:counts', 'next']];
       expect(results.length).toBe(12);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
@@ -1790,21 +1790,21 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [9]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'kicked', height: 180, hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { immature: 0 }};
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
-        ['hset', 'Bitcoin:payments:primary:immature', 'example1', 0],
-        ['smove', 'Bitcoin:blocks:primary:pending', 'Bitcoin:blocks:primary:kicked', 'serialized'],
-        ['zremrangebyscore', 'Bitcoin:rounds:primary:current:hashrate', 0],
-        ['hincrbyfloat', 'Bitcoin:payments:primary:counts', 'total', 0],
-        ['hset', 'Bitcoin:payments:primary:counts', 'last'],
-        ['hset', 'Bitcoin:payments:primary:counts', 'next']];
+        ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+        ['smove', 'Pool1:blocks:primary:pending', 'Pool1:blocks:primary:kicked', 'serialized'],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
+        ['hset', 'Pool1:payments:primary:counts', 'last'],
+        ['hset', 'Pool1:payments:primary:counts', 'next']];
       expect(results.length).toBe(6);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
@@ -1820,24 +1820,24 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [10]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'kicked', delete: true, height: 180, hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { immature: 0 }};
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
-        ['hset', 'Bitcoin:payments:primary:immature', 'example1', 0],
-        ['smove', 'Bitcoin:blocks:primary:pending', 'Bitcoin:blocks:primary:kicked', 'serialized'],
-        ['del', 'Bitcoin:rounds:primary:round-180:counts'],
-        ['del', 'Bitcoin:rounds:primary:round-180:shares'],
-        ['del', 'Bitcoin:rounds:primary:round-180:times'],
-        ['zremrangebyscore', 'Bitcoin:rounds:primary:current:hashrate', 0],
-        ['hincrbyfloat', 'Bitcoin:payments:primary:counts', 'total', 0],
-        ['hset', 'Bitcoin:payments:primary:counts', 'last'],
-        ['hset', 'Bitcoin:payments:primary:counts', 'next']];
+        ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+        ['smove', 'Pool1:blocks:primary:pending', 'Pool1:blocks:primary:kicked', 'serialized'],
+        ['del', 'Pool1:rounds:primary:round-180:counts'],
+        ['del', 'Pool1:rounds:primary:round-180:shares'],
+        ['del', 'Pool1:rounds:primary:round-180:times'],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
+        ['hset', 'Pool1:payments:primary:counts', 'last'],
+        ['hset', 'Pool1:payments:primary:counts', 'next']];
       expect(results.length).toBe(9);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
@@ -1856,22 +1856,22 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [11]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.minPaymentSatoshis = 50000000;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].primary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 50000000;
+    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'immature', hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { immature: 1250000000, change: 50000000 }};
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
-        ['hset', 'Bitcoin:payments:primary:balances', 'example1', 0.5],
-        ['hset', 'Bitcoin:payments:primary:generate', 'example1', 0],
-        ['hset', 'Bitcoin:payments:primary:immature', 'example1', 12.5],
-        ['zremrangebyscore', 'Bitcoin:rounds:primary:current:hashrate', 0],
-        ['hincrbyfloat', 'Bitcoin:payments:primary:counts', 'total', 0],
-        ['hset', 'Bitcoin:payments:primary:counts', 'last'],
-        ['hset', 'Bitcoin:payments:primary:counts', 'next']];
+        ['hset', 'Pool1:payments:primary:balances', 'example1', 0.5],
+        ['hset', 'Pool1:payments:primary:generate', 'example1', 0],
+        ['hset', 'Pool1:payments:primary:immature', 'example1', 12.5],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
+        ['hset', 'Pool1:payments:primary:counts', 'last'],
+        ['hset', 'Pool1:payments:primary:counts', 'next']];
       expect(results.length).toBe(7);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
@@ -1888,19 +1888,19 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [12]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Bitcoin'].auxiliary = { payments: {} };
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Bitcoin'].auxiliary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Bitcoin'];
+    poolPayments.poolConfigs['Pool1'].auxiliary = { payments: {} };
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.coinPrecision = 8;
+    poolPayments.poolConfigs['Pool1'].auxiliary.payments.processingFee = parseFloat(0.0004);
+    const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'immature', hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { immature: 1250000000 }};
     poolPayments.handleUpdates(config, 'checks', 'auxiliary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
-        ['hset', 'Bitcoin:payments:auxiliary:generate', 'example1', 0],
-        ['hset', 'Bitcoin:payments:auxiliary:immature', 'example1', 12.5],
-        ['zremrangebyscore', 'Bitcoin:rounds:auxiliary:current:hashrate', 0]];
+        ['hset', 'Pool1:payments:auxiliary:generate', 'example1', 0],
+        ['hset', 'Pool1:payments:auxiliary:immature', 'example1', 12.5],
+        ['zremrangebyscore', 'Pool1:rounds:auxiliary:current:hashrate', 0]];
       expect(results.length).toBe(3);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
@@ -1913,7 +1913,7 @@ describe('Test payments functionality', () => {
   test('Test info message on successful pipeline', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
-    poolPayments.outputPaymentInfo(['Bitcoin']);
+    poolPayments.outputPaymentInfo(['Pool1']);
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Payment processing setup to run every'));
     console.log.mockClear();
   });

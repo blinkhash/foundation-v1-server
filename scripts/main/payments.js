@@ -15,7 +15,7 @@ const Stratum = require('foundation-stratum');
 const PoolPayments = function (logger, client) {
 
   const _this = this;
-  this.coins = [];
+  this.pools = [];
   this.client = client;
   this.poolConfigs = JSON.parse(process.env.poolConfigs);
   this.portalConfig = JSON.parse(process.env.portalConfig);
@@ -23,10 +23,10 @@ const PoolPayments = function (logger, client) {
 
   // Check for Enabled Configs
   this.checkEnabled = function() {
-    Object.keys(_this.poolConfigs).forEach((coin) => {
-      const poolConfig = _this.poolConfigs[coin];
+    Object.keys(_this.poolConfigs).forEach((pool) => {
+      const poolConfig = _this.poolConfigs[pool];
       if (poolConfig.primary.payments && poolConfig.primary.payments.enabled) {
-        _this.coins.push(coin);
+        _this.pools.push(pool);
       }
     });
   };
@@ -46,7 +46,7 @@ const PoolPayments = function (logger, client) {
   };
 
   // Check Address to Ensure Viability
-  this.checkAddress = function(daemon, address, coin, command, callback) {
+  this.checkAddress = function(daemon, address, command, callback) {
     daemon.cmd(command, [address], (result) => {
       if (result.error) {
         callback(true, JSON.stringify(result.error));
@@ -59,12 +59,12 @@ const PoolPayments = function (logger, client) {
   };
 
   // Ensure Payment Address is Valid for Daemon
-  this.handleAddress = function(daemon, address, coin, callback) {
-    _this.checkAddress(daemon, address, coin, 'validateaddress', (error,) => {
+  this.handleAddress = function(daemon, address, pool, callback) {
+    _this.checkAddress(daemon, address, 'validateaddress', (error,) => {
       if (error) {
-        _this.checkAddress(daemon, address, coin, 'getaddressinfo', (error, results) => {
+        _this.checkAddress(daemon, address, 'getaddressinfo', (error, results) => {
           if (error) {
-            logger.error('Payments', coin, `Error with payment processing daemon: ${ results }`);
+            logger.error('Payments', pool, `Error with payment processing daemon: ${ results }`);
             callback(true, []);
           } else {
             callback(null, []);
@@ -77,12 +77,13 @@ const PoolPayments = function (logger, client) {
   };
 
   // Calculate Current Balance in Daemon
-  this.handleBalance = function(daemon, config, coin, blockType, callback) {
+  this.handleBalance = function(daemon, config, pool, blockType, callback) {
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
     daemon.cmd('getbalance', [], (result) => {
       if (result.error) {
-        logger.error('Payments', coin, `Error with payment processing daemon: ${ JSON.stringify(result.error) }`);
+        logger.error('Payments', pool, `Error with payment processing daemon: ${ JSON.stringify(result.error) }`);
         callback(true, []);
+        return;
       }
       try {
         const data = result.data.split('result":')[1].split(',')[0].split('.')[1];
@@ -91,19 +92,19 @@ const PoolPayments = function (logger, client) {
         const coinPrecision = magnitude.toString().length - 1;
         callback(null, [magnitude, minSatoshis, coinPrecision]);
       } catch(e) {
-        logger.error('Payments', coin, `Error detecting number of satoshis in a coin. Tried parsing: ${ result.data }`);
+        logger.error('Payments', pool, `Error detecting number of satoshis in a coin. Tried parsing: ${ result.data }`);
         callback(true, []);
       }
     }, true, true);
   };
 
   // Calculate Unspent Balance in Daemon
-  this.handleUnspent = function(daemon, config, category, coin, blockType, callback) {
+  this.handleUnspent = function(daemon, config, category, pool, blockType, callback) {
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
     const args = [processingConfig.payments.minConfirmations, 99999999];
     daemon.cmd('listunspent', args, (result) => {
       if (!result || result[0].error) {
-        logger.error('Payments', coin, `Error with payment processing daemon: ${ JSON.stringify(result[0].error) }`);
+        logger.error('Payments', pool, `Error with payment processing daemon: ${ JSON.stringify(result[0].error) }`);
         callback(true, []);
       } else {
         let balance = parseFloat(0);
@@ -116,7 +117,7 @@ const PoolPayments = function (logger, client) {
           balance = utils.coinsRound(balance, processingConfig.payments.coinPrecision);
         }
         if (category === 'start') {
-          logger.special('Payments', coin, `${ processingConfig.coin.name } wallet has a balance of ${ balance } ${ processingConfig.coin.symbol }`);
+          logger.special('Payments', pool, `${ processingConfig.coin.name } wallet has a balance of ${ balance } ${ processingConfig.coin.symbol }`);
         }
         callback(null, [utils.coinsToSatoshis(balance, processingConfig.payments.magnitude)]);
       }
@@ -124,13 +125,13 @@ const PoolPayments = function (logger, client) {
   };
 
   // Handle Shares of Orphan Blocks
-  this.handleOrphans = function(round, coin, blockType, callback) {
+  this.handleOrphans = function(round, pool, blockType, callback) {
 
     const commands = [];
     const dateNow = Date.now();
 
     if (typeof round.orphanShares !== 'undefined') {
-      logger.warning('Payments', coin, `Moving shares/times from orphaned block ${ round.height } to current round.`);
+      logger.warning('Payments', pool, `Moving shares/times from orphaned block ${ round.height } to current round.`);
 
       // Move Orphaned Shares to Following Round
       Object.keys(round.orphanShares).forEach((address) => {
@@ -140,14 +141,14 @@ const PoolPayments = function (logger, client) {
           worker: address,
           solo: false,
         };
-        commands.push(['hincrby', `${ coin }:rounds:${ blockType }:current:counts`, 'valid', 1]);
-        commands.push(['zadd', `${ coin }:rounds:${ blockType }:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
-        commands.push(['hincrby', `${ coin }:rounds:${ blockType }:current:shares`, JSON.stringify(outputShare), round.orphanShares[address]]);
+        commands.push(['hincrby', `${ pool }:rounds:${ blockType }:current:counts`, 'valid', 1]);
+        commands.push(['zadd', `${ pool }:rounds:${ blockType }:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
+        commands.push(['hincrby', `${ pool }:rounds:${ blockType }:current:shares`, JSON.stringify(outputShare), round.orphanShares[address]]);
       });
 
       // Move Orphaned Times to Following Round
       Object.keys(round.orphanTimes).forEach((address) => {
-        commands.push(['hincrbyfloat', `${ coin }:rounds:${ blockType }:current:times`, address, round.orphanTimes[address]]);
+        commands.push(['hincrbyfloat', `${ pool }:rounds:${ blockType }:current:times`, address, round.orphanTimes[address]]);
       });
     }
 
@@ -157,7 +158,7 @@ const PoolPayments = function (logger, client) {
 
   // Handle Duplicate Blocks/Rounds
   /* istanbul ignore next */
-  this.handleDuplicates = function(daemon, rounds, coin, blockType, callback) {
+  this.handleDuplicates = function(daemon, rounds, pool, blockType, callback) {
 
     const validBlocks = {};
     const invalidBlocks = [];
@@ -169,7 +170,7 @@ const PoolPayments = function (logger, client) {
     // Query Daemon Regarding Duplicate Blocks
     daemon.batchCmd(commands, (error, blocks) => {
       if (error || !blocks) {
-        logger.error('Payments', coin, `Could not get blocks from daemon: ${ JSON.stringify(error) }`);
+        logger.error('Payments', pool, `Could not get blocks from daemon: ${ JSON.stringify(error) }`);
         callback(true, []);
         return;
       }
@@ -178,9 +179,9 @@ const PoolPayments = function (logger, client) {
       blocks.forEach((block, idx) => {
         if (block && block.result) {
           if (block.result.confirmations < 0) {
-            invalidBlocks.push(['smove', `${ coin }:blocks:${ blockType }:pending`, `${ coin }:blocks:${ blockType }:duplicate`, duplicates[idx].serialized]);
+            invalidBlocks.push(['smove', `${ pool }:blocks:${ blockType }:pending`, `${ pool }:blocks:${ blockType }:duplicate`, duplicates[idx].serialized]);
           } else if (Object.prototype.hasOwnProperty.call(validBlocks, duplicates[idx].hash)) {
-            invalidBlocks.push(['smove', `${ coin }:blocks:${ blockType }:pending`, `${ coin }:blocks:${ blockType }:duplicate`, duplicates[idx].serialized]);
+            invalidBlocks.push(['smove', `${ pool }:blocks:${ blockType }:pending`, `${ pool }:blocks:${ blockType }:duplicate`, duplicates[idx].serialized]);
           } else {
             validBlocks[duplicates[idx].hash] = duplicates[idx].serialized;
           }
@@ -191,7 +192,7 @@ const PoolPayments = function (logger, client) {
       if (invalidBlocks.length > 0) {
         _this.client.multi(invalidBlocks).exec((error,) => {
           if (error) {
-            logger.error('Payments', coin, `Error could not move invalid duplicate blocks ${ JSON.stringify(error) }`);
+            logger.error('Payments', pool, `Error could not move invalid duplicate blocks ${ JSON.stringify(error) }`);
             callback(true, []);
             return;
           }
@@ -326,11 +327,11 @@ const PoolPayments = function (logger, client) {
   this.handleBlocks = function(daemon, config, blockType, callback) {
 
     // Load Blocks from Database
-    const coin = config.primary.coin.name;
-    const commands = [['smembers', `${ coin }:blocks:${ blockType }:pending`]];
+    const pool = config.name;
+    const commands = [['smembers', `${ pool }:blocks:${ blockType }:pending`]];
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
-        logger.error('Payments', coin, `Could not get blocks from database: ${ JSON.stringify(error) }`);
+        logger.error('Payments', pool, `Could not get blocks from database: ${ JSON.stringify(error) }`);
         callback(true, []);
         return;
       }
@@ -365,7 +366,7 @@ const PoolPayments = function (logger, client) {
 
       // Handle Duplicate Blocks
       if (duplicateFound) {
-        _this.handleDuplicates(daemon, rounds, coin, blockType, callback);
+        _this.handleDuplicates(daemon, rounds, pool, blockType, callback);
       } else {
         callback(null, [rounds]);
       }
@@ -377,12 +378,12 @@ const PoolPayments = function (logger, client) {
   this.handleWorkers = function(config, blockType, data, callback) {
 
     // Load Unpaid Workers from Database
-    const coin = config.primary.coin.name;
+    const pool = config.name;
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
-    const commands = [['hgetall', `${ coin }:payments:${ blockType }:balances`]];
+    const commands = [['hgetall', `${ pool }:payments:${ blockType }:balances`]];
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
-        logger.error('Payments', coin, `Could not get workers from database: ${ JSON.stringify(error) }`);
+        logger.error('Payments', pool, `Could not get workers from database: ${ JSON.stringify(error) }`);
         callback(true, []);
       }
 
@@ -406,14 +407,14 @@ const PoolPayments = function (logger, client) {
 
     // Get Hashes for Each Transaction
     let rounds = data[0];
-    const coin = config.primary.coin.name;
+    const pool = config.name;
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
     const commands = rounds.map((round) => ['gettransaction', [round.transaction]]);
 
     // Query Daemon Regarding Transactions
     daemon.batchCmd(commands, (error, transactions) => {
       if (error || !transactions) {
-        logger.error('Payments', coin, `Could not get transactions from daemon: ${ JSON.stringify(error) }`);
+        logger.error('Payments', pool, `Could not get transactions from daemon: ${ JSON.stringify(error) }`);
         callback(true, []);
         return;
       }
@@ -424,14 +425,14 @@ const PoolPayments = function (logger, client) {
         // Check Daemon Edge Cases
         const round = rounds[idx];
         if (tx.error && tx.error.code === -5) {
-          logger.warning('Payments', coin, `Daemon reports invalid transaction: ${ round.transaction }`);
+          logger.warning('Payments', pool, `Daemon reports invalid transaction: ${ round.transaction }`);
           round.category = 'kicked';
           return;
         } else if (tx.error || !tx.result) {
-          logger.error('Payments', coin, `Unable to load transaction: ${ round.transaction } ${ JSON.stringify(tx)}`);
+          logger.error('Payments', pool, `Unable to load transaction: ${ round.transaction } ${ JSON.stringify(tx)}`);
           return;
         } else if (!tx.result.details || (tx.result.details && tx.result.details.length === 0)) {
-          logger.warning('Payments', coin, `Daemon reports no details for transaction: ${ round.transaction }`);
+          logger.warning('Payments', pool, `Daemon reports no details for transaction: ${ round.transaction }`);
           round.category = 'kicked';
           return;
         }
@@ -491,15 +492,15 @@ const PoolPayments = function (logger, client) {
   this.handleTimes = function(config, blockType, data, callback) {
 
     const times = [];
-    const coin = config.primary.coin.name;
+    const pool = config.name;
     const commands = data[0].map((round) => {
-      return ['hgetall', `${ coin }:rounds:${ blockType }:round-${ round.height }:times`];
+      return ['hgetall', `${ pool }:rounds:${ blockType }:round-${ round.height }:times`];
     });
 
     // Build Commands from Rounds
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
-        logger.error('Payments', coin, `Could not load times data from database: ${ JSON.stringify(error) }`);
+        logger.error('Payments', pool, `Could not load times data from database: ${ JSON.stringify(error) }`);
         callback(true, []);
         return;
       }
@@ -531,15 +532,17 @@ const PoolPayments = function (logger, client) {
 
     const solo = [];
     const shared = [];
-    const coin = config.primary.coin.name;
+    const pool = config.name;
+
+    // Map Commands from Individual Rounds
     const commands = data[0].map((round) => {
-      return ['hgetall', `${ coin }:rounds:${ blockType }:round-${ round.height }:shares`];
+      return ['hgetall', `${ pool }:rounds:${ blockType }:round-${ round.height }:shares`];
     });
 
     // Build Commands from Rounds
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
-        logger.error('Payments', coin, `Could not load shares data from database: ${ JSON.stringify(error) }`);
+        logger.error('Payments', pool, `Could not load shares data from database: ${ JSON.stringify(error) }`);
         callback(true, []);
         return;
       }
@@ -579,8 +582,8 @@ const PoolPayments = function (logger, client) {
 
     let totalOwed = parseInt(0);
     const rounds = data[0];
+    const pool = config.name;
 
-    const coin = config.primary.coin.name;
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
     const feeSatoshi = utils.coinsToSatoshis(processingConfig.payments.processingFee, processingConfig.payments.magnitude);
 
@@ -597,9 +600,9 @@ const PoolPayments = function (logger, client) {
     });
 
     // Check Unspent Balance
-    _this.handleUnspent(daemon, config, category, coin, blockType, (error, balance) => {
+    _this.handleUnspent(daemon, config, category, pool, blockType, (error, balance) => {
       if (error) {
-        logger.error('Payments', coin, 'Error checking pool balance before processing payments.');
+        logger.error('Payments', pool, 'Error checking pool balance before processing payments.');
         callback(true, []);
         return;
       }
@@ -608,7 +611,7 @@ const PoolPayments = function (logger, client) {
       if (balance[0] < totalOwed) {
         const currentBalance = utils.satoshisToCoins(balance[0], processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
         const owedBalance = utils.satoshisToCoins(totalOwed, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
-        logger.error('Payments', coin, `Insufficient funds (${ currentBalance }) to process payments (${ owedBalance }), possibly waiting for transactions.`);
+        logger.error('Payments', pool, `Insufficient funds (${ currentBalance }) to process payments (${ owedBalance }), possibly waiting for transactions.`);
       }
 
       // Return Payment Data as Callback
@@ -621,7 +624,7 @@ const PoolPayments = function (logger, client) {
 
     let workers = data[1];
     const rounds = data[0];
-    const coin = config.primary.coin.name;
+    const pool = config.name;
 
     // Manage Shares in each Round
     rounds.forEach((round, i) => {
@@ -633,8 +636,8 @@ const PoolPayments = function (logger, client) {
 
       // Check if Shares Exist in Round
       if (Object.keys(solo).length <= 0 && Object.keys(shared).length <= 0) {
-        _this.client.smove(`${ coin }:blocks:${ blockType }:pending`, `${ coin }:blocks:${ blockType }:manual`, round.serialized);
-        logger.error('Payments', coin, `No worker shares for round: ${ round.height }, hash: ${ round.hash }. Manual payout required.`);
+        _this.client.smove(`${ pool }:blocks:${ blockType }:pending`, `${ pool }:blocks:${ blockType }:manual`, round.serialized);
+        logger.error('Payments', pool, `No worker shares for round: ${ round.height }, hash: ${ round.hash }. Manual payout required.`);
         return;
       }
 
@@ -682,7 +685,7 @@ const PoolPayments = function (logger, client) {
 
     const rounds = data[0];
     const workers = data[1];
-    const coin = config.primary.coin.name;
+    const pool = config.name;
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
 
     // Calculate Amount to Send to Workers
@@ -729,23 +732,23 @@ const PoolPayments = function (logger, client) {
       // Check Error Edge Cases
       const output = result[0];
       if (output.error && output.error.code === -5) {
-        logger.warning('Payments', coin, rpcTracking);
-        logger.error('Payments', coin, `Error sending payments ${ JSON.stringify(output.error)}`);
+        logger.warning('Payments', pool, rpcTracking);
+        logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(output.error)}`);
         callback(true, []);
         return;
       } else if (output.error && output.error.code === -6) {
-        logger.warning('Payments', coin, rpcTracking);
-        logger.error('Payments', coin, `Insufficient funds for payments: ${ JSON.stringify(output.error)}`);
+        logger.warning('Payments', pool, rpcTracking);
+        logger.error('Payments', pool, `Insufficient funds for payments: ${ JSON.stringify(output.error)}`);
         callback(true, []);
         return;
       } else if (output.error && output.error.message != null) {
-        logger.warning('Payments', coin, rpcTracking);
-        logger.error('Payments', coin, `Error sending payments ${ JSON.stringify(output.error)}`);
+        logger.warning('Payments', pool, rpcTracking);
+        logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(output.error)}`);
         callback(true, []);
         return;
       } else if (output.error) {
-        logger.warning('Payments', coin, rpcTracking);
-        logger.error('Payments', coin, `Error sending payments ${ JSON.stringify(output.error)}`);
+        logger.warning('Payments', pool, rpcTracking);
+        logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(output.error)}`);
         callback(true, []);
         return;
       }
@@ -762,14 +765,14 @@ const PoolPayments = function (logger, client) {
         };
 
         // Update Redis Database with Payment Record
-        logger.special('Payments', coin, `Sent ${ totalSent } ${ processingConfig.coin.symbol } to ${ Object.keys(amounts).length } workers, txid: ${ transaction }`);
-        commands.push(['zadd', `${ coin }:payments:${ blockType }:records`, Date.now(), JSON.stringify(payments)]);
+        logger.special('Payments', pool, `Sent ${ totalSent } ${ processingConfig.coin.symbol } to ${ Object.keys(amounts).length } workers, txid: ${ transaction }`);
+        commands.push(['zadd', `${ pool }:payments:${ blockType }:records`, Date.now(), JSON.stringify(payments)]);
         callback(null, [rounds, workers, commands]);
         return;
 
       // Invalid/No Transaction ID
       } else {
-        logger.error('Payments', coin, 'RPC command did not return txid. Disabling payments to prevent possible double-payouts');
+        logger.error('Payments', pool, 'RPC command did not return txid. Disabling payments to prevent possible double-payouts');
         callback(true, []);
         return;
       }
@@ -782,10 +785,10 @@ const PoolPayments = function (logger, client) {
 
     let totalPaid = 0;
     let commands = data[2] || [];
+
     const rounds = data[0];
     const workers = data[1];
-
-    const coin = config.primary.coin.name;
+    const pool = config.name;
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
 
     // Update Worker Payouts/Balances
@@ -797,22 +800,22 @@ const PoolPayments = function (logger, client) {
         if (worker.sent > 0) {
           const sent = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
           totalPaid = utils.coinsRound(totalPaid + worker.sent, processingConfig.payments.coinPrecision);
-          commands.push(['hincrbyfloat', `${ coin }:payments:${ blockType }:paid`, address, sent]);
-          commands.push(['hset', `${ coin }:payments:${ blockType }:balances`, address, 0]);
-          commands.push(['hset', `${ coin }:payments:${ blockType }:generate`, address, 0]);
+          commands.push(['hincrbyfloat', `${ pool }:payments:${ blockType }:paid`, address, sent]);
+          commands.push(['hset', `${ pool }:payments:${ blockType }:balances`, address, 0]);
+          commands.push(['hset', `${ pool }:payments:${ blockType }:generate`, address, 0]);
         } else if (worker.change > 0) {
           worker.change = utils.satoshisToCoins(worker.change, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
           const change = utils.coinsRound(worker.change, processingConfig.payments.coinPrecision);
-          commands.push(['hset', `${ coin }:payments:${ blockType }:balances`, address, change]);
-          commands.push(['hset', `${ coin }:payments:${ blockType }:generate`, address, 0]);
+          commands.push(['hset', `${ pool }:payments:${ blockType }:balances`, address, change]);
+          commands.push(['hset', `${ pool }:payments:${ blockType }:generate`, address, 0]);
         }
       } else {
         if (worker.generate > 0) {
           worker.generate = utils.satoshisToCoins(worker.generate, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
           const generate = utils.coinsRound(worker.generate, processingConfig.payments.coinPrecision);
-          commands.push(['hset', `${ coin }:payments:${ blockType }:generate`, address, generate]);
+          commands.push(['hset', `${ pool }:payments:${ blockType }:generate`, address, generate]);
         } else {
-          commands.push(['hset', `${ coin }:payments:${ blockType }:generate`, address, 0]);
+          commands.push(['hset', `${ pool }:payments:${ blockType }:generate`, address, 0]);
         }
       }
 
@@ -820,18 +823,18 @@ const PoolPayments = function (logger, client) {
       if (worker.immature > 0) {
         worker.immature = utils.satoshisToCoins(worker.immature, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
         const immature = utils.coinsRound(worker.immature, processingConfig.payments.coinPrecision);
-        commands.push(['hset', `${ coin }:payments:${ blockType }:immature`, address, immature]);
+        commands.push(['hset', `${ pool }:payments:${ blockType }:immature`, address, immature]);
       } else {
-        commands.push(['hset', `${ coin }:payments:${ blockType }:immature`, address, 0]);
+        commands.push(['hset', `${ pool }:payments:${ blockType }:immature`, address, 0]);
       }
     });
 
     // Update Worker Shares
-    const deleteCurrent = function(round, coin, blockType) {
+    const deleteCurrent = function(round, pool, blockType) {
       return [
-        ['del', `${ coin }:rounds:${ blockType }:round-${ round.height }:counts`],
-        ['del', `${ coin }:rounds:${ blockType }:round-${ round.height }:shares`],
-        ['del', `${ coin }:rounds:${ blockType }:round-${ round.height }:times`]];
+        ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:counts`],
+        ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:shares`],
+        ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:times`]];
     };
 
     // Update Round Shares/Times
@@ -839,11 +842,11 @@ const PoolPayments = function (logger, client) {
       switch (round.category) {
       case 'kicked':
       case 'orphan':
-        commands.push(['smove', `${ coin }:blocks:${ blockType }:pending`, `${ coin }:blocks:${ blockType }:kicked`, round.serialized]);
+        commands.push(['smove', `${ pool }:blocks:${ blockType }:pending`, `${ pool }:blocks:${ blockType }:kicked`, round.serialized]);
         if (round.delete) {
-          _this.handleOrphans(round, coin, blockType, (error, results) => {
+          _this.handleOrphans(round, pool, blockType, (error, results) => {
             commands = commands.concat(results);
-            commands = commands.concat(deleteCurrent(round, coin, blockType));
+            commands = commands.concat(deleteCurrent(round, pool, blockType));
           });
         }
         break;
@@ -851,8 +854,8 @@ const PoolPayments = function (logger, client) {
         break;
       case 'generate':
         if (category === 'payments') {
-          commands.push(['smove', `${ coin }:blocks:${ blockType }:pending`, `${ coin }:blocks:${ blockType }:confirmed`, round.serialized]);
-          commands = commands.concat(deleteCurrent(round, coin, blockType));
+          commands.push(['smove', `${ pool }:blocks:${ blockType }:pending`, `${ pool }:blocks:${ blockType }:confirmed`, round.serialized]);
+          commands = commands.concat(deleteCurrent(round, pool, blockType));
         }
         break;
       }
@@ -861,23 +864,23 @@ const PoolPayments = function (logger, client) {
     // Update Hashrate Calculation
     const hashrateWindow = config.settings.hashrateWindow;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
-    commands.push(['zremrangebyscore', `${ coin }:rounds:${ blockType }:current:hashrate`, 0, `(${ windowTime }`]);
+    commands.push(['zremrangebyscore', `${ pool }:rounds:${ blockType }:current:hashrate`, 0, `(${ windowTime }`]);
 
     // Update Miscellaneous Statistics
     if ((category === 'start') || (category === 'payments')) {
       const nextInterval = interval + (processingConfig.payments.paymentInterval * 1000);
-      commands.push(['hincrbyfloat', `${ coin }:payments:${ blockType }:counts`, 'total', totalPaid]);
-      commands.push(['hset', `${ coin }:payments:${ blockType }:counts`, 'last', interval]);
-      commands.push(['hset', `${ coin }:payments:${ blockType }:counts`, 'next', nextInterval]);
+      commands.push(['hincrbyfloat', `${ pool }:payments:${ blockType }:counts`, 'total', totalPaid]);
+      commands.push(['hset', `${ pool }:payments:${ blockType }:counts`, 'last', interval]);
+      commands.push(['hset', `${ pool }:payments:${ blockType }:counts`, 'next', nextInterval]);
     }
 
     // Manage Redis Commands
     _this.client.multi(commands).exec((error,) => {
       if (error) {
-        logger.error('Payments', coin, `Payments sent but could not update redis: ${
+        logger.error('Payments', pool, `Payments sent but could not update redis: ${
           JSON.stringify(error) }. Disabling payment processing to prevent double-payouts. The commands in ${
-          coin.toLowerCase() }_commands.txt must be ran manually`);
-        fs.writeFile(`${ coin.toLowerCase() }_commands.txt`, JSON.stringify(commands), () => {
+          pool.toLowerCase() }_commands.txt must be ran manually`);
+        fs.writeFile(`${ pool.toLowerCase() }_commands.txt`, JSON.stringify(commands), () => {
           logger.error('Could not write output commands.txt, stop the program immediately.');
         });
         callback(true, []);
@@ -930,8 +933,8 @@ const PoolPayments = function (logger, client) {
         callbackMain(null, false);
         return;
       }
-      const coin = config.primary.coin.name;
-      logger.debug('Payments', coin, 'Finished payment processing management and attempted to send out payments.');
+      const pool = config.name;
+      logger.debug('Payments', pool, 'Finished payment processing management and attempted to send out payments.');
       callbackMain(null, true);
     });
   };
@@ -980,33 +983,35 @@ const PoolPayments = function (logger, client) {
     const config = data[1];
 
     // Setup Intervals for Individual Chains
-    _this.handleIntervals(daemons[0], config, 'primary');
-    if (config.auxiliary.payments && config.auxiliary.payments.enabled && daemons.length > 1) {
-      _this.handleIntervals(daemons[1], config, 'auxiliary');
+    if (daemons && daemons.length >= 1) {
+      _this.handleIntervals(daemons[0], config, 'primary');
+      if (config.auxiliary && config.auxiliary.payments && config.auxiliary.payments.enabled && daemons.length > 1) {
+        _this.handleIntervals(daemons[1], config, 'auxiliary');
+      }
     }
   };
 
   // Handle Primary Payment Processing
   /* istanbul ignore next */
-  this.handlePrimary = function(coin, callbackMain) {
+  this.handlePrimary = function(pool, callbackMain) {
 
-    const config = _this.poolConfigs[coin];
+    const config = _this.poolConfigs[pool];
     config.primary.payments.processingFee = parseFloat(config.primary.payments.transactionFee) || parseFloat(0.0004);
     config.primary.payments.minConfirmations = Math.max((config.primary.payments.minConfirmations || 10), 1);
 
     // Build Primary Daemon
-    const handler = (severity, results) => logger[severity]('Payments', coin, results);
+    const handler = (severity, results) => logger[severity]('Payments', pool, results);
     const daemon = new Stratum.daemon([config.primary.payments.daemon], handler);
 
     // Warn if < Recommended Config
     if (config.primary.payments.minConfirmations < 3) {
-      logger.warning('Payments', coin, 'The recommended number of confirmations (primary) is >= 3.');
+      logger.warning('Payments', pool, 'The recommended number of confirmations (primary) is >= 3.');
     }
 
     // Handle Initial Validation
     async.parallel([
-      (callback) => _this.handleAddress(daemon, config.primary.address, coin, callback),
-      (callback) => _this.handleBalance(daemon, config, coin, 'primary', callback),
+      (callback) => _this.handleAddress(daemon, config.primary.address, pool, callback),
+      (callback) => _this.handleBalance(daemon, config, pool, 'primary', callback),
     ], (error, results) => {
       if (error) {
         callbackMain(null, false);
@@ -1021,25 +1026,25 @@ const PoolPayments = function (logger, client) {
 
   // Handle Auxiliary Payment Processing
   /* istanbul ignore next */
-  this.handleAuxiliary = function(coin, data, callbackMain) {
+  this.handleAuxiliary = function(pool, data, callbackMain) {
 
     const config = data[1];
-    if (config.auxiliary && config.auxiliary.enabled) {
+    if (config && config.auxiliary && config.auxiliary.enabled) {
       config.auxiliary.payments.processingFee = parseFloat(config.auxiliary.payments.transactionFee) || parseFloat(0.0004);
       config.auxiliary.payments.minConfirmations = Math.max((config.auxiliary.payments.minConfirmations || 10), 1);
 
       // Build Auxiliary Daemon
-      const handler = (severity, results) => logger[severity]('Payments', coin, results);
+      const handler = (severity, results) => logger[severity]('Payments', pool, results);
       const daemon = new Stratum.daemon([config.auxiliary.payments.daemon], handler);
 
       // Warn if < Recommended Config
       if (config.auxiliary.payments.minConfirmations < 3) {
-        logger.warning('Payments', coin, 'The recommended number of confirmations (auxiliary) is >= 3.');
+        logger.warning('Payments', pool, 'The recommended number of confirmations (auxiliary) is >= 3.');
       }
 
       // Handle Initial Validation
       async.parallel([
-        (callback) => _this.handleBalance(daemon, config, coin, 'auxiliary', callback),
+        (callback) => _this.handleBalance(daemon, config, pool, 'auxiliary', callback),
       ], (error, results) => {
         if (error) {
           callbackMain(null, [data[0], config]);
@@ -1058,10 +1063,10 @@ const PoolPayments = function (logger, client) {
 
   // Handle Payment Processing for Enabled Pools
   /* istanbul ignore next */
-  this.handlePayments = function(coin, callbackMain) {
+  this.handlePayments = function(pool, callbackMain) {
     async.waterfall([
-      (callback) => _this.handlePrimary(coin, callback),
-      (data, callback) => _this.handleAuxiliary(coin, data, callback)
+      (callback) => _this.handlePrimary(pool, callback),
+      (data, callback) => _this.handleAuxiliary(pool, data, callback)
     ], (error, results) => {
       if (error) {
         callbackMain(null, false);
@@ -1073,10 +1078,10 @@ const PoolPayments = function (logger, client) {
 
   // Output Derived Payment Information
   this.outputPaymentInfo = function(pools) {
-    pools.forEach((coin) => {
-      const poolOptions = _this.poolConfigs[coin];
+    pools.forEach((pool) => {
+      const poolOptions = _this.poolConfigs[pool];
       const processingConfig = poolOptions.primary.payments;
-      logger.debug('Payments', coin, `Payment processing setup to run every ${
+      logger.debug('Payments', pool, `Payment processing setup to run every ${
         processingConfig.paymentInterval } second(s) with daemon (${
         processingConfig.daemon.username }@${ processingConfig.daemon.host }:${
         processingConfig.daemon.port }) and redis (${ _this.portalConfig.redis.host }:${
@@ -1089,7 +1094,7 @@ const PoolPayments = function (logger, client) {
   /* istanbul ignore next */
   this.setupPayments = function(callback) {
     _this.checkEnabled();
-    async.filter(_this.coins, _this.handlePayments, (error, results) => {
+    async.filter(_this.pools, _this.handlePayments, (error, results) => {
       _this.outputPaymentInfo(results);
       callback();
     });

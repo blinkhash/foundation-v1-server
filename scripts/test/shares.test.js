@@ -79,8 +79,8 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example'],
-      ['hset', 'Bitcoin:rounds:primary:current:submissions', 'example']];
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'example'],
+      ['hset', 'Pool1:rounds:primary:current:submissions', 'example']];
     const commands = poolShares.buildTimesCommands(results, shareData, true, false);
     expect(commands.length).toBe(2);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
@@ -110,8 +110,8 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example'],
-      ['hset', 'Bitcoin:rounds:primary:current:submissions', 'example']];
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'example'],
+      ['hset', 'Pool1:rounds:primary:current:submissions', 'example']];
     const commands = poolShares.buildTimesCommands(results, shareData, true, false);
     expect(commands.length).toBe(2);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
@@ -140,7 +140,7 @@ describe('Test shares functionality', () => {
       'reward': 10006839,
       'shareDiff': '2.35170820',
     };
-    const expected = [['hset', 'Bitcoin:rounds:primary:current:submissions', 'example']];
+    const expected = [['hset', 'Pool1:rounds:primary:current:submissions', 'example']];
     const commands = poolShares.buildTimesCommands(results, shareData, true, false);
     expect(commands.length).toBe(1);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
@@ -167,7 +167,7 @@ describe('Test shares functionality', () => {
       'reward': 10006839,
       'shareDiff': '2.35170820',
     };
-    const expected = [['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example']];
+    const expected = [['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'example']];
     const commands = poolShares.buildTimesCommands(results, shareData, true, true);
     expect(commands.length).toBe(1);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
@@ -196,10 +196,10 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example1'],
-      ['hset', 'Bitcoin:rounds:primary:current:submissions', 'example1'],
-      ['hincrbyfloat', 'Bitcoin:rounds:auxiliary:current:times', 'example2'],
-      ['hset', 'Bitcoin:rounds:auxiliary:current:submissions', 'example2']];
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'example1'],
+      ['hset', 'Pool1:rounds:primary:current:submissions', 'example1'],
+      ['hincrbyfloat', 'Pool1:rounds:auxiliary:current:times', 'example2'],
+      ['hset', 'Pool1:rounds:auxiliary:current:submissions', 'example2']];
     const commands = poolShares.buildTimesCommands(results, shareData, true, false);
     expect(commands.length).toBe(4);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
@@ -233,11 +233,11 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example'],
-      ['hset', 'Bitcoin:rounds:primary:current:submissions', 'example'],
-      ['zadd', 'Bitcoin:rounds:primary:current:hashrate'],
-      ['hincrby', 'Bitcoin:rounds:primary:current:counts', 'valid', 1],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:shares']];
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'example'],
+      ['hset', 'Pool1:rounds:primary:current:submissions', 'example'],
+      ['zadd', 'Pool1:rounds:primary:current:hashrate'],
+      ['hincrby', 'Pool1:rounds:primary:current:counts', 'valid', 1],
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:shares']];
     const commands = poolShares.buildSharesCommands(results, shareData, true, false);
     expect(commands.length).toBe(5);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
@@ -268,8 +268,8 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['zadd', 'Bitcoin:rounds:primary:current:hashrate'],
-      ['hincrby', 'Bitcoin:rounds:primary:current:counts', 'invalid', 1]];
+      ['zadd', 'Pool1:rounds:primary:current:hashrate'],
+      ['hincrby', 'Pool1:rounds:primary:current:counts', 'invalid', 1]];
     const commands = poolShares.buildSharesCommands(results, shareData, false, true);
     expect(commands.length).toBe(2);
     expect(commands[0].slice(0, 2)).toStrictEqual(expected[0]);
@@ -298,16 +298,16 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example1'],
-      ['hset', 'Bitcoin:rounds:primary:current:submissions', 'example1'],
-      ['hincrbyfloat', 'Bitcoin:rounds:auxiliary:current:times', 'example2'],
-      ['hset', 'Bitcoin:rounds:auxiliary:current:submissions', 'example2'],
-      ['zadd', 'Bitcoin:rounds:primary:current:hashrate'],
-      ['hincrby', 'Bitcoin:rounds:primary:current:counts', 'valid', 1],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:shares'],
-      ['zadd', 'Bitcoin:rounds:auxiliary:current:hashrate'],
-      ['hincrby', 'Bitcoin:rounds:auxiliary:current:counts', 'valid', 1],
-      ['hincrbyfloat', 'Bitcoin:rounds:auxiliary:current:shares']];
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'example1'],
+      ['hset', 'Pool1:rounds:primary:current:submissions', 'example1'],
+      ['hincrbyfloat', 'Pool1:rounds:auxiliary:current:times', 'example2'],
+      ['hset', 'Pool1:rounds:auxiliary:current:submissions', 'example2'],
+      ['zadd', 'Pool1:rounds:primary:current:hashrate'],
+      ['hincrby', 'Pool1:rounds:primary:current:counts', 'valid', 1],
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:shares'],
+      ['zadd', 'Pool1:rounds:auxiliary:current:hashrate'],
+      ['hincrby', 'Pool1:rounds:auxiliary:current:counts', 'valid', 1],
+      ['hincrbyfloat', 'Pool1:rounds:auxiliary:current:shares']];
     const commands = poolShares.buildSharesCommands(results, shareData, true, false);
     expect(commands.length).toBe(10);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
@@ -341,12 +341,12 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['del', 'Bitcoin:rounds:primary:current:submissions'],
-      ['rename', 'Bitcoin:rounds:primary:current:counts', 'Bitcoin:rounds:primary:round-1972211:counts'],
-      ['rename', 'Bitcoin:rounds:primary:current:shares', 'Bitcoin:rounds:primary:round-1972211:shares'],
-      ['rename', 'Bitcoin:rounds:primary:current:times', 'Bitcoin:rounds:primary:round-1972211:times'],
-      ['sadd', 'Bitcoin:blocks:primary:pending'],
-      ['hincrby', 'Bitcoin:blocks:primary:counts', 'valid', 1]];
+      ['del', 'Pool1:rounds:primary:current:submissions'],
+      ['rename', 'Pool1:rounds:primary:current:counts', 'Pool1:rounds:primary:round-1972211:counts'],
+      ['rename', 'Pool1:rounds:primary:current:shares', 'Pool1:rounds:primary:round-1972211:shares'],
+      ['rename', 'Pool1:rounds:primary:current:times', 'Pool1:rounds:primary:round-1972211:times'],
+      ['sadd', 'Pool1:blocks:primary:pending'],
+      ['hincrby', 'Pool1:blocks:primary:counts', 'valid', 1]];
     const commands = poolShares.calculateBlocks(shareData, true, true);
     expect(commands.length).toBe(6);
     expect(commands[0]).toStrictEqual(expected[0]);
@@ -376,7 +376,7 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
       'transaction': 'example',
     };
-    const expected = [['hincrby', 'Bitcoin:blocks:primary:counts', 'invalid', 1]];
+    const expected = [['hincrby', 'Pool1:blocks:primary:counts', 'invalid', 1]];
     const commands = poolShares.calculateBlocks(shareData, true, false);
     expect(commands.length).toBe(1);
     expect(commands[0]).toStrictEqual(expected[0]);
@@ -447,11 +447,11 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:times', 'example'],
-      ['hset', 'Bitcoin:rounds:primary:current:submissions', 'example'],
-      ['zadd', 'Bitcoin:rounds:primary:current:hashrate'],
-      ['hincrby', 'Bitcoin:rounds:primary:current:counts', 'valid', 1],
-      ['hincrbyfloat', 'Bitcoin:rounds:primary:current:shares']];
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'example'],
+      ['hset', 'Pool1:rounds:primary:current:submissions', 'example'],
+      ['zadd', 'Pool1:rounds:primary:current:hashrate'],
+      ['hincrby', 'Pool1:rounds:primary:current:counts', 'valid', 1],
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:shares']];
     const commands = poolShares.buildCommands(results, shareData, true, false, () => {
       return done();
     });

@@ -12,14 +12,14 @@ const utils = require('./utils');
 const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
   const _this = this;
-  this.coin = poolConfig.primary.coin.name;
+  this.pool = poolConfig.name;
   this.client = client;
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;
   this.forkId = process.env.forkId;
 
   const logSystem = 'Pool';
-  const logComponent = _this.coin;
+  const logComponent = poolConfig.name;
   const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
 
   _this.client.on('ready', () => {});
@@ -46,12 +46,12 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const lastTime = lastTimes[address];
     const timeChange = utils.roundTo(Math.max(dateNow - lastTime, 0) / 1000, 4);
     if (timeChange < 900) {
-      commands.push(['hincrbyfloat', `${ _this.coin }:rounds:${ blockType }:current:times`, address, timeChange]);
+      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:times`, address, timeChange]);
     }
 
     // Ensure Block Hasn't Been Found
     if (!blockValid) {
-      commands.push(['hset', `${ _this.coin }:rounds:${ blockType }:current:submissions`, address, dateNow]);
+      commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:submissions`, address, dateNow]);
     }
 
     return commands;
@@ -76,12 +76,12 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Handle Valid/Invalid Shares
     if (shareValid) {
-      commands.push(['zadd', `${ _this.coin }:rounds:${ blockType }:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
-      commands.push(['hincrby', `${ _this.coin }:rounds:${ blockType }:current:counts`, 'valid', 1]);
-      commands.push(['hincrbyfloat', `${ _this.coin }:rounds:${ blockType }:current:shares`, JSON.stringify(outputShare), shareData.difficulty]);
+      commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
+      commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:counts`, 'valid', 1]);
+      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:shares`, JSON.stringify(outputShare), shareData.difficulty]);
     } else {
-      commands.push(['zadd', `${ _this.coin }:rounds:${ blockType }:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
-      commands.push(['hincrby', `${ _this.coin }:rounds:${ blockType }:current:counts`, 'invalid', 1]);
+      commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
+      commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:counts`, 'invalid', 1]);
     }
 
     return commands;
@@ -111,14 +111,14 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Handle Valid/Invalid Blocks
     if (blockValid) {
-      commands.push(['del', `${ _this.coin }:rounds:${ blockType }:current:submissions`]),
-      commands.push(['rename', `${ _this.coin }:rounds:${ blockType }:current:counts`, `${ _this.coin }:rounds:${ blockType }:round-${ shareData.height }:counts`]);
-      commands.push(['rename', `${ _this.coin }:rounds:${ blockType }:current:shares`, `${ _this.coin }:rounds:${ blockType }:round-${ shareData.height }:shares`]);
-      commands.push(['rename', `${ _this.coin }:rounds:${ blockType }:current:times`, `${ _this.coin }:rounds:${ blockType }:round-${ shareData.height }:times`]);
-      commands.push(['sadd', `${ _this.coin }:blocks:${ blockType }:pending`, JSON.stringify(outputBlock)]);
-      commands.push(['hincrby', `${ _this.coin }:blocks:${ blockType }:counts`, 'valid', 1]);
+      commands.push(['del', `${ _this.pool }:rounds:${ blockType }:current:submissions`]),
+      commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:counts`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:counts`]);
+      commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:shares`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:shares`]);
+      commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:times`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:times`]);
+      commands.push(['sadd', `${ _this.pool }:blocks:${ blockType }:pending`, JSON.stringify(outputBlock)]);
+      commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'valid', 1]);
     } else if (shareData.transaction) {
-      commands.push(['hincrby', `${ _this.coin }:blocks:${ blockType }:counts`, 'invalid', 1]);
+      commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'invalid', 1]);
     }
 
     return commands;
@@ -174,8 +174,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   /* istanbul ignore next */
   this.handleShares = function(shareData, shareValid, blockValid, callback, handler) {
     const shareLookups = [
-      ['hgetall', `${ _this.coin }:rounds:primary:current:submissions`],
-      ['hgetall', `${ _this.coin }:rounds:auxiliary:current:submissions`]];
+      ['hgetall', `${ _this.pool }:rounds:primary:current:submissions`],
+      ['hgetall', `${ _this.pool }:rounds:auxiliary:current:submissions`]];
     this.executeCommands(shareLookups, (results) => {
       _this.buildCommands(results, shareData, shareValid, blockValid, callback, handler);
     }, handler);

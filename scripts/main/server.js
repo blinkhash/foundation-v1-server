@@ -45,7 +45,7 @@ const PoolServer = function (logger, client) {
     // Handle API Requests
     /* istanbul ignore next */
     /* eslint-disable-next-line no-unused-vars */
-    app.get('/api/v1/:coin/:endpoint?', (req, res, next) => {
+    app.get('/api/v1/:pool/:endpoint?', (req, res, next) => {
       api.handleApiV1(req, res);
     });
 

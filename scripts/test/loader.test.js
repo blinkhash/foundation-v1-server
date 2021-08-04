@@ -90,15 +90,15 @@ describe('Test loader functionality', () => {
   test('Test pool name validation [1]', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: true, primary: { coin: { name: 'Litecoin' }}};
-    const poolConfigs = { Bitcoin: { enabled: true, primary: { coin: { name: 'Bitcoin' }}}};
+    const poolConfigs = { Pool1: { enabled: true, primary: { coin: { name: 'Bitcoin' }}}};
     const response = poolLoader.validatePoolNames(poolConfigs, poolConfig);
     expect(response).toBe(true);
   });
 
   test('Test pool name validation [2]', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, primary: { coin: { name: 'Bitcoin' }}};
-    const poolConfigs = { Bitcoin: { enabled: true, primary: { coin: { name: 'Bitcoin' }}}};
+    const poolConfig = { enabled: true, name: 'Pool1' };
+    const poolConfigs = { Pool1: { enabled: true, primary: { coin: { name: 'Bitcoin' }}}};
     const response = poolLoader.validatePoolNames(poolConfigs, poolConfig);
     expect(response).toBe(false);
   });
@@ -106,7 +106,7 @@ describe('Test loader functionality', () => {
   test('Test pool port validation [1]', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: true, ports: [{ enabled: true, port: 3001 }]};
-    const poolConfigs = { Bitcoin: { enabled: true, ports: [{ enabled: true, port: 3002 }]}};
+    const poolConfigs = { Pool1: { enabled: true, ports: [{ enabled: true, port: 3002 }]}};
     const response = poolLoader.validatePoolPorts(poolConfigs, poolConfig);
     expect(response).toBe(true);
   });
@@ -115,7 +115,7 @@ describe('Test loader functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: true, ports: [{ enabled: true, port: 3001 }]};
-    const poolConfigs = { Bitcoin: { enabled: true, ports: [{ enabled: true, port: 3001 }]}};
+    const poolConfigs = { Pool1: { enabled: true, ports: [{ enabled: true, port: 3001 }]}};
     const response = poolLoader.validatePoolPorts(poolConfigs, poolConfig);
     expect(consoleSpy).toHaveBeenCalled();
     expect(response).toBe(false);

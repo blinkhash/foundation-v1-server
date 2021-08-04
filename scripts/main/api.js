@@ -20,7 +20,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   this.messages = {
     invalid: { code: 500, message: 'The server was unable to handle your request. Verify your input or try again later.' },
     method: { code: 405, message: 'The requested method is not currently supported. Verify your input and try again.' },
-    coin: { code: 405, message: 'The requested coin was not found. Verify your input and try again.' },
+    pool: { code: 405, message: 'The requested pool was not found. Verify your input and try again.' },
     success: { code: 200, message: '' }
   };
 
@@ -28,54 +28,54 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   //////////////////////////////////////////////////////////////////////////////
 
   // API Endpoint for /blocks/confirmed
-  this.handleBlocksConfirmed = function(coin, response) {
+  this.handleBlocksConfirmed = function(pool, response) {
     const commands = [
-      ['smembers', `${ coin }:blocks:primary:confirmed`],
-      ['smembers', `${ coin }:blocks:auxiliary:confirmed`]];
-    _this.executeCommands(coin, '/blocks/confirmed', commands, response, (results) => {
+      ['smembers', `${ pool }:blocks:primary:confirmed`],
+      ['smembers', `${ pool }:blocks:auxiliary:confirmed`]];
+    _this.executeCommands(pool, '/blocks/confirmed', commands, response, (results) => {
       const blocks = {
         primary: utils.processBlocks(results[0]),
         auxiliary: utils.processBlocks(results[1])};
-      _this.buildPayload(coin, '/blocks/confirmed', _this.messages.success, blocks, response);
+      _this.buildPayload(pool, '/blocks/confirmed', _this.messages.success, blocks, response);
     });
   };
 
   // API Endpoint for /blocks/kicked
-  this.handleBlocksKicked = function(coin, response) {
+  this.handleBlocksKicked = function(pool, response) {
     const commands = [
-      ['smembers', `${ coin }:blocks:primary:kicked`],
-      ['smembers', `${ coin }:blocks:auxiliary:kicked`]];
-    _this.executeCommands(coin, '/blocks/kicked', commands, response, (results) => {
+      ['smembers', `${ pool }:blocks:primary:kicked`],
+      ['smembers', `${ pool }:blocks:auxiliary:kicked`]];
+    _this.executeCommands(pool, '/blocks/kicked', commands, response, (results) => {
       const blocks = {
         primary: utils.processBlocks(results[0]),
         auxiliary: utils.processBlocks(results[1])};
-      _this.buildPayload(coin, '/blocks/kicked', _this.messages.success, blocks, response);
+      _this.buildPayload(pool, '/blocks/kicked', _this.messages.success, blocks, response);
     });
   };
 
   // API Endpoint for /blocks/pending
-  this.handleBlocksPending = function(coin, response) {
+  this.handleBlocksPending = function(pool, response) {
     const commands = [
-      ['smembers', `${ coin }:blocks:primary:pending`],
-      ['smembers', `${ coin }:blocks:auxiliary:pending`]];
-    _this.executeCommands(coin, '/blocks/pending', commands, response, (results) => {
+      ['smembers', `${ pool }:blocks:primary:pending`],
+      ['smembers', `${ pool }:blocks:auxiliary:pending`]];
+    _this.executeCommands(pool, '/blocks/pending', commands, response, (results) => {
       const blocks = {
         primary: utils.processBlocks(results[0]),
         auxiliary: utils.processBlocks(results[1])};
-      _this.buildPayload(coin, '/blocks/pending', _this.messages.success, blocks, response);
+      _this.buildPayload(pool, '/blocks/pending', _this.messages.success, blocks, response);
     });
   };
 
   // API Endpoint for /blocks
-  this.handleBlocks = function(coin, response) {
+  this.handleBlocks = function(pool, response) {
     const commands = [
-      ['smembers', `${ coin }:blocks:primary:confirmed`],
-      ['smembers', `${ coin }:blocks:primary:kicked`],
-      ['smembers', `${ coin }:blocks:primary:pending`],
-      ['smembers', `${ coin }:blocks:auxiliary:confirmed`],
-      ['smembers', `${ coin }:blocks:auxiliary:kicked`],
-      ['smembers', `${ coin }:blocks:auxiliary:pending`]];
-    _this.executeCommands(coin, '/blocks', commands, response, (results) => {
+      ['smembers', `${ pool }:blocks:primary:confirmed`],
+      ['smembers', `${ pool }:blocks:primary:kicked`],
+      ['smembers', `${ pool }:blocks:primary:pending`],
+      ['smembers', `${ pool }:blocks:auxiliary:confirmed`],
+      ['smembers', `${ pool }:blocks:auxiliary:kicked`],
+      ['smembers', `${ pool }:blocks:auxiliary:pending`]];
+    _this.executeCommands(pool, '/blocks', commands, response, (results) => {
       const blocks = {
         primary: {
           confirmed: utils.processBlocks(results[0]),
@@ -88,32 +88,32 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
           pending: utils.processBlocks(results[5])
         }
       };
-      _this.buildPayload(coin, '/blocks', _this.messages.success, blocks, response);
+      _this.buildPayload(pool, '/blocks', _this.messages.success, blocks, response);
     });
   };
 
   // API Endpoint for /miners/[miner]
-  this.handleMinersSpecific = function(coin, miner, response) {
-    const algorithm = _this.poolConfigs[coin].primary.coin.algorithms.mining;
-    const hashrateWindow = _this.poolConfigs[coin].settings.hashrateWindow;
+  this.handleMinersSpecific = function(pool, miner, response) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
-      ['hgetall', `${ coin }:payments:primary:balances`],
-      ['hgetall', `${ coin }:payments:primary:generate`],
-      ['hgetall', `${ coin }:payments:primary:immature`],
-      ['hgetall', `${ coin }:payments:primary:paid`],
-      ['hgetall', `${ coin }:rounds:primary:current:shares`],
-      ['hgetall', `${ coin }:rounds:primary:current:times`],
-      ['zrangebyscore', `${ coin }:rounds:primary:current:hashrate`, windowTime, '+inf'],
-      ['hgetall', `${ coin }:payments:auxiliary:balances`],
-      ['hgetall', `${ coin }:payments:auxiliary:generate`],
-      ['hgetall', `${ coin }:payments:auxiliary:immature`],
-      ['hgetall', `${ coin }:payments:auxiliary:paid`],
-      ['hgetall', `${ coin }:rounds:auxiliary:current:shares`],
-      ['hgetall', `${ coin }:rounds:auxiliary:current:times`],
-      ['zrangebyscore', `${ coin }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(coin, `/miners/${ miner }`, commands, response, (results) => {
+      ['hgetall', `${ pool }:payments:primary:balances`],
+      ['hgetall', `${ pool }:payments:primary:generate`],
+      ['hgetall', `${ pool }:payments:primary:immature`],
+      ['hgetall', `${ pool }:payments:primary:paid`],
+      ['hgetall', `${ pool }:rounds:primary:current:shares`],
+      ['hgetall', `${ pool }:rounds:primary:current:times`],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:payments:auxiliary:balances`],
+      ['hgetall', `${ pool }:payments:auxiliary:generate`],
+      ['hgetall', `${ pool }:payments:auxiliary:immature`],
+      ['hgetall', `${ pool }:payments:auxiliary:paid`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shares`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:times`],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
+    _this.executeCommands(pool, `/miners/${ miner }`, commands, response, (results) => {
 
       // Structure Round Data
       const primaryShareData = utils.processShares(results[4], miner);
@@ -180,102 +180,102 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       };
 
       // Output Final Payload
-      _this.buildPayload(coin, `/miners/${ miner }`, _this.messages.success, statistics, response);
+      _this.buildPayload(pool, `/miners/${ miner }`, _this.messages.success, statistics, response);
     });
   };
 
   // API Endpoint for /miners
-  this.handleMiners = function(coin, response) {
-    const hashrateWindow = _this.poolConfigs[coin].settings.hashrateWindow;
+  this.handleMiners = function(pool, response) {
+    const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
-      ['zrangebyscore', `${ coin }:rounds:primary:current:hashrate`, windowTime, '+inf'],
-      ['zrangebyscore', `${ coin }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(coin, '/miners', commands, response, (results) => {
+      ['zrangebyscore', `${ pool }:rounds:primary:current:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
+    _this.executeCommands(pool, '/miners', commands, response, (results) => {
       const miners = {
         primary: utils.processMiners(results[0]),
         auxiliary: utils.processMiners(results[1])};
-      _this.buildPayload(coin, '/miners', _this.messages.success, miners, response);
+      _this.buildPayload(pool, '/miners', _this.messages.success, miners, response);
     });
   };
 
   // API Endpoint for /payments/balances
-  this.handlePaymentsBalances = function(coin, response) {
+  this.handlePaymentsBalances = function(pool, response) {
     const commands = [
-      ['hgetall', `${ coin }:payments:primary:balances`],
-      ['hgetall', `${ coin }:payments:auxiliary:balances`]];
-    _this.executeCommands(coin, '/payments/balances', commands, response, (results) => {
+      ['hgetall', `${ pool }:payments:primary:balances`],
+      ['hgetall', `${ pool }:payments:auxiliary:balances`]];
+    _this.executeCommands(pool, '/payments/balances', commands, response, (results) => {
       const payments = {
         primary: utils.processPayments(results[0]),
         auxiliary: utils.processPayments(results[1])};
-      _this.buildPayload(coin, '/payments/balances', _this.messages.success, payments, response);
+      _this.buildPayload(pool, '/payments/balances', _this.messages.success, payments, response);
     });
   };
 
   // API Endpoint for /payments/generate
-  this.handlePaymentsGenerate = function(coin, response) {
+  this.handlePaymentsGenerate = function(pool, response) {
     const commands = [
-      ['hgetall', `${ coin }:payments:primary:generate`],
-      ['hgetall', `${ coin }:payments:auxiliary:generate`]];
-    _this.executeCommands(coin, '/payments/generate', commands, response, (results) => {
+      ['hgetall', `${ pool }:payments:primary:generate`],
+      ['hgetall', `${ pool }:payments:auxiliary:generate`]];
+    _this.executeCommands(pool, '/payments/generate', commands, response, (results) => {
       const payments = {
         primary: utils.processPayments(results[0]),
         auxiliary: utils.processPayments(results[1])};
-      _this.buildPayload(coin, '/payments/generate', _this.messages.success, payments, response);
+      _this.buildPayload(pool, '/payments/generate', _this.messages.success, payments, response);
     });
   };
 
   // API Endpoint for /payments/immature
-  this.handlePaymentsImmature = function(coin, response) {
+  this.handlePaymentsImmature = function(pool, response) {
     const commands = [
-      ['hgetall', `${ coin }:payments:primary:immature`],
-      ['hgetall', `${ coin }:payments:auxiliary:immature`]];
-    _this.executeCommands(coin, '/payments/immature', commands, response, (results) => {
+      ['hgetall', `${ pool }:payments:primary:immature`],
+      ['hgetall', `${ pool }:payments:auxiliary:immature`]];
+    _this.executeCommands(pool, '/payments/immature', commands, response, (results) => {
       const payments = {
         primary: utils.processPayments(results[0]),
         auxiliary: utils.processPayments(results[1])};
-      _this.buildPayload(coin, '/payments/immature', _this.messages.success, payments, response);
+      _this.buildPayload(pool, '/payments/immature', _this.messages.success, payments, response);
     });
   };
 
   // API Endpoint for /payments/paid
-  this.handlePaymentsPaid = function(coin, response) {
+  this.handlePaymentsPaid = function(pool, response) {
     const commands = [
-      ['hgetall', `${ coin }:payments:primary:paid`],
-      ['hgetall', `${ coin }:payments:auxiliary:paid`]];
-    _this.executeCommands(coin, '/payments/paid', commands, response, (results) => {
+      ['hgetall', `${ pool }:payments:primary:paid`],
+      ['hgetall', `${ pool }:payments:auxiliary:paid`]];
+    _this.executeCommands(pool, '/payments/paid', commands, response, (results) => {
       const payments = {
         primary: utils.processPayments(results[0]),
         auxiliary: utils.processPayments(results[1])};
-      _this.buildPayload(coin, '/payments/paid', _this.messages.success, payments, response);
+      _this.buildPayload(pool, '/payments/paid', _this.messages.success, payments, response);
     });
   };
 
   // API Endpoint for /payments/paid
-  this.handlePaymentsRecords = function(coin, response) {
+  this.handlePaymentsRecords = function(pool, response) {
     const commands = [
-      ['zrange', `${ coin }:payments:primary:records`, 0, -1],
-      ['zrange', `${ coin }:payments:auxiliary:records`, 0, -1]];
-    _this.executeCommands(coin, '/payments/records', commands, response, (results) => {
+      ['zrange', `${ pool }:payments:primary:records`, 0, -1],
+      ['zrange', `${ pool }:payments:auxiliary:records`, 0, -1]];
+    _this.executeCommands(pool, '/payments/records', commands, response, (results) => {
       const payments = {
         primary: utils.processRecords(results[0]),
         auxiliary: utils.processRecords(results[1])};
-      _this.buildPayload(coin, '/payments/records', _this.messages.success, payments, response);
+      _this.buildPayload(pool, '/payments/records', _this.messages.success, payments, response);
     });
   };
 
   // API Endpoint for /payments
-  this.handlePayments = function(coin, response) {
+  this.handlePayments = function(pool, response) {
     const commands = [
-      ['hgetall', `${ coin }:payments:primary:balances`],
-      ['hgetall', `${ coin }:payments:primary:generate`],
-      ['hgetall', `${ coin }:payments:primary:immature`],
-      ['hgetall', `${ coin }:payments:primary:paid`],
-      ['hgetall', `${ coin }:payments:auxiliary:balances`],
-      ['hgetall', `${ coin }:payments:auxiliary:generate`],
-      ['hgetall', `${ coin }:payments:auxiliary:immature`],
-      ['hgetall', `${ coin }:payments:auxiliary:paid`]];
-    _this.executeCommands(coin, '/payments', commands, response, (results) => {
+      ['hgetall', `${ pool }:payments:primary:balances`],
+      ['hgetall', `${ pool }:payments:primary:generate`],
+      ['hgetall', `${ pool }:payments:primary:immature`],
+      ['hgetall', `${ pool }:payments:primary:paid`],
+      ['hgetall', `${ pool }:payments:auxiliary:balances`],
+      ['hgetall', `${ pool }:payments:auxiliary:generate`],
+      ['hgetall', `${ pool }:payments:auxiliary:immature`],
+      ['hgetall', `${ pool }:payments:auxiliary:paid`]];
+    _this.executeCommands(pool, '/payments', commands, response, (results) => {
       const blocks = {
         primary: {
           balances: utils.processPayments(results[0]),
@@ -290,18 +290,18 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
           paid: utils.processPayments(results[7]),
         }
       };
-      _this.buildPayload(coin, '/payments', _this.messages.success, blocks, response);
+      _this.buildPayload(pool, '/payments', _this.messages.success, blocks, response);
     });
   };
 
   // API Endpoint for /rounds/current
-  this.handleRoundsCurrent = function(coin, response) {
+  this.handleRoundsCurrent = function(pool, response) {
     const commands = [
-      ['hgetall', `${ coin }:rounds:primary:current:shares`],
-      ['hgetall', `${ coin }:rounds:primary:current:times`],
-      ['hgetall', `${ coin }:rounds:auxiliary:current:shares`],
-      ['hgetall', `${ coin }:rounds:auxiliary:current:times`]];
-    _this.executeCommands(coin, '/rounds/current', commands, response, (results) => {
+      ['hgetall', `${ pool }:rounds:primary:current:shares`],
+      ['hgetall', `${ pool }:rounds:primary:current:times`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shares`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:times`]];
+    _this.executeCommands(pool, '/rounds/current', commands, response, (results) => {
       const primaryShareData = utils.processShares(results[0]);
       const auxiliaryShareData = utils.processShares(results[2]);
       const current = {
@@ -316,18 +316,18 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
           times: utils.processTimes(results[3]),
         }
       };
-      _this.buildPayload(coin, '/rounds/current', _this.messages.success, current, response);
+      _this.buildPayload(pool, '/rounds/current', _this.messages.success, current, response);
     });
   };
 
   // API Endpoint for /rounds/[height]
-  this.handleRoundsHeight = function(coin, height, response) {
+  this.handleRoundsHeight = function(pool, height, response) {
     const commands = [
-      ['hgetall', `${ coin }:rounds:primary:round-${ height }:shares`],
-      ['hgetall', `${ coin }:rounds:primary:round-${ height }:times`],
-      ['hgetall', `${ coin }:rounds:auxiliary:round-${ height }:shares`],
-      ['hgetall', `${ coin }:rounds:auxiliary:round-${ height }:times`]];
-    _this.executeCommands(coin, `/rounds/${ height }`, commands, response, (results) => {
+      ['hgetall', `${ pool }:rounds:primary:round-${ height }:shares`],
+      ['hgetall', `${ pool }:rounds:primary:round-${ height }:times`],
+      ['hgetall', `${ pool }:rounds:auxiliary:round-${ height }:shares`],
+      ['hgetall', `${ pool }:rounds:auxiliary:round-${ height }:times`]];
+    _this.executeCommands(pool, `/rounds/${ height }`, commands, response, (results) => {
       const primaryShareData = utils.processShares(results[0]);
       const auxiliaryShareData = utils.processShares(results[2]);
       const current = {
@@ -342,20 +342,20 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
           times: utils.processTimes(results[3]),
         }
       };
-      _this.buildPayload(coin, `/rounds/${ height }`, _this.messages.success, current, response);
+      _this.buildPayload(pool, `/rounds/${ height }`, _this.messages.success, current, response);
     });
   };
 
   // Helper Function for /rounds
-  this.processRounds = function(coin, rounds, blockType, response, callback) {
+  this.processRounds = function(pool, rounds, blockType, response, callback) {
     const combined = {};
     if (rounds.length >= 1) {
       const handler = new Promise((resolve,) => {
         rounds.forEach((height, idx) => {
           const commands = [
-            ['hgetall', `${ coin }:rounds:${ blockType }:round-${ height }:shares`],
-            ['hgetall', `${ coin }:rounds:${ blockType }:round-${ height }:times`]];
-          _this.executeCommands(coin, '/rounds', commands, response, (results) => {
+            ['hgetall', `${ pool }:rounds:${ blockType }:round-${ height }:shares`],
+            ['hgetall', `${ pool }:rounds:${ blockType }:round-${ height }:times`]];
+          _this.executeCommands(pool, '/rounds', commands, response, (results) => {
             const shareData = utils.processShares(results[0]);
             combined[height] = {
               solo: shareData[0],
@@ -376,19 +376,19 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /rounds
-  this.handleRounds = function(coin, response) {
+  this.handleRounds = function(pool, response) {
     const keys = [
-      ['keys', `${ coin }:rounds:primary:round-*:shares`],
-      ['keys', `${ coin }:rounds:auxiliary:round-*:shares`]];
-    _this.executeCommands(coin, '/rounds', keys, response, (results) => {
+      ['keys', `${ pool }:rounds:primary:round-*:shares`],
+      ['keys', `${ pool }:rounds:auxiliary:round-*:shares`]];
+    _this.executeCommands(pool, '/rounds', keys, response, (results) => {
       const rounds = {};
       const primaryRounds = results[0].map((key) => key.split(':')[3].split('-')[1]);
       const auxiliaryRounds = results[1].map((key) => key.split(':')[3].split('-')[1]);
-      _this.processRounds(coin, primaryRounds, 'primary', response, (combined) => {
+      _this.processRounds(pool, primaryRounds, 'primary', response, (combined) => {
         rounds.primary = combined;
-        _this.processRounds(coin, auxiliaryRounds, 'auxiliary', response, (combined) => {
+        _this.processRounds(pool, auxiliaryRounds, 'auxiliary', response, (combined) => {
           rounds.auxiliary = combined;
-          _this.buildPayload(coin, '/rounds', _this.messages.success, rounds, response);
+          _this.buildPayload(pool, '/rounds', _this.messages.success, rounds, response);
         });
       });
     });
@@ -396,21 +396,21 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
 
   // API Endpoint for /statistics
   /* istanbul ignore next */
-  this.handleStatistics = function(coin, response) {
-    const algorithm = _this.poolConfigs[coin].primary.coin.algorithms.mining;
-    const hashrateWindow = _this.poolConfigs[coin].settings.hashrateWindow;
+  this.handleStatistics = function(pool, response) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
-      ['hgetall', `${ coin }:blocks:primary:counts`],
-      ['hgetall', `${ coin }:payments:primary:counts`],
-      ['hgetall', `${ coin }:rounds:primary:current:counts`],
-      ['zrangebyscore', `${ coin }:rounds:primary:current:hashrate`, windowTime, '+inf'],
-      ['hgetall', `${ coin }:blocks:auxiliary:counts`],
-      ['hgetall', `${ coin }:payments:auxiliary:counts`],
-      ['hgetall', `${ coin }:rounds:auxiliary:current:counts`],
-      ['zrangebyscore', `${ coin }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(coin, '/statistics', commands, response, (results) => {
+      ['hgetall', `${ pool }:blocks:primary:counts`],
+      ['hgetall', `${ pool }:payments:primary:counts`],
+      ['hgetall', `${ pool }:rounds:primary:current:counts`],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:blocks:auxiliary:counts`],
+      ['hgetall', `${ pool }:payments:auxiliary:counts`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:counts`],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
+    _this.executeCommands(pool, '/statistics', commands, response, (results) => {
       const statistics = {
         primary: {
           blocks: {
@@ -453,24 +453,24 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
           }
         }
       };
-      _this.buildPayload(coin, '/statistics', _this.messages.success, statistics, response);
+      _this.buildPayload(pool, '/statistics', _this.messages.success, statistics, response);
     });
   };
 
   // API Endpoint for /workers/[worker]
-  this.handleWorkersSpecific = function(coin, worker, response) {
-    const algorithm = _this.poolConfigs[coin].primary.coin.algorithms.mining;
-    const hashrateWindow = _this.poolConfigs[coin].settings.hashrateWindow;
+  this.handleWorkersSpecific = function(pool, worker, response) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
-      ['hgetall', `${ coin }:rounds:primary:current:shares`],
-      ['hgetall', `${ coin }:rounds:primary:current:times`],
-      ['zrangebyscore', `${ coin }:rounds:primary:current:hashrate`, windowTime, '+inf'],
-      ['hgetall', `${ coin }:rounds:auxiliary:current:shares`],
-      ['hgetall', `${ coin }:rounds:auxiliary:current:times`],
-      ['zrangebyscore', `${ coin }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(coin, `/workers/${ worker }`, commands, response, (results) => {
+      ['hgetall', `${ pool }:rounds:primary:current:shares`],
+      ['hgetall', `${ pool }:rounds:primary:current:times`],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shares`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:times`],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
+    _this.executeCommands(pool, `/workers/${ worker }`, commands, response, (results) => {
 
       // Structure Round Data
       const primaryShareData = utils.processShares(results[0], worker);
@@ -507,32 +507,32 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       };
 
       // Output Final Payload
-      _this.buildPayload(coin, `/workers/${ worker }`, _this.messages.success, statistics, response);
+      _this.buildPayload(pool, `/workers/${ worker }`, _this.messages.success, statistics, response);
     });
   };
 
   // API Endpoint for /workers
-  this.handleWorkers = function(coin, response) {
-    const hashrateWindow = _this.poolConfigs[coin].settings.hashrateWindow;
+  this.handleWorkers = function(pool, response) {
+    const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
-      ['zrangebyscore', `${ coin }:rounds:primary:current:hashrate`, windowTime, '+inf'],
-      ['zrangebyscore', `${ coin }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(coin, '/workers', commands, response, (results) => {
+      ['zrangebyscore', `${ pool }:rounds:primary:current:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
+    _this.executeCommands(pool, '/workers', commands, response, (results) => {
       const workers = {
         primary: utils.processWorkers(results[0]),
         auxiliary: utils.processWorkers(results[1])};
-      _this.buildPayload(coin, '/workers', _this.messages.success, workers, response);
+      _this.buildPayload(pool, '/workers', _this.messages.success, workers, response);
     });
   };
 
   // Miscellaneous Endpoints
   //////////////////////////////////////////////////////////////////////////////
 
-  // API Endpoint for /coins
-  this.handleCoins = function(response) {
-    const coins = Object.keys(_this.poolConfigs);
-    _this.buildPayload('Pool', '/coins', _this.messages.success, coins, response);
+  // API Endpoint for /pools
+  this.handlePools = function(response) {
+    const pools = Object.keys(_this.poolConfigs);
+    _this.buildPayload('Pool', '/pools', _this.messages.success, pools, response);
   };
 
   // API Endpoint for /partners
@@ -544,9 +544,11 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   //////////////////////////////////////////////////////////////////////////////
 
   // Build API Payload for each Endpoint
-  this.buildPayload = function(coin, endpoint, message, data, response) {
+  this.buildPayload = function(pool, endpoint, message, data, response) {
     const payload = {
-      coin: coin,
+      pool: pool,
+      coins: _this.poolConfigs[pool] ? _this.poolConfigs[pool].coins || [] : [],
+      logo: _this.poolConfigs[pool] ? _this.poolConfigs[pool].logo || '' : '',
       endpoint: endpoint,
       time: Date.now(),
       response: message,
@@ -559,10 +561,10 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
 
   // Execute Redis Commands
   /* istanbul ignore next */
-  this.executeCommands = function(coin, endpoint, commands, response, callback) {
+  this.executeCommands = function(pool, endpoint, commands, response, callback) {
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
-        _this.buildPayload(coin, endpoint, _this.messages.invalid, null, response);
+        _this.buildPayload(pool, endpoint, _this.messages.invalid, null, response);
       } else {
         callback(results);
       }
@@ -572,11 +574,11 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   // Determine API Endpoint Called
   this.handleApiV1 = function(req, res) {
 
-    let coin, endpoint, method;
+    let pool, endpoint, method;
 
     // If Path Params Exist
     if (req.params) {
-      coin = utils.validateInput(req.params.coin || '');
+      pool = utils.validateInput(req.params.pool || '');
       endpoint = utils.validateInput(req.params.endpoint || '');
     }
 
@@ -585,9 +587,9 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       method = utils.validateInput(req.query.method || '');
     }
 
-    const miscellaneous = ['coins', 'partners'];
-    if (!(coin in _this.poolConfigs) && !(miscellaneous.includes(coin))) {
-      _this.buildPayload(coin, '/unknown', _this.messages.coin, null, res);
+    const miscellaneous = ['pools', 'partners'];
+    if (!(pool in _this.poolConfigs) && !(miscellaneous.includes(pool))) {
+      _this.buildPayload(pool, '/unknown', _this.messages.pool, null, res);
       return;
     }
 
@@ -596,84 +598,84 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
 
     // Blocks Endpoints
     case (endpoint === 'blocks' && method === 'confirmed'):
-      _this.handleBlocksConfirmed(coin, res);
+      _this.handleBlocksConfirmed(pool, res);
       break;
     case (endpoint === 'blocks' && method === 'kicked'):
-      _this.handleBlocksKicked(coin, res);
+      _this.handleBlocksKicked(pool, res);
       break;
     case (endpoint === 'blocks' && method === 'pending'):
-      _this.handleBlocksPending(coin, res);
+      _this.handleBlocksPending(pool, res);
       break;
     case (endpoint === 'blocks' && method === ''):
-      _this.handleBlocks(coin, res);
+      _this.handleBlocks(pool, res);
       break;
 
     // Miners Endpoints
     case (endpoint === 'miners' && method.length >= 1):
-      _this.handleMinersSpecific(coin, method, res);
+      _this.handleMinersSpecific(pool, method, res);
       break;
     case (endpoint === 'miners' && method === ''):
-      _this.handleMiners(coin, res);
+      _this.handleMiners(pool, res);
       break;
 
     // Payments Endpoints
     case (endpoint === 'payments' && method === 'balances'):
-      _this.handlePaymentsBalances(coin, res);
+      _this.handlePaymentsBalances(pool, res);
       break;
     case (endpoint === 'payments' && method === 'generate'):
-      _this.handlePaymentsGenerate(coin, res);
+      _this.handlePaymentsGenerate(pool, res);
       break;
     case (endpoint === 'payments' && method === 'immature'):
-      _this.handlePaymentsImmature(coin, res);
+      _this.handlePaymentsImmature(pool, res);
       break;
     case (endpoint === 'payments' && method === 'paid'):
-      _this.handlePaymentsPaid(coin, res);
+      _this.handlePaymentsPaid(pool, res);
       break;
     case (endpoint === 'payments' && method === 'records'):
-      _this.handlePaymentsRecords(coin, res);
+      _this.handlePaymentsRecords(pool, res);
       break;
     case (endpoint === 'payments' && method === ''):
-      _this.handlePayments(coin, res);
+      _this.handlePayments(pool, res);
       break;
 
     // Rounds Endpoints
     case (endpoint === 'rounds' && method === 'current'):
-      _this.handleRoundsCurrent(coin, res);
+      _this.handleRoundsCurrent(pool, res);
       break;
     case (endpoint === 'rounds' && utils.checkNumber(method)):
-      _this.handleRoundsHeight(coin, method, res);
+      _this.handleRoundsHeight(pool, method, res);
       break;
     case (endpoint === 'rounds' && method === ''):
-      _this.handleRounds(coin, res);
+      _this.handleRounds(pool, res);
       break;
 
     // Statistics Endpoints
     case (endpoint === 'statistics' && method === ''):
-      _this.handleStatistics(coin, res);
+      _this.handleStatistics(pool, res);
       break;
 
     // Workers Endpoints
     case (endpoint === 'workers' && method.length >= 1):
-      _this.handleWorkersSpecific(coin, method, res);
+      _this.handleWorkersSpecific(pool, method, res);
       break;
     case (endpoint === 'workers' && method === ''):
-      _this.handleWorkers(coin, res);
+      _this.handleWorkers(pool, res);
       break;
 
     // Miscellaneous Endpoints
-    case (endpoint === '' && method === '' && coin === 'partners'):
+    case (endpoint === '' && method === '' && pool === 'partners'):
       _this.handlePartners(res);
       break;
-    case (endpoint === '' && method === '' && coin === 'coins'):
-      _this.handleCoins(res);
+    case (endpoint === '' && method === '' && pool === 'pools'):
+      _this.handlePools(res);
       break;
-    case (endpoint === '' && method === '' && !(miscellaneous.includes(coin))):
-      _this.handleStatistics(coin, res);
+    case (endpoint === '' && method === '' && !(miscellaneous.includes(pool))):
+      _this.handleStatistics(pool, res);
       break;
 
     // Unknown Endpoints
     default:
-      _this.buildPayload(coin, '/unknown', _this.messages.method, null, res);
+      _this.buildPayload(pool, '/unknown', _this.messages.method, null, res);
       break;
     }
   };

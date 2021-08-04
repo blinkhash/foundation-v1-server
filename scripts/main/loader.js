@@ -26,9 +26,9 @@ const PoolLoader = function(logger, portalConfig) {
   };
 
   // Validate Pool Algorithms
-  this.validatePoolAlgorithms = function(algorithm, coin) {
+  this.validatePoolAlgorithms = function(algorithm, name) {
     if (!(algorithm in Algorithms)) {
-      logger.error('Builder', coin, `Cannot run a pool for unsupported algorithm "${ algorithm }"`);
+      logger.error('Builder', name, `Cannot run a pool for unsupported algorithm "${ algorithm }"`);
       return false;
     }
     return true;
@@ -36,20 +36,20 @@ const PoolLoader = function(logger, portalConfig) {
 
   // Validate Pool Configs
   this.validatePoolConfigs = function(poolConfig) {
-    const coin = poolConfig.primary.coin.name;
+    const name = poolConfig.name;
     if (!poolConfig.enabled) return false;
-    if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.mining, coin)) return false;
-    if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.block, coin)) return false;
-    if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.coinbase, coin)) return false;
+    if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.mining, name)) return false;
+    if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.block, name)) return false;
+    if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.coinbase, name)) return false;
     return true;
   };
 
   // Check for Overlapping Pool Names
   this.validatePoolNames = function(poolConfigs, poolConfig) {
     let configNames = Object.keys(poolConfigs);
-    configNames = configNames.concat(poolConfig.primary.coin.name);
+    configNames = configNames.concat(poolConfig.name);
     if (new Set(configNames).size !== configNames.length) {
-      logger.error('Builder', 'Setup', 'Overlapping coin names. Check your configuration files');
+      logger.error('Builder', 'Setup', 'Overlapping pool names. Check your configuration files');
       return false;
     }
     return true;
@@ -100,7 +100,7 @@ const PoolLoader = function(logger, portalConfig) {
       if (!_this.validatePoolConfigs(poolConfig)) return;
       if (!_this.validatePoolNames(poolConfigs, poolConfig)) return;
       if (!_this.validatePoolPorts(poolConfigs, poolConfig)) return;
-      poolConfigs[poolConfig.primary.coin.name] = poolConfig;
+      poolConfigs[poolConfig.name] = poolConfig;
     });
     return poolConfigs;
   };

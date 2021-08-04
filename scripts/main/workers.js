@@ -39,7 +39,7 @@ const PoolWorkers = function (logger, client) {
     const poolsPromises = poolsKeys.map((configName) => _this.createPromises(configName));
     Promise.all(poolsPromises).then((results) => {
       results.forEach(poolStratum => {
-        _this.pools[poolStratum.coin] = poolStratum;
+        _this.pools[poolStratum.pool] = poolStratum;
       });
       callback();
     }, callback);

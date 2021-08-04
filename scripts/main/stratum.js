@@ -12,13 +12,13 @@ const Stratum = require('foundation-stratum');
 const PoolStratum = function (logger, poolConfig, poolShares) {
 
   const _this = this;
-  this.coin = poolConfig.primary.coin.name;
+  this.pool = poolConfig.name;
   this.poolConfig = poolConfig;
   this.poolShares = poolShares;
   this.forkId = process.env.forkId;
 
   const logSystem = 'Pool';
-  const logComponent = _this.coin;
+  const logComponent = poolConfig.name;
   const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
 
   // Determine Block Viability

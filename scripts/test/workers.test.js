@@ -30,7 +30,7 @@ client._redisMock._maxListeners = 0;
 nock.disableNetConnect();
 nock.enableNetConnect('127.0.0.1');
 
-process.env.poolConfigs = JSON.stringify({ Bitcoin: poolConfig });
+process.env.poolConfigs = JSON.stringify({ Pool1: poolConfig });
 process.env.portalConfig = JSON.stringify(portalConfig);
 const logger = new PoolLogger(portalConfig);
 
@@ -57,7 +57,7 @@ describe('Test workers functionality', () => {
       expect(consoleSpy).toHaveBeenCalled();
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('p2p has been disabled in the configuration'));
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Stratum pool server started for Bitcoin'));
-      const poolStratum = poolWorkers.pools.Bitcoin;
+      const poolStratum = poolWorkers.pools.Pool1;
       poolStratum.poolStratum.stratum.stopServer();
       console.log.mockClear();
       nock.cleanAll();
