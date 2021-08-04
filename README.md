@@ -18,37 +18,6 @@ If you need help with a code-related matter, the first place to look is our [Dis
 
 ---
 
-### Specifications
-
-#### Features
-
-* For the pool server it uses the [foundation-stratum](https://github.com/blinkhash/foundation-stratum-pool) module, which supports vardiff, POW/POS, anti-DDoS, IP banning, [multiple hashing algorithms](https://github.com/blinkhash/foundation-multi-hashing).
-* Multipool ability - this software was built from the ground up to run with multiple coins simultaneously (which can have different properties and hashing algorithms). It can be used to create a pool for a single coin or for multiple coins at once. The pools use clustering to load balance across multiple CPU cores.
-* For reward/payment processing, shares are inserted into Redis (a fast NoSQL key/value store). The PPLNT reward system is used with [Redis Transactions](http://redis.io/topics/transactions) for secure and super speedy payouts. There is zero risk to the pool operator. Shares from rounds resulting in orphaned blocks will be merged into share in the current round so that each and every share will be rewarded
-* This portal does not have user accounts/logins/registrations. Instead, miners simply use their coin address for stratum authentication.
-
-#### Security
-
-* Without a registration/login system, non-security-oriented miners reusing passwords across pools is no longer a concern.
-* Automated payouts by default and pool profits are sent to another address so pool wallets aren't plump with coins, giving hackers few rewards and keeping your pool from being a target.
-* Miners can notice lack of automated payments as a possible early warning sign that an operator is about to run off with their coins.
-
-#### Transparency
-
-* The API was specifically designed to be as transparent as possible regarding payouts and shares. Everything is logged for users to check and ensure that everything is legitimate.
-* The server itself will always be open-source. Feel free to create relevant issues and pull requests whenever necessary.
-
-#### Attack Mitigation
-
-* Detects and thwarts socket flooding (garbage data sent over socket in order to consume system resources).
-* Detects and thwarts zombie miners (botnet infected computers connecting to your server to use up sockets but not sending any shares).
-* Detects and thwarts invalid share attacks:
-   * This server is not vulnerable to the low difficulty share exploits happening to other pool servers. Rather than using hardcoded max difficulties for new hashing algorithms, it dynamically generates the max difficulty for each algorithm based on values found in the coin source code.
-   * IP banning feature which on a configurable threshold will ban an IP for a configurable amount of time if the miner submits over a configurable threshold of invalid shares.
-* The server is written in Node.js which uses a single thread (async) to handle connections rather than the overhead of one thread per connection. Clustering is also implemented so that all CPU cores are taken advantage of.
-
----
-
 ### Donations
 
 Maintaining this project has always been driven out of nothing more than a desire to give back to the mining community, however I always appreciate donations, especially if this repository helps you in any way.
