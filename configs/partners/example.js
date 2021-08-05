@@ -7,11 +7,10 @@
 const config = {};
 
 // Partner Configuration
-config.partner = {};
-config.partner.name = 'Blinkhash';
-config.partner.url = 'https://blinkhash.com';
-config.partner.image = '';
-config.partner.tier = 4;
+config.name = 'Blinkhash';
+config.url = 'https://blinkhash.com';
+config.image = '';
+config.tier = 4;
 
 // Subscription Configuration
 config.subscription = {};

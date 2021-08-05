@@ -457,9 +457,9 @@ describe('Test API functionality', () => {
       expect(processed.response.message).toBe('');
       expect(typeof processed.data).toBe('object');
       expect(processed.data.length).toBe(1);
-      expect(processed.data[0].partner.name).toBe('Blinkhash');
-      expect(processed.data[0].partner.tier).toBe(4);
-      expect(processed.data[0].partner.url).toBe('https://blinkhash.com');
+      expect(processed.data[0].name).toBe('Blinkhash');
+      expect(processed.data[0].tier).toBe(4);
+      expect(processed.data[0].url).toBe('https://blinkhash.com');
       done();
     });
     mockSetupClient(client, [], 'Pool1', () => {

@@ -82,7 +82,7 @@ const PoolLoader = function(logger, portalConfig) {
       }
       const partnerConfig = require(normalizedPath + file);
       if (!_this.validatePartnerConfigs(partnerConfig)) return;
-      partnerConfigs[partnerConfig.partner.name] = partnerConfig;
+      partnerConfigs[partnerConfig.name] = partnerConfig;
     });
     return partnerConfigs;
   };
