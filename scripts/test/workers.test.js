@@ -56,7 +56,7 @@ describe('Test workers functionality', () => {
     poolWorkers.setupWorkers(() => {
       expect(consoleSpy).toHaveBeenCalled();
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('p2p has been disabled in the configuration'));
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Stratum pool server started for Bitcoin'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Stratum pool server started for Pool1'));
       const poolStratum = poolWorkers.pools.Pool1;
       poolStratum.poolStratum.stratum.stopServer();
       console.log.mockClear();

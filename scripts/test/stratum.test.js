@@ -125,7 +125,7 @@ describe('Test stratum functionality', () => {
     poolStratum.setupStratum(() => {
       expect(consoleSpy).toHaveBeenCalled();
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('p2p has been disabled in the configuration'));
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Stratum pool server started for Bitcoin'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Stratum pool server started for Pool1'));
       poolStratum.poolStratum.stratum.stopServer();
       console.log.mockClear();
       nock.cleanAll();
