@@ -66,10 +66,11 @@ config.primary.coin.name = 'Bitcoin';
 config.primary.coin.symbol = 'BTC';
 config.primary.coin.asicboost = true;
 config.primary.coin.getinfo = false;
-config.primary.coin.messages = false;
+config.primary.coin.parameters = {}
 config.primary.coin.segwit = true;
 config.primary.coin.staking = false;
 config.primary.coin.rewards = '';
+config.primary.coin.version = 4;
 
 // Algorithm Configuration
 config.primary.coin.algorithms = {};
