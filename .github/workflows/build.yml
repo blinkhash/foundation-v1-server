@@ -18,6 +18,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - run: sudo apt-get install build-essential libsodium-dev libboost-system-dev
       - run: npm install
       - run: npm test
   coverage:
@@ -28,5 +29,6 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 12.16
+      - run: sudo apt-get install build-essential libsodium-dev libboost-system-dev
       - run: npm install && npm install -g codecov
       - run: npm run test && codecov
