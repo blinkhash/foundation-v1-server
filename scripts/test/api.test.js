@@ -174,7 +174,7 @@ describe('Test API functionality', () => {
       expect(Object.keys(processed.data).length).toBe(2);
       expect(processed.data.primary.length).toBe(4);
       expect(processed.data.auxiliary.length).toBe(2);
-      expect(processed.data.primary[0].height).toBe(180);
+      expect(processed.data.primary[0].height).toBe(183);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
@@ -204,7 +204,7 @@ describe('Test API functionality', () => {
       expect(Object.keys(processed.data).length).toBe(2);
       expect(processed.data.primary.length).toBe(4);
       expect(processed.data.auxiliary.length).toBe(2);
-      expect(processed.data.primary[0].height).toBe(180);
+      expect(processed.data.primary[0].height).toBe(183);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
@@ -234,7 +234,7 @@ describe('Test API functionality', () => {
       expect(Object.keys(processed.data).length).toBe(2);
       expect(processed.data.primary.length).toBe(4);
       expect(processed.data.auxiliary.length).toBe(2);
-      expect(processed.data.primary[0].height).toBe(180);
+      expect(processed.data.primary[0].height).toBe(183);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
@@ -269,9 +269,9 @@ describe('Test API functionality', () => {
       expect(processed.data.primary.confirmed[0].height).toBe(180);
       expect(processed.data.primary.kicked.length).toBe(1);
       expect(processed.data.primary.pending.length).toBe(2);
-      expect(processed.data.primary.pending[0].height).toBe(182);
+      expect(processed.data.primary.pending[0].height).toBe(183);
       expect(processed.data.auxiliary.pending.length).toBe(2);
-      expect(processed.data.auxiliary.pending[0].height).toBe(183);
+      expect(processed.data.auxiliary.pending[0].height).toBe(184);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {

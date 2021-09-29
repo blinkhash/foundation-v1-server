@@ -8,6 +8,16 @@ const os = require('os');
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Calculate Average of Object Property
+exports.calculateAverage = function(data, property) {
+  const average = data.reduce((total, next) => total + next[property], 0) / data.length;
+  if (average) {
+    return Math.round(average * 100) / 100;
+  } else {
+    return 0;
+  }
+};
+
 // Check if Value is a Number
 exports.checkNumber = function(value) {
   if (typeof value !== 'string') {
@@ -123,7 +133,7 @@ exports.loggerSeverity = {
 exports.processBlocks = function(blocks) {
   const output = blocks
     .map((block) => JSON.parse(block))
-    .sort((a, b) => (a.height - b.height));
+    .sort((a, b) => (b.height - a.height));
   output.forEach((block) => (block.worker = block.worker.split('.')[0]));
   return output;
 };
@@ -141,6 +151,18 @@ exports.processDifficulty = function(shares, miner) {
     });
   }
   return count;
+};
+
+// Process Luck for API Endpoints
+exports.processLuck = function(blocks) {
+  const output = {};
+  const sorted = blocks
+    .map((block) => JSON.parse(block))
+    .sort((a, b) => (b.height - a.height));
+  output['luck1'] = exports.calculateAverage(sorted.slice(0, 1), 'luck');
+  output['luck10'] = exports.calculateAverage(sorted.slice(0, 10), 'luck');
+  output['luck100'] = exports.calculateAverage(sorted.slice(0, 100), 'luck');
+  return output;
 };
 
 // Process Miners for API Endpoints

@@ -88,14 +88,25 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Manage Blocks Calculations
-  this.calculateBlocks = function(shareData, shareValid, blockValid) {
+  /* istanbul ignore next */
+  this.calculateBlocks = function(results, shareData, shareValid, blockValid) {
 
     const commands = [];
     const dateNow = Date.now();
     const blockType = shareData.blockType;
-    const difficulty = (shareValid ? shareData.difficulty : -shareData.difficulty);
     const isSoloMining = utils.checkSoloMining(_this.poolConfig, shareData);
-    const worker = blockType === 'primary' ? shareData.addrPrimary : shareData.addrAuxiliary;
+
+    const worker = ['share', 'primary'].includes(blockType) ? shareData.addrPrimary : shareData.addrAuxiliary;
+    const difficulty = ['share', 'primary'].includes(blockType) ? shareData.blockDiffPrimary : shareData.blockDiffAuxiliary;
+    const shares = ['share', 'primary'].includes(blockType) ? results[0] : results[2];
+
+    // Convert Difficulties to Floats
+    let difficulties = Object.values(shares || {}).map((value) => {
+      return /^-?\d*(\.\d+)?$/.test(value) ? parseFloat(value) : 0;
+    });
+
+    difficulties = difficulties.reduce((p_sum, a) => p_sum + a, 0);
+    const luck = (difficulties + shareData.difficulty) / difficulty * 100;
 
     // Build Output Block
     const outputBlock = {
@@ -105,6 +116,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       reward: shareData.reward,
       transaction: shareData.transaction,
       difficulty: difficulty,
+      luck: luck,
       worker: worker,
       solo: isSoloMining,
     };
@@ -128,9 +140,9 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   this.buildTimesCommands = function(results, shareData, shareValid, blockValid) {
     let commands = [];
     if (shareValid) {
-      commands = commands.concat(_this.calculateTimes(results[0], shareData.addrPrimary, blockValid, 'primary'));
+      commands = commands.concat(_this.calculateTimes(results[1], shareData.addrPrimary, blockValid, 'primary'));
       if (_this.poolConfig.auxiliary && _this.poolConfig.auxiliary.enabled) {
-        commands = commands.concat(_this.calculateTimes(results[1], shareData.addrAuxiliary, blockValid, 'auxiliary'));
+        commands = commands.concat(_this.calculateTimes(results[3], shareData.addrAuxiliary, blockValid, 'auxiliary'));
       }
     }
     return commands;
@@ -152,7 +164,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   this.buildCommands = function(results, shareData, shareValid, blockValid, callback, handler) {
     let commands = [];
     commands = commands.concat(_this.buildSharesCommands(results, shareData, shareValid, blockValid));
-    commands = commands.concat(_this.calculateBlocks(shareData, shareValid, blockValid));
+    commands = commands.concat(_this.calculateBlocks(results, shareData, shareValid, blockValid));
     this.executeCommands(commands, callback, handler);
     return commands;
   };
@@ -174,7 +186,9 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   /* istanbul ignore next */
   this.handleShares = function(shareData, shareValid, blockValid, callback, handler) {
     const shareLookups = [
+      ['hgetall', `${ _this.pool }:rounds:primary:current:shares`],
       ['hgetall', `${ _this.pool }:rounds:primary:current:submissions`],
+      ['hgetall', `${ _this.pool }:rounds:auxiliary:current:shares`],
       ['hgetall', `${ _this.pool }:rounds:auxiliary:current:submissions`]];
     this.executeCommands(shareLookups, (results) => {
       _this.buildCommands(results, shareData, shareValid, blockValid, callback, handler);

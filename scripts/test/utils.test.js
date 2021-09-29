@@ -13,6 +13,15 @@ const utils = require('../main/utils');
 
 describe('Test utility functionality', () => {
 
+  test('Test implemented calculateAverage', () => {
+    const data = [{ luck: 101.43 }, { luck: 19.47 }, { luck: 47.56 }, { luck: 87.13 },
+      { luck: 423.71 }, { luck: 114.65 }, { luck: 237.15 }, { luck: 12.11 }, { luck: 54.67 },
+      { luck: 667.10 }, { luck: 9.14 }, { luck: 17.23 }, { luck: 551.41 }, { luck: 67.79 }];
+    expect(utils.calculateAverage(data, 'luck')).toBe(172.18);
+    expect(utils.calculateAverage([], 'luck')).toBe(0);
+    expect(utils.calculateAverage([{ luck: null }], 'luck')).toBe(0);
+  });
+
   test('Test implemented checkNumber', () => {
     expect(utils.checkNumber('1')).toBe(true);
     expect(utils.checkNumber('test')).toBe(false);
@@ -177,12 +186,12 @@ describe('Test utility functionality', () => {
 
   test('Test implemented processBlocks', () => {
     const blocks = [
-      '{"time":1623901893184,"height":1928855,"hash":"f5026aa6116665d3e18a4219d9ae93dab3a016feee7921726258bedee418af8d","reward":1250006928,"transaction":"2c81c6aed147484ca41cd977338826875b5e142f94321b1a508b71f29e515a63","difficulty":8,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false}',
-      '{"time":1623862569773,"height":1928702,"hash":"1a26babf21149764100660b6e75bff1e6d34926aa52366dc8323fa7456378943","reward":1250008474,"transaction":"61f857486100d35f5ccb447f55847924d463f7507c54882e5f518c6acdee7328","difficulty":8,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false}'];
+      '{"time":1623862569773,"height":1928702,"hash":"1a26babf21149764100660b6e75bff1e6d34926aa52366dc8323fa7456378943","reward":1250008474,"transaction":"61f857486100d35f5ccb447f55847924d463f7507c54882e5f518c6acdee7328","difficulty":8,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false}',
+      '{"time":1623901893184,"height":1928855,"hash":"f5026aa6116665d3e18a4219d9ae93dab3a016feee7921726258bedee418af8d","reward":1250006928,"transaction":"2c81c6aed147484ca41cd977338826875b5e142f94321b1a508b71f29e515a63","difficulty":8,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false}'];
     const processed = utils.processBlocks(blocks);
     expect(processed.length).toBe(2);
-    expect(processed[0].height).toBe(1928702);
-    expect(processed[0].hash).toBe('1a26babf21149764100660b6e75bff1e6d34926aa52366dc8323fa7456378943');
+    expect(processed[0].height).toBe(1928855);
+    expect(processed[0].hash).toBe('f5026aa6116665d3e18a4219d9ae93dab3a016feee7921726258bedee418af8d');
     expect(processed[1].worker).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
   });
 
@@ -215,6 +224,30 @@ describe('Test utility functionality', () => {
 
   test('Test implemented processDifficulty [4]', () => {
     expect(utils.processDifficulty(null)).toBe(0);
+  });
+
+  test('Test implemented processLuck [1]', () => {
+    const blocks = ['{"luck":101.43}', '{"luck":19.47}', '{"luck":47.56}', '{"luck":87.13}',
+      '{"luck":423.71}', '{"luck":114.65}', '{"luck":237.15}', '{"luck":12.11}', '{"luck":54.67}',
+      '{"luck":667.10}', '{"luck":9.14}', '{"luck":17.23}', '{"luck":551.41}', '{"luck":67.79}'];
+    const processed = utils.processLuck(blocks);
+    expect(processed.luck1).toBe(101.43);
+    expect(processed.luck10).toBe(176.5);
+    expect(processed.luck100).toBe(172.18);
+  });
+
+  test('Test implemented processLuck [2]', () => {
+    const processed = utils.processLuck([]);
+    expect(processed.luck1).toBe(0);
+    expect(processed.luck10).toBe(0);
+    expect(processed.luck100).toBe(0);
+  });
+
+  test('Test implemented processLuck [3]', () => {
+    const processed = utils.processLuck(['{"luck":101.43}']);
+    expect(processed.luck1).toBe(101.43);
+    expect(processed.luck10).toBe(101.43);
+    expect(processed.luck100).toBe(101.43);
   });
 
   test('Test implemented processMiners [1]', () => {
