@@ -54,10 +54,12 @@ exports.countMiners = function(shares) {
   if (shares) {
     shares = shares.map((share) => JSON.parse(share));
     shares.forEach((share) => {
-      const address = share.worker.split('.')[0];
-      if (!(miners.includes(address))) {
-        count += 1;
-        miners.push(address);
+      if (share.worker) {
+        const address = share.worker.split('.')[0];
+        if (!(miners.includes(address))) {
+          count += 1;
+          miners.push(address);
+        }
       }
     });
   }
@@ -81,11 +83,13 @@ exports.countWorkers = function(shares, worker) {
   if (shares) {
     shares = shares.map((share) => JSON.parse(share));
     shares.forEach((share) => {
-      const address = share.worker.split('.')[0];
-      if (!worker || worker === address) {
-        if (!(workers.includes(share.worker))) {
-          count += 1;
-          workers.push(share.worker);
+      if (share.worker) {
+        const address = share.worker.split('.')[0];
+        if (!worker || worker === address) {
+          if (!(workers.includes(share.worker))) {
+            count += 1;
+            workers.push(share.worker);
+          }
         }
       }
     });
@@ -144,9 +148,11 @@ exports.processDifficulty = function(shares, miner) {
   if (shares) {
     shares = shares.map((share) => JSON.parse(share));
     shares.forEach((share) => {
-      const address = (miner && miner.includes('.')) ? share.worker : share.worker.split('.')[0];
-      if (!miner || miner === address) {
-        count += parseFloat(share.difficulty);
+      if (share.worker && share.difficulty) {
+        const address = (miner && miner.includes('.')) ? share.worker : share.worker.split('.')[0];
+        if (!miner || miner === address) {
+          count += parseFloat(share.difficulty);
+        }
       }
     });
   }
@@ -171,9 +177,11 @@ exports.processMiners = function(shares) {
   if (shares) {
     shares = shares.map((share) => JSON.parse(share));
     shares.forEach((share) => {
-      const address = share.worker.split('.')[0];
-      if (!(miners.includes(address))) {
-        miners.push(address);
+      if (share.worker) {
+        const address = share.worker.split('.')[0];
+        if (!(miners.includes(address))) {
+          miners.push(address);
+        }
       }
     });
   }
@@ -261,10 +269,12 @@ exports.processWorkers = function(shares, worker) {
   if (shares) {
     shares = shares.map((share) => JSON.parse(share));
     shares.forEach((share) => {
-      const address = (worker && worker.includes('.')) ? share.worker : share.worker.split('.')[0];
-      if (!worker || worker === address) {
-        if (!(workers.includes(share.worker))) {
-          workers.push(share.worker);
+      if (share.worker) {
+        const address = (worker && worker.includes('.')) ? share.worker : share.worker.split('.')[0];
+        if (!worker || worker === address) {
+          if (!(workers.includes(share.worker))) {
+            workers.push(share.worker);
+          }
         }
       }
     });

@@ -99,6 +99,15 @@ describe('Test utility functionality', () => {
   });
 
   test('Test implemented countMiners [4]', () => {
+    const shares = [
+      '{"time":1623901893182,"solo":false,"difficulty":8}',
+      '{"time":1623901919389,"solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3d.worker1","solo":false,"difficulty":8}'];
+    expect(utils.countMiners(shares)).toBe(2);
+  });
+
+  test('Test implemented countMiners [5]', () => {
     expect(utils.countMiners(null)).toBe(0);
   });
 
@@ -146,6 +155,15 @@ describe('Test utility functionality', () => {
   });
 
   test('Test implemented countWorkers [5]', () => {
+    const shares = [
+      '{"time":1623901893182,"solo":false,"difficulty":8}',
+      '{"time":1623901919389,"solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3d.worker1","solo":false,"difficulty":8}'];
+    expect(utils.countWorkers(shares)).toBe(2);
+  });
+
+  test('Test implemented countWorkers [6]', () => {
     expect(utils.countWorkers(null)).toBe(0);
   });
 
@@ -223,6 +241,15 @@ describe('Test utility functionality', () => {
   });
 
   test('Test implemented processDifficulty [4]', () => {
+    const shares = [
+      '{"time":1623901893182,"solo":false,"difficulty":8}',
+      '{"time":1623901919389,"solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}'];
+    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a')).toBe(8);
+  });
+
+  test('Test implemented processDifficulty [5]', () => {
     expect(utils.processDifficulty(null)).toBe(0);
   });
 
@@ -274,6 +301,18 @@ describe('Test utility functionality', () => {
   });
 
   test('Test implemented processMiners [3]', () => {
+    const shares = [
+      '{"time":1623901893182,"solo":false,"difficulty":8}',
+      '{"time":1623901919389,"solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
+    const processed = utils.processMiners(shares);
+    expect(processed.length).toBe(2);
+    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
+    expect(processed[1]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b');
+  });
+
+  test('Test implemented processMiners [4]', () => {
     expect(utils.processMiners(null)).toStrictEqual([]);
   });
 
@@ -488,6 +527,17 @@ describe('Test utility functionality', () => {
   });
 
   test('Test implemented processWorkers [5]', () => {
+    const shares = [
+      '{"time":1623901893182,"solo":false,"difficulty":8}',
+      '{"time":1623901919389,"solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
+    const processed = utils.processWorkers(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+    expect(processed.length).toBe(1);
+    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+  });
+
+  test('Test implemented processWorkers [6]', () => {
     expect(utils.processWorkers(null)).toStrictEqual([]);
   });
 
