@@ -58,13 +58,25 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Manage Shares Calculations
+  /* istanbul ignore next */
   this.calculateShares = function(results, shareData, shareValid, blockValid, blockType) {
 
     const commands = [];
     const dateNow = Date.now();
     const difficulty = (shareValid ? shareData.difficulty : -shareData.difficulty);
     const isSoloMining = utils.checkSoloMining(_this.poolConfig, shareData);
-    const worker = blockType === 'primary' ? shareData.addrPrimary : shareData.addrAuxiliary;
+
+    const worker = ['share', 'primary'].includes(blockType) ? shareData.addrPrimary : shareData.addrAuxiliary;
+    const blockDifficulty = ['share', 'primary'].includes(blockType) ? shareData.blockDiffPrimary : shareData.blockDiffAuxiliary;
+    const shares = ['share', 'primary'].includes(blockType) ? results[0] : results[2];
+
+    // Convert Difficulties to Floats
+    let difficulties = Object.values(shares || {}).map((value) => {
+      return /^-?\d*(\.\d+)?$/.test(value) ? parseFloat(value) : 0;
+    });
+
+    difficulties = difficulties.reduce((p_sum, a) => p_sum + a, 0);
+    const effort = (difficulties + shareData.difficulty) / blockDifficulty * 100;
 
     // Build Primary Output
     const outputShare = {
@@ -79,6 +91,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:counts`, 'valid', 1]);
       commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:shares`, JSON.stringify(outputShare), shareData.difficulty]);
+      commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:counts`, 'effort', effort]);
     } else {
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:counts`, 'invalid', 1]);
@@ -97,7 +110,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const isSoloMining = utils.checkSoloMining(_this.poolConfig, shareData);
 
     const worker = ['share', 'primary'].includes(blockType) ? shareData.addrPrimary : shareData.addrAuxiliary;
-    const difficulty = ['share', 'primary'].includes(blockType) ? shareData.blockDiffPrimary : shareData.blockDiffAuxiliary;
+    const blockDifficulty = ['share', 'primary'].includes(blockType) ? shareData.blockDiffPrimary : shareData.blockDiffAuxiliary;
     const shares = ['share', 'primary'].includes(blockType) ? results[0] : results[2];
 
     // Convert Difficulties to Floats
@@ -106,7 +119,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     });
 
     difficulties = difficulties.reduce((p_sum, a) => p_sum + a, 0);
-    const luck = (difficulties + shareData.difficulty) / difficulty * 100;
+    const luck = (difficulties + shareData.difficulty) / blockDifficulty * 100;
 
     // Build Output Block
     const outputBlock = {
@@ -115,7 +128,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       hash: shareData.hash,
       reward: shareData.reward,
       transaction: shareData.transaction,
-      difficulty: difficulty,
+      difficulty: blockDifficulty,
       luck: luck,
       worker: worker,
       solo: isSoloMining,

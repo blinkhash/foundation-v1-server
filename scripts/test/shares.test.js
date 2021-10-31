@@ -231,14 +231,16 @@ describe('Test shares functionality', () => {
       ['hset', 'Pool1:rounds:primary:current:submissions', 'example'],
       ['zadd', 'Pool1:rounds:primary:current:hashrate'],
       ['hincrby', 'Pool1:rounds:primary:current:counts', 'valid', 1],
-      ['hincrbyfloat', 'Pool1:rounds:primary:current:shares']];
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:shares'],
+      ['hset', 'Pool1:rounds:primary:current:counts', 'effort', 7.277845022124848e-7]];
     const commands = poolShares.buildSharesCommands(results, shareData, true, false);
-    expect(commands.length).toBe(5);
+    expect(commands.length).toBe(6);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
     expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
     expect(commands[2].slice(0, 2)).toStrictEqual(expected[2]);
     expect(commands[3]).toStrictEqual(expected[3]);
     expect(commands[4].slice(0, 2)).toStrictEqual(expected[4]);
+    expect(commands[5]).toStrictEqual(expected[5]);
   });
 
   test('Test share command handling [2]', () => {
@@ -281,6 +283,7 @@ describe('Test shares functionality', () => {
       'addrPrimary': 'example1',
       'addrAuxiliary': 'example2',
       'blockDiffPrimary': 137403310.58987552,
+      'blockDiffAuxiliary': 3.5,
       'blockType': 'auxiliary',
       'difficulty': 1,
       'hash': null,
@@ -297,11 +300,13 @@ describe('Test shares functionality', () => {
       ['zadd', 'Pool1:rounds:primary:current:hashrate'],
       ['hincrby', 'Pool1:rounds:primary:current:counts', 'valid', 1],
       ['hincrbyfloat', 'Pool1:rounds:primary:current:shares'],
+      ['hset', 'Pool1:rounds:primary:current:counts', 'effort', 7.277845022124848e-7],
       ['zadd', 'Pool1:rounds:auxiliary:current:hashrate'],
       ['hincrby', 'Pool1:rounds:auxiliary:current:counts', 'valid', 1],
-      ['hincrbyfloat', 'Pool1:rounds:auxiliary:current:shares']];
+      ['hincrbyfloat', 'Pool1:rounds:auxiliary:current:shares'],
+      ['hset', 'Pool1:rounds:auxiliary:current:counts', 'effort', 28.57142857142857]];
     const commands = poolShares.buildSharesCommands(results, shareData, true, false);
-    expect(commands.length).toBe(10);
+    expect(commands.length).toBe(12);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
     expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
     expect(commands[2].slice(0, 3)).toStrictEqual(expected[2]);
@@ -309,9 +314,11 @@ describe('Test shares functionality', () => {
     expect(commands[4].slice(0, 2)).toStrictEqual(expected[4]);
     expect(commands[5]).toStrictEqual(expected[5]);
     expect(commands[6].slice(0, 2)).toStrictEqual(expected[6]);
-    expect(commands[7].slice(0, 2)).toStrictEqual(expected[7]);
-    expect(commands[8]).toStrictEqual(expected[8]);
-    expect(commands[9].slice(0, 2)).toStrictEqual(expected[9]);
+    expect(commands[7]).toStrictEqual(expected[7]);
+    expect(commands[8].slice(0, 2)).toStrictEqual(expected[8]);
+    expect(commands[9]).toStrictEqual(expected[9]);
+    expect(commands[10].slice(0, 2)).toStrictEqual(expected[10]);
+    expect(commands[11]).toStrictEqual(expected[11]);
   });
 
   test('Test block command handling [1]', () => {
@@ -478,15 +485,17 @@ describe('Test shares functionality', () => {
       ['hset', 'Pool1:rounds:primary:current:submissions', 'example'],
       ['zadd', 'Pool1:rounds:primary:current:hashrate'],
       ['hincrby', 'Pool1:rounds:primary:current:counts', 'valid', 1],
-      ['hincrbyfloat', 'Pool1:rounds:primary:current:shares']];
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:shares'],
+      ['hset', 'Pool1:rounds:primary:current:counts', 'effort', 7.277845022124848e-7]];
     const commands = poolShares.buildCommands(results, shareData, true, false, () => {
       return done();
     });
-    expect(commands.length).toBe(5);
+    expect(commands.length).toBe(6);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
     expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
     expect(commands[2].slice(0, 2)).toStrictEqual(expected[2]);
     expect(commands[3]).toStrictEqual(expected[3]);
     expect(commands[4].slice(0, 2)).toStrictEqual(expected[4]);
+    expect(commands[5]).toStrictEqual(expected[5]);
   });
 });

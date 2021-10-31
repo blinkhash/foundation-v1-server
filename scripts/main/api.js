@@ -404,11 +404,13 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     const commands = [
       ['hgetall', `${ pool }:blocks:primary:counts`],
       ['smembers', `${ pool }:blocks:primary:pending`],
+      ['smembers', `${ pool }:blocks:primary:confirmed`],
       ['hgetall', `${ pool }:payments:primary:counts`],
       ['hgetall', `${ pool }:rounds:primary:current:counts`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:blocks:auxiliary:counts`],
       ['smembers', `${ pool }:blocks:auxiliary:pending`],
+      ['smembers', `${ pool }:blocks:auxiliary:confirmed`],
       ['hgetall', `${ pool }:payments:auxiliary:counts`],
       ['hgetall', `${ pool }:rounds:auxiliary:current:counts`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
@@ -420,40 +422,42 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
             invalid: parseFloat(results[0] ? results[0].invalid || 0 : 0),
           },
           shares: {
-            valid: parseFloat(results[3] ? results[3].valid || 0 : 0),
-            invalid: parseFloat(results[3] ? results[3].invalid || 0 : 0),
+            valid: parseFloat(results[4] ? results[4].valid || 0 : 0),
+            invalid: parseFloat(results[4] ? results[4].invalid || 0 : 0),
           },
           status: {
-            luck: utils.processLuck(results[1]),
-            hashrate: (multiplier * utils.processDifficulty(results[4])) / hashrateWindow,
-            miners: utils.countMiners(results[4]),
-            workers: utils.countWorkers(results[4]),
+            effort: parseFloat(results[4] ? results[4].effort || 0 : 0),
+            luck: utils.processLuck(results[1], results[2]),
+            hashrate: (multiplier * utils.processDifficulty(results[5])) / hashrateWindow,
+            miners: utils.countMiners(results[5]),
+            workers: utils.countWorkers(results[5]),
           },
           payments: {
-            last: parseFloat(results[2] ? results[2].last || 0 : 0),
-            next: parseFloat(results[2] ? results[2].next || 0 : 0),
-            total: parseFloat(results[2] ? results[2].total || 0 : 0),
+            last: parseFloat(results[3] ? results[3].last || 0 : 0),
+            next: parseFloat(results[3] ? results[3].next || 0 : 0),
+            total: parseFloat(results[3] ? results[3].total || 0 : 0),
           }
         },
         auxiliary: {
           blocks: {
-            valid: parseFloat(results[5] ? results[5].valid || 0 : 0),
-            invalid: parseFloat(results[5] ? results[5].invalid || 0 : 0),
+            valid: parseFloat(results[6] ? results[6].valid || 0 : 0),
+            invalid: parseFloat(results[6] ? results[6].invalid || 0 : 0),
           },
           shares: {
-            valid: parseFloat(results[8] ? results[8].valid || 0 : 0),
-            invalid: parseFloat(results[8] ? results[8].invalid || 0 : 0),
+            valid: parseFloat(results[10] ? results[10].valid || 0 : 0),
+            invalid: parseFloat(results[10] ? results[10].invalid || 0 : 0),
           },
           status: {
-            luck: utils.processLuck(results[6]),
-            hashrate: (multiplier * utils.processDifficulty(results[9])) / hashrateWindow,
-            miners: utils.countMiners(results[9]),
-            workers: utils.countWorkers(results[9]),
+            effort: parseFloat(results[10] ? results[10].effort || 0 : 0),
+            luck: utils.processLuck(results[7], results[8]),
+            hashrate: (multiplier * utils.processDifficulty(results[11])) / hashrateWindow,
+            miners: utils.countMiners(results[11]),
+            workers: utils.countWorkers(results[11]),
           },
           payments: {
-            last: parseFloat(results[7] ? results[7].last || 0 : 0),
-            next: parseFloat(results[7] ? results[7].next || 0 : 0),
-            total: parseFloat(results[7] ? results[7].total || 0 : 0),
+            last: parseFloat(results[9] ? results[9].last || 0 : 0),
+            next: parseFloat(results[9] ? results[9].next || 0 : 0),
+            total: parseFloat(results[9] ? results[9].total || 0 : 0),
           }
         }
       };

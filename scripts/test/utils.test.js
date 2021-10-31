@@ -257,24 +257,35 @@ describe('Test utility functionality', () => {
     const blocks = ['{"luck":101.43}', '{"luck":19.47}', '{"luck":47.56}', '{"luck":87.13}',
       '{"luck":423.71}', '{"luck":114.65}', '{"luck":237.15}', '{"luck":12.11}', '{"luck":54.67}',
       '{"luck":667.10}', '{"luck":9.14}', '{"luck":17.23}', '{"luck":551.41}', '{"luck":67.79}'];
-    const processed = utils.processLuck(blocks);
+    const processed = utils.processLuck(blocks, []);
     expect(processed.luck1).toBe(101.43);
     expect(processed.luck10).toBe(176.5);
     expect(processed.luck100).toBe(172.18);
   });
 
   test('Test implemented processLuck [2]', () => {
-    const processed = utils.processLuck([]);
+    const processed = utils.processLuck([], []);
     expect(processed.luck1).toBe(0);
     expect(processed.luck10).toBe(0);
     expect(processed.luck100).toBe(0);
   });
 
   test('Test implemented processLuck [3]', () => {
-    const processed = utils.processLuck(['{"luck":101.43}']);
+    const processed = utils.processLuck(['{"luck":101.43}'], []);
     expect(processed.luck1).toBe(101.43);
     expect(processed.luck10).toBe(101.43);
     expect(processed.luck100).toBe(101.43);
+  });
+
+  test('Test implemented processLuck [4]', () => {
+    const pending = ['{"luck":101.43}', '{"luck":19.47}', '{"luck":47.56}', '{"luck":87.13}',
+      '{"luck":423.71}', '{"luck":114.65}', '{"luck":237.15}', '{"luck":12.11}', '{"luck":54.67}',
+      '{"luck":667.10}', '{"luck":9.14}', '{"luck":17.23}', '{"luck":551.41}', '{"luck":67.79}'];
+    const confirmed = ['{"luck":222.55}'];
+    const processed = utils.processLuck(pending, confirmed);
+    expect(processed.luck1).toBe(101.43);
+    expect(processed.luck10).toBe(176.5);
+    expect(processed.luck100).toBe(175.54);
   });
 
   test('Test implemented processMiners [1]', () => {
