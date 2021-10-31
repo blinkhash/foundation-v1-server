@@ -691,7 +691,7 @@ const PoolPayments = function (logger, client) {
     // Calculate Amount to Send to Workers
     Object.keys(workers).forEach((address) => {
       const worker = workers[address];
-      const amount = Math.round(worker.balance || 0 + worker.generate || 0);
+      const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
 
       // Determine Amounts Given Mininum Payment
       if (amount >= processingConfig.payments.minPaymentSatoshis) {
