@@ -1,6 +1,6 @@
 {
   "name": "foundation-server",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "An extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool",
   "main": "./scripts/init.js",
   "keywords": [

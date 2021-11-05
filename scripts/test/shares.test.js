@@ -65,7 +65,7 @@ describe('Test shares functionality', () => {
     const shareData = {
       'job': '4',
       'ip': '::1',
-      'port': 3001,
+      'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
       'blockDiffPrimary': 137403310.58987552,
@@ -95,7 +95,7 @@ describe('Test shares functionality', () => {
     const shareData = {
       'job': '4',
       'ip': '::1',
-      'port': 3001,
+      'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
       'blockDiffPrimary': 137403310.58987552,
@@ -125,7 +125,7 @@ describe('Test shares functionality', () => {
     const shareData = {
       'job': '4',
       'ip': '::1',
-      'port': 3001,
+      'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
       'blockDiffPrimary': 137403310.58987552,
@@ -151,7 +151,7 @@ describe('Test shares functionality', () => {
     const shareData = {
       'job': '4',
       'ip': '::1',
-      'port': 3001,
+      'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
       'blockDiffPrimary': 137403310.58987552,
@@ -178,7 +178,7 @@ describe('Test shares functionality', () => {
     const shareData = {
       'job': '4',
       'ip': '::1',
-      'port': 3001,
+      'port': 3002,
       'addrPrimary': 'example1',
       'addrAuxiliary': 'example2',
       'blockDiffPrimary': 137403310.58987552,
@@ -214,7 +214,7 @@ describe('Test shares functionality', () => {
     const shareData = {
       'job': '4',
       'ip': '::1',
-      'port': 3001,
+      'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
       'blockDiffPrimary': 137403310.58987552,
@@ -250,7 +250,7 @@ describe('Test shares functionality', () => {
     const shareData = {
       'job': '4',
       'ip': '::1',
-      'port': 3001,
+      'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
       'blockDiffPrimary': 137403310.58987552,
@@ -279,7 +279,7 @@ describe('Test shares functionality', () => {
     const shareData = {
       'job': '4',
       'ip': '::1',
-      'port': 3001,
+      'port': 3002,
       'addrPrimary': 'example1',
       'addrAuxiliary': 'example2',
       'blockDiffPrimary': 137403310.58987552,
@@ -327,7 +327,7 @@ describe('Test shares functionality', () => {
     const shareData = {
       'job': '4',
       'ip': '::1',
-      'port': 3001,
+      'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
       'blockDiffPrimary': 137403310.58987552,
@@ -362,7 +362,7 @@ describe('Test shares functionality', () => {
     const shareData = {
       'job': '4',
       'ip': '::1',
-      'port': 3001,
+      'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
       'blockDiffPrimary': 137403310.58987552,
@@ -387,7 +387,7 @@ describe('Test shares functionality', () => {
     const shareData = {
       'job': '4',
       'ip': '::1',
-      'port': 3001,
+      'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
       'blockDiffPrimary': 137403310.58987552,
@@ -409,7 +409,7 @@ describe('Test shares functionality', () => {
     const shareData = {
       'job': '4',
       'ip': '::1',
-      'port': 3001,
+      'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
       'blockDiffPrimary': 137403310.58987552,
@@ -431,7 +431,7 @@ describe('Test shares functionality', () => {
     const shareData = {
       'job': '4',
       'ip': '::1',
-      'port': 3001,
+      'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
       'blockDiffPrimary': 32,
@@ -461,6 +461,33 @@ describe('Test shares functionality', () => {
     expect(commands[5]).toStrictEqual(expected[5]);
   });
 
+  test('Test block command handling [6]', () => {
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const results = [];
+    const shareData = {
+      'job': '4',
+      'ip': '::1',
+      'port': 3003,
+      'addrPrimary': 'example',
+      'addrAuxiliary': null,
+      'blockDiffPrimary': 137403310.58987552,
+      'blockType': 'primary',
+      'difficulty': 1,
+      'hash': null,
+      'hashInvalid': null,
+      'height': 1972211,
+      'reward': 10006839,
+      'shareDiff': '2.35170820',
+    };
+    const expected = [
+      ['sadd', 'Pool1:blocks:primary:pending'],
+      ['hincrby', 'Pool1:blocks:primary:counts', 'valid', 1]];
+    const commands = poolShares.calculateBlocks(results, shareData, true, true);
+    expect(commands.length).toBe(2);
+    expect(commands[0].slice(0, 2)).toStrictEqual(expected[0]);
+    expect(commands[1]).toStrictEqual(expected[1]);
+  });
+
   test('Test command handling and execution', (done) => {
     const dateNow = Date.now();
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
@@ -468,7 +495,7 @@ describe('Test shares functionality', () => {
     const shareData = {
       'job': '4',
       'ip': '::1',
-      'port': 3001,
+      'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
       'blockDiffPrimary': 137403310.58987552,

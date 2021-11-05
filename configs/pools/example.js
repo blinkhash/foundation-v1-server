@@ -39,6 +39,19 @@ ports1.difficulty.retargetTime = 90;
 ports1.difficulty.variance = 0.3;
 config.ports.push(ports1);
 
+const ports2 = {};
+ports2.port = 3003;
+ports2.enabled = true;
+ports2.type = 'solo';
+ports2.difficulty = {};
+ports2.difficulty.initial = 32;
+ports2.difficulty.minimum = 8;
+ports2.difficulty.maximum = 512;
+ports2.difficulty.targetTime = 15;
+ports2.difficulty.retargetTime = 90;
+ports2.difficulty.variance = 0.3;
+config.ports.push(ports2);
+
 // P2P Configuration
 config.p2p = {};
 config.p2p.enabled = true;

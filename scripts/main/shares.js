@@ -134,12 +134,16 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       solo: isSoloMining,
     };
 
-    // Handle Valid/Invalid Blocks
-    if (blockValid) {
+    // Restart Round if Not Solo Block
+    if (blockValid && !isSoloMining) {
       commands.push(['del', `${ _this.pool }:rounds:${ blockType }:current:submissions`]),
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:counts`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:counts`]);
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:shares`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:shares`]);
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:times`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:times`]);
+    }
+
+    // Handle Valid/Invalid Blocks
+    if (blockValid) {
       commands.push(['sadd', `${ _this.pool }:blocks:${ blockType }:pending`, JSON.stringify(outputBlock)]);
       commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'valid', 1]);
     } else if (shareData.transaction) {
