@@ -374,8 +374,8 @@ describe('Test utility functionality', () => {
 
   test('Test implemented processShares [1]', () => {
     const shares = {
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1": '{"time":1623862569778,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","difficulty":24,"effort":42.16}',
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2": '{"time":1623862569778,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","difficulty":16,"effort":41.65}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': '{"time":1623862569778,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","difficulty":24,"effort":42.16}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569778,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","difficulty":16,"effort":41.65}',
     };
     const processed = utils.processShares(shares);
     expect(Object.keys(processed).length).toBe(2);
@@ -385,10 +385,10 @@ describe('Test utility functionality', () => {
 
   test('Test implemented processShares [2]', () => {
     const shares = {
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1": '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","difficulty":8,"effort":42.16}',
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2": '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","difficulty":8,"effort":43.11}',
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1": '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","difficulty":8,"effort":42.16}',
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2": '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","difficulty":16,"effort":43.11}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","difficulty":8,"effort":42.16}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","difficulty":8,"effort":43.11}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","difficulty":8,"effort":42.16}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","difficulty":16,"effort":43.11}',
     };
     const processed = utils.processShares(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
     expect(Object.keys(processed).length).toBe(1);

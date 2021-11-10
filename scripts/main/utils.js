@@ -232,7 +232,7 @@ exports.processShares = function(shares, miner) {
     });
   }
   return output;
-}
+};
 
 // Process Times for API Endpoints
 exports.processTimes = function(times, miner) {

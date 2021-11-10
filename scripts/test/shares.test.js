@@ -427,7 +427,7 @@ describe('Test shares functionality', () => {
 
   test('Test block command handling [5]', () => {
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    const results = [{ 'example1': "{\"difficulty\":8}", 'example2': "{\"difficulty\":8}", 'example3': "{\"difficulty\":8}" }, {}, {}, {}];
+    const results = [{ 'example1': '{"difficulty":8}', 'example2': '{"difficulty":8}', 'example3': '{"difficulty":8}' }, {}, {}, {}];
     const shareData = {
       'job': '4',
       'ip': '::1',

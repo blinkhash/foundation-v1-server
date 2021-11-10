@@ -37,7 +37,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const commands = [];
     const dateNow = Date.now();
     const lastTimes = results || {};
-    const minerType = isSoloMining ? "solo" : "shared";
+    const minerType = isSoloMining ? 'solo' : 'shared';
 
     // Check if Worker Recently Joined
     if (!lastTimes[address]) {
@@ -67,7 +67,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const commands = [];
     const dateNow = Date.now();
     const difficulty = (shareValid ? shareData.difficulty : -shareData.difficulty);
-    const minerType = isSoloMining ? "solo" : "shared";
+    const minerType = isSoloMining ? 'solo' : 'shared';
 
     const worker = ['share', 'primary'].includes(blockType) ? shareData.addrPrimary : shareData.addrAuxiliary;
     const blockDifficulty = ['share', 'primary'].includes(blockType) ? shareData.blockDiffPrimary : shareData.blockDiffAuxiliary;
@@ -131,7 +131,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const dateNow = Date.now();
     const blockType = shareData.blockType;
     const difficulty = (shareValid ? shareData.difficulty : -shareData.difficulty);
-    const minerType = isSoloMining ? "solo" : "shared";
+    const minerType = isSoloMining ? 'solo' : 'shared';
 
     const worker = ['share', 'primary'].includes(blockType) ? shareData.addrPrimary : shareData.addrAuxiliary;
     const blockDifficulty = ['share', 'primary'].includes(blockType) ? shareData.blockDiffPrimary : shareData.blockDiffAuxiliary;
