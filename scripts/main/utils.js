@@ -214,33 +214,25 @@ exports.processRecords = function(records) {
 
 // Process Shares for API Endpoints
 exports.processShares = function(shares, miner) {
-  const solo = {};
-  const shared = {};
+  const output = {};
   if (shares) {
     Object.keys(shares).forEach((entry) => {
-      const details = JSON.parse(entry);
-      const address = (miner && miner.includes('.')) ? details.worker : details.worker.split('.')[0];
+      const details = JSON.parse(shares[entry]);
+      const address = (miner && miner.includes('.')) ? entry : entry.split('.')[0];
+      const shareValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
       if (!miner || miner === address) {
-        if (shares[entry] > 0) {
-          if (details.solo) {
-            if (address in solo) {
-              solo[address] += parseFloat(shares[entry]);
-            } else {
-              solo[address] = parseFloat(shares[entry]);
-            }
+        if (shareValue > 0) {
+          if (address in output) {
+            output[address] += shareValue;
           } else {
-            if (address in shared) {
-              shared[address] += parseFloat(shares[entry]);
-            } else {
-              shared[address] = parseFloat(shares[entry]);
-            }
+            output[address] = shareValue;
           }
         }
       }
     });
   }
-  return [solo, shared];
-};
+  return output;
+}
 
 // Process Times for API Endpoints
 exports.processTimes = function(times, miner) {

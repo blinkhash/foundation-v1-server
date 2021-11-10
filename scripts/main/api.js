@@ -103,79 +103,93 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       ['hgetall', `${ pool }:payments:primary:generate`],
       ['hgetall', `${ pool }:payments:primary:immature`],
       ['hgetall', `${ pool }:payments:primary:paid`],
-      ['hgetall', `${ pool }:rounds:primary:current:shares`],
-      ['hgetall', `${ pool }:rounds:primary:current:times`],
-      ['zrangebyscore', `${ pool }:rounds:primary:current:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
+      ['hgetall', `${ pool }:rounds:primary:current:shared:times`],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:payments:auxiliary:balances`],
       ['hgetall', `${ pool }:payments:auxiliary:generate`],
       ['hgetall', `${ pool }:payments:auxiliary:immature`],
       ['hgetall', `${ pool }:payments:auxiliary:paid`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:shares`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:times`],
-      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
     _this.executeCommands(pool, `/miners/${ miner }`, commands, response, (results) => {
 
       // Structure Round Data
-      const primaryShareData = utils.processShares(results[4], miner);
-      const auxiliaryShareData = utils.processShares(results[11], miner);
-      const primaryTimesData = utils.processTimes(results[5], miner);
-      const auxiliaryTimesData = utils.processTimes(results[12], miner);
+      const primarySharedShareData = utils.processShares(results[4], miner);
+      const primarySoloShareData = utils.processShares(results[7], miner);
+      const primarySharedTimesData = utils.processTimes(results[5], miner);
+      const auxiliarySharedShareData = utils.processShares(results[13], miner);
+      const auxiliarySoloShareData = utils.processShares(results[16], miner);
+      const auxiliarySharedTimesData = utils.processTimes(results[14], miner);
 
       // Structure Payments Data
       const primaryBalanceData = utils.processPayments(results[0], miner)[miner];
-      const auxiliaryBalanceData = utils.processPayments(results[7], miner)[miner];
       const primaryGenerateData = utils.processPayments(results[1], miner)[miner];
-      const auxiliaryGenerateData = utils.processPayments(results[8], miner)[miner];
       const primaryImmatureData = utils.processPayments(results[2], miner)[miner];
-      const auxiliaryImmatureData = utils.processPayments(results[9], miner)[miner];
       const primaryPaidData = utils.processPayments(results[3], miner)[miner];
-      const auxiliaryPaidData = utils.processPayments(results[10], miner)[miner];
+      const auxiliaryBalanceData = utils.processPayments(results[9], miner)[miner];
+      const auxiliaryGenerateData = utils.processPayments(results[10], miner)[miner];
+      const auxiliaryImmatureData = utils.processPayments(results[11], miner)[miner];
+      const auxiliaryPaidData = utils.processPayments(results[12], miner)[miner];
 
       // Structure Miscellaneous Data
-      const primaryDifficultyData = utils.processDifficulty(results[6], miner);
-      const auxiliaryDifficultyData = utils.processDifficulty(results[13], miner);
-      const primaryWorkerCounts = utils.countWorkers(results[6], miner);
-      const auxiliaryWorkerCounts = utils.countWorkers(results[13], miner);
-      const primaryWorkerData = utils.processWorkers(results[6], miner);
-      const auxiliaryWorkerData = utils.processWorkers(results[13], miner);
+      const primarySharedDifficultyData = utils.processDifficulty(results[6], miner);
+      const primarySoloDifficultyData = utils.processDifficulty(results[8], miner);
+      const primarySharedWorkerData = utils.processWorkers(results[6], miner);
+      const primarySoloWorkerData = utils.processWorkers(results[8], miner);
+      const auxiliarySharedDifficultyData = utils.processDifficulty(results[15], miner);
+      const auxiliarySoloDifficultyData = utils.processDifficulty(results[17], miner);
+      const auxiliarySharedWorkerData = utils.processWorkers(results[15], miner);
+      const auxiliarySoloWorkerData = utils.processWorkers(results[17], miner);
 
       // Build Miner Statistics
       const statistics = {
         primary: {
           current: {
-            solo: primaryShareData[0][miner] || 0,
-            shared: primaryShareData[1][miner] || 0,
-            times: primaryTimesData[miner] || 0,
+            shared: primarySharedShareData[miner] || 0,
+            solo: primarySoloShareData[miner] || 0,
+            times: primarySharedTimesData[miner] || 0,
           },
-          status: {
-            hashrate: (multiplier * primaryDifficultyData) / hashrateWindow,
-            workers: primaryWorkerCounts || 0,
+          hashrate: {
+            shared: (multiplier * primarySharedDifficultyData) / hashrateWindow,
+            solo: (multiplier * primarySoloDifficultyData) / hashrateWindow,
           },
           payments: {
-            balances: (primaryBalanceData || auxiliaryBalanceData) || 0,
-            generate: (primaryGenerateData || auxiliaryGenerateData) || 0,
-            immature: (primaryImmatureData || auxiliaryImmatureData) || 0,
-            paid: (primaryPaidData || auxiliaryPaidData) || 0,
+            balances: primaryBalanceData || 0,
+            generate: primaryGenerateData || 0,
+            immature: primaryImmatureData || 0,
+            paid: primaryPaidData || 0,
           },
-          workers: primaryWorkerData
+          workers: {
+            shared: primarySharedWorkerData,
+            solo: primarySoloWorkerData,
+          },
         },
         auxiliary: {
           current: {
-            solo: auxiliaryShareData[0][miner] || 0,
-            shared: auxiliaryShareData[1][miner] || 0,
-            times: auxiliaryTimesData[miner] || 0,
+            shared: auxiliarySharedShareData[miner] || 0,
+            solo: auxiliarySoloShareData[miner] || 0,
+            times: auxiliarySharedTimesData[miner] || 0,
           },
-          status: {
-            hashrate: (multiplier * auxiliaryDifficultyData) / hashrateWindow,
-            workers: auxiliaryWorkerCounts || 0,
+          hashrate: {
+            shared: (multiplier * auxiliarySharedDifficultyData) / hashrateWindow,
+            solo: (multiplier * auxiliarySoloDifficultyData) / hashrateWindow,
           },
           payments: {
-            balances: (auxiliaryBalanceData || auxiliaryBalanceData) || 0,
-            generate: (auxiliaryGenerateData || auxiliaryGenerateData) || 0,
-            immature: (auxiliaryImmatureData || auxiliaryImmatureData) || 0,
-            paid: (auxiliaryPaidData || auxiliaryPaidData) || 0,
+            balances: auxiliaryBalanceData || 0,
+            generate: auxiliaryGenerateData || 0,
+            immature: auxiliaryImmatureData || 0,
+            paid: auxiliaryPaidData || 0,
           },
-          workers: auxiliaryWorkerData
+          workers: {
+            shared: auxiliarySharedWorkerData,
+            solo: auxiliarySoloWorkerData,
+          },
         }
       };
 
@@ -189,12 +203,21 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
-      ['zrangebyscore', `${ pool }:rounds:primary:current:hashrate`, windowTime, '+inf'],
-      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
+      ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
     _this.executeCommands(pool, '/miners', commands, response, (results) => {
       const miners = {
-        primary: utils.processMiners(results[0]),
-        auxiliary: utils.processMiners(results[1])};
+        primary: {
+          shared: utils.processMiners(results[0]),
+          solo: utils.processMiners(results[1]),
+        },
+        auxiliary: {
+          shared: utils.processMiners(results[2]),
+          solo: utils.processMiners(results[3]),
+        }
+      };
       _this.buildPayload(pool, '/miners', _this.messages.success, miners, response);
     });
   };
@@ -297,23 +320,23 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   // API Endpoint for /rounds/current
   this.handleRoundsCurrent = function(pool, response) {
     const commands = [
-      ['hgetall', `${ pool }:rounds:primary:current:shares`],
-      ['hgetall', `${ pool }:rounds:primary:current:times`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:shares`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:times`]];
+      ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
+      ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
+      ['hgetall', `${ pool }:rounds:primary:current:shared:times`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`]];
     _this.executeCommands(pool, '/rounds/current', commands, response, (results) => {
-      const primaryShareData = utils.processShares(results[0]);
-      const auxiliaryShareData = utils.processShares(results[2]);
       const current = {
         primary: {
-          solo: primaryShareData[0],
-          shared: primaryShareData[1],
-          times: utils.processTimes(results[1]),
+          shared: utils.processShares(results[0]),
+          solo: utils.processShares(results[1]),
+          times: utils.processTimes(results[2]),
         },
         auxiliary: {
-          solo: auxiliaryShareData[0],
-          shared: auxiliaryShareData[1],
-          times: utils.processTimes(results[3]),
+          shared: utils.processShares(results[3]),
+          solo: utils.processShares(results[4]),
+          times: utils.processTimes(results[5]),
         }
       };
       _this.buildPayload(pool, '/rounds/current', _this.messages.success, current, response);
@@ -328,17 +351,13 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       ['hgetall', `${ pool }:rounds:auxiliary:round-${ height }:shares`],
       ['hgetall', `${ pool }:rounds:auxiliary:round-${ height }:times`]];
     _this.executeCommands(pool, `/rounds/${ height }`, commands, response, (results) => {
-      const primaryShareData = utils.processShares(results[0]);
-      const auxiliaryShareData = utils.processShares(results[2]);
       const current = {
         primary: {
-          solo: primaryShareData[0],
-          shared: primaryShareData[1],
+          shares: utils.processShares(results[0]),
           times: utils.processTimes(results[1]),
         },
         auxiliary: {
-          solo: auxiliaryShareData[0],
-          shared: auxiliaryShareData[1],
+          shares: utils.processShares(results[2]),
           times: utils.processTimes(results[3]),
         }
       };
@@ -356,11 +375,10 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
             ['hgetall', `${ pool }:rounds:${ blockType }:round-${ height }:shares`],
             ['hgetall', `${ pool }:rounds:${ blockType }:round-${ height }:times`]];
           _this.executeCommands(pool, '/rounds', commands, response, (results) => {
-            const shareData = utils.processShares(results[0]);
             combined[height] = {
-              solo: shareData[0],
-              shared: shareData[1],
-              times: utils.processTimes(results[1])};
+              shares: utils.processShares(results[0]),
+              times: utils.processTimes(results[1])
+            };
             if (idx === rounds.length - 1) {
               resolve(combined);
             }
@@ -406,14 +424,16 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       ['smembers', `${ pool }:blocks:primary:pending`],
       ['smembers', `${ pool }:blocks:primary:confirmed`],
       ['hgetall', `${ pool }:payments:primary:counts`],
-      ['hgetall', `${ pool }:rounds:primary:current:counts`],
-      ['zrangebyscore', `${ pool }:rounds:primary:current:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:primary:current:shared:counts`],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:blocks:auxiliary:counts`],
       ['smembers', `${ pool }:blocks:auxiliary:pending`],
       ['smembers', `${ pool }:blocks:auxiliary:confirmed`],
       ['hgetall', `${ pool }:payments:auxiliary:counts`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:counts`],
-      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:counts`],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
     _this.executeCommands(pool, '/statistics', commands, response, (results) => {
       const statistics = {
         primary: {
@@ -425,40 +445,46 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
             valid: parseFloat(results[4] ? results[4].valid || 0 : 0),
             invalid: parseFloat(results[4] ? results[4].invalid || 0 : 0),
           },
-          status: {
-            effort: parseFloat(results[4] ? results[4].effort || 0 : 0),
-            luck: utils.processLuck(results[1], results[2]),
-            hashrate: (multiplier * utils.processDifficulty(results[5])) / hashrateWindow,
-            miners: utils.countMiners(results[5]),
-            workers: utils.countWorkers(results[5]),
+          hashrate: {
+            shared: (multiplier * utils.processDifficulty(results[5])) / hashrateWindow,
+            solo: (multiplier * utils.processDifficulty(results[6])) / hashrateWindow,
           },
           payments: {
             last: parseFloat(results[3] ? results[3].last || 0 : 0),
             next: parseFloat(results[3] ? results[3].next || 0 : 0),
             total: parseFloat(results[3] ? results[3].total || 0 : 0),
-          }
+          },
+          status: {
+            effort: parseFloat(results[4] ? results[4].effort || 0 : 0),
+            luck: utils.processLuck(results[1], results[2]),
+            miners: utils.countMiners(results[5]),
+            workers: utils.countWorkers(results[5]),
+          },
         },
         auxiliary: {
           blocks: {
-            valid: parseFloat(results[6] ? results[6].valid || 0 : 0),
-            invalid: parseFloat(results[6] ? results[6].invalid || 0 : 0),
+            valid: parseFloat(results[7] ? results[7].valid || 0 : 0),
+            invalid: parseFloat(results[7] ? results[7].invalid || 0 : 0),
           },
           shares: {
-            valid: parseFloat(results[10] ? results[10].valid || 0 : 0),
-            invalid: parseFloat(results[10] ? results[10].invalid || 0 : 0),
+            valid: parseFloat(results[11] ? results[11].valid || 0 : 0),
+            invalid: parseFloat(results[11] ? results[11].invalid || 0 : 0),
           },
-          status: {
-            effort: parseFloat(results[10] ? results[10].effort || 0 : 0),
-            luck: utils.processLuck(results[7], results[8]),
-            hashrate: (multiplier * utils.processDifficulty(results[11])) / hashrateWindow,
-            miners: utils.countMiners(results[11]),
-            workers: utils.countWorkers(results[11]),
+          hashrate: {
+            shared: (multiplier * utils.processDifficulty(results[12])) / hashrateWindow,
+            solo: (multiplier * utils.processDifficulty(results[13])) / hashrateWindow,
           },
           payments: {
-            last: parseFloat(results[9] ? results[9].last || 0 : 0),
-            next: parseFloat(results[9] ? results[9].next || 0 : 0),
-            total: parseFloat(results[9] ? results[9].total || 0 : 0),
-          }
+            last: parseFloat(results[10] ? results[10].last || 0 : 0),
+            next: parseFloat(results[10] ? results[10].next || 0 : 0),
+            total: parseFloat(results[10] ? results[10].total || 0 : 0),
+          },
+          status: {
+            effort: parseFloat(results[11] ? results[11].effort || 0 : 0),
+            luck: utils.processLuck(results[8], results[9]),
+            miners: utils.countMiners(results[12]),
+            workers: utils.countWorkers(results[12]),
+          },
         }
       };
       _this.buildPayload(pool, '/statistics', _this.messages.success, statistics, response);
@@ -472,44 +498,54 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
-      ['hgetall', `${ pool }:rounds:primary:current:shares`],
-      ['hgetall', `${ pool }:rounds:primary:current:times`],
-      ['zrangebyscore', `${ pool }:rounds:primary:current:hashrate`, windowTime, '+inf'],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:shares`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:times`],
-      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
+      ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
+      ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
+      ['hgetall', `${ pool }:rounds:primary:current:shared:times`],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
     _this.executeCommands(pool, `/workers/${ worker }`, commands, response, (results) => {
 
       // Structure Round Data
-      const primaryShareData = utils.processShares(results[0], worker);
-      const auxiliaryShareData = utils.processShares(results[3], worker);
-      const primaryTimesData = utils.processTimes(results[1], worker);
-      const auxiliaryTimesData = utils.processTimes(results[4], worker);
+      const primarySharedShareData = utils.processShares(results[0], worker);
+      const primarySoloShareData = utils.processShares(results[1], worker);
+      const primarySharedTimesData = utils.processTimes(results[2], worker);
+      const auxiliarySharedShareData = utils.processShares(results[5], worker);
+      const auxiliarySoloShareData = utils.processShares(results[6], worker);
+      const auxiliarySharedTimesData = utils.processTimes(results[7], worker);
 
       // Structure Miscellaneous Data
-      const primaryDifficultyData = utils.processDifficulty(results[2], worker);
-      const auxiliaryDifficultyData = utils.processDifficulty(results[5], worker);
+      const primarySharedDifficultyData = utils.processDifficulty(results[3], worker);
+      const primarySoloDifficultyData = utils.processDifficulty(results[4], worker);
+      const auxiliarySharedDifficultyData = utils.processDifficulty(results[8], worker);
+      const auxiliarySoloDifficultyData = utils.processDifficulty(results[9], worker);
 
       // Build Worker Statistics
       const statistics = {
         primary: {
           current: {
-            solo: primaryShareData[0][worker] || 0,
-            shared: primaryShareData[1][worker] || 0,
-            times: primaryTimesData[worker] || 0,
+            shared: primarySharedShareData[worker] || 0,
+            solo: primarySoloShareData[worker] || 0,
+            times: primarySharedTimesData[worker] || 0,
           },
-          status: {
-            hashrate: (multiplier * primaryDifficultyData) / hashrateWindow,
+          hashrate: {
+            shared: (multiplier * primarySharedDifficultyData) / hashrateWindow,
+            solo: (multiplier * primarySoloDifficultyData) / hashrateWindow,
           },
         },
         auxiliary: {
           current: {
-            solo: auxiliaryShareData[0][worker] || 0,
-            shared: auxiliaryShareData[1][worker] || 0,
-            times: auxiliaryTimesData[worker] || 0,
+            shared: auxiliarySharedShareData[worker] || 0,
+            solo: auxiliarySoloShareData[worker] || 0,
+            times: auxiliarySharedTimesData[worker] || 0,
           },
-          status: {
-            hashrate: (multiplier * auxiliaryDifficultyData) / hashrateWindow,
+          hashrate: {
+            shared: (multiplier * auxiliarySharedDifficultyData) / hashrateWindow,
+            solo: (multiplier * auxiliarySoloDifficultyData) / hashrateWindow,
           },
         }
       };
@@ -524,12 +560,21 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
-      ['zrangebyscore', `${ pool }:rounds:primary:current:hashrate`, windowTime, '+inf'],
-      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:hashrate`, windowTime, '+inf']];
+      ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
     _this.executeCommands(pool, '/workers', commands, response, (results) => {
       const workers = {
-        primary: utils.processWorkers(results[0]),
-        auxiliary: utils.processWorkers(results[1])};
+        primary: {
+          shared: utils.processWorkers(results[0]),
+          solo: utils.processWorkers(results[1]),
+        },
+        auxiliary: {
+          shared: utils.processWorkers(results[2]),
+          solo: utils.processWorkers(results[3]),
+        }
+      };
       _this.buildPayload(pool, '/workers', _this.messages.success, workers, response);
     });
   };
