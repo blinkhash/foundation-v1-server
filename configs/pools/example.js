@@ -60,6 +60,7 @@ config.p2p.port = 8333;
 
 // Settings Configuration
 config.settings = {};
+config.settings.networkStatsRefreshInterval = 20 * 1000;
 config.settings.blockRefreshInterval = 1000;
 config.settings.connectionTimeout = 600;
 config.settings.hashrateWindow = 300;

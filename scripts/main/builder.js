@@ -137,6 +137,35 @@ const PoolBuilder = function(logger, portalConfig) {
       }
     }, 250);
   };
+
+  // Functionality for Pool Stats
+  /* istanbul ignore next */
+  this.setupPoolStats = function() {
+
+    // Check if Daemons Configured
+    Object.keys(_this.poolConfigs).forEach(config => {
+      const pool = _this.poolConfigs[config];
+      if (!Array.isArray(pool.primary.daemons) || pool.primary.daemons.length < 1) {
+        logger.error('Builder', config, 'No daemons configured so the pool stats cannot be started.');
+        delete _this.poolConfigs[config];
+      }
+    });
+
+    // Establish Pool Stats
+    const worker = cluster.fork({
+      workerType: 'stats',
+      poolConfigs: JSON.stringify(_this.poolConfigs),
+      portalConfig: JSON.stringify(_this.portalConfig)
+    });
+
+    // Establish Worker Exit
+    worker.on('exit', () => {
+      logger.error('Master', 'Stats', 'Stats process died, starting replacement...');
+      setTimeout(() => {
+        _this.setupPoolStats();
+      }, 2000);
+    });
+  };
 };
 
 module.exports = PoolBuilder;

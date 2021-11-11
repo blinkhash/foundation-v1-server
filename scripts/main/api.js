@@ -433,7 +433,9 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       ['hgetall', `${ pool }:payments:auxiliary:counts`],
       ['hgetall', `${ pool }:rounds:auxiliary:current:shared:counts`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
-      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:stats`]
+    ];
     _this.executeCommands(pool, '/statistics', commands, response, (results) => {
       const statistics = {
         primary: {
@@ -485,6 +487,11 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
             miners: utils.countMiners(results[12]),
             workers: utils.countWorkers(results[12]),
           },
+        },
+        stats: {
+          networkHashesPerSecond: parseFloat(results[14].networkHashesPerSecond),
+          networkDiff: parseFloat(results[14].networkDiff),
+          blockchainHeight: parseInt(results[14].blockchainHeight),
         }
       };
       _this.buildPayload(pool, '/statistics', _this.messages.success, statistics, response);
