@@ -10,7 +10,6 @@ const PoolLoader = require('./loader');
 const PoolPayments = require('./payments');
 const PoolServer = require('./server');
 const PoolWorkers = require('./workers');
-const PoolStats = require('./stats');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +33,6 @@ const PoolThreads = function(logger, client, portalConfig) {
       poolBuilder.setupPoolPayments();
       poolBuilder.setupPoolServer();
       poolBuilder.setupPoolWorkers();
-      poolBuilder.setupPoolStats();
     }
 
     // Handle Worker Forks
@@ -49,8 +47,6 @@ const PoolThreads = function(logger, client, portalConfig) {
       case 'worker':
         new PoolWorkers(logger, _this.client).setupWorkers(() => {});
         break;
-      case 'stats':
-        new PoolStats(logger, _this.client).setupPoolStats(() => {});
       }
     }
   };
