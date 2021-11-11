@@ -28,14 +28,14 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const commands = [];
     daemon.cmd('getmininginfo', [], (result) => {
       if (result[0].error) {
-        logger.error('Statistics', _this.pool, `Error with statistics daemon: ${ JSON.stringify(result.error) }`);
-        callback(true,[]);
+        logger.error('Statistics', _this.pool, `Error with statistics daemon: ${ JSON.stringify(result[0].error) }`);
+        handler(result[0].error);
       } else {
         const data = result[0].response;
         commands.push(['hset', `${ this.pool }:statistics:${ blockType }:network`, 'difficulty', data.difficulty]);
         commands.push(['hset', `${ this.pool }:statistics:${ blockType }:network`, 'hashrate', data.networkhashps]);
         commands.push(['hset', `${ this.pool }:statistics:${ blockType }:network`, 'height', data.blocks]);
-        _this.executeCommands(commands, callback, handler);
+        callback(commands);
       }
     });
   };
@@ -57,10 +57,12 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   /* istanbul ignore next */
   this.handleIntervals = function(daemon, blockType) {
     const statisticsInterval = setInterval(() => {
-      _this.handleMiningInfo(daemon, blockType, () => {
-        if (_this.poolConfig.debug) {
-          logger.debug('Statistics', _this.pool, `Finished updating statistics for ${ blockType } configuration.`);
-        }
+      _this.handleMiningInfo(daemon, blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating statistics for ${ blockType } configuration.`);
+          }
+        }, () => {});
       }, () => {});
     }, _this.refreshInterval);
   }
