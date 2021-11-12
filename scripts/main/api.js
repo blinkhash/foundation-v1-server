@@ -250,12 +250,12 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     _this.executeCommands(pool, '/miners', commands, response, (results) => {
       const miners = {
         primary: {
-          shared: utils.processMiners(results[0], results[2], results[1], multiplier, hashrateWindow, true),
-          solo: utils.processMiners(results[3], results[4], null, multiplier, hashrateWindow, true),
+          shared: utils.processMiners(results[0], results[2], results[1], multiplier, hashrateWindow, false),
+          solo: utils.processMiners(results[3], results[4], null, multiplier, hashrateWindow, false),
         },
         auxiliary: {
-          shared: utils.processMiners(results[5], results[7], results[6], multiplier, hashrateWindow, true),
-          solo: utils.processMiners(results[8], results[9], null, multiplier, hashrateWindow, true),
+          shared: utils.processMiners(results[5], results[7], results[6], multiplier, hashrateWindow, false),
+          solo: utils.processMiners(results[8], results[9], null, multiplier, hashrateWindow, false),
         }
       };
       _this.buildPayload(pool, '/miners', _this.messages.success, miners, response);
@@ -660,12 +660,12 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     _this.executeCommands(pool, '/workers', commands, response, (results) => {
       const workers = {
         primary: {
-          shared: utils.processWorkers(results[0], results[2], results[1], multiplier, hashrateWindow, true),
-          solo: utils.processWorkers(results[3], results[4], null, multiplier, hashrateWindow, true),
+          shared: utils.processWorkers(results[0], results[2], results[1], multiplier, hashrateWindow, false),
+          solo: utils.processWorkers(results[3], results[4], null, multiplier, hashrateWindow, false),
         },
         auxiliary: {
-          shared: utils.processWorkers(results[5], results[7], results[6], multiplier, hashrateWindow, true),
-          solo: utils.processWorkers(results[8], results[9], null, multiplier, hashrateWindow, true),
+          shared: utils.processWorkers(results[5], results[7], results[6], multiplier, hashrateWindow, false),
+          solo: utils.processWorkers(results[8], results[9], null, multiplier, hashrateWindow, false),
         }
       };
       _this.buildPayload(pool, '/workers', _this.messages.success, workers, response);
