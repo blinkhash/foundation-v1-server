@@ -303,6 +303,44 @@ describe('Test API functionality', () => {
     });
   });
 
+  test('Test handleMinersActive API endpoint', (done) => {
+    const commands = [
+      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'worker1', JSON.stringify({ time: 0, difficulty: 64, worker: 'worker1' })],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker2.w1', JSON.stringify({ time: 0, difficulty: 64, worker: 'worker2.w1' })],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker2.w2', JSON.stringify({ time: 0, difficulty: 44, worker: 'worker2.w2' })],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker3', JSON.stringify({ time: 0, difficulty: 8, worker: 'worker3' })],
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'worker1', 20.15],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32 })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64 })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32 })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44 })]];
+    const response = mockResponse();
+    response.on('end', (payload) => {
+      const processed = JSON.parse(payload);
+      expect(processed.pool).toBe('Pool1');
+      expect(processed.coins).toStrictEqual(['Bitcoin']);
+      expect(processed.logo).toBe('');
+      expect(processed.endpoint).toBe('/miners/active');
+      expect(processed.response.code).toBe(200);
+      expect(processed.response.message).toBe('');
+      expect(typeof processed.data).toBe('object');
+      expect(processed.data.primary.shared.length).toBe(1);
+      expect(processed.data.primary.solo.length).toBe(1);
+      expect(processed.data.primary.shared[0].worker).toBe("worker2");
+      expect(processed.data.primary.shared[0].shares).toBe(108);
+      expect(processed.data.primary.shared[0].hashrate).toBe(1546188226.56);
+      expect(processed.data.primary.solo[0].worker).toBe("worker1");
+      expect(processed.data.primary.solo[0].shares).toBe(64);
+      expect(processed.data.primary.solo[0].hashrate).toBe(916259689.8133334);
+      done();
+    });
+    mockSetupClient(client, commands, 'Pool1', () => {
+      const request = mockRequest('Pool1', 'miners', 'active');
+      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      poolApi.handleApiV1(request, response);
+    });
+  });
+
   test('Test handleMinersSpecific API endpoint [1]', (done) => {
     const commands = [
       ['hset', 'Pool1:payments:primary:balances', 'worker2', 37.43],
@@ -408,13 +446,16 @@ describe('Test API functionality', () => {
 
   test('Test handleMiners API endpoint', (done) => {
     const commands = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, difficulty: 8, worker: 'worker1', solo: false })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, difficulty: 8, worker: 'worker2.w1', solo: false })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, difficulty: 8, worker: 'worker1', solo: false })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, difficulty: 8, worker: 'worker3', solo: false })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, difficulty: 8, worker: 'worker2.w2', solo: false })],
-      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, difficulty: 8, worker: 'worker2.w2', solo: false })],
-      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, difficulty: 8, worker: 'worker3', solo: false })]];
+      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'worker1', JSON.stringify({ time: 0, difficulty: 64, worker: 'worker1' })],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker2.w1', JSON.stringify({ time: 0, difficulty: 64, worker: 'worker2.w1' })],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker2.w2', JSON.stringify({ time: 0, difficulty: 44, worker: 'worker2.w2' })],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker3', JSON.stringify({ time: 0, difficulty: 8, worker: 'worker3' })],
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'worker1', 20.15],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32 })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64 })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32 })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', difficulty: 8 })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44 })]];
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
@@ -425,13 +466,17 @@ describe('Test API functionality', () => {
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
       expect(typeof processed.data).toBe('object');
-      expect(processed.data.primary.shared.length).toBe(3);
-      expect(processed.data.auxiliary.shared.length).toBe(2);
-      expect(processed.data.primary.shared[0]).toBe('worker1');
-      expect(processed.data.primary.shared[1]).toBe('worker2');
-      expect(processed.data.primary.shared[2]).toBe('worker3');
-      expect(processed.data.auxiliary.shared[0]).toBe('worker2');
-      expect(processed.data.auxiliary.shared[1]).toBe('worker3');
+      expect(processed.data.primary.shared.length).toBe(2);
+      expect(processed.data.primary.solo.length).toBe(1);
+      expect(processed.data.primary.shared[0].worker).toBe("worker2");
+      expect(processed.data.primary.shared[0].shares).toBe(108);
+      expect(processed.data.primary.shared[0].hashrate).toBe(1546188226.56);
+      expect(processed.data.primary.shared[1].worker).toBe("worker3");
+      expect(processed.data.primary.shared[1].shares).toBe(8);
+      expect(processed.data.primary.shared[1].hashrate).toBe(114532461.22666667);
+      expect(processed.data.primary.solo[0].worker).toBe("worker1");
+      expect(processed.data.primary.solo[0].shares).toBe(64);
+      expect(processed.data.primary.solo[0].hashrate).toBe(916259689.8133334);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
@@ -889,6 +934,47 @@ describe('Test API functionality', () => {
     });
   });
 
+  test('Test handleWorkersActive API endpoint', (done) => {
+    const commands = [
+      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'worker1', JSON.stringify({ time: 0, difficulty: 64, worker: 'worker1' })],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker2.w1', JSON.stringify({ time: 0, difficulty: 64, worker: 'worker2.w1' })],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker2.w2', JSON.stringify({ time: 0, difficulty: 44, worker: 'worker2.w2' })],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker3', JSON.stringify({ time: 0, difficulty: 8, worker: 'worker3' })],
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'worker1', 20.15],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32 })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64 })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32 })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44 })]];
+    const response = mockResponse();
+    response.on('end', (payload) => {
+      const processed = JSON.parse(payload);
+      expect(processed.pool).toBe('Pool1');
+      expect(processed.coins).toStrictEqual(['Bitcoin']);
+      expect(processed.logo).toBe('');
+      expect(processed.endpoint).toBe('/workers/active');
+      expect(processed.response.code).toBe(200);
+      expect(processed.response.message).toBe('');
+      expect(typeof processed.data).toBe('object');
+      expect(processed.data.primary.shared.length).toBe(2);
+      expect(processed.data.primary.solo.length).toBe(1);
+      expect(processed.data.primary.shared[0].worker).toBe("worker2.w1");
+      expect(processed.data.primary.shared[0].shares).toBe(64);
+      expect(processed.data.primary.shared[0].hashrate).toBe(916259689.8133334);
+      expect(processed.data.primary.shared[1].worker).toBe("worker2.w2");
+      expect(processed.data.primary.shared[1].shares).toBe(44);
+      expect(processed.data.primary.shared[1].hashrate).toBe(629928536.7466667);
+      expect(processed.data.primary.solo[0].worker).toBe("worker1");
+      expect(processed.data.primary.solo[0].shares).toBe(64);
+      expect(processed.data.primary.solo[0].hashrate).toBe(916259689.8133334);
+      done();
+    });
+    mockSetupClient(client, commands, 'Pool1', () => {
+      const request = mockRequest('Pool1', 'workers', 'active');
+      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      poolApi.handleApiV1(request, response);
+    });
+  });
+
   test('Test handleWorkersSpecific API endpoint [1]', (done) => {
     const commands = [
       ['hset', 'Pool1:payments:primary:generate', 'worker1', 134.3],
@@ -979,13 +1065,16 @@ describe('Test API functionality', () => {
 
   test('Test handleWorkers API endpoint', (done) => {
     const commands = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: false })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: false })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker3', solo: false })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w2', solo: false })],
-      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w2', solo: false })],
-      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker3', solo: false })]];
+      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'worker1', JSON.stringify({ time: 0, difficulty: 64, worker: 'worker1' })],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker2.w1', JSON.stringify({ time: 0, difficulty: 64, worker: 'worker2.w1' })],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker2.w2', JSON.stringify({ time: 0, difficulty: 44, worker: 'worker2.w2' })],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker3', JSON.stringify({ time: 0, difficulty: 8, worker: 'worker3' })],
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'worker1', 20.15],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32 })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64 })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32 })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', difficulty: 8 })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44 })]];
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
@@ -996,14 +1085,20 @@ describe('Test API functionality', () => {
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
       expect(typeof processed.data).toBe('object');
-      expect(processed.data.primary.shared.length).toBe(4);
-      expect(processed.data.auxiliary.shared.length).toBe(2);
-      expect(processed.data.primary.shared[0]).toBe('worker1');
-      expect(processed.data.primary.shared[1]).toBe('worker2.w1');
-      expect(processed.data.primary.shared[2]).toBe('worker2.w2');
-      expect(processed.data.primary.shared[3]).toBe('worker3');
-      expect(processed.data.auxiliary.shared[0]).toBe('worker2.w2');
-      expect(processed.data.auxiliary.shared[1]).toBe('worker3');
+      expect(processed.data.primary.shared.length).toBe(3);
+      expect(processed.data.primary.solo.length).toBe(1);
+      expect(processed.data.primary.shared[0].worker).toBe("worker2.w1");
+      expect(processed.data.primary.shared[0].shares).toBe(64);
+      expect(processed.data.primary.shared[0].hashrate).toBe(916259689.8133334);
+      expect(processed.data.primary.shared[1].worker).toBe("worker2.w2");
+      expect(processed.data.primary.shared[1].shares).toBe(44);
+      expect(processed.data.primary.shared[1].hashrate).toBe(629928536.7466667);
+      expect(processed.data.primary.shared[2].worker).toBe("worker3");
+      expect(processed.data.primary.shared[2].shares).toBe(8);
+      expect(processed.data.primary.shared[2].hashrate).toBe(114532461.22666667);
+      expect(processed.data.primary.solo[0].worker).toBe("worker1");
+      expect(processed.data.primary.solo[0].shares).toBe(64);
+      expect(processed.data.primary.solo[0].hashrate).toBe(916259689.8133334);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {

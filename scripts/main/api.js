@@ -92,6 +92,38 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     });
   };
 
+  // API Endpoint for /miners/active
+  this.handleMinersActive = function(pool, response) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
+    const commands = [
+      ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
+      ['hgetall', `${ pool }:rounds:primary:current:shared:times`],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
+    _this.executeCommands(pool, '/miners/active', commands, response, (results) => {
+      const miners = {
+        primary: {
+          shared: utils.processMiners(results[0], results[2], results[1], multiplier, hashrateWindow, true),
+          solo: utils.processMiners(results[3], results[4], null, multiplier, hashrateWindow, true),
+        },
+        auxiliary: {
+          shared: utils.processMiners(results[5], results[7], results[6], multiplier, hashrateWindow, true),
+          solo: utils.processMiners(results[8], results[9], null, multiplier, hashrateWindow, true),
+        }
+      };
+      _this.buildPayload(pool, '/miners/active', _this.messages.success, miners, response);
+    });
+  };
+
   // API Endpoint for /miners/[miner]
   this.handleMinersSpecific = function(pool, miner, response) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
@@ -140,12 +172,12 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       // Structure Miscellaneous Data
       const primarySharedDifficultyData = utils.processDifficulty(results[6], miner);
       const primarySoloDifficultyData = utils.processDifficulty(results[8], miner);
-      const primarySharedWorkerData = utils.processWorkers(results[6], miner);
-      const primarySoloWorkerData = utils.processWorkers(results[8], miner);
+      const primarySharedWorkerData = utils.listWorkers(results[6], miner);
+      const primarySoloWorkerData = utils.listWorkers(results[8], miner);
       const auxiliarySharedDifficultyData = utils.processDifficulty(results[15], miner);
       const auxiliarySoloDifficultyData = utils.processDifficulty(results[17], miner);
-      const auxiliarySharedWorkerData = utils.processWorkers(results[15], miner);
-      const auxiliarySoloWorkerData = utils.processWorkers(results[17], miner);
+      const auxiliarySharedWorkerData = utils.listWorkers(results[15], miner);
+      const auxiliarySoloWorkerData = utils.listWorkers(results[17], miner);
 
       // Build Miner Statistics
       const statistics = {
@@ -200,22 +232,30 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
 
   // API Endpoint for /miners
   this.handleMiners = function(pool, response) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
+      ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
+      ['hgetall', `${ pool }:rounds:primary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
     _this.executeCommands(pool, '/miners', commands, response, (results) => {
       const miners = {
         primary: {
-          shared: utils.processMiners(results[0]),
-          solo: utils.processMiners(results[1]),
+          shared: utils.processMiners(results[0], results[2], results[1], multiplier, hashrateWindow, true),
+          solo: utils.processMiners(results[3], results[4], null, multiplier, hashrateWindow, true),
         },
         auxiliary: {
-          shared: utils.processMiners(results[2]),
-          solo: utils.processMiners(results[3]),
+          shared: utils.processMiners(results[5], results[7], results[6], multiplier, hashrateWindow, true),
+          solo: utils.processMiners(results[8], results[9], null, multiplier, hashrateWindow, true),
         }
       };
       _this.buildPayload(pool, '/miners', _this.messages.success, miners, response);
@@ -504,6 +544,38 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     });
   };
 
+  // API Endpoint for /workers/active
+  this.handleWorkersActive = function(pool, response) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
+    const commands = [
+      ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
+      ['hgetall', `${ pool }:rounds:primary:current:shared:times`],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
+    _this.executeCommands(pool, '/workers/active', commands, response, (results) => {
+      const workers = {
+        primary: {
+          shared: utils.processWorkers(results[0], results[2], results[1], multiplier, hashrateWindow, true),
+          solo: utils.processWorkers(results[3], results[4], null, multiplier, hashrateWindow, true),
+        },
+        auxiliary: {
+          shared: utils.processWorkers(results[5], results[7], results[6], multiplier, hashrateWindow, true),
+          solo: utils.processWorkers(results[8], results[9], null, multiplier, hashrateWindow, true),
+        }
+      };
+      _this.buildPayload(pool, '/workers/active', _this.messages.success, workers, response);
+    });
+  };
+
   // API Endpoint for /workers/[worker]
   this.handleWorkersSpecific = function(pool, worker, response) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
@@ -570,22 +642,30 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
 
   // API Endpoint for /workers
   this.handleWorkers = function(pool, response) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
+      ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
+      ['hgetall', `${ pool }:rounds:primary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
     _this.executeCommands(pool, '/workers', commands, response, (results) => {
       const workers = {
         primary: {
-          shared: utils.processWorkers(results[0]),
-          solo: utils.processWorkers(results[1]),
+          shared: utils.processWorkers(results[0], results[2], results[1], multiplier, hashrateWindow, true),
+          solo: utils.processWorkers(results[3], results[4], null, multiplier, hashrateWindow, true),
         },
         auxiliary: {
-          shared: utils.processWorkers(results[2]),
-          solo: utils.processWorkers(results[3]),
+          shared: utils.processWorkers(results[5], results[7], results[6], multiplier, hashrateWindow, true),
+          solo: utils.processWorkers(results[8], results[9], null, multiplier, hashrateWindow, true),
         }
       };
       _this.buildPayload(pool, '/workers', _this.messages.success, workers, response);
@@ -677,6 +757,9 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       break;
 
     // Miners Endpoints
+    case (endpoint === 'miners' && method === 'active'):
+      _this.handleMinersActive(pool, res);
+      break;
     case (endpoint === 'miners' && method.length >= 1):
       _this.handleMinersSpecific(pool, method, res);
       break;
@@ -721,6 +804,9 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       break;
 
     // Workers Endpoints
+    case (endpoint === 'workers' && method === 'active'):
+      _this.handleWorkersActive(pool, res);
+      break;
     case (endpoint === 'workers' && method.length >= 1):
       _this.handleWorkersSpecific(pool, method, res);
       break;

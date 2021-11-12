@@ -187,6 +187,68 @@ describe('Test utility functionality', () => {
     expect(utils.countProcessForks(config)).toBe(1);
   });
 
+  test('Test implemented listWorkers [1]', () => {
+    const shares = [
+      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
+      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}'];
+    const processed = utils.listWorkers(shares);
+    expect(processed.length).toBe(1);
+    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2');
+  });
+
+  test('Test implemented listWorkers [2]', () => {
+    const shares = [
+      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
+    const processed = utils.listWorkers(shares);
+    expect(processed.length).toBe(3);
+    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+    expect(processed[1]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2');
+    expect(processed[2]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2');
+  });
+
+  test('Test implemented listWorkers [3]', () => {
+    const shares = [
+      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
+    const processed = utils.listWorkers(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
+    expect(processed.length).toBe(2);
+    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+    expect(processed[1]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2');
+  });
+
+  test('Test implemented listWorkers [4]', () => {
+    const shares = [
+      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
+    const processed = utils.listWorkers(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+    expect(processed.length).toBe(1);
+    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+  });
+
+  test('Test implemented listWorkers [5]', () => {
+    const shares = [
+      '{"time":1623901893182,"solo":false,"difficulty":8}',
+      '{"time":1623901919389,"solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
+    const processed = utils.listWorkers(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+    expect(processed.length).toBe(1);
+    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+  });
+
+  test('Test implemented listWorkers [6]', () => {
+    expect(utils.listWorkers(null)).toStrictEqual([]);
+  });
+
   test('Test implemented loggerSeverity', () => {
     expect(utils.loggerSeverity.debug).toBe(1);
     expect(utils.loggerSeverity.warning).toBe(2);
@@ -250,6 +312,15 @@ describe('Test utility functionality', () => {
   });
 
   test('Test implemented processDifficulty [5]', () => {
+    const shares = [
+      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":"test"}',
+      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":"test"}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}'];
+    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a')).toBe(16);
+  });
+
+  test('Test implemented processDifficulty [6]', () => {
     expect(utils.processDifficulty(null)).toBe(0);
   });
 
@@ -289,41 +360,114 @@ describe('Test utility functionality', () => {
   });
 
   test('Test implemented processMiners [1]', () => {
-    const shares = [
-      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}'];
-    const processed = utils.processMiners(shares);
-    expect(processed.length).toBe(1);
-    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
+    const shares = {
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1': '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2': '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"difficulty":8}'};
+    const hashrate = [
+      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"difficulty":8}'];
+    const times = {
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': 20.15,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': 18.75,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1': 16.14,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2': 75.15}
+    const processed = utils.processMiners(shares, hashrate, times, 1, 300, false);
+    expect(processed.length).toBe(3);
+    expect(processed[0].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a");
+    expect(processed[0].hashrate).toBe(0.02666666666666667);
+    expect(processed[0].shares).toBe(8);
+    expect(processed[0].times).toBe(20.15);
+    expect(processed[1].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b");
+    expect(processed[1].hashrate).toBe(0.02666666666666667);
+    expect(processed[1].shares).toBe(8);
+    expect(processed[1].times).toBe(18.75);
+    expect(processed[2].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c");
+    expect(processed[2].hashrate).toBe(0.05333333333333334);
+    expect(processed[2].shares).toBe(16);
+    expect(processed[2].times).toBe(75.15);
   });
 
   test('Test implemented processMiners [2]', () => {
-    const shares = [
-      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
-    const processed = utils.processMiners(shares);
+    const shares = {
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"effort":45.66}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":8,"effort":76.12}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1': '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2': '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"difficulty":8}'};
+    const hashrate = [
+      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"difficulty":8}'];
+    const processed = utils.processMiners(shares, hashrate, null, 1, 300, false);
     expect(processed.length).toBe(2);
-    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
-    expect(processed[1]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b');
+    expect(processed[0].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b");
+    expect(processed[0].hashrate).toBe(0.02666666666666667);
+    expect(processed[0].shares).toBe(8);
+    expect(processed[0].effort).toBe(76.12);
+    expect(processed[1].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c");
+    expect(processed[1].hashrate).toBe(0.05333333333333334);
+    expect(processed[1].shares).toBe(16);
+    expect(processed[1].effort).toBe(0);
   });
 
   test('Test implemented processMiners [3]', () => {
-    const shares = [
-      '{"time":1623901893182,"solo":false,"difficulty":8}',
-      '{"time":1623901919389,"solo":false,"difficulty":8}',
-      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
-      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
-    const processed = utils.processMiners(shares);
+    const shares = {
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2': '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1': '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2': '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"difficulty":8}'};
+    const hashrate = [
+      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":0}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"difficulty":8}'];
+    const times = {
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': 20.15,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2': 75.15}
+    const processed = utils.processMiners(shares, hashrate, times, 1, 300, true);
     expect(processed.length).toBe(2);
-    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
-    expect(processed[1]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b');
+    expect(processed[0].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a");
+    expect(processed[0].hashrate).toBe(0.02666666666666667);
+    expect(processed[0].shares).toBe(8);
+    expect(processed[0].times).toBe(20.15);
+    expect(processed[1].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c");
+    expect(processed[1].hashrate).toBe(0.05333333333333334);
+    expect(processed[1].shares).toBe(16);
+    expect(processed[1].times).toBe(75.15);
   });
 
   test('Test implemented processMiners [4]', () => {
+    const shares = {
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2': '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":0}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1': '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2': '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"difficulty":8}'};
+    const hashrate = [
+      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"difficulty":8}'];
+    const times = {
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1': 20.15,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2': 18.17}
+    const processed = utils.processMiners(shares, hashrate, times, 1, 300, false);
+    expect(processed.length).toBe(2);
+    expect(processed[0].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a");
+    expect(processed[0].hashrate).toBe(0.02666666666666667);
+    expect(processed[0].shares).toBe(16);
+    expect(processed[0].times).toBe(0);
+    expect(processed[1].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c");
+    expect(processed[1].hashrate).toBe(0.05333333333333334);
+    expect(processed[1].shares).toBe(16);
+    expect(processed[1].times).toBe(20.15);
+  });
+
+  test('Test implemented processMiners [5]', () => {
     expect(utils.processMiners(null)).toStrictEqual([]);
   });
 
@@ -358,6 +502,15 @@ describe('Test utility functionality', () => {
   });
 
   test('Test implemented processPayments [4]', () => {
+    const payments = {
+      tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a: 'test',
+      tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b: '11.87468051'};
+    const processed = utils.processPayments(payments);
+    expect(Object.keys(processed).length).toBe(1);
+    expect(processed['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b']).toBe(11.87468051);
+  });
+
+  test('Test implemented processPayments [5]', () => {
     expect(utils.processPayments(null)).toStrictEqual({});
   });
 
@@ -483,68 +636,106 @@ describe('Test utility functionality', () => {
   });
 
   test('Test implemented processTimes [5]', () => {
+    const times = {
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': 'test',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2': '100.15',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '56.43',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '10.15'};
+    const processed = utils.processTimes(times, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
+    expect(Object.keys(processed).length).toBe(1);
+    expect(processed['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a']).toBe(100.15);
+  });
+
+  test('Test implemented processTimes [5]', () => {
     expect(utils.processTimes(null)).toStrictEqual({});
   });
 
   test('Test implemented processWorkers [1]', () => {
-    const shares = [
-      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}'];
-    const processed = utils.processWorkers(shares);
-    expect(processed.length).toBe(1);
-    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2');
+    const shares = {
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1': '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2': '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"difficulty":8}'};
+    const hashrate = [
+      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"difficulty":8}'];
+    const times = {
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': 20.15,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': 18.75,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1': 16.14,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2': 75.15}
+    const processed = utils.processWorkers(shares, hashrate, times, 1, 300, false);
+    expect(processed.length).toBe(4);
+    expect(processed[0].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1");
+    expect(processed[0].hashrate).toBe(0.02666666666666667);
+    expect(processed[0].shares).toBe(8);
+    expect(processed[0].times).toBe(20.15);
+    expect(processed[1].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1");
+    expect(processed[1].hashrate).toBe(0.02666666666666667);
+    expect(processed[1].shares).toBe(8);
+    expect(processed[1].times).toBe(18.75);
+    expect(processed[2].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1");
+    expect(processed[2].hashrate).toBe(0.02666666666666667);
+    expect(processed[2].shares).toBe(8);
+    expect(processed[2].times).toBe(16.14);
+    expect(processed[3].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2");
+    expect(processed[3].hashrate).toBe(0.02666666666666667);
+    expect(processed[3].shares).toBe(8);
+    expect(processed[3].times).toBe(75.15);
   });
 
   test('Test implemented processWorkers [2]', () => {
-    const shares = [
+    const shares = {
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8,"effort":16.15}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1': '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2': '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"difficulty":8}'};
+    const hashrate = [
       '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
-      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
-    const processed = utils.processWorkers(shares);
+      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"difficulty":8}'];
+    const processed = utils.processWorkers(shares, hashrate, null, 1, 300, false);
     expect(processed.length).toBe(3);
-    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
-    expect(processed[1]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2');
-    expect(processed[2]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2');
+    expect(processed[0].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1");
+    expect(processed[0].hashrate).toBe(0.02666666666666667);
+    expect(processed[0].shares).toBe(8);
+    expect(processed[0].effort).toBe(16.15);
+    expect(processed[1].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1");
+    expect(processed[1].hashrate).toBe(0.02666666666666667);
+    expect(processed[1].shares).toBe(8);
+    expect(processed[2].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2");
+    expect(processed[2].hashrate).toBe(0.02666666666666667);
+    expect(processed[2].shares).toBe(8);
   });
 
   test('Test implemented processWorkers [3]', () => {
-    const shares = [
+    const shares = {
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1': '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"difficulty":8}',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2': '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"difficulty":8}'};
+    const hashrate = [
       '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
-      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
-    const processed = utils.processWorkers(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"difficulty":8}'];
+    const times = {
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': 20.15,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2': 75.15}
+    const processed = utils.processWorkers(shares, hashrate, times, 1, 300, true);
     expect(processed.length).toBe(2);
-    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
-    expect(processed[1]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2');
+    expect(processed[0].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1");
+    expect(processed[0].hashrate).toBe(0.02666666666666667);
+    expect(processed[0].shares).toBe(8);
+    expect(processed[0].times).toBe(20.15);
+    expect(processed[1].worker).toBe("tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2");
+    expect(processed[1].hashrate).toBe(0.02666666666666667);
+    expect(processed[1].shares).toBe(8);
+    expect(processed[1].times).toBe(75.15);
   });
 
   test('Test implemented processWorkers [4]', () => {
-    const shares = [
-      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
-      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}',
-      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
-    const processed = utils.processWorkers(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
-    expect(processed.length).toBe(1);
-    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
-  });
-
-  test('Test implemented processWorkers [5]', () => {
-    const shares = [
-      '{"time":1623901893182,"solo":false,"difficulty":8}',
-      '{"time":1623901919389,"solo":false,"difficulty":8}',
-      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
-      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}'];
-    const processed = utils.processWorkers(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
-    expect(processed.length).toBe(1);
-    expect(processed[0]).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
-  });
-
-  test('Test implemented processWorkers [6]', () => {
     expect(utils.processWorkers(null)).toStrictEqual([]);
   });
 
