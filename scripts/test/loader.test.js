@@ -81,10 +81,49 @@ describe('Test loader functionality', () => {
   });
 
   test('Test pool configuration validation [5]', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const algorithms = { mining: 'scrypt', block: 'sha256d', coinbase: 'sha256d' };
+    const poolLoader = new PoolLoader(logger, configCopy);
+    const poolConfig = { enabled: true, primary: { coin: { algorithms: algorithms }, recipients: [{ percentage: 1 }]}};
+    const response = poolLoader.validatePoolConfigs(poolConfig);
+    expect(consoleSpy).toHaveBeenCalled();
+    expect(response).toBe(false);
+    console.log.mockClear();
+  });
+
+  test('Test pool configuration validation [5]', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: false, name: 'Litecoin', primary: { coin: { name: 'Litecoin' }}};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(response).toBe(false);
+  });
+
+  test('Test pool recipient validation [1]', () => {
+    const poolLoader = new PoolLoader(logger, configCopy);
+    const poolConfig = { enabled: true, name: 'Litecoin', primary: {}};
+    const response = poolLoader.validatePoolRecipients(poolConfig);
+    expect(response).toBe(true);
+  });
+
+  test('Test pool recipient validation [2]', () => {
+    const poolLoader = new PoolLoader(logger, configCopy);
+    const poolConfig = { enabled: true, name: 'Litecoin', primary: { recipients: [{ percentage: 1 }]}};
+    const response = poolLoader.validatePoolRecipients(poolConfig);
+    expect(response).toBe(false);
+  });
+
+  test('Test pool recipient validation [3]', () => {
+    const poolLoader = new PoolLoader(logger, configCopy);
+    const poolConfig = { enabled: true, name: 'Litecoin', primary: { recipients: [{ percentage: 0.4 }]}};
+    const response = poolLoader.validatePoolRecipients(poolConfig);
+    expect(response).toBe(true);
+  });
+
+  test('Test pool recipient validation [4]', () => {
+    const poolLoader = new PoolLoader(logger, configCopy);
+    const poolConfig = { enabled: true, name: 'Litecoin', primary: { recipients: [{ percentage: 0.05 }]}};
+    const response = poolLoader.validatePoolRecipients(poolConfig);
+    expect(response).toBe(true);
   });
 
   test('Test pool name validation [1]', () => {

@@ -41,6 +41,7 @@ const PoolLoader = function(logger, portalConfig) {
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.mining, name)) return false;
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.block, name)) return false;
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.coinbase, name)) return false;
+    if (!_this.validatePoolRecipients(poolConfig)) return false;
     return true;
   };
 
@@ -79,6 +80,24 @@ const PoolLoader = function(logger, portalConfig) {
     }
     return true;
   };
+
+  // Check for Valid Recipient Percentage
+  this.validatePoolRecipients = function(poolConfig) {
+    if (poolConfig.primary.recipients && poolConfig.primary.recipients.length >= 1) {
+      const recipientTotal = poolConfig.primary.recipients.reduce((p_sum, a) => p_sum + a.percentage, 0);
+      if (recipientTotal >= 1) {
+        logger.error('Builder', 'Setup', `Recipient percentage for ${ poolConfig.name } is greater than 100%. Check your configuration files`);
+        return false;
+      } else if (recipientTotal >= 0.4) {
+        logger.warning('Builder', 'Setup', `Recipient percentage for ${ poolConfig.name } is greater than 40%. Are you sure that you configured it properly?`);
+        return true;
+      } else {
+        return true;
+      }
+    } else {
+      return true;
+    }
+  }
 
   // Read and Format Partner Configs
   /* istanbul ignore next */
