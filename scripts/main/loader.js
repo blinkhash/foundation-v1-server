@@ -48,11 +48,20 @@ const PoolLoader = function(logger, portalConfig) {
   this.validatePoolNames = function(poolConfigs, poolConfig) {
     let configNames = Object.keys(poolConfigs);
     configNames = configNames.concat(poolConfig.name);
-    if (new Set(configNames).size !== configNames.length) {
-      logger.error('Builder', 'Setup', 'Overlapping pool names. Check your configuration files');
+    if (poolConfig.name) {
+      if (poolConfig.name.split(' ').length > 1) {
+        logger.error('Builder', 'Setup', 'Pool names are only allowed to be a single word. Check your configuration files')
+        return false;
+      }
+      if (new Set(configNames).size !== configNames.length) {
+        logger.error('Builder', 'Setup', 'Overlapping pool names. Check your configuration files');
+        return false;
+      }
+      return true;
+    } else {
+      logger.error('Builder', 'Setup', 'No existing pool name passed in. Check your configuration files');
       return false;
     }
-    return true;
   };
 
   // Check for Overlapping Pool Ports

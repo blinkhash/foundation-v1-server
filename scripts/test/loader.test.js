@@ -82,15 +82,15 @@ describe('Test loader functionality', () => {
 
   test('Test pool configuration validation [5]', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: false, primary: { coin: { name: 'Litecoin' }}};
+    const poolConfig = { enabled: false, name: 'Litecoin', primary: { coin: { name: 'Litecoin' }}};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(response).toBe(false);
   });
 
   test('Test pool name validation [1]', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, primary: { coin: { name: 'Litecoin' }}};
-    const poolConfigs = { Pool1: { enabled: true, primary: { coin: { name: 'Bitcoin' }}}};
+    const poolConfig = { enabled: true, name: 'Litecoin', primary: { coin: { name: 'Litecoin' }}};
+    const poolConfigs = { Pool1: { enabled: true, name: 'Bitcoin', primary: { coin: { name: 'Bitcoin' }}}};
     const response = poolLoader.validatePoolNames(poolConfigs, poolConfig);
     expect(response).toBe(true);
   });
@@ -98,7 +98,23 @@ describe('Test loader functionality', () => {
   test('Test pool name validation [2]', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: true, name: 'Pool1' };
-    const poolConfigs = { Pool1: { enabled: true, primary: { coin: { name: 'Bitcoin' }}}};
+    const poolConfigs = { Pool1: { enabled: true, name: 'Bitcoin', primary: { coin: { name: 'Bitcoin' }}}};
+    const response = poolLoader.validatePoolNames(poolConfigs, poolConfig);
+    expect(response).toBe(false);
+  });
+
+  test('Test pool name validation [3]', () => {
+    const poolLoader = new PoolLoader(logger, configCopy);
+    const poolConfig = { enabled: true, name: 'Pool1 Pool2' };
+    const poolConfigs = { Pool1: { enabled: true, name: 'Bitcoin', primary: { coin: { name: 'Bitcoin' }}}};
+    const response = poolLoader.validatePoolNames(poolConfigs, poolConfig);
+    expect(response).toBe(false);
+  });
+
+  test('Test pool name validation [4]', () => {
+    const poolLoader = new PoolLoader(logger, configCopy);
+    const poolConfig = { enabled: true };
+    const poolConfigs = { Pool1: { enabled: true, name: 'Bitcoin', primary: { coin: { name: 'Bitcoin' }}}};
     const response = poolLoader.validatePoolNames(poolConfigs, poolConfig);
     expect(response).toBe(false);
   });
