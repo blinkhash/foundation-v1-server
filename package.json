@@ -45,7 +45,7 @@
     "url": "https://github.com/blinkhash/foundation-server.git"
   },
   "dependencies": {
-    "apicache": "^1.5.3",
+    "apicache": "^1.6.3",
     "async": "2.6.3",
     "body-parser": "*",
     "colors": "*",
