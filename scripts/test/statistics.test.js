@@ -10,7 +10,6 @@ jest.mock('redis', () => jest.requireActual('redis-mock'));
 const nock = require('nock');
 const mockDaemon = require('./daemon.mock.js');
 
-const utils = require('../main/utils');
 const PoolLogger = require('../main/logger');
 const PoolStatistics = require('../main/statistics');
 const Stratum = require('foundation-stratum');
@@ -53,9 +52,9 @@ describe('Test statistics functionality', () => {
     const poolStatistics = new PoolStatistics(logger, client, poolConfigCopy, configCopy);
     const daemon = new Stratum.daemon([poolConfigCopy.primary.payments.daemon], () => {});
     const expected = [
-      ["hset", "Pool1:statistics:primary:network", "difficulty", 0.001978989105730653],
-      ["hset", "Pool1:statistics:primary:network", "hashrate", 52007.68563030699],
-      ["hset", "Pool1:statistics:primary:network", "height", 611207]]
+      ['hset', 'Pool1:statistics:primary:network', 'difficulty', 0.001978989105730653],
+      ['hset', 'Pool1:statistics:primary:network', 'hashrate', 52007.68563030699],
+      ['hset', 'Pool1:statistics:primary:network', 'height', 611207]];
     poolStatistics.handleMiningInfo(daemon, 'primary', (commands) => {
       expect(commands.length).toBe(3);
       expect(commands[0]).toStrictEqual(expected[0]);

@@ -56,7 +56,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   // Start Interval Initialization
   /* istanbul ignore next */
   this.handleIntervals = function(daemon, blockType) {
-    const statisticsInterval = setInterval(() => {
+    setInterval(() => {
       _this.handleMiningInfo(daemon, blockType, (results) => {
         _this.executeCommands(results, () => {
           if (_this.poolConfig.debug) {
@@ -65,7 +65,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         }, () => {});
       }, () => {});
     }, _this.refreshInterval);
-  }
+  };
 
   // Start Interval Initialization
   /* istanbul ignore next */
@@ -76,7 +76,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         _this.handleIntervals(poolStratum.auxiliary.daemon, 'auxiliary');
       }
     }
-  }
+  };
 };
 
 module.exports = PoolStatistics;

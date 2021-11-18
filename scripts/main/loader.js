@@ -51,7 +51,7 @@ const PoolLoader = function(logger, portalConfig) {
     configNames = configNames.concat(poolConfig.name);
     if (poolConfig.name) {
       if (poolConfig.name.split(' ').length > 1) {
-        logger.error('Builder', 'Setup', 'Pool names are only allowed to be a single word. Check your configuration files')
+        logger.error('Builder', 'Setup', 'Pool names are only allowed to be a single word. Check your configuration files');
         return false;
       }
       if (new Set(configNames).size !== configNames.length) {
@@ -97,7 +97,7 @@ const PoolLoader = function(logger, portalConfig) {
     } else {
       return true;
     }
-  }
+  };
 
   // Read and Format Partner Configs
   /* istanbul ignore next */

@@ -123,10 +123,10 @@ const PoolStratum = function (logger, poolConfig, poolShares, poolStatistics) {
   // Handle Stratum Statistics
   /* istanbul ignore next */
   this.handleStatistics = function(poolStratum) {
-    if (_this.forkId === "0") {
+    if (_this.forkId === '0') {
       _this.poolStatistics.setupStatistics(poolStratum);
     }
-  }
+  };
 
   // Build Pool from Configuration
   this.setupStratum = function(callback) {

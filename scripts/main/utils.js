@@ -208,7 +208,7 @@ exports.processMiners = function(shares, hashrate, times, multiplier, hashrateWi
           const hashrateValue = exports.processDifficulty(hashrate, entry);
           if (!active || (active && hashrateValue > 0)) {
             miners[address].shares += shareValue;
-            miners[address].hashrate += (multiplier * hashrateValue) / hashrateWindow
+            miners[address].hashrate += (multiplier * hashrateValue) / hashrateWindow;
             if (times && timeValue >= miners[address].times) {
               miners[address].times = timeValue;
             } else if (!times) {
@@ -224,7 +224,7 @@ exports.processMiners = function(shares, hashrate, times, multiplier, hashrateWi
               times: timeValue || null,
               hashrate: (multiplier * hashrateValue) / hashrateWindow,
               effort: effortValue || null,
-            }
+            };
           }
         }
       }
@@ -320,7 +320,7 @@ exports.processWorkers = function(shares, hashrate, times, multiplier, hashrateW
             times: timeValue || null,
             hashrate: (multiplier * hashrateValue) / hashrateWindow,
             effort: effortValue || null,
-          }
+          };
         }
       }
     });
