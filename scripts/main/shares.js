@@ -16,18 +16,28 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   this.client = client;
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;
+  this.roundValue = process.env.roundValue;
   this.forkId = process.env.forkId;
 
   const logSystem = 'Pool';
   const logComponent = poolConfig.name;
   const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
 
+  // Handle Client Messages
   _this.client.on('ready', () => {});
   _this.client.on('error', (error) => {
     logger.error(logSystem, logComponent, logSubCat, `Redis client had an error: ${ JSON.stringify(error) }`);
   });
   _this.client.on('end', () => {
     logger.error(logSystem, logComponent, logSubCat, 'Connection to redis database has been ended');
+  });
+
+  // Handle Worker Messages
+  /* istanbul ignore next */
+  process.on('message', (msg) => {
+    if (msg.type && msg.type === 'roundUpdate') {
+      _this.roundValue = msg.value;
+    }
   });
 
   // Manage Times Calculations
@@ -102,22 +112,32 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       effort: effort,
       worker: worker,
       solo: isSoloMining,
+      round: _this.roundValue,
     };
+
+    // Reset Share Data (If Necessary)
+    if (!isSoloMining && (lastShare.round !== _this.roundValue)) {
+      outputShare.difficulty = difficulty;
+      outputShare.effort = shareData.difficulty / blockDifficulty * 100;
+    }
 
     // Build Secondary Output (Solo)
     const hashrateShare = JSON.parse(JSON.stringify(outputShare));
     hashrateShare.difficulty = difficulty;
 
-    // Handle Valid/Invalid Shares
     // No Shared Effort if Solo Share
     if (shareValid && isSoloMining) {
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateShare)]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
+
+    // Handle Shared Effort, Share Updates
     } else if (shareValid) {
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateShare)]);
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'valid', 1]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'effort', effort]);
+
+    // Handle Invalid Shares Submitted
     } else {
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateShare)]);
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'invalid', 1]);
@@ -174,6 +194,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       luck: luck,
       worker: worker,
       solo: isSoloMining,
+      round: _this.roundValue,
     };
 
     // Build Primary Output (Solo)
@@ -183,6 +204,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       effort: 0,
       worker: worker,
       solo: isSoloMining,
+      round: _this.roundValue,
     };
 
     // Build Secondary Output (Solo)
@@ -192,11 +214,11 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Check for Multiple Workers (Solo);
     const workers = Object.keys(results[4] || {}).filter((result) => {
-      return result.split('.')[0] === worker.split('.')[0]
+      const address = worker.split('.')[0];
+      return result.split('.')[0] === address;
     });
 
-    // Handle Valid/Invalid Shares
-    // Don't Restart Round if Solo Block
+    // Don't Restart Round if Solo Block, Just Reset Workers
     if (blockValid && isSoloMining) {
       commands.push(['sadd', `${ _this.pool }:blocks:${ blockType }:pending`, JSON.stringify(outputBlock)]);
       commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'valid', 1]);
@@ -205,14 +227,18 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
         outputShare.worker = result;
         commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, result, JSON.stringify(outputShare)]);
       });
+
+    // Handle Round Updates if Shared Block
     } else if (blockValid) {
+      process.send({ type: 'roundUpdate' });
       commands.push(['sadd', `${ _this.pool }:blocks:${ blockType }:pending`, JSON.stringify(outputBlock)]);
       commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'valid', 1]);
       commands.push(['del', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:submissions`]),
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:counts`]);
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:shares`]);
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:times`]);
-      commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
+
+    // Handle Invalid Block Submitted
     } else if (shareData.transaction) {
       commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'invalid', 1]);
     }

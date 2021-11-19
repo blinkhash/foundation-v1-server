@@ -14,6 +14,8 @@ const PoolBuilder = function(logger, portalConfig) {
 
   const _this = this;
   this.portalConfig = portalConfig;
+  this.roundCounter = utils.extraNonceCounter(4);
+  this.roundValue = _this.roundCounter.next();
 
   // Handle Pool Payments Creation
   /* istanbul ignore next */
@@ -75,6 +77,7 @@ const PoolBuilder = function(logger, portalConfig) {
       workerType: 'worker',
       poolConfigs: JSON.stringify(_this.poolConfigs),
       portalConfig: JSON.stringify(_this.portalConfig),
+      roundValue: this.roundValue,
       forkId: forkId,
     });
 
@@ -92,6 +95,13 @@ const PoolBuilder = function(logger, portalConfig) {
           }
         });
         break;
+      case 'roundUpdate':
+        _this.roundValue = _this.roundCounter.next();
+        Object.keys(cluster.workers).forEach(id => {
+          if (cluster.workers[id].type === 'worker') {
+            cluster.workers[id].send({ type: 'roundUpdate', value: _this.roundValue });
+          }
+        });
       }
     });
 

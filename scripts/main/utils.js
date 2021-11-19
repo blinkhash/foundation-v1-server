@@ -5,6 +5,7 @@
  */
 
 const os = require('os');
+const crypto = require('crypto');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -107,6 +108,17 @@ exports.countProcessForks = function(portalConfig) {
     return 1;
   }
   return portalConfig.clustering.forks;
+};
+
+// Generate Unique ExtraNonce for each Subscriber
+/* istanbul ignore next */
+exports.extraNonceCounter = function(size) {
+  return {
+    size: size,
+    next: function() {
+      return(crypto.randomBytes(this.size).toString('hex'));
+    }
+  };
 };
 
 // List Round Workers for API Endpoints
