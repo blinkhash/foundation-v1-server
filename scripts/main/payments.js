@@ -334,7 +334,7 @@ const PoolPayments = function (logger, client) {
           reward: details.reward,
           transaction: details.transaction,
           difficulty: details.difficulty,
-          worker: details.worker,
+          worker: details.worker.split('.')[0],
           solo: details.solo,
           duplicate: false,
           serialized: r
