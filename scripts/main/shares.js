@@ -190,13 +190,21 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     roundShare.difficulty = difficulty + (lastShare.difficulty || 0);
     roundShare.effort = luck;
 
+    // Check for Multiple Workers (Solo);
+    const workers = Object.keys(results[4] || {}).filter((result) => {
+      return result.split('.')[0] === worker.split('.')[0]
+    });
+
     // Handle Valid/Invalid Shares
     // Don't Restart Round if Solo Block
     if (blockValid && isSoloMining) {
       commands.push(['sadd', `${ _this.pool }:blocks:${ blockType }:pending`, JSON.stringify(outputBlock)]);
       commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'valid', 1]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:shares`, worker, JSON.stringify(roundShare)]);
-      commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
+      workers.forEach((result) => {
+        outputShare.worker = result;
+        commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, result, JSON.stringify(outputShare)]);
+      });
     } else if (blockValid) {
       commands.push(['sadd', `${ _this.pool }:blocks:${ blockType }:pending`, JSON.stringify(outputBlock)]);
       commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'valid', 1]);
@@ -204,6 +212,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:counts`]);
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:shares`]);
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:times`]);
+      commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
     } else if (shareData.transaction) {
       commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'invalid', 1]);
     }

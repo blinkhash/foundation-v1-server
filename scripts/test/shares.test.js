@@ -345,15 +345,17 @@ describe('Test shares functionality', () => {
       ['del', 'Pool1:rounds:primary:current:shared:submissions'],
       ['rename', 'Pool1:rounds:primary:current:shared:counts', 'Pool1:rounds:primary:round-1972211:counts'],
       ['rename', 'Pool1:rounds:primary:current:shared:shares', 'Pool1:rounds:primary:round-1972211:shares'],
-      ['rename', 'Pool1:rounds:primary:current:shared:times', 'Pool1:rounds:primary:round-1972211:times']];
+      ['rename', 'Pool1:rounds:primary:current:shared:times', 'Pool1:rounds:primary:round-1972211:times'],
+      ["hset", "Pool1:rounds:primary:current:shared:shares", "example"]];
     const commands = poolShares.calculateBlocks(results, shareData, true, true, false);
-    expect(commands.length).toBe(6);
+    expect(commands.length).toBe(7);
     expect(commands[0].slice(0, 2)).toStrictEqual(expected[0]);
     expect(commands[1]).toStrictEqual(expected[1]);
     expect(commands[2]).toStrictEqual(expected[2]);
     expect(commands[3]).toStrictEqual(expected[3]);
     expect(commands[4]).toStrictEqual(expected[4]);
     expect(commands[5]).toStrictEqual(expected[5]);
+    expect(commands[6].slice(0, 3)).toStrictEqual(expected[6]);
   });
 
   test('Test block command handling [2]', () => {
@@ -449,9 +451,10 @@ describe('Test shares functionality', () => {
       ['del', 'Pool1:rounds:primary:current:shared:submissions'],
       ['rename', 'Pool1:rounds:primary:current:shared:counts', 'Pool1:rounds:primary:round-1972211:counts'],
       ['rename', 'Pool1:rounds:primary:current:shared:shares', 'Pool1:rounds:primary:round-1972211:shares'],
-      ['rename', 'Pool1:rounds:primary:current:shared:times', 'Pool1:rounds:primary:round-1972211:times']];
+      ['rename', 'Pool1:rounds:primary:current:shared:times', 'Pool1:rounds:primary:round-1972211:times'],
+      ["hset", "Pool1:rounds:primary:current:shared:shares", "example"]];
     const commands = poolShares.calculateBlocks(results, shareData, true, true, false);
-    expect(commands.length).toBe(6);
+    expect(commands.length).toBe(7);
     expect(commands[0].slice(0, 2)).toStrictEqual(expected[0]);
     expect(JSON.parse(commands[0][2]).luck).toBe(87.5);
     expect(commands[1]).toStrictEqual(expected[1]);
@@ -459,11 +462,12 @@ describe('Test shares functionality', () => {
     expect(commands[3]).toStrictEqual(expected[3]);
     expect(commands[4]).toStrictEqual(expected[4]);
     expect(commands[5]).toStrictEqual(expected[5]);
+    expect(commands[6].slice(0, 3)).toStrictEqual(expected[6]);
   });
 
   test('Test block command handling [6]', () => {
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    const results = [];
+    const results = [{}, {}, {}, {}, { 'example': "{\"time\":1637348736715,\"difficulty\":1,\"effort\":7.277845022124848e-7,\"worker\":\"example\",\"solo\":true}"}];
     const shareData = {
       'job': '4',
       'ip': '::1',
