@@ -334,7 +334,7 @@ const PoolPayments = function (logger, client) {
           reward: details.reward,
           transaction: details.transaction,
           difficulty: details.difficulty,
-          worker: details.worker.split('.')[0],
+          worker: details.worker ? details.worker.split('.')[0] : "",
           solo: details.solo,
           duplicate: false,
           serialized: r
@@ -597,10 +597,10 @@ const PoolPayments = function (logger, client) {
       }
 
       // Check Balance for Payments
-      if (balance[0] < totalOwed) {
+      if ((balance[0] < totalOwed) && (category === "payments")) {
         const currentBalance = utils.satoshisToCoins(balance[0], processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
         const owedBalance = utils.satoshisToCoins(totalOwed, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
-        logger.error('Payments', pool, `Insufficient funds (${ currentBalance }) to process payments (${ owedBalance }), possibly waiting for transactions.`);
+        logger.warning('Payments', pool, `Insufficient funds (${ currentBalance }) to process payments (${ owedBalance }), possibly waiting for transactions.`);
       }
 
       // Return Payment Data as Callback
@@ -609,7 +609,7 @@ const PoolPayments = function (logger, client) {
   };
 
   // Calculate Scores Given Times/Shares
-  this.handleRewards = function(config, blockType, data, callback) {
+  this.handleRewards = function(config, category, blockType, data, callback) {
 
     let workers = data[1];
     const rounds = data[0];
@@ -625,9 +625,11 @@ const PoolPayments = function (logger, client) {
 
       // Check if Shares Exist in Round
       if (Object.keys(solo).length <= 0 && Object.keys(shared).length <= 0) {
-        _this.client.smove(`${ pool }:blocks:${ blockType }:pending`, `${ pool }:blocks:${ blockType }:manual`, round.serialized);
-        logger.error('Payments', pool, `No worker shares for round: ${ round.height }, hash: ${ round.hash }. Manual payout required.`);
-        return;
+        if (category === 'payments') {
+          _this.client.smove(`${ pool }:blocks:${ blockType }:pending`, `${ pool }:blocks:${ blockType }:manual`, round.serialized);
+          logger.error('Payments', pool, `No worker shares for round: ${ round.height }, hash: ${ round.hash }. Manual payout required.`);
+          return;
+        }
       }
 
       // Find Max Time in ALL Shares
@@ -876,8 +878,7 @@ const PoolPayments = function (logger, client) {
       (data, callback) => _this.handleTransactions(daemon, config, blockType, data, callback),
       (data, callback) => _this.handleTimes(config, blockType, data, callback),
       (data, callback) => _this.handleShares(config, blockType, data, callback),
-      (data, callback) => _this.handleOwed(daemon, config, category, blockType, data, callback),
-      (data, callback) => _this.handleRewards(config, blockType, data, callback),
+      (data, callback) => _this.handleRewards(config, category, blockType, data, callback),
       (data, callback) => _this.handleUpdates(config, category, blockType, interval, data, callback),
     ], (error) => {
       if (error) {
@@ -900,7 +901,7 @@ const PoolPayments = function (logger, client) {
       (data, callback) => _this.handleTimes(config, blockType, data, callback),
       (data, callback) => _this.handleShares(config, blockType, data, callback),
       (data, callback) => _this.handleOwed(daemon, config, category, blockType, data, callback),
-      (data, callback) => _this.handleRewards(config, blockType, data, callback),
+      (data, callback) => _this.handleRewards(config, category, blockType, data, callback),
       (data, callback) => _this.handleSending(daemon, config, blockType, data, callback),
       (data, callback) => _this.handleUpdates(config, category, blockType, interval, data, callback),
     ], (error) => {

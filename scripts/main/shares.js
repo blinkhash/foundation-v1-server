@@ -16,6 +16,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   this.client = client;
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;
+  this.roundSet = process.env.roundSet === 'true';
   this.roundValue = process.env.roundValue;
   this.forkId = process.env.forkId;
 
@@ -37,6 +38,9 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   process.on('message', (msg) => {
     if (msg.type && msg.type === 'roundUpdate') {
       _this.roundValue = msg.value;
+      logger.debug(logSystem, logComponent, logSubCat, `Block found by shared worker, resetting round data: ${ msg.value }.`);
+    } else if (msg.type && msg.type === 'roundSet') {
+      _this.roundSet = msg.value;
     }
   });
 
@@ -116,7 +120,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     };
 
     // Reset Share Data (If Necessary)
-    if (!isSoloMining && (lastShare.round !== _this.roundValue)) {
+    if (!isSoloMining && (lastShare.round !== _this.roundValue) && _this.roundSet) {
       outputShare.difficulty = difficulty;
       outputShare.effort = shareData.difficulty / blockDifficulty * 100;
     }
@@ -214,7 +218,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Check for Multiple Workers (Solo);
     const workers = Object.keys(results[4] || {}).filter((result) => {
-      const address = worker.split('.')[0];
+      const address = worker ? worker.split('.')[0] : "";
       return result.split('.')[0] === address;
     });
 
@@ -230,7 +234,6 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Handle Round Updates if Shared Block
     } else if (blockValid) {
-      process.send({ type: 'roundUpdate' });
       commands.push(['sadd', `${ _this.pool }:blocks:${ blockType }:pending`, JSON.stringify(outputBlock)]);
       commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'valid', 1]);
       commands.push(['del', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:submissions`]),
@@ -306,7 +309,14 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       ['hgetall', `${ _this.pool }:rounds:auxiliary:current:solo:shares`],
       ['hgetall', `${ _this.pool }:rounds:auxiliary:current:solo:submissions`]];
     this.executeCommands(shareLookups, (results) => {
-      _this.buildCommands(results, shareData, shareValid, blockValid, callback, handler);
+      _this.buildCommands(results, shareData, shareValid, blockValid, () => {
+        if (blockValid) {
+          process.send({ type: 'roundUpdate' });
+          callback();
+        } else {
+          callback();
+        }
+      }, handler);
     }, handler);
   };
 };
