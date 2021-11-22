@@ -16,8 +16,9 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   this.client = client;
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;
-  this.roundSet = process.env.roundSet === 'true';
   this.roundValue = process.env.roundValue;
+  this.prevRoundValue = process.env.prevRoundValue;
+  this.roundSet = process.env.roundSet === 'true';
   this.forkId = process.env.forkId;
 
   const logSystem = 'Pool';
@@ -37,8 +38,10 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   /* istanbul ignore next */
   process.on('message', (msg) => {
     if (msg.type && msg.type === 'roundUpdate') {
-      _this.roundValue = msg.value;
       logger.debug(logSystem, logComponent, logSubCat, `Block found by shared worker, resetting round data: ${ msg.value }.`);
+      _this.roundValue = msg.value;
+    } else if (msg.type && msg.type === 'prevRoundUpdate') {
+      _this.prevRoundValue = msg.value;
     } else if (msg.type && msg.type === 'roundSet') {
       _this.roundSet = msg.value;
     }
@@ -120,7 +123,11 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     };
 
     // Reset Share Data (If Necessary)
-    if (!isSoloMining && (lastShare.round !== _this.roundValue) && _this.roundSet) {
+    if ((!isSoloMining) &&
+        (lastShare.round === _this.prevRoundValue) &&
+        (lastShare.round !== _this.roundValue) &&
+        (_this.roundSet)) {
+      logger.warning(logSystem, logComponent, logSubCat, `Resetting share data for ${ worker } due to rounds overlapping.`);
       outputShare.difficulty = difficulty;
       outputShare.effort = shareData.difficulty / blockDifficulty * 100;
     }

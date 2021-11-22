@@ -15,8 +15,9 @@ const PoolBuilder = function(logger, portalConfig) {
   const _this = this;
   this.portalConfig = portalConfig;
   this.roundCounter = utils.extraNonceCounter(4);
-  this.roundSet = false;
   this.roundValue = _this.roundCounter.next();
+  this.prevRoundValue = null;
+  this.roundSet = false;
 
   // Handle Pool Payments Creation
   /* istanbul ignore next */
@@ -99,11 +100,13 @@ const PoolBuilder = function(logger, portalConfig) {
         break;
       case 'roundUpdate':
         _this.roundSet = true;
+        _this.prevRoundValue = _this.roundValue;
         _this.roundValue = _this.roundCounter.next();
         Object.keys(cluster.workers).forEach(id => {
           if (cluster.workers[id].type === 'worker') {
-            cluster.workers[id].send({ type: 'roundSet', value: _this.roundSet });
             cluster.workers[id].send({ type: 'roundUpdate', value: _this.roundValue });
+            cluster.workers[id].send({ type: 'prevRoundUpdate', value: _this.prevRoundValue });
+            cluster.workers[id].send({ type: 'roundSet', value: _this.roundSet });
           }
         });
       }
