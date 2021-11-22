@@ -218,7 +218,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Check for Multiple Workers (Solo);
     const workers = Object.keys(results[4] || {}).filter((result) => {
-      const address = worker ? worker.split('.')[0] : "";
+      const address = worker ? worker.split('.')[0] : '';
       return result.split('.')[0] === address;
     });
 

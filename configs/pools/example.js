@@ -83,7 +83,6 @@ config.primary.coin.getinfo = false;
 config.primary.coin.parameters = {};
 config.primary.coin.segwit = true;
 config.primary.coin.staking = false;
-config.primary.coin.rewards = '';
 config.primary.coin.version = 4;
 
 // Algorithm Configuration
@@ -91,6 +90,11 @@ config.primary.coin.algorithms = {};
 config.primary.coin.algorithms.mining = 'sha256d';
 config.primary.coin.algorithms.block = 'sha256d';
 config.primary.coin.algorithms.coinbase = 'sha256d';
+
+// Rewards Configuration
+config.primary.coin.rewards = {};
+config.primary.coin.rewards.type = '';
+config.primary.coin.rewards.addresses = [];
 
 // Mainnet Configuration
 config.primary.coin.mainnet = {};

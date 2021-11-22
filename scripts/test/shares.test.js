@@ -322,10 +322,9 @@ describe('Test shares functionality', () => {
   });
 
   test('Test share command handling [4]', () => {
-    const dateNow = Date.now();
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    poolShares.roundValue = "361aae45";
-    const results = [{}, {}, {}, {}, { 'example': "{\"time\":1637348736715,\"difficulty\":1,\"effort\":7.277845022124848e-7,\"worker\":\"example\",\"solo\":true,\"round\":\"361aae45\"}"}];
+    poolShares.roundValue = '361aae45';
+    const results = [{}, {}, {}, {}, { 'example': '{"time":1637348736715,"difficulty":1,"effort":7.277845022124848e-7,"worker":"example","solo":true,"round":"361aae45"}'}];
     const shareData = {
       'job': '4',
       'ip': '::1',
@@ -342,21 +341,20 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:solo:hashrate"],
-      ["hset", "Pool1:rounds:primary:current:solo:shares", "example"]];
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate'],
+      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'example']];
     const commands = poolShares.buildSharesCommands(results, shareData, true, false, true);
     expect(commands.length).toBe(2);
     expect(commands[0].slice(0, 2)).toStrictEqual(expected[0]);
     expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
     expect(JSON.parse(commands[1][3]).difficulty).toBe(2);
-    expect()
+    expect();
   });
 
   test('Test share command handling [5]', () => {
-    const dateNow = Date.now();
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    poolShares.roundValue = "361aae45";
-    const results = [{ 'example': "{\"time\":1637348736715,\"difficulty\":1,\"effort\":7.277845022124848e-7,\"worker\":\"example\",\"solo\":false,\"round\":\"361aae45\"}"}];
+    poolShares.roundValue = '361aae45';
+    const results = [{ 'example': '{"time":1637348736715,"difficulty":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
     const shareData = {
       'job': '4',
       'ip': '::1',
@@ -388,15 +386,14 @@ describe('Test shares functionality', () => {
     expect(commands[4].slice(0, 3)).toStrictEqual(expected[4]);
     expect(JSON.parse(commands[4][3]).difficulty).toBe(2);
     expect(commands[5]).toStrictEqual(expected[5]);
-    expect()
+    expect();
   });
 
   test('Test share command handling [6]', () => {
-    const dateNow = Date.now();
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    poolShares.roundValue = "aaaaaaaa";
+    poolShares.roundValue = 'aaaaaaaa';
     poolShares.roundSet = true;
-    const results = [{ 'example': "{\"time\":1637348736715,\"difficulty\":1,\"effort\":7.277845022124848e-7,\"worker\":\"example\",\"solo\":false,\"round\":\"361aae45\"}"}];
+    const results = [{ 'example': '{"time":1637348736715,"difficulty":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
     const shareData = {
       'job': '4',
       'ip': '::1',
@@ -428,7 +425,7 @@ describe('Test shares functionality', () => {
     expect(commands[4].slice(0, 3)).toStrictEqual(expected[4]);
     expect(JSON.parse(commands[4][3]).difficulty).toBe(1);
     expect(commands[5]).toStrictEqual(expected[5]);
-    expect()
+    expect();
   });
 
   test('Test block command handling [1]', () => {
@@ -573,7 +570,7 @@ describe('Test shares functionality', () => {
 
   test('Test block command handling [6]', () => {
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    const results = [{}, {}, {}, {}, { 'example': "{\"time\":1637348736715,\"difficulty\":1,\"effort\":7.277845022124848e-7,\"worker\":\"example\",\"solo\":true}"}];
+    const results = [{}, {}, {}, {}, { 'example': '{"time":1637348736715,"difficulty":1,"effort":7.277845022124848e-7,"worker":"example","solo":true}'}];
     const shareData = {
       'job': '4',
       'ip': '::1',

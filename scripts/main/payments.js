@@ -334,7 +334,7 @@ const PoolPayments = function (logger, client) {
           reward: details.reward,
           transaction: details.transaction,
           difficulty: details.difficulty,
-          worker: details.worker ? details.worker.split('.')[0] : "",
+          worker: details.worker ? details.worker.split('.')[0] : '',
           solo: details.solo,
           duplicate: false,
           serialized: r
@@ -597,7 +597,7 @@ const PoolPayments = function (logger, client) {
       }
 
       // Check Balance for Payments
-      if ((balance[0] < totalOwed) && (category === "payments")) {
+      if ((balance[0] < totalOwed) && (category === 'payments')) {
         const currentBalance = utils.satoshisToCoins(balance[0], processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
         const owedBalance = utils.satoshisToCoins(totalOwed, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
         logger.warning('Payments', pool, `Insufficient funds (${ currentBalance }) to process payments (${ owedBalance }), possibly waiting for transactions.`);
