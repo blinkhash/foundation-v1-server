@@ -393,7 +393,6 @@ describe('Test shares functionality', () => {
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     poolShares.roundValue = 'aaaaaaaa';
     poolShares.prevRoundValue = '361aae45';
-    poolShares.roundSet = true;
     const results = [{ 'example': '{"time":1637348736715,"difficulty":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
     const shareData = {
       'job': '4',

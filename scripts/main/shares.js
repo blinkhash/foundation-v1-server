@@ -16,14 +16,15 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   this.client = client;
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;
-  this.roundValue = process.env.roundValue;
-  this.prevRoundValue = process.env.prevRoundValue;
-  this.roundSet = process.env.roundSet === 'true';
   this.forkId = process.env.forkId;
 
   const logSystem = 'Pool';
   const logComponent = poolConfig.name;
   const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
+
+  // Handle Round Values
+  this.prevRoundValue = process.env.prevRoundValue;
+  this.roundValue = process.env.roundValue;
 
   // Handle Client Messages
   _this.client.on('ready', () => {});
@@ -37,13 +38,12 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   // Handle Worker Messages
   /* istanbul ignore next */
   process.on('message', (msg) => {
-    if (msg.type && msg.type === 'roundUpdate') {
-      logger.debug(logSystem, logComponent, logSubCat, `Block found by shared worker, resetting round data: ${ msg.value }.`);
-      _this.roundValue = msg.value;
-    } else if (msg.type && msg.type === 'prevRoundUpdate') {
-      _this.prevRoundValue = msg.value;
-    } else if (msg.type && msg.type === 'roundSet') {
-      _this.roundSet = msg.value;
+    if (_this.pool === msg.pool) {
+      if (msg.type && msg.type === 'roundUpdate') {
+        logger.debug(logSystem, logComponent, logSubCat, `Block found by shared worker, resetting round data: ${ msg.value }.`);
+        _this.prevRoundValue = _this.roundValue;
+        _this.roundValue = msg.value;
+      }
     }
   });
 
@@ -125,8 +125,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Reset Share Data (If Necessary)
     if ((!isSoloMining) &&
         (lastShare.round === _this.prevRoundValue) &&
-        (lastShare.round !== _this.roundValue) &&
-        (_this.roundSet)) {
+        (lastShare.round !== _this.roundValue)) {
       logger.warning(logSystem, logComponent, logSubCat, `Resetting share data for ${ worker } due to rounds overlapping.`);
       outputShare.difficulty = difficulty;
       outputShare.effort = shareData.difficulty / blockDifficulty * 100;
@@ -247,6 +246,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:counts`]);
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:shares`]);
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:times`]);
+      process.send({ pool: _this.pool, type: 'roundUpdate' });
 
     // Handle Invalid Block Submitted
     } else if (shareData.transaction) {
@@ -316,14 +316,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       ['hgetall', `${ _this.pool }:rounds:auxiliary:current:solo:shares`],
       ['hgetall', `${ _this.pool }:rounds:auxiliary:current:solo:submissions`]];
     this.executeCommands(shareLookups, (results) => {
-      _this.buildCommands(results, shareData, shareValid, blockValid, () => {
-        if (blockValid) {
-          process.send({ type: 'roundUpdate' });
-          callback();
-        } else {
-          callback();
-        }
-      }, handler);
+      _this.buildCommands(results, shareData, shareValid, blockValid, callback, handler);
     }, handler);
   };
 };
