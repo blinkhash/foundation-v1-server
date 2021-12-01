@@ -479,7 +479,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     ];
     _this.executeCommands(pool, '/statistics', commands, response, (results) => {
       const statistics = {
-        config: {
+        configuration: {
           primary: {
             coin: config.enabled ? config.primary.coin.name : "",
             symbol: config.enabled ? config.primary.coin.symbol : "",
@@ -490,67 +490,70 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
             symbol: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.coin.symbol : "",
             algorithm: (config.auxiliary && config.auxiliary.enabled) ? config.primary.coin.algorithms.mining : "",
           },
+          ports: config.enabled ? config.ports : [],
         },
-        primary: {
-          blocks: {
-            valid: parseFloat(results[0] ? results[0].valid || 0 : 0),
-            invalid: parseFloat(results[0] ? results[0].invalid || 0 : 0),
+        statistics: {
+          primary: {
+            blocks: {
+              valid: parseFloat(results[0] ? results[0].valid || 0 : 0),
+              invalid: parseFloat(results[0] ? results[0].invalid || 0 : 0),
+            },
+            shares: {
+              valid: parseFloat(results[4] ? results[4].valid || 0 : 0),
+              invalid: parseFloat(results[4] ? results[4].invalid || 0 : 0),
+            },
+            hashrate: {
+              shared: (multiplier * utils.processDifficulty(results[5])) / hashrateWindow,
+              solo: (multiplier * utils.processDifficulty(results[6])) / hashrateWindow,
+            },
+            network: {
+              difficulty: parseFloat(results[7] ? results[7].difficulty || 0 : 0),
+              hashrate: parseFloat(results[7] ? results[7].hashrate || 0 : 0),
+              height: parseFloat(results[7] ? results[7].height || 0 : 0),
+            },
+            payments: {
+              last: parseFloat(results[3] ? results[3].last || 0 : 0),
+              next: parseFloat(results[3] ? results[3].next || 0 : 0),
+              total: parseFloat(results[3] ? results[3].total || 0 : 0),
+            },
+            status: {
+              effort: parseFloat(results[4] ? results[4].effort || 0 : 0),
+              luck: utils.processLuck(results[1], results[2]),
+              miners: utils.countMiners(results[5]),
+              workers: utils.countWorkers(results[5]),
+            },
           },
-          shares: {
-            valid: parseFloat(results[4] ? results[4].valid || 0 : 0),
-            invalid: parseFloat(results[4] ? results[4].invalid || 0 : 0),
+          auxiliary: {
+            blocks: {
+              valid: parseFloat(results[8] ? results[8].valid || 0 : 0),
+              invalid: parseFloat(results[8] ? results[8].invalid || 0 : 0),
+            },
+            shares: {
+              valid: parseFloat(results[12] ? results[12].valid || 0 : 0),
+              invalid: parseFloat(results[12] ? results[12].invalid || 0 : 0),
+            },
+            hashrate: {
+              shared: (multiplier * utils.processDifficulty(results[13])) / hashrateWindow,
+              solo: (multiplier * utils.processDifficulty(results[14])) / hashrateWindow,
+            },
+            network: {
+              difficulty: parseFloat(results[15] ? results[15].difficulty || 0 : 0),
+              hashrate: parseFloat(results[15] ? results[15].hashrate || 0 : 0),
+              height: parseFloat(results[15] ? results[15].height || 0 : 0),
+            },
+            payments: {
+              last: parseFloat(results[11] ? results[11].last || 0 : 0),
+              next: parseFloat(results[11] ? results[11].next || 0 : 0),
+              total: parseFloat(results[11] ? results[11].total || 0 : 0),
+            },
+            status: {
+              effort: parseFloat(results[12] ? results[12].effort || 0 : 0),
+              luck: utils.processLuck(results[9], results[10]),
+              miners: utils.countMiners(results[13]),
+              workers: utils.countWorkers(results[13]),
+            },
           },
-          hashrate: {
-            shared: (multiplier * utils.processDifficulty(results[5])) / hashrateWindow,
-            solo: (multiplier * utils.processDifficulty(results[6])) / hashrateWindow,
-          },
-          network: {
-            difficulty: parseFloat(results[7] ? results[7].difficulty || 0 : 0),
-            hashrate: parseFloat(results[7] ? results[7].hashrate || 0 : 0),
-            height: parseFloat(results[7] ? results[7].height || 0 : 0),
-          },
-          payments: {
-            last: parseFloat(results[3] ? results[3].last || 0 : 0),
-            next: parseFloat(results[3] ? results[3].next || 0 : 0),
-            total: parseFloat(results[3] ? results[3].total || 0 : 0),
-          },
-          status: {
-            effort: parseFloat(results[4] ? results[4].effort || 0 : 0),
-            luck: utils.processLuck(results[1], results[2]),
-            miners: utils.countMiners(results[5]),
-            workers: utils.countWorkers(results[5]),
-          },
-        },
-        auxiliary: {
-          blocks: {
-            valid: parseFloat(results[8] ? results[8].valid || 0 : 0),
-            invalid: parseFloat(results[8] ? results[8].invalid || 0 : 0),
-          },
-          shares: {
-            valid: parseFloat(results[12] ? results[12].valid || 0 : 0),
-            invalid: parseFloat(results[12] ? results[12].invalid || 0 : 0),
-          },
-          hashrate: {
-            shared: (multiplier * utils.processDifficulty(results[13])) / hashrateWindow,
-            solo: (multiplier * utils.processDifficulty(results[14])) / hashrateWindow,
-          },
-          network: {
-            difficulty: parseFloat(results[15] ? results[15].difficulty || 0 : 0),
-            hashrate: parseFloat(results[15] ? results[15].hashrate || 0 : 0),
-            height: parseFloat(results[15] ? results[15].height || 0 : 0),
-          },
-          payments: {
-            last: parseFloat(results[11] ? results[11].last || 0 : 0),
-            next: parseFloat(results[11] ? results[11].next || 0 : 0),
-            total: parseFloat(results[11] ? results[11].total || 0 : 0),
-          },
-          status: {
-            effort: parseFloat(results[12] ? results[12].effort || 0 : 0),
-            luck: utils.processLuck(results[9], results[10]),
-            miners: utils.countMiners(results[13]),
-            workers: utils.countWorkers(results[13]),
-          },
-        },
+        }
       };
       _this.buildPayload(pool, '/statistics', _this.messages.success, statistics, response);
     });
