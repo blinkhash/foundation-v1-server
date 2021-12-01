@@ -8,7 +8,6 @@ const redis = require('redis-mock');
 jest.mock('redis', () => jest.requireActual('redis-mock'));
 
 const events = require('events');
-const partnerConfig = require('../../configs/partners/example.js');
 const poolConfig = require('../../configs/pools/example.js');
 const portalConfig = require('../../configs/main/example.js');
 const PoolApi = require('../main/api');
@@ -19,8 +18,6 @@ const client = redis.createClient({
 });
 client._maxListeners = 0;
 client._redisMock._maxListeners = 0;
-
-const partnerConfigs = { Blinkhash: partnerConfig };
 const poolConfigs = { Pool1: poolConfig };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +63,7 @@ describe('Test API functionality', () => {
   });
 
   test('Test initialization of API', () => {
-    const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+    const poolApi = new PoolApi(client, poolConfigs, portalConfig);
     expect(typeof poolApi.handleBlocksConfirmed).toBe('function');
     expect(typeof poolApi.messages).toBe('object');
     expect(poolApi.messages.success.code).toBe(200);
@@ -78,10 +75,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('');
-      expect(processed.coins).toStrictEqual([]);
-      expect(processed.logo).toBe('');
-      expect(processed.coins).toStrictEqual([]);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/unknown');
       expect(processed.response.code).toBe(405);
       expect(processed.response.message).toBe('The requested pool was not found. Verify your input and try again.');
@@ -90,7 +83,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest();
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -100,8 +93,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/unknown');
       expect(processed.response.code).toBe(405);
       expect(processed.response.message).toBe('The requested method is not currently supported. Verify your input and try again.');
@@ -110,7 +101,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest('Pool1', 'unknown', 'unknown');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -120,8 +111,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual([]);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/unknown');
       expect(processed.response.code).toBe(405);
       expect(processed.response.message).toBe('The requested method is not currently supported. Verify your input and try again.');
@@ -131,8 +120,7 @@ describe('Test API functionality', () => {
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest('Pool1', 'unknown', 'unknown');
       const poolConfigsCopy = JSON.parse(JSON.stringify(poolConfigs));
-      delete poolConfigsCopy.Pool1.coins;
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigsCopy, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigsCopy, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -149,7 +137,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = {};
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -166,8 +154,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/blocks/confirmed');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -179,7 +165,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'blocks', 'confirmed');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -196,8 +182,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/blocks/kicked');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -209,7 +193,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'blocks', 'kicked');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -226,8 +210,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/blocks/pending');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -239,7 +221,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'blocks', 'pending');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -255,9 +237,6 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/blocks');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -276,7 +255,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'blocks');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -286,8 +265,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool');
-      expect(processed.coins).toStrictEqual([]);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/pools');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -298,7 +275,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest('pools');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -318,8 +295,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/miners/active');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -336,7 +311,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'miners', 'active');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -367,8 +342,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/miners/worker2');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -390,7 +363,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'miners', 'worker2');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -418,8 +391,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/miners/worker1');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -439,7 +410,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'miners', 'worker1');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -460,8 +431,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/miners');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -481,31 +450,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'miners');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
-    });
-  });
-
-  test('Test handlePartners API endpoint', (done) => {
-    const response = mockResponse();
-    response.on('end', (payload) => {
-      const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool');
-      expect(processed.coins).toStrictEqual([]);
-      expect(processed.logo).toBe('');
-      expect(processed.endpoint).toBe('/partners');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(processed.data.length).toBe(1);
-      expect(processed.data[0].name).toBe('Blinkhash');
-      expect(processed.data[0].tier).toBe(4);
-      expect(processed.data[0].url).toBe('https://blinkhash.com');
-      done();
-    });
-    mockSetupClient(client, [], 'Pool1', () => {
-      const request = mockRequest('partners');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -521,8 +466,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/payments/balances');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -537,7 +480,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'balances');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -553,8 +496,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/payments/generate');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -569,7 +510,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'generate');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -585,8 +526,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/payments/immature');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -601,7 +540,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'immature');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -617,8 +556,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/payments/paid');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -633,7 +570,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'paid');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -647,8 +584,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/payments/records');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -668,7 +603,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'records');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -692,8 +627,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/payments');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -715,7 +648,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -731,8 +664,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/rounds/current');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -746,7 +677,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'rounds', 'current');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -761,8 +692,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/rounds/180');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -775,7 +704,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'rounds', '180');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -794,8 +723,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/rounds');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -812,7 +739,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'rounds');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -822,8 +749,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/rounds');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -835,7 +760,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest('Pool1', 'rounds');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -860,8 +785,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/statistics');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -882,7 +805,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'statistics');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -907,8 +830,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/statistics');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -929,7 +850,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -949,8 +870,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/workers/active');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -970,7 +889,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'workers', 'active');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -1000,8 +919,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/workers/worker2.w1');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -1016,7 +933,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'workers', 'worker2.w1');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -1043,8 +960,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/workers/worker1');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -1058,7 +973,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'workers', 'worker1');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });
@@ -1079,8 +994,6 @@ describe('Test API functionality', () => {
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.pool).toBe('Pool1');
-      expect(processed.coins).toStrictEqual(['Bitcoin']);
-      expect(processed.logo).toBe('');
       expect(processed.endpoint).toBe('/workers');
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
@@ -1103,7 +1016,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'workers');
-      const poolApi = new PoolApi(client, partnerConfigs, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, response);
     });
   });

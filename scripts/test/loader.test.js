@@ -21,22 +21,7 @@ describe('Test loader functionality', () => {
   test('Test initialization of builder', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
     expect(typeof poolLoader.portalConfig).toBe('object');
-    expect(typeof poolLoader.validatePartnerConfigs).toBe('function');
     expect(typeof poolLoader.validatePoolPorts).toBe('function');
-  });
-
-  test('Test partner configuration validation [1]', () => {
-    const poolLoader = new PoolLoader(logger, configCopy);
-    const partnerConfig = { subscription: { endDate: '01/01/3000' }};
-    const response = poolLoader.validatePartnerConfigs(partnerConfig);
-    expect(response).toBe(true);
-  });
-
-  test('Test partner configuration validation [2]', () => {
-    const poolLoader = new PoolLoader(logger, configCopy);
-    const partnerConfig = { subscription: { endDate: '01/01/2000' }};
-    const response = poolLoader.validatePartnerConfigs(partnerConfig);
-    expect(response).toBe(false);
   });
 
   test('Test pool configuration validation [1]', () => {

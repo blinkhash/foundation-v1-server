@@ -10,11 +10,7 @@
 // Miscellaneous Configuration
 const config = {};
 config.enabled = false;
-
-// Statistics Configuration
 config.name = 'Pool1';
-config.coins = ['Bitcoin'];
-config.logo = '';
 
 // Banning Configuration
 config.banning = {};

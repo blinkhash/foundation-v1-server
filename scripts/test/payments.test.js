@@ -32,7 +32,6 @@ client._redisMock._maxListeners = 0;
 nock.disableNetConnect();
 nock.enableNetConnect('127.0.0.1');
 
-process.env.partnerConfigs = JSON.stringify({});
 process.env.poolConfigs = JSON.stringify({ Pool1: poolConfig });
 process.env.portalConfig = JSON.stringify(portalConfig);
 const logger = new PoolLogger(portalConfig);
@@ -63,7 +62,6 @@ describe('Test payments functionality', () => {
   beforeEach((done) => {
     client.flushall(() => done());
   });
-
 
   test('Test initialization of payments', () => {
     const poolPayments = new PoolPayments(logger, client);

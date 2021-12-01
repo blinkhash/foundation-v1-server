@@ -16,15 +16,6 @@ const PoolLoader = function(logger, portalConfig) {
   const _this = this;
   this.portalConfig = portalConfig;
 
-  // Validate Partner Configs
-  this.validatePartnerConfigs = function(partnerConfig) {
-    const currentDate = new Date();
-    if (new Date(partnerConfig.subscription.endDate) < currentDate) {
-      return false;
-    }
-    return true;
-  };
-
   // Validate Pool Algorithms
   this.validatePoolAlgorithms = function(algorithm, name) {
     if (!(algorithm in Algorithms)) {
@@ -97,22 +88,6 @@ const PoolLoader = function(logger, portalConfig) {
     } else {
       return true;
     }
-  };
-
-  // Read and Format Partner Configs
-  /* istanbul ignore next */
-  this.buildPartnerConfigs = function() {
-    const partnerConfigs = {};
-    const normalizedPath = path.join(__dirname, '../../configs/partners/');
-    fs.readdirSync(normalizedPath).forEach(file => {
-      if (!fs.existsSync(normalizedPath + file) || path.extname(normalizedPath + file) !== '.js') {
-        return;
-      }
-      const partnerConfig = require(normalizedPath + file);
-      if (!_this.validatePartnerConfigs(partnerConfig)) return;
-      partnerConfigs[partnerConfig.name] = partnerConfig;
-    });
-    return partnerConfigs;
   };
 
   // Build Pool Configurations

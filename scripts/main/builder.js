@@ -54,7 +54,6 @@ const PoolBuilder = function(logger, portalConfig) {
     // Establish Pool Server
     const worker = cluster.fork({
       workerType: 'server',
-      partnerConfigs: JSON.stringify(_this.partnerConfigs),
       poolConfigs: JSON.stringify(_this.poolConfigs),
       portalConfig: JSON.stringify(_this.portalConfig)
     });

@@ -4,8 +4,6 @@ npm-debug.log
 config.json
 configs/main/*
 !configs/main/example.js
-configs/partners/*
-!configs/partners/example.js
 configs/pools/*
 !configs/pools/example.js
 coverage/

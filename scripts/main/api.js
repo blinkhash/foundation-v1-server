@@ -10,11 +10,10 @@ const Algorithms = require('foundation-stratum').algorithms;
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main API Function
-const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
+const PoolApi = function (client, poolConfigs, portalConfig) {
 
   const _this = this;
   this.client = client;
-  this.partnerConfigs = partnerConfigs;
   this.poolConfigs = poolConfigs;
   this.portalConfig = portalConfig;
   this.messages = {
@@ -455,8 +454,9 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
   // API Endpoint for /statistics
   /* istanbul ignore next */
   this.handleStatistics = function(pool, response) {
-    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
-    const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
+    const config = _this.poolConfigs[pool] || {};
+    const algorithm = config.primary.coin.algorithms.mining;
+    const hashrateWindow = config.settings.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
@@ -479,6 +479,18 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     ];
     _this.executeCommands(pool, '/statistics', commands, response, (results) => {
       const statistics = {
+        config: {
+          primary: {
+            coin: config.enabled ? config.primary.coin.name : "",
+            symbol: config.enabled ? config.primary.coin.symbol : "",
+            algorithm: config.enabled ? config.primary.coin.algorithms.mining : "",
+          },
+          auxiliary: {
+            coin: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.coin.name : "",
+            symbol: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.coin.symbol : "",
+            algorithm: (config.auxiliary && config.auxiliary.enabled) ? config.primary.coin.algorithms.mining : "",
+          },
+        },
         primary: {
           blocks: {
             valid: parseFloat(results[0] ? results[0].valid || 0 : 0),
@@ -681,24 +693,17 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
     _this.buildPayload('Pool', '/pools', _this.messages.success, pools, response);
   };
 
-  // API Endpoint for /partners
-  this.handlePartners = function(response) {
-    const partners = Object.values(_this.partnerConfigs);
-    _this.buildPayload('Pool', '/partners', _this.messages.success, partners, response);
-  };
-
   //////////////////////////////////////////////////////////////////////////////
 
   // Build API Payload for each Endpoint
   this.buildPayload = function(pool, endpoint, message, data, response) {
     const payload = {
       pool: pool,
-      coins: _this.poolConfigs[pool] ? _this.poolConfigs[pool].coins || [] : [],
-      logo: _this.poolConfigs[pool] ? _this.poolConfigs[pool].logo || '' : '',
       endpoint: endpoint,
       time: Date.now(),
       response: message,
       data: data,
+      version: '0.0.1',
     };
     response.writeHead(message.code, { 'Content-Type': 'application/json' });
     response.end(JSON.stringify(payload));
@@ -733,7 +738,7 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       method = utils.validateInput(req.query.method || '');
     }
 
-    const miscellaneous = ['pools', 'partners'];
+    const miscellaneous = ['pools'];
     if (!(pool in _this.poolConfigs) && !(miscellaneous.includes(pool))) {
       _this.buildPayload(pool, '/unknown', _this.messages.pool, null, res);
       return;
@@ -815,9 +820,6 @@ const PoolApi = function (client, partnerConfigs, poolConfigs, portalConfig) {
       break;
 
     // Miscellaneous Endpoints
-    case (endpoint === '' && method === '' && pool === 'partners'):
-      _this.handlePartners(res);
-      break;
     case (endpoint === '' && method === '' && pool === 'pools'):
       _this.handlePools(res);
       break;
