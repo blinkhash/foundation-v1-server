@@ -67,6 +67,7 @@ describe('Test statistics functionality', () => {
 
   test('Test collection of mining statistics [2]', (done) => {
     mockDaemon.mockGetMiningInfoError1();
+    poolConfigCopy.settings.statisticsRefreshInterval = null;
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolStatistics = new PoolStatistics(logger, client, poolConfigCopy, configCopy);
     const daemon = new Stratum.daemon([poolConfigCopy.primary.payments.daemon], () => {});

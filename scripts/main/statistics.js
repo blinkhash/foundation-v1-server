@@ -21,7 +21,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
 
   // Current Statistics Refresh Interval
-  _this.refreshInterval = _this.poolConfig.statisticsRefreshInterval || 20000;
+  _this.refreshInterval = _this.poolConfig.settings.statisticsRefreshInterval || 20000;
 
   // Get Mining Statistics from Daemon
   this.handleMiningInfo = function(daemon, blockType, callback, handler) {
