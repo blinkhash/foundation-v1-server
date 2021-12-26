@@ -48,12 +48,23 @@ exports.coinsToSatoshis = function(coins, magnitude) {
   return Math.round(coins * magnitude);
 };
 
+// Combine Solo/Shared Miners Count
+exports.combineMiners = function(shared, solo) {
+  let count = 0;
+  if (shared || solo) {
+    shared = shared ? shared.map((share) => JSON.parse(share)) : [];
+    solo = solo ? solo.map((share) => JSON.parse(share)) : [];
+    count += exports.countMiners(shared);
+    count += exports.countMiners(solo);
+  }
+  return count;
+}
+
 // Count Number of Miners
 exports.countMiners = function(shares) {
   let count = 0;
   const miners = [];
   if (shares) {
-    shares = shares.map((share) => JSON.parse(share));
     shares.forEach((share) => {
       if (share.worker) {
         const address = share.worker.split('.')[0];
@@ -77,20 +88,29 @@ exports.countOccurences = function(array, value) {
   return count;
 };
 
-// Count Number of Miners
-exports.countWorkers = function(shares, worker) {
+// Combine Solo/Shared Workers Count
+exports.combineWorkers = function(shared, solo) {
+  let count = 0;
+  if (shared || solo) {
+    shared = shared ? shared.map((share) => JSON.parse(share)) : [];
+    solo = solo ? solo.map((share) => JSON.parse(share)) : [];
+    count += exports.countWorkers(shared);
+    count += exports.countWorkers(solo);
+  }
+  return count;
+}
+
+// Count Number of Workers
+exports.countWorkers = function(shares) {
   let count = 0;
   const workers = [];
   if (shares) {
-    shares = shares.map((share) => JSON.parse(share));
     shares.forEach((share) => {
       if (share.worker) {
         const address = share.worker.split('.')[0];
-        if (!worker || worker === address) {
-          if (!(workers.includes(share.worker))) {
-            count += 1;
-            workers.push(share.worker);
-          }
+        if (!(workers.includes(share.worker))) {
+          count += 1;
+          workers.push(share.worker);
         }
       }
     });
@@ -215,20 +235,16 @@ exports.processMiners = function(shares, hashrate, times, multiplier, hashrateWi
       const shareValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
       const effortValue = (!times) ? (/^-?\d*(\.\d+)?$/.test(details.effort) ? parseFloat(details.effort) : 0) : null;
       const timeValue = (times) ? (/^-?\d*(\.\d+)?$/.test(times[entry]) ? parseFloat(times[entry]) : 0) : null;
+      const hashrateValue = exports.processDifficulty(hashrate, address);
       if (details.worker && shareValue > 0) {
         if (address in miners) {
-          const hashrateValue = exports.processDifficulty(hashrate, entry);
-          if (!active || (active && hashrateValue > 0)) {
-            miners[address].shares += shareValue;
-            miners[address].hashrate += (multiplier * hashrateValue) / hashrateWindow;
-            if (times && timeValue >= miners[address].times) {
-              miners[address].times = timeValue;
-            } else if (!times) {
-              miners[address].effort += effortValue || 0;
-            }
+          miners[address].shares += shareValue;
+          if (times && timeValue >= miners[address].times) {
+            miners[address].times = timeValue;
+          } else if (!times) {
+            miners[address].effort += effortValue || 0;
           }
         } else {
-          const hashrateValue = exports.processDifficulty(hashrate, entry);
           if (!active || (active && hashrateValue > 0)) {
             miners[address] = {
               worker: address,
@@ -323,8 +339,8 @@ exports.processWorkers = function(shares, hashrate, times, multiplier, hashrateW
       const shareValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
       const effortValue = (!times) ? (/^-?\d*(\.\d+)?$/.test(details.effort) ? parseFloat(details.effort) : 0) : null;
       const timeValue = (times) ? (/^-?\d*(\.\d+)?$/.test(times[entry]) ? parseFloat(times[entry]) : 0) : null;
+      const hashrateValue = exports.processDifficulty(hashrate, entry);
       if (details.worker && shareValue > 0) {
-        const hashrateValue = exports.processDifficulty(hashrate, entry);
         if (!active || (active && hashrateValue > 0)) {
           workers[entry] = {
             worker: entry,

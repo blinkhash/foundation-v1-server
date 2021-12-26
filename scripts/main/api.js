@@ -525,8 +525,8 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
             status: {
               effort: parseFloat(results[4] ? results[4].effort || 0 : 0),
               luck: utils.processLuck(results[1], results[2]),
-              miners: utils.countMiners(results[5]),
-              workers: utils.countWorkers(results[5]),
+              miners: utils.combineMiners(results[5], results[6]),
+              workers: utils.combineWorkers(results[5], results[6]),
             },
           },
           auxiliary: {
@@ -555,8 +555,8 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
             status: {
               effort: parseFloat(results[12] ? results[12].effort || 0 : 0),
               luck: utils.processLuck(results[9], results[10]),
-              miners: utils.countMiners(results[13]),
-              workers: utils.countWorkers(results[13]),
+              miners: utils.combineMiners(results[13], results[14]),
+              workers: utils.combineWorkers(results[13], results[14]),
             },
           },
         }

@@ -779,6 +779,11 @@ describe('Test API functionality', () => {
       ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32 })],
       ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8 })],
       ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44 })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32 })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64 })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32 })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8 })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44 })],
       ['hset', 'Pool1:blocks:auxiliary:counts', 'valid', 500],
       ['hset', 'Pool1:blocks:auxiliary:counts', 'invalid', 2]];
     const response = mockResponse();
@@ -800,8 +805,8 @@ describe('Test API functionality', () => {
       expect(processed.data.statistics.primary.shares.invalid).toBe(465);
       expect(processed.data.statistics.primary.shares.valid).toBe(3190);
       expect(processed.data.statistics.primary.hashrate.shared).toBe(2576980377.6);
-      expect(processed.data.statistics.primary.status.miners).toBe(3);
-      expect(processed.data.statistics.primary.status.workers).toBe(4);
+      expect(processed.data.statistics.primary.status.miners).toBe(6);
+      expect(processed.data.statistics.primary.status.workers).toBe(8);
       expect(processed.data.configuration.auxiliary.fee).toBe(0);
       expect(processed.data.configuration.auxiliary.paymentInterval).toBe(1200);
       expect(processed.data.configuration.auxiliary.minimumPayment).toBe(10);
@@ -830,6 +835,11 @@ describe('Test API functionality', () => {
       ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32 })],
       ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8 })],
       ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44 })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32 })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64 })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32 })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8 })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44 })],
       ['hset', 'Pool1:blocks:auxiliary:counts', 'valid', 500],
       ['hset', 'Pool1:blocks:auxiliary:counts', 'invalid', 2]];
     const response = mockResponse();
@@ -848,8 +858,8 @@ describe('Test API functionality', () => {
       expect(processed.data.statistics.primary.shares.invalid).toBe(465);
       expect(processed.data.statistics.primary.shares.valid).toBe(3190);
       expect(processed.data.statistics.primary.hashrate.shared).toBe(2576980377.6);
-      expect(processed.data.statistics.primary.status.miners).toBe(3);
-      expect(processed.data.statistics.primary.status.workers).toBe(4);
+      expect(processed.data.statistics.primary.status.miners).toBe(6);
+      expect(processed.data.statistics.primary.status.workers).toBe(8);
       expect(processed.data.statistics.auxiliary.blocks.invalid).toBe(2);
       expect(processed.data.statistics.auxiliary.blocks.valid).toBe(500);
       done();
