@@ -10,11 +10,7 @@
 // Miscellaneous Configuration
 const config = {};
 config.enabled = false;
-
-// Statistics Configuration
 config.name = 'Pool1';
-config.coins = ['Bitcoin'];
-config.logo = '';
 
 // Banning Configuration
 config.banning = {};
@@ -39,6 +35,19 @@ ports1.difficulty.retargetTime = 90;
 ports1.difficulty.variance = 0.3;
 config.ports.push(ports1);
 
+const ports2 = {};
+ports2.port = 3003;
+ports2.enabled = true;
+ports2.type = 'solo';
+ports2.difficulty = {};
+ports2.difficulty.initial = 32;
+ports2.difficulty.minimum = 8;
+ports2.difficulty.maximum = 512;
+ports2.difficulty.targetTime = 15;
+ports2.difficulty.retargetTime = 90;
+ports2.difficulty.variance = 0.3;
+config.ports.push(ports2);
+
 // P2P Configuration
 config.p2p = {};
 config.p2p.enabled = true;
@@ -48,6 +57,7 @@ config.p2p.port = 8333;
 // Settings Configuration
 config.settings = {};
 config.settings.blockRefreshInterval = 1000;
+config.settings.statisticsRefreshInterval = 20000;
 config.settings.connectionTimeout = 600;
 config.settings.hashrateWindow = 300;
 config.settings.jobRebroadcastTimeout = 60;
@@ -66,10 +76,9 @@ config.primary.coin.name = 'Bitcoin';
 config.primary.coin.symbol = 'BTC';
 config.primary.coin.asicboost = true;
 config.primary.coin.getinfo = false;
-config.primary.coin.parameters = {}
+config.primary.coin.parameters = {};
 config.primary.coin.segwit = true;
 config.primary.coin.staking = false;
-config.primary.coin.rewards = '';
 config.primary.coin.version = 4;
 
 // Algorithm Configuration
@@ -77,6 +86,11 @@ config.primary.coin.algorithms = {};
 config.primary.coin.algorithms.mining = 'sha256d';
 config.primary.coin.algorithms.block = 'sha256d';
 config.primary.coin.algorithms.coinbase = 'sha256d';
+
+// Rewards Configuration
+config.primary.coin.rewards = {};
+config.primary.coin.rewards.type = '';
+config.primary.coin.rewards.addresses = [];
 
 // Mainnet Configuration
 config.primary.coin.mainnet = {};

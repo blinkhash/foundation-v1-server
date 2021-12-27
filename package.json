@@ -1,6 +1,6 @@
 {
   "name": "foundation-server",
-  "version": "0.0.5",
+  "version": "0.1.4",
   "description": "An extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool",
   "main": "./scripts/init.js",
   "keywords": [
@@ -31,6 +31,10 @@
   },
   "scripts": {
     "start": "nodemon scripts/main.js",
+    "prod:start": "pm2 start scripts/main.js",
+    "prod:stop": "pm2 stop scripts/main.js",
+    "prod:logs": "pm2 logs main",
+    "prod:update": "pm2 update",
     "clean": "eslint . --ext .js --ignore-pattern node_modules/",
     "clean:fix": "eslint . --ext .js --fix --ignore-pattern node_modules/",
     "test": "jest --coverage"
@@ -43,8 +47,6 @@
   "dependencies": {
     "apicache": "^1.5.3",
     "async": "2.6.3",
-    "bignum": "0.13.1",
-    "foundation-stratum": "0.0.6",
     "body-parser": "*",
     "colors": "*",
     "compression": "*",
@@ -52,7 +54,9 @@
     "dateformat": "4.5.1",
     "express": "*",
     "express-rate-limit": "^5.3.0",
+    "foundation-stratum": "0.0.19",
     "nodemon": "2.0.12",
+    "pm2": "^5.1.2",
     "redis": "^3.1.1"
   },
   "devDependencies": {

@@ -20,7 +20,6 @@ const PoolServer = function (logger, client) {
 
   const _this = this;
   this.client = client;
-  this.partnerConfigs = JSON.parse(process.env.partnerConfigs);
   this.poolConfigs = JSON.parse(process.env.poolConfigs);
   this.portalConfig = JSON.parse(process.env.portalConfig);
 
@@ -29,7 +28,7 @@ const PoolServer = function (logger, client) {
 
     // Build Main Server
     const app = express();
-    const api = new PoolApi(_this.client, _this.partnerConfigs, _this.poolConfigs, _this.portalConfig);
+    const api = new PoolApi(_this.client, _this.poolConfigs, _this.portalConfig);
     const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
     const cache = apicache.options({}).middleware;
 
@@ -54,7 +53,7 @@ const PoolServer = function (logger, client) {
     /* eslint-disable-next-line no-unused-vars */
     app.get('/health/', (req, res, next) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ "status": "OK" }));
+      res.end(JSON.stringify({ 'status': 'OK' }));
     });
 
     // Handle Error Responses

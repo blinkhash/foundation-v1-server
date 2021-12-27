@@ -82,6 +82,40 @@ exports.mockGetAddressInfo = function() {
     );
 };
 
+exports.mockGetMiningInfo = function() {
+  const response = {
+    blocks: 611207,
+    currentblocksize: 1000,
+    currentblocktx: 0,
+    difficulty: 0.001978989105730653,
+    networkhashps: 52007.68563030699,
+    pooledtx: 0,
+    chain: 'test',
+    warnings: 'Warning: unknown new rules activated (versionbit 3)'
+  };
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => body.method === 'getmininginfo')
+    .reply(200, JSON.stringify({
+      id: 'nocktest',
+      error: null,
+      result: response,
+    })
+    );
+};
+
+exports.mockGetMiningInfoError1 = function() {
+  nock('http://127.0.0.1:8332')
+    .persist()
+    .post('/', body => body.method === 'getmininginfo')
+    .reply(200, JSON.stringify({
+      id: 'nocktest',
+      error: { code: -5 },
+      result: null,
+    })
+    );
+};
+
 exports.mockGetBalance = function() {
   nock('http://127.0.0.1:8332')
     .persist()

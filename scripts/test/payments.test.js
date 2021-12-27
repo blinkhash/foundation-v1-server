@@ -32,7 +32,6 @@ client._redisMock._maxListeners = 0;
 nock.disableNetConnect();
 nock.enableNetConnect('127.0.0.1');
 
-process.env.partnerConfigs = JSON.stringify({});
 process.env.poolConfigs = JSON.stringify({ Pool1: poolConfig });
 process.env.portalConfig = JSON.stringify(portalConfig);
 const logger = new PoolLogger(portalConfig);
@@ -63,7 +62,6 @@ describe('Test payments functionality', () => {
   beforeEach((done) => {
     client.flushall(() => done());
   });
-
 
   test('Test initialization of payments', () => {
     const poolPayments = new PoolPayments(logger, client);
@@ -240,16 +238,14 @@ describe('Test payments functionality', () => {
     const round = { orphanShares: { 'example': 8 }, orphanTimes: { 'example': 1 }};
     const expected = [
       ['hincrby', 'Pool1:rounds:primary:current:counts', 'valid', 1],
-      ['zadd', 'Pool1:rounds:primary:current:hashrate'],
       ['hincrby', 'Pool1:rounds:primary:current:shares'],
       ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'example', 1]];
     poolPayments.handleOrphans(round, 'Pool1', 'primary', (error, results) => {
       expect(error).toBe(null);
-      expect(results.length).toBe(4);
+      expect(results.length).toBe(3);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1].slice(0, 2)).toStrictEqual(expected[1]);
-      expect(results[2].slice(0, 2)).toStrictEqual(expected[2]);
-      expect(results[3]).toStrictEqual(expected[3]);
+      expect(results[2]).toStrictEqual(expected[2]);
       done();
     });
   });
@@ -577,9 +573,6 @@ describe('Test payments functionality', () => {
     poolPayments.handleGenerate(config, round, {}, { 'example': 20.15 }, 20.15, {}, { 'example': 8 }, 'primary', (error, results) => {
       expect(error).toBe(null);
       expect(results[0]['example'].generate).toBe(1249960000);
-      expect(results[0]['example'].records['180'].amounts).toBe(12.4996);
-      expect(results[0]['example'].records['180'].shares).toBe(8);
-      expect(results[0]['example'].records['180'].times).toBe(20.15);
       expect(results[0]['example'].shares.round).toBe(8);
       expect(results[0]['example'].shares.total).toBe(8);
       console.log.mockClear();
@@ -616,9 +609,6 @@ describe('Test payments functionality', () => {
     poolPayments.handleGenerate(config, round, {}, { 'example': 20.15 }, 20.15, { 'example': 8 }, {}, 'primary', (error, results) => {
       expect(error).toBe(null);
       expect(results[0]['example'].generate).toBe(1249960000);
-      expect(results[0]['example'].records['180'].amounts).toBe(12.4996);
-      expect(results[0]['example'].records['180'].shares).toBe(8);
-      expect(results[0]['example'].records['180'].times).toBe(1);
       expect(results[0]['example'].shares.round).toBe(8);
       expect(results[0]['example'].shares.total).toBe(8);
       console.log.mockClear();
@@ -638,9 +628,6 @@ describe('Test payments functionality', () => {
     poolPayments.handleGenerate(config, round, {}, { 'example': 20.15 }, 20.15, {}, {}, 'primary', (error, results) => {
       expect(error).toBe(null);
       expect(results[0]['example'].generate).toBe(1249960000);
-      expect(results[0]['example'].records['180'].amounts).toBe(12.4996);
-      expect(results[0]['example'].records['180'].shares).toBe(1);
-      expect(results[0]['example'].records['180'].times).toBe(1);
       expect(results[0]['example'].shares.round).toBe(1);
       expect(results[0]['example'].shares.total).toBe(1);
       console.log.mockClear();
@@ -660,9 +647,6 @@ describe('Test payments functionality', () => {
     poolPayments.handleGenerate(config, round, {}, { 'example': 8.2 }, 20.15, {}, { 'example': 8 }, 'primary', (error, results) => {
       expect(error).toBe(null);
       expect(results[0]['example'].generate).toBe(1249960000);
-      expect(results[0]['example'].records['180'].amounts).toBe(12.4996);
-      expect(results[0]['example'].records['180'].shares).toBe(3.28);
-      expect(results[0]['example'].records['180'].times).toBe(8.2);
       expect(results[0]['example'].shares.round).toBe(3.28);
       expect(results[0]['example'].shares.total).toBe(3.28);
       console.log.mockClear();
@@ -670,7 +654,7 @@ describe('Test payments functionality', () => {
     });
   });
 
-  test('Test handling of immature blocks [6]', (done) => {
+  test('Test handling of generate blocks [6]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
@@ -682,9 +666,6 @@ describe('Test payments functionality', () => {
     poolPayments.handleGenerate(config, round, {}, {}, 20.15, {}, { 'example': 8 }, 'primary', (error, results) => {
       expect(error).toBe(null);
       expect(results[0]['example'].generate).toBe(1249960000);
-      expect(results[0]['example'].records['180'].amounts).toBe(12.4996);
-      expect(results[0]['example'].records['180'].shares).toBe(8);
-      expect(results[0]['example'].records['180'].times).toBe(1);
       expect(results[0]['example'].shares.round).toBe(8);
       expect(results[0]['example'].shares.total).toBe(8);
       console.log.mockClear();
@@ -692,7 +673,7 @@ describe('Test payments functionality', () => {
     });
   });
 
-  test('Test handling of immature blocks [6]', (done) => {
+  test('Test handling of generate blocks [7]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client);
     poolPayments.poolConfigs['Pool1'].auxiliary = { payments: {} };
@@ -705,9 +686,6 @@ describe('Test payments functionality', () => {
     poolPayments.handleGenerate(config, round, {}, {}, 20.15, {}, { 'example': 8 }, 'auxiliary', (error, results) => {
       expect(error).toBe(null);
       expect(results[0]['example'].generate).toBe(1249960000);
-      expect(results[0]['example'].records['180'].amounts).toBe(12.4996);
-      expect(results[0]['example'].records['180'].shares).toBe(8);
-      expect(results[0]['example'].records['180'].times).toBe(1);
       expect(results[0]['example'].shares.round).toBe(8);
       expect(results[0]['example'].shares.total).toBe(8);
       console.log.mockClear();
@@ -1064,9 +1042,8 @@ describe('Test payments functionality', () => {
 
   test('Test main shares handling [1]', (done) => {
     const commands = [
-      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:shares', JSON.stringify({ time: 0, worker: 'worker1', solo: true }), 8],
-      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:shares', JSON.stringify({ time: 0, worker: 'worker2', solo: false }), 16],
-      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:shares', JSON.stringify({ time: 1, worker: 'worker2', solo: false }), 12]];
+      ['hset', 'Pool1:rounds:primary:round-180:shares', 'worker1', JSON.stringify({ time: 0, difficulty: 8, worker: 'worker1', solo: true })],
+      ['hset', 'Pool1:rounds:primary:round-180:shares', 'worker2', JSON.stringify({ time: 0, difficulty: 28, worker: 'worker2', solo: false })]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
@@ -1084,13 +1061,10 @@ describe('Test payments functionality', () => {
 
   test('Test main shares handling [2]', (done) => {
     const commands = [
-      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:shares', JSON.stringify({ time: 0, worker: 'worker1', solo: true }), 8],
-      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:shares', JSON.stringify({ time: 0, worker: 'worker2', solo: false }), 16],
-      ['hincrbyfloat', 'Pool1:rounds:primary:round-180:shares', JSON.stringify({ time: 1, worker: 'worker2', solo: false }), 12],
-      ['hincrbyfloat', 'Pool1:rounds:primary:round-181:shares', JSON.stringify({ time: 0, worker: 'worker1', solo: true }), 16],
-      ['hincrbyfloat', 'Pool1:rounds:primary:round-181:shares', JSON.stringify({ time: 1, worker: 'worker1', solo: true }), 10],
-      ['hincrbyfloat', 'Pool1:rounds:primary:round-181:shares', JSON.stringify({ time: 0, worker: 'worker2', solo: false }), 28],
-      ['hincrbyfloat', 'Pool1:rounds:primary:round-181:shares', JSON.stringify({ time: 1, worker: 'worker2', solo: false }), 12]];
+      ['hset', 'Pool1:rounds:primary:round-180:shares', 'worker1', JSON.stringify({ time: 0, difficulty: 8, worker: 'worker1', solo: true })],
+      ['hset', 'Pool1:rounds:primary:round-180:shares', 'worker2', JSON.stringify({ time: 0, difficulty: 28, worker: 'worker2', solo: false })],
+      ['hset', 'Pool1:rounds:primary:round-181:shares', 'worker1', JSON.stringify({ time: 0, difficulty: 26, worker: 'worker1', solo: true })],
+      ['hset', 'Pool1:rounds:primary:round-181:shares', 'worker2', JSON.stringify({ time: 0, difficulty: 40, worker: 'worker2', solo: false })]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       const poolPayments = new PoolPayments(logger, client);
@@ -1209,7 +1183,7 @@ describe('Test payments functionality', () => {
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'generate', reward: 500 }];
-    poolPayments.handleOwed(daemon, config, 'checks', 'primary', [rounds, [], [], [], []], (error, results) => {
+    poolPayments.handleOwed(daemon, config, 'payments', 'primary', [rounds, [], [], [], []], (error, results) => {
       expect(error).toBe(null);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Insufficient funds'));
       expect(results[0][0].category).toBe('generate');
@@ -1252,7 +1226,7 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'immature', height: 180, reward: 12.50, solo: false, worker: 'example' };
-    poolPayments.handleRewards(config, 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
+    poolPayments.handleRewards(config, 'checks', 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
       expect(error).toBe(null);
       expect(results[1]['example'].immature).toBe(1249960000);
       expect(results[1]['example'].shares.round).toBe(8);
@@ -1270,12 +1244,9 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'generate', height: 180, reward: 12.50, solo: false, worker: 'example' };
-    poolPayments.handleRewards(config, 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
+    poolPayments.handleRewards(config, 'checks', 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
       expect(error).toBe(null);
       expect(results[1]['example'].generate).toBe(1249960000);
-      expect(results[1]['example'].records['180'].amounts).toBe(12.4996);
-      expect(results[1]['example'].records['180'].shares).toBe(8);
-      expect(results[1]['example'].records['180'].times).toBe(20.15);
       expect(results[1]['example'].shares.round).toBe(8);
       expect(results[1]['example'].shares.total).toBe(8);
       console.log.mockClear();
@@ -1288,7 +1259,7 @@ describe('Test payments functionality', () => {
     const poolPayments = new PoolPayments(logger, client);
     const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'orphan', height: 180, reward: 12.50, solo: false, worker: 'example' };
-    poolPayments.handleRewards(config, 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
+    poolPayments.handleRewards(config, 'checks', 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
       expect(error).toBe(null);
       expect(results[0][0].orphanShares['example']).toBe(8);
       expect(results[0][0].orphanTimes['example']).toBe(20.15);
@@ -1302,7 +1273,21 @@ describe('Test payments functionality', () => {
     const poolPayments = new PoolPayments(logger, client);
     const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'immature', height: 180, reward: 12.50, solo: false, worker: 'example' };
-    poolPayments.handleRewards(config, 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{}]], (error, results) => {
+    poolPayments.handleRewards(config, 'checks', 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{}]], (error, results) => {
+      expect(error).toBe(null);
+      expect(consoleSpy).not.toHaveBeenCalledWith(expect.stringMatching('No worker shares for round'));
+      expect(results[1]).toStrictEqual({});
+      console.log.mockClear();
+      done();
+    });
+  });
+
+  test('Test reward calculation given rounds/workers [4]', (done) => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolPayments = new PoolPayments(logger, client);
+    const config = poolPayments.poolConfigs['Pool1'];
+    const round = { category: 'immature', height: 180, reward: 12.50, solo: false, worker: 'example' };
+    poolPayments.handleRewards(config, 'payments', 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{}]], (error, results) => {
       expect(error).toBe(null);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('No worker shares for round'));
       expect(results[1]).toStrictEqual({});
@@ -1322,7 +1307,7 @@ describe('Test payments functionality', () => {
     const round = { category: 'immature', height: 180, reward: 12.50, solo: false, worker: 'example' };
     const times = [{ 'example1': 20.15, 'example2': 15.267 }];
     const shared = [{ 'example1': 8, 'example2': 16 }];
-    poolPayments.handleRewards(config, 'primary', [[round], {}, times, [{}], shared], (error, results) => {
+    poolPayments.handleRewards(config, 'checks', 'primary', [[round], {}, times, [{}], shared], (error, results) => {
       expect(error).toBe(null);
       expect(results[1]['example1'].immature).toBe(416653333);
       expect(results[1]['example1'].shares.round).toBe(8);
@@ -1344,18 +1329,12 @@ describe('Test payments functionality', () => {
     const round = { category: 'generate', height: 180, reward: 12.50, solo: false, worker: 'example' };
     const times = [{ 'example1': 20.15, 'example2': 4.623 }];
     const shared = [{ 'example1': 8, 'example2': 16 }];
-    poolPayments.handleRewards(config, 'primary', [[round], {}, times, [{}], shared], (error, results) => {
+    poolPayments.handleRewards(config, 'checks', 'primary', [[round], {}, times, [{}], shared], (error, results) => {
       expect(error).toBe(null);
       expect(results[1]['example1'].generate).toBe(856136986);
-      expect(results[1]['example1'].records['180'].amounts).toBe(8.56136986);
-      expect(results[1]['example1'].records['180'].shares).toBe(8);
-      expect(results[1]['example1'].records['180'].times).toBe(20.15);
       expect(results[1]['example1'].shares.round).toBe(8);
       expect(results[1]['example1'].shares.total).toBe(8);
       expect(results[1]['example2'].generate).toBe(393823014);
-      expect(results[1]['example2'].records['180'].amounts).toBe(3.93823014);
-      expect(results[1]['example2'].records['180'].shares).toBe(3.68);
-      expect(results[1]['example2'].records['180'].times).toBe(4.623);
       expect(results[1]['example2'].shares.round).toBe(3.68);
       expect(results[1]['example2'].shares.total).toBe(3.68);
       console.log.mockClear();
@@ -1535,11 +1514,13 @@ describe('Test payments functionality', () => {
       const expected = [
         ['hset', 'Pool1:payments:primary:generate', 'example1', 0],
         ['hset', 'Pool1:payments:primary:immature', 'example1', 12.5],
-        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0]];
-      expect(results.length).toBe(3);
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:shared:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:solo:hashrate', 0]];
+      expect(results.length).toBe(4);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2].slice(0, 3)).toStrictEqual(expected[2]);
+      expect(results[3].slice(0, 3)).toStrictEqual(expected[3]);
       console.log.mockClear();
       done();
     });
@@ -1558,16 +1539,18 @@ describe('Test payments functionality', () => {
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
         ['hset', 'Pool1:payments:primary:immature', 'example1', 12.5],
-        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:shared:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:solo:hashrate', 0],
         ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
         ['hset', 'Pool1:payments:primary:counts', 'last'],
         ['hset', 'Pool1:payments:primary:counts', 'next']];
-      expect(results.length).toBe(5);
+      expect(results.length).toBe(6);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1].slice(0, 3)).toStrictEqual(expected[1]);
-      expect(results[2]).toStrictEqual(expected[2]);
-      expect(results[3].slice(0, 3)).toStrictEqual(expected[3]);
+      expect(results[2].slice(0, 3)).toStrictEqual(expected[2]);
+      expect(results[3]).toStrictEqual(expected[3]);
       expect(results[4].slice(0, 3)).toStrictEqual(expected[4]);
+      expect(results[5].slice(0, 3)).toStrictEqual(expected[5]);
       console.log.mockClear();
       done();
     });
@@ -1586,16 +1569,18 @@ describe('Test payments functionality', () => {
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       const expected = [
         ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
-        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:shared:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:solo:hashrate', 0],
         ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
         ['hset', 'Pool1:payments:primary:counts', 'last'],
         ['hset', 'Pool1:payments:primary:counts', 'next']];
-      expect(results.length).toBe(5);
+      expect(results.length).toBe(6);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1].slice(0, 3)).toStrictEqual(expected[1]);
-      expect(results[2]).toStrictEqual(expected[2]);
-      expect(results[3].slice(0, 3)).toStrictEqual(expected[3]);
+      expect(results[2].slice(0, 3)).toStrictEqual(expected[2]);
+      expect(results[3]).toStrictEqual(expected[3]);
       expect(results[4].slice(0, 3)).toStrictEqual(expected[4]);
+      expect(results[5].slice(0, 3)).toStrictEqual(expected[5]);
       console.log.mockClear();
       done();
     });
@@ -1618,20 +1603,22 @@ describe('Test payments functionality', () => {
         ['del', 'Pool1:rounds:primary:round-180:counts'],
         ['del', 'Pool1:rounds:primary:round-180:shares'],
         ['del', 'Pool1:rounds:primary:round-180:times'],
-        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:shared:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:solo:hashrate', 0],
         ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
         ['hset', 'Pool1:payments:primary:counts', 'last'],
         ['hset', 'Pool1:payments:primary:counts', 'next']];
-      expect(results.length).toBe(9);
+      expect(results.length).toBe(10);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2]).toStrictEqual(expected[2]);
       expect(results[3]).toStrictEqual(expected[3]);
       expect(results[4]).toStrictEqual(expected[4]);
       expect(results[5].slice(0, 3)).toStrictEqual(expected[5]);
-      expect(results[6]).toStrictEqual(expected[6]);
-      expect(results[7].slice(0, 3)).toStrictEqual(expected[7]);
+      expect(results[6].slice(0, 3)).toStrictEqual(expected[6]);
+      expect(results[7]).toStrictEqual(expected[7]);
       expect(results[8].slice(0, 3)).toStrictEqual(expected[8]);
+      expect(results[9].slice(0, 3)).toStrictEqual(expected[9]);
       console.log.mockClear();
       done();
     });
@@ -1651,11 +1638,13 @@ describe('Test payments functionality', () => {
       const expected = [
         ['hset', 'Pool1:payments:primary:generate', 'example1', 12.5],
         ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
-        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0]];
-      expect(results.length).toBe(3);
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:shared:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:solo:hashrate', 0]];
+      expect(results.length).toBe(4);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2].slice(0, 3)).toStrictEqual(expected[2]);
+      expect(results[3].slice(0, 3)).toStrictEqual(expected[3]);
       console.log.mockClear();
       done();
     });
@@ -1681,11 +1670,12 @@ describe('Test payments functionality', () => {
         ['del', 'Pool1:rounds:primary:round-180:counts'],
         ['del', 'Pool1:rounds:primary:round-180:shares'],
         ['del', 'Pool1:rounds:primary:round-180:times'],
-        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:shared:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:solo:hashrate', 0],
         ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 12.5],
         ['hset', 'Pool1:payments:primary:counts', 'last'],
         ['hset', 'Pool1:payments:primary:counts', 'next']];
-      expect(results.length).toBe(12);
+      expect(results.length).toBe(13);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2]).toStrictEqual(expected[2]);
@@ -1695,9 +1685,10 @@ describe('Test payments functionality', () => {
       expect(results[6]).toStrictEqual(expected[6]);
       expect(results[7]).toStrictEqual(expected[7]);
       expect(results[8].slice(0, 3)).toStrictEqual(expected[8]);
-      expect(results[9]).toStrictEqual(expected[9]);
-      expect(results[10].slice(0, 3)).toStrictEqual(expected[10]);
+      expect(results[9].slice(0, 3)).toStrictEqual(expected[9]);
+      expect(results[10]).toStrictEqual(expected[10]);
       expect(results[11].slice(0, 3)).toStrictEqual(expected[11]);
+      expect(results[12].slice(0, 3)).toStrictEqual(expected[12]);
       console.log.mockClear();
       done();
     });
@@ -1723,11 +1714,12 @@ describe('Test payments functionality', () => {
         ['del', 'Pool1:rounds:primary:round-180:counts'],
         ['del', 'Pool1:rounds:primary:round-180:shares'],
         ['del', 'Pool1:rounds:primary:round-180:times'],
-        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:shared:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:solo:hashrate', 0],
         ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 12.5],
         ['hset', 'Pool1:payments:primary:counts', 'last'],
         ['hset', 'Pool1:payments:primary:counts', 'next']];
-      expect(results.length).toBe(12);
+      expect(results.length).toBe(13);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2]).toStrictEqual(expected[2]);
@@ -1737,9 +1729,10 @@ describe('Test payments functionality', () => {
       expect(results[6]).toStrictEqual(expected[6]);
       expect(results[7]).toStrictEqual(expected[7]);
       expect(results[8].slice(0, 3)).toStrictEqual(expected[8]);
-      expect(results[9]).toStrictEqual(expected[9]);
-      expect(results[10].slice(0, 3)).toStrictEqual(expected[10]);
+      expect(results[9].slice(0, 3)).toStrictEqual(expected[9]);
+      expect(results[10]).toStrictEqual(expected[10]);
       expect(results[11].slice(0, 3)).toStrictEqual(expected[11]);
+      expect(results[12].slice(0, 3)).toStrictEqual(expected[12]);
       console.log.mockClear();
       done();
     });
@@ -1765,11 +1758,12 @@ describe('Test payments functionality', () => {
         ['del', 'Pool1:rounds:primary:round-180:counts'],
         ['del', 'Pool1:rounds:primary:round-180:shares'],
         ['del', 'Pool1:rounds:primary:round-180:times'],
-        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:shared:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:solo:hashrate', 0],
         ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 12.5],
         ['hset', 'Pool1:payments:primary:counts', 'last'],
         ['hset', 'Pool1:payments:primary:counts', 'next']];
-      expect(results.length).toBe(12);
+      expect(results.length).toBe(13);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2]).toStrictEqual(expected[2]);
@@ -1779,9 +1773,10 @@ describe('Test payments functionality', () => {
       expect(results[6]).toStrictEqual(expected[6]);
       expect(results[7]).toStrictEqual(expected[7]);
       expect(results[8].slice(0, 3)).toStrictEqual(expected[8]);
-      expect(results[9]).toStrictEqual(expected[9]);
-      expect(results[10].slice(0, 3)).toStrictEqual(expected[10]);
+      expect(results[9].slice(0, 3)).toStrictEqual(expected[9]);
+      expect(results[10]).toStrictEqual(expected[10]);
       expect(results[11].slice(0, 3)).toStrictEqual(expected[11]);
+      expect(results[12].slice(0, 3)).toStrictEqual(expected[12]);
       console.log.mockClear();
       done();
     });
@@ -1801,17 +1796,19 @@ describe('Test payments functionality', () => {
       const expected = [
         ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
         ['smove', 'Pool1:blocks:primary:pending', 'Pool1:blocks:primary:kicked', 'serialized'],
-        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:shared:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:solo:hashrate', 0],
         ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
         ['hset', 'Pool1:payments:primary:counts', 'last'],
         ['hset', 'Pool1:payments:primary:counts', 'next']];
-      expect(results.length).toBe(6);
+      expect(results.length).toBe(7);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2].slice(0, 3)).toStrictEqual(expected[2]);
-      expect(results[3]).toStrictEqual(expected[3]);
-      expect(results[4].slice(0, 3)).toStrictEqual(expected[4]);
+      expect(results[3].slice(0, 3)).toStrictEqual(expected[3]);
+      expect(results[4]).toStrictEqual(expected[4]);
       expect(results[5].slice(0, 3)).toStrictEqual(expected[5]);
+      expect(results[6].slice(0, 3)).toStrictEqual(expected[6]);
       console.log.mockClear();
       done();
     });
@@ -1834,20 +1831,22 @@ describe('Test payments functionality', () => {
         ['del', 'Pool1:rounds:primary:round-180:counts'],
         ['del', 'Pool1:rounds:primary:round-180:shares'],
         ['del', 'Pool1:rounds:primary:round-180:times'],
-        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:shared:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:solo:hashrate', 0],
         ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
         ['hset', 'Pool1:payments:primary:counts', 'last'],
         ['hset', 'Pool1:payments:primary:counts', 'next']];
-      expect(results.length).toBe(9);
+      expect(results.length).toBe(10);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2]).toStrictEqual(expected[2]);
       expect(results[3]).toStrictEqual(expected[3]);
       expect(results[4]).toStrictEqual(expected[4]);
       expect(results[5].slice(0, 3)).toStrictEqual(expected[5]);
-      expect(results[6]).toStrictEqual(expected[6]);
-      expect(results[7].slice(0, 3)).toStrictEqual(expected[7]);
+      expect(results[6].slice(0, 3)).toStrictEqual(expected[6]);
+      expect(results[7]).toStrictEqual(expected[7]);
       expect(results[8].slice(0, 3)).toStrictEqual(expected[8]);
+      expect(results[9].slice(0, 3)).toStrictEqual(expected[9]);
       console.log.mockClear();
       done();
     });
@@ -1868,18 +1867,20 @@ describe('Test payments functionality', () => {
         ['hset', 'Pool1:payments:primary:balances', 'example1', 0.5],
         ['hset', 'Pool1:payments:primary:generate', 'example1', 0],
         ['hset', 'Pool1:payments:primary:immature', 'example1', 12.5],
-        ['zremrangebyscore', 'Pool1:rounds:primary:current:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:shared:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:primary:current:solo:hashrate', 0],
         ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
         ['hset', 'Pool1:payments:primary:counts', 'last'],
         ['hset', 'Pool1:payments:primary:counts', 'next']];
-      expect(results.length).toBe(7);
+      expect(results.length).toBe(8);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2]).toStrictEqual(expected[2]);
       expect(results[3].slice(0, 3)).toStrictEqual(expected[3]);
-      expect(results[4]).toStrictEqual(expected[4]);
-      expect(results[5].slice(0, 3)).toStrictEqual(expected[5]);
+      expect(results[4].slice(0, 3)).toStrictEqual(expected[4]);
+      expect(results[5]).toStrictEqual(expected[5]);
       expect(results[6].slice(0, 3)).toStrictEqual(expected[6]);
+      expect(results[7].slice(0, 3)).toStrictEqual(expected[7]);
       console.log.mockClear();
       done();
     });
@@ -1900,11 +1901,13 @@ describe('Test payments functionality', () => {
       const expected = [
         ['hset', 'Pool1:payments:auxiliary:generate', 'example1', 0],
         ['hset', 'Pool1:payments:auxiliary:immature', 'example1', 12.5],
-        ['zremrangebyscore', 'Pool1:rounds:auxiliary:current:hashrate', 0]];
-      expect(results.length).toBe(3);
+        ['zremrangebyscore', 'Pool1:rounds:auxiliary:current:shared:hashrate', 0],
+        ['zremrangebyscore', 'Pool1:rounds:auxiliary:current:solo:hashrate', 0]];
+      expect(results.length).toBe(4);
       expect(results[0]).toStrictEqual(expected[0]);
       expect(results[1]).toStrictEqual(expected[1]);
       expect(results[2].slice(0, 3)).toStrictEqual(expected[2]);
+      expect(results[3].slice(0, 3)).toStrictEqual(expected[3]);
       console.log.mockClear();
       done();
     });

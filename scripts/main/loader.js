@@ -16,15 +16,6 @@ const PoolLoader = function(logger, portalConfig) {
   const _this = this;
   this.portalConfig = portalConfig;
 
-  // Validate Partner Configs
-  this.validatePartnerConfigs = function(partnerConfig) {
-    const currentDate = new Date();
-    if (new Date(partnerConfig.subscription.endDate) < currentDate) {
-      return false;
-    }
-    return true;
-  };
-
   // Validate Pool Algorithms
   this.validatePoolAlgorithms = function(algorithm, name) {
     if (!(algorithm in Algorithms)) {
@@ -41,6 +32,7 @@ const PoolLoader = function(logger, portalConfig) {
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.mining, name)) return false;
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.block, name)) return false;
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.coinbase, name)) return false;
+    if (!_this.validatePoolRecipients(poolConfig)) return false;
     return true;
   };
 
@@ -48,11 +40,20 @@ const PoolLoader = function(logger, portalConfig) {
   this.validatePoolNames = function(poolConfigs, poolConfig) {
     let configNames = Object.keys(poolConfigs);
     configNames = configNames.concat(poolConfig.name);
-    if (new Set(configNames).size !== configNames.length) {
-      logger.error('Builder', 'Setup', 'Overlapping pool names. Check your configuration files');
+    if (poolConfig.name) {
+      if (poolConfig.name.split(' ').length > 1) {
+        logger.error('Builder', 'Setup', 'Pool names are only allowed to be a single word. Check your configuration files');
+        return false;
+      }
+      if (new Set(configNames).size !== configNames.length) {
+        logger.error('Builder', 'Setup', 'Overlapping pool names. Check your configuration files');
+        return false;
+      }
+      return true;
+    } else {
+      logger.error('Builder', 'Setup', 'No existing pool name passed in. Check your configuration files');
       return false;
     }
-    return true;
   };
 
   // Check for Overlapping Pool Ports
@@ -71,20 +72,22 @@ const PoolLoader = function(logger, portalConfig) {
     return true;
   };
 
-  // Read and Format Partner Configs
-  /* istanbul ignore next */
-  this.buildPartnerConfigs = function() {
-    const partnerConfigs = {};
-    const normalizedPath = path.join(__dirname, '../../configs/partners/');
-    fs.readdirSync(normalizedPath).forEach(file => {
-      if (!fs.existsSync(normalizedPath + file) || path.extname(normalizedPath + file) !== '.js') {
-        return;
+  // Check for Valid Recipient Percentage
+  this.validatePoolRecipients = function(poolConfig) {
+    if (poolConfig.primary.recipients && poolConfig.primary.recipients.length >= 1) {
+      const recipientTotal = poolConfig.primary.recipients.reduce((p_sum, a) => p_sum + a.percentage, 0);
+      if (recipientTotal >= 1) {
+        logger.error('Builder', 'Setup', `Recipient percentage for ${ poolConfig.name } is greater than 100%. Check your configuration files`);
+        return false;
+      } else if (recipientTotal >= 0.4) {
+        logger.warning('Builder', 'Setup', `Recipient percentage for ${ poolConfig.name } is greater than 40%. Are you sure that you configured it properly?`);
+        return true;
+      } else {
+        return true;
       }
-      const partnerConfig = require(normalizedPath + file);
-      if (!_this.validatePartnerConfigs(partnerConfig)) return;
-      partnerConfigs[partnerConfig.name] = partnerConfig;
-    });
-    return partnerConfigs;
+    } else {
+      return true;
+    }
   };
 
   // Build Pool Configurations
