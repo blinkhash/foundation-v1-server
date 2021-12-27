@@ -28,7 +28,6 @@ const PoolThreads = function(logger, client, portalConfig) {
     if (cluster.isMaster) {
       const poolLoader = new PoolLoader(logger, _this.portalConfig);
       const poolBuilder = new PoolBuilder(logger, _this.portalConfig);
-      poolBuilder.partnerConfigs = poolLoader.buildPartnerConfigs();
       poolBuilder.poolConfigs = poolLoader.buildPoolConfigs();
       poolBuilder.setupPoolPayments();
       poolBuilder.setupPoolServer();

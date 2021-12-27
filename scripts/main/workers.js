@@ -5,6 +5,7 @@
  */
 
 const PoolShares = require('./shares');
+const PoolStatistics = require('./statistics');
 const PoolStratum = require('./stratum');
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,7 +26,8 @@ const PoolWorkers = function (logger, client) {
     return new Promise((resolve, reject) => {
       const poolConfig = _this.poolConfigs[configName];
       const poolShares = new PoolShares(logger, _this.client, poolConfig, _this.portalConfig);
-      const poolStratum = new PoolStratum(logger, poolConfig, poolShares);
+      const poolStatistics = new PoolStatistics(logger, _this.client, poolConfig, _this.portalConfig);
+      const poolStratum = new PoolStratum(logger, poolConfig, poolShares, poolStatistics);
       poolStratum.setupStratum((response) => {
         if (response === true) resolve(poolStratum);
         else reject(`Error thrown on pool creation: ${ response }`);

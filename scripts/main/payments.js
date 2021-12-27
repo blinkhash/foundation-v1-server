@@ -138,11 +138,11 @@ const PoolPayments = function (logger, client) {
         const outputShare = {
           time: dateNow,
           difficulty: round.orphanShares[address],
+          effort: 0,
           worker: address,
           solo: false,
         };
         commands.push(['hincrby', `${ pool }:rounds:${ blockType }:current:counts`, 'valid', 1]);
-        commands.push(['zadd', `${ pool }:rounds:${ blockType }:current:hashrate`, dateNow / 1000 | 0, JSON.stringify(outputShare)]);
         commands.push(['hincrby', `${ pool }:rounds:${ blockType }:current:shares`, JSON.stringify(outputShare), round.orphanShares[address]]);
       });
 
@@ -270,12 +270,6 @@ const PoolPayments = function (logger, client) {
       worker.shares = worker.shares || {};
       const shares = parseFloat(solo[round.worker] || 1);
       const total = Math.round(generate);
-      worker.records = worker.records || {};
-      worker.records[round.height] = {
-        times: 1,
-        shares: shares,
-        amounts: utils.satoshisToCoins(total, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision),
-      };
       worker.shares.round = shares;
       worker.shares.total = parseFloat(worker.shares.total || 0) + shares;
       worker.generate = (worker.generate || 0) + total;
@@ -289,11 +283,8 @@ const PoolPayments = function (logger, client) {
         let shares = parseFloat(shared[address]);
         const worker = workers[address] || {};
         worker.shares = worker.shares || {};
-        worker.records = worker.records || {};
-        worker.records[round.height] = {};
         if (times[address] != null && parseFloat(times[address]) > 0) {
           const timePeriod = utils.roundTo((parseFloat(times[address]) / maxTime), 2);
-          worker.records[round.height].times = parseFloat(times[address]);
           if (timePeriod > 0 && timePeriod < 0.51) {
             const lost = shares * (1 - timePeriod);
             shares = utils.roundTo(Math.max(shares - lost, 0), 2);
@@ -302,8 +293,6 @@ const PoolPayments = function (logger, client) {
         totalShares += shares;
         worker.shares.round = shares;
         worker.shares.total = parseFloat(worker.shares.total || 0) + shares;
-        worker.records[round.height].times = worker.records[round.height].times || 1;
-        worker.records[round.height].shares = shares;
         workers[address] = worker;
       });
 
@@ -312,7 +301,6 @@ const PoolPayments = function (logger, client) {
         const worker = workers[address];
         const percent = parseFloat(worker.shares.round) / totalShares;
         const total = Math.round(generate * percent);
-        worker.records[round.height].amounts = utils.satoshisToCoins(total, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
         worker.generate = (worker.generate || 0) + total;
         workers[address] = worker;
       });
@@ -346,7 +334,7 @@ const PoolPayments = function (logger, client) {
           reward: details.reward,
           transaction: details.transaction,
           difficulty: details.difficulty,
-          worker: details.worker,
+          worker: details.worker ? details.worker.split('.')[0] : '',
           solo: details.solo,
           duplicate: false,
           serialized: r
@@ -552,19 +540,20 @@ const PoolPayments = function (logger, client) {
         const soloRound = {};
         const sharedRound = {};
         Object.keys(round || {}).forEach((entry) => {
-          const details = JSON.parse(entry);
-          const address = details.worker.split('.')[0];
+          const details = JSON.parse(round[entry]);
+          const address = entry.split('.')[0];
+          const shareValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
           if (details.solo) {
             if (address in soloRound) {
-              soloRound[address] += parseFloat(round[entry]);
+              soloRound[address] += parseFloat(shareValue);
             } else {
-              soloRound[address] = parseFloat(round[entry]);
+              soloRound[address] = parseFloat(shareValue);
             }
           } else {
             if (address in sharedRound) {
-              sharedRound[address] += parseFloat(round[entry]);
+              sharedRound[address] += parseFloat(shareValue);
             } else {
-              sharedRound[address] = parseFloat(round[entry]);
+              sharedRound[address] = parseFloat(shareValue);
             }
           }
         });
@@ -608,10 +597,10 @@ const PoolPayments = function (logger, client) {
       }
 
       // Check Balance for Payments
-      if (balance[0] < totalOwed) {
+      if ((balance[0] < totalOwed) && (category === 'payments')) {
         const currentBalance = utils.satoshisToCoins(balance[0], processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
         const owedBalance = utils.satoshisToCoins(totalOwed, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
-        logger.error('Payments', pool, `Insufficient funds (${ currentBalance }) to process payments (${ owedBalance }), possibly waiting for transactions.`);
+        logger.warning('Payments', pool, `Insufficient funds (${ currentBalance }) to process payments (${ owedBalance }), possibly waiting for transactions.`);
       }
 
       // Return Payment Data as Callback
@@ -620,7 +609,7 @@ const PoolPayments = function (logger, client) {
   };
 
   // Calculate Scores Given Times/Shares
-  this.handleRewards = function(config, blockType, data, callback) {
+  this.handleRewards = function(config, category, blockType, data, callback) {
 
     let workers = data[1];
     const rounds = data[0];
@@ -636,9 +625,11 @@ const PoolPayments = function (logger, client) {
 
       // Check if Shares Exist in Round
       if (Object.keys(solo).length <= 0 && Object.keys(shared).length <= 0) {
-        _this.client.smove(`${ pool }:blocks:${ blockType }:pending`, `${ pool }:blocks:${ blockType }:manual`, round.serialized);
-        logger.error('Payments', pool, `No worker shares for round: ${ round.height }, hash: ${ round.hash }. Manual payout required.`);
-        return;
+        if (category === 'payments') {
+          _this.client.smove(`${ pool }:blocks:${ blockType }:pending`, `${ pool }:blocks:${ blockType }:manual`, round.serialized);
+          logger.error('Payments', pool, `No worker shares for round: ${ round.height }, hash: ${ round.hash }. Manual payout required.`);
+          return;
+        }
       }
 
       // Find Max Time in ALL Shares
@@ -680,7 +671,6 @@ const PoolPayments = function (logger, client) {
 
     let totalSent = 0;
     const amounts = {};
-    const records = {};
     const commands = [];
 
     const rounds = data[0];
@@ -691,7 +681,7 @@ const PoolPayments = function (logger, client) {
     // Calculate Amount to Send to Workers
     Object.keys(workers).forEach((address) => {
       const worker = workers[address];
-      const amount = Math.round(worker.balance || 0 + worker.generate || 0);
+      const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
 
       // Determine Amounts Given Mininum Payment
       if (amount >= processingConfig.payments.minPaymentSatoshis) {
@@ -711,19 +701,6 @@ const PoolPayments = function (logger, client) {
       callback(null, [rounds, workers]);
       return;
     }
-
-    // Generate Records for Each Round Paid
-    const roundsPaid = rounds.filter((round) => round.category === 'generate');
-    roundsPaid.forEach((round) => {
-      const roundRecords = {};
-      Object.keys(workers).forEach((address) => {
-        const worker = workers[address];
-        if (worker.records && round.height in worker.records) {
-          roundRecords[address] = worker.records[round.height];
-        }
-      });
-      records[round.height] = roundRecords;
-    });
 
     // Send Payments to Workers Through Daemon
     const rpcTracking = `sendmany "" ${ JSON.stringify(amounts) }`;
@@ -761,7 +738,6 @@ const PoolPayments = function (logger, client) {
           time: currentDate,
           paid: totalSent,
           transaction: transaction,
-          records: records,
         };
 
         // Update Redis Database with Payment Record
@@ -864,7 +840,8 @@ const PoolPayments = function (logger, client) {
     // Update Hashrate Calculation
     const hashrateWindow = config.settings.hashrateWindow;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
-    commands.push(['zremrangebyscore', `${ pool }:rounds:${ blockType }:current:hashrate`, 0, `(${ windowTime }`]);
+    commands.push(['zremrangebyscore', `${ pool }:rounds:${ blockType }:current:shared:hashrate`, 0, `(${ windowTime }`]);
+    commands.push(['zremrangebyscore', `${ pool }:rounds:${ blockType }:current:solo:hashrate`, 0, `(${ windowTime }`]);
 
     // Update Miscellaneous Statistics
     if ((category === 'start') || (category === 'payments')) {
@@ -901,8 +878,7 @@ const PoolPayments = function (logger, client) {
       (data, callback) => _this.handleTransactions(daemon, config, blockType, data, callback),
       (data, callback) => _this.handleTimes(config, blockType, data, callback),
       (data, callback) => _this.handleShares(config, blockType, data, callback),
-      (data, callback) => _this.handleOwed(daemon, config, category, blockType, data, callback),
-      (data, callback) => _this.handleRewards(config, blockType, data, callback),
+      (data, callback) => _this.handleRewards(config, category, blockType, data, callback),
       (data, callback) => _this.handleUpdates(config, category, blockType, interval, data, callback),
     ], (error) => {
       if (error) {
@@ -925,7 +901,7 @@ const PoolPayments = function (logger, client) {
       (data, callback) => _this.handleTimes(config, blockType, data, callback),
       (data, callback) => _this.handleShares(config, blockType, data, callback),
       (data, callback) => _this.handleOwed(daemon, config, category, blockType, data, callback),
-      (data, callback) => _this.handleRewards(config, blockType, data, callback),
+      (data, callback) => _this.handleRewards(config, category, blockType, data, callback),
       (data, callback) => _this.handleSending(daemon, config, blockType, data, callback),
       (data, callback) => _this.handleUpdates(config, category, blockType, interval, data, callback),
     ], (error) => {

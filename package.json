@@ -1,6 +1,6 @@
 {
   "name": "foundation-server",
-  "version": "0.0.9",
+  "version": "0.1.4",
   "description": "An extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool",
   "main": "./scripts/init.js",
   "keywords": [
@@ -47,15 +47,14 @@
   "dependencies": {
     "apicache": "^1.5.3",
     "async": "2.6.3",
-    "bignum": "0.13.1",
     "body-parser": "*",
     "colors": "*",
     "compression": "*",
     "cors": "^2.8.5",
-    "dateformat": "4.5.1",
+    "dateformat": "4.6.3",
     "express": "*",
     "express-rate-limit": "^5.4.1",
-    "foundation-stratum": "0.0.13",
+    "foundation-stratum": "0.0.19",
     "nodemon": "2.0.9",
     "pm2": "^5.1.2",
     "redis": "^3.1.1"

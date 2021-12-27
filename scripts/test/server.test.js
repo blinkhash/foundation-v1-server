@@ -13,7 +13,6 @@ const PoolLogger = require('../main/logger');
 const poolConfig = require('../../configs/pools/example.js');
 const portalConfig = require('../../configs/main/example.js');
 
-process.env.partnerConfigs = JSON.stringify({});
 process.env.poolConfigs = JSON.stringify({ Pool1: poolConfig });
 process.env.portalConfig = JSON.stringify(portalConfig);
 const logger = new PoolLogger(portalConfig);
