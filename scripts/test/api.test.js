@@ -794,6 +794,9 @@ describe('Test API functionality', () => {
       expect(processed.response.code).toBe(200);
       expect(processed.response.message).toBe('');
       expect(typeof processed.data).toBe('object');
+      expect(processed.data.configuration.primary.fee).toBe(0);
+      expect(processed.data.configuration.primary.paymentInterval).toBe(1200);
+      expect(processed.data.configuration.primary.minimumPayment).toBe(10);
       expect(processed.data.statistics.primary.blocks.invalid).toBe(2);
       expect(processed.data.statistics.primary.blocks.valid).toBe(500);
       expect(processed.data.statistics.primary.payments.last).toBe(0);
@@ -804,6 +807,9 @@ describe('Test API functionality', () => {
       expect(processed.data.statistics.primary.hashrate.shared).toBe(2576980377.6);
       expect(processed.data.statistics.primary.status.miners).toBe(6);
       expect(processed.data.statistics.primary.status.workers).toBe(8);
+      expect(processed.data.configuration.auxiliary.fee).toBe(0);
+      expect(processed.data.configuration.auxiliary.paymentInterval).toBe(1200);
+      expect(processed.data.configuration.auxiliary.minimumPayment).toBe(10);
       expect(processed.data.statistics.auxiliary.blocks.invalid).toBe(2);
       expect(processed.data.statistics.auxiliary.blocks.valid).toBe(500);
       done();
