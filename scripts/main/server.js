@@ -19,6 +19,8 @@ const PoolApi = require('./api.js');
 const PoolServer = function (logger, client) {
 
   const _this = this;
+  process.setMaxListeners(0);
+
   this.client = client;
   this.poolConfigs = JSON.parse(process.env.poolConfigs);
   this.portalConfig = JSON.parse(process.env.portalConfig);
@@ -32,7 +34,6 @@ const PoolServer = function (logger, client) {
     const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
     const cache = apicache.options({}).middleware;
 
-
     // Establish Middleware
     app.set('trust proxy', 1);
     app.use(bodyParser.json());
@@ -43,15 +44,15 @@ const PoolServer = function (logger, client) {
 
     // Handle API Requests
     /* istanbul ignore next */
-    /* eslint-disable-next-line no-unused-vars */
-    app.get('/api/v1/:pool/:endpoint?', (req, res, next) => {
-      api.handleApiV1(req, res);
+    app.get('/api/v1/:pool/:endpoint?', (req, res) => {
+      api.handleApiV1(req, (code, message) => {
+        api.buildResponse(code, message, res);
+      });
     });
 
     // Handle Health Check
     /* istanbul ignore next */
-    /* eslint-disable-next-line no-unused-vars */
-    app.get('/health/', (req, res, next) => {
+    app.get('/health/', (req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ 'status': 'OK' }));
     });
@@ -60,8 +61,8 @@ const PoolServer = function (logger, client) {
     /* istanbul ignore next */
     /* eslint-disable-next-line no-unused-vars */
     app.use((err, req, res, next) => {
-      api.buildPayload('', '/error/', api.messages.invalid, null, res);
       logger.error('Server', 'Website', `API call threw an unknown error: (${ err })`);
+      _this.buildResponse(500, 'The server was unable to handle your request. Verify your input or try again later', res);
       next();
     });
 

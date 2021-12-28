@@ -12,6 +12,8 @@ const utils = require('./utils');
 const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
   const _this = this;
+  process.setMaxListeners(0);
+
   this.pool = poolConfig.name;
   this.client = client;
   this.poolConfig = poolConfig;
