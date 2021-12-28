@@ -16,57 +16,57 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
   this.client = client;
   this.poolConfigs = poolConfigs;
   this.portalConfig = portalConfig;
-  this.messages = {
-    invalid: { code: 500, message: 'The server was unable to handle your request. Verify your input or try again later.' },
-    method: { code: 405, message: 'The requested method is not currently supported. Verify your input and try again.' },
-    pool: { code: 405, message: 'The requested pool was not found. Verify your input and try again.' },
-    success: { code: 200, message: '' }
+  this.headers = {
+    'Access-Control-Allow-Headers' : 'Content-Type, Access-Control-Allow-Headers, Access-Control-Allow-Origin, Access-Control-Allow-Methods',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET',
+    'Content-Type': 'application/json'
   };
 
   // Main Endpoints
   //////////////////////////////////////////////////////////////////////////////
 
   // API Endpoint for /blocks/confirmed
-  this.handleBlocksConfirmed = function(pool, response) {
+  this.handleBlocksConfirmed = function(pool, callback) {
     const commands = [
       ['smembers', `${ pool }:blocks:primary:confirmed`],
       ['smembers', `${ pool }:blocks:auxiliary:confirmed`]];
-    _this.executeCommands(pool, '/blocks/confirmed', commands, response, (results) => {
-      const blocks = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: utils.processBlocks(results[0]),
-        auxiliary: utils.processBlocks(results[1])};
-      _this.buildPayload(pool, '/blocks/confirmed', _this.messages.success, blocks, response);
-    });
+        auxiliary: utils.processBlocks(results[1]),
+      });
+    }, callback);
   };
 
   // API Endpoint for /blocks/kicked
-  this.handleBlocksKicked = function(pool, response) {
+  this.handleBlocksKicked = function(pool, callback) {
     const commands = [
       ['smembers', `${ pool }:blocks:primary:kicked`],
       ['smembers', `${ pool }:blocks:auxiliary:kicked`]];
-    _this.executeCommands(pool, '/blocks/kicked', commands, response, (results) => {
-      const blocks = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: utils.processBlocks(results[0]),
-        auxiliary: utils.processBlocks(results[1])};
-      _this.buildPayload(pool, '/blocks/kicked', _this.messages.success, blocks, response);
-    });
+        auxiliary: utils.processBlocks(results[1])
+      });
+    }, callback);
   };
 
   // API Endpoint for /blocks/pending
-  this.handleBlocksPending = function(pool, response) {
+  this.handleBlocksPending = function(pool, callback) {
     const commands = [
       ['smembers', `${ pool }:blocks:primary:pending`],
       ['smembers', `${ pool }:blocks:auxiliary:pending`]];
-    _this.executeCommands(pool, '/blocks/pending', commands, response, (results) => {
-      const blocks = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: utils.processBlocks(results[0]),
-        auxiliary: utils.processBlocks(results[1])};
-      _this.buildPayload(pool, '/blocks/pending', _this.messages.success, blocks, response);
-    });
+        auxiliary: utils.processBlocks(results[1])
+      });
+    }, callback);
   };
 
   // API Endpoint for /blocks
-  this.handleBlocks = function(pool, response) {
+  this.handleBlocks = function(pool, callback) {
     const commands = [
       ['smembers', `${ pool }:blocks:primary:confirmed`],
       ['smembers', `${ pool }:blocks:primary:kicked`],
@@ -74,8 +74,8 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       ['smembers', `${ pool }:blocks:auxiliary:confirmed`],
       ['smembers', `${ pool }:blocks:auxiliary:kicked`],
       ['smembers', `${ pool }:blocks:auxiliary:pending`]];
-    _this.executeCommands(pool, '/blocks', commands, response, (results) => {
-      const blocks = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: {
           confirmed: utils.processBlocks(results[0]),
           kicked: utils.processBlocks(results[1]),
@@ -86,13 +86,12 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           kicked: utils.processBlocks(results[4]),
           pending: utils.processBlocks(results[5])
         }
-      };
-      _this.buildPayload(pool, '/blocks', _this.messages.success, blocks, response);
-    });
+      });
+    }, callback);
   };
 
   // API Endpoint for /miners/active
-  this.handleMinersActive = function(pool, response) {
+  this.handleMinersActive = function(pool, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
@@ -108,8 +107,8 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(pool, '/miners/active', commands, response, (results) => {
-      const miners = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: {
           shared: utils.processMiners(results[0], results[2], results[1], multiplier, hashrateWindow, true),
           solo: utils.processMiners(results[3], results[4], null, multiplier, hashrateWindow, true),
@@ -118,13 +117,12 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           shared: utils.processMiners(results[5], results[7], results[6], multiplier, hashrateWindow, true),
           solo: utils.processMiners(results[8], results[9], null, multiplier, hashrateWindow, true),
         }
-      };
-      _this.buildPayload(pool, '/miners/active', _this.messages.success, miners, response);
-    });
+      });
+    }, callback);
   };
 
   // API Endpoint for /miners/[miner]
-  this.handleMinersSpecific = function(pool, miner, response) {
+  this.handleMinersSpecific = function(pool, miner, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
@@ -148,7 +146,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(pool, `/miners/${ miner }`, commands, response, (results) => {
+    _this.executeCommands(commands, (results) => {
 
       // Structure Round Data
       const primarySharedShareData = utils.processShares(results[4], miner);
@@ -179,7 +177,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       const auxiliarySoloWorkerData = utils.listWorkers(results[17], miner);
 
       // Build Miner Statistics
-      const statistics = {
+      callback(200, {
         primary: {
           current: {
             shared: primarySharedShareData[miner] || 0,
@@ -222,15 +220,12 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
             solo: auxiliarySoloWorkerData,
           },
         }
-      };
-
-      // Output Final Payload
-      _this.buildPayload(pool, `/miners/${ miner }`, _this.messages.success, statistics, response);
-    });
+      });
+    }, callback);
   };
 
   // API Endpoint for /miners
-  this.handleMiners = function(pool, response) {
+  this.handleMiners = function(pool, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
@@ -246,8 +241,8 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(pool, '/miners', commands, response, (results) => {
-      const miners = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: {
           shared: utils.processMiners(results[0], results[2], results[1], multiplier, hashrateWindow, false),
           solo: utils.processMiners(results[3], results[4], null, multiplier, hashrateWindow, false),
@@ -256,78 +251,77 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           shared: utils.processMiners(results[5], results[7], results[6], multiplier, hashrateWindow, false),
           solo: utils.processMiners(results[8], results[9], null, multiplier, hashrateWindow, false),
         }
-      };
-      _this.buildPayload(pool, '/miners', _this.messages.success, miners, response);
-    });
+      });
+    }, callback);
   };
 
   // API Endpoint for /payments/balances
-  this.handlePaymentsBalances = function(pool, response) {
+  this.handlePaymentsBalances = function(pool, callback) {
     const commands = [
       ['hgetall', `${ pool }:payments:primary:balances`],
       ['hgetall', `${ pool }:payments:auxiliary:balances`]];
-    _this.executeCommands(pool, '/payments/balances', commands, response, (results) => {
-      const payments = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: utils.processPayments(results[0]),
-        auxiliary: utils.processPayments(results[1])};
-      _this.buildPayload(pool, '/payments/balances', _this.messages.success, payments, response);
-    });
+        auxiliary: utils.processPayments(results[1]),
+      });
+    }, callback);
   };
 
   // API Endpoint for /payments/generate
-  this.handlePaymentsGenerate = function(pool, response) {
+  this.handlePaymentsGenerate = function(pool, callback) {
     const commands = [
       ['hgetall', `${ pool }:payments:primary:generate`],
       ['hgetall', `${ pool }:payments:auxiliary:generate`]];
-    _this.executeCommands(pool, '/payments/generate', commands, response, (results) => {
-      const payments = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: utils.processPayments(results[0]),
-        auxiliary: utils.processPayments(results[1])};
-      _this.buildPayload(pool, '/payments/generate', _this.messages.success, payments, response);
-    });
+        auxiliary: utils.processPayments(results[1]),
+      });
+    }, callback);
   };
 
   // API Endpoint for /payments/immature
-  this.handlePaymentsImmature = function(pool, response) {
+  this.handlePaymentsImmature = function(pool, callback) {
     const commands = [
       ['hgetall', `${ pool }:payments:primary:immature`],
       ['hgetall', `${ pool }:payments:auxiliary:immature`]];
-    _this.executeCommands(pool, '/payments/immature', commands, response, (results) => {
-      const payments = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: utils.processPayments(results[0]),
-        auxiliary: utils.processPayments(results[1])};
-      _this.buildPayload(pool, '/payments/immature', _this.messages.success, payments, response);
-    });
+        auxiliary: utils.processPayments(results[1]),
+      });
+    }, callback);
   };
 
   // API Endpoint for /payments/paid
-  this.handlePaymentsPaid = function(pool, response) {
+  this.handlePaymentsPaid = function(pool, callback) {
     const commands = [
       ['hgetall', `${ pool }:payments:primary:paid`],
       ['hgetall', `${ pool }:payments:auxiliary:paid`]];
-    _this.executeCommands(pool, '/payments/paid', commands, response, (results) => {
-      const payments = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: utils.processPayments(results[0]),
-        auxiliary: utils.processPayments(results[1])};
-      _this.buildPayload(pool, '/payments/paid', _this.messages.success, payments, response);
-    });
+        auxiliary: utils.processPayments(results[1]),
+      });
+    }, callback);
   };
 
   // API Endpoint for /payments/paid
-  this.handlePaymentsRecords = function(pool, response) {
+  this.handlePaymentsRecords = function(pool, callback) {
     const commands = [
       ['zrange', `${ pool }:payments:primary:records`, 0, -1],
       ['zrange', `${ pool }:payments:auxiliary:records`, 0, -1]];
-    _this.executeCommands(pool, '/payments/records', commands, response, (results) => {
-      const payments = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: utils.processRecords(results[0]),
-        auxiliary: utils.processRecords(results[1])};
-      _this.buildPayload(pool, '/payments/records', _this.messages.success, payments, response);
-    });
+        auxiliary: utils.processRecords(results[1]),
+      });
+    }, callback);
   };
 
   // API Endpoint for /payments
-  this.handlePayments = function(pool, response) {
+  this.handlePayments = function(pool, callback) {
     const commands = [
       ['hgetall', `${ pool }:payments:primary:balances`],
       ['hgetall', `${ pool }:payments:primary:generate`],
@@ -337,8 +331,8 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       ['hgetall', `${ pool }:payments:auxiliary:generate`],
       ['hgetall', `${ pool }:payments:auxiliary:immature`],
       ['hgetall', `${ pool }:payments:auxiliary:paid`]];
-    _this.executeCommands(pool, '/payments', commands, response, (results) => {
-      const blocks = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: {
           balances: utils.processPayments(results[0]),
           generate: utils.processPayments(results[1]),
@@ -351,13 +345,12 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           immature: utils.processPayments(results[6]),
           paid: utils.processPayments(results[7]),
         }
-      };
-      _this.buildPayload(pool, '/payments', _this.messages.success, blocks, response);
-    });
+      });
+    }, callback);
   };
 
   // API Endpoint for /rounds/current
-  this.handleRoundsCurrent = function(pool, response) {
+  this.handleRoundsCurrent = function(pool, callback) {
     const commands = [
       ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
       ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
@@ -365,8 +358,8 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
       ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
       ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`]];
-    _this.executeCommands(pool, '/rounds/current', commands, response, (results) => {
-      const current = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: {
           shared: utils.processShares(results[0]),
           solo: utils.processShares(results[1]),
@@ -377,20 +370,19 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           solo: utils.processShares(results[4]),
           times: utils.processTimes(results[5]),
         }
-      };
-      _this.buildPayload(pool, '/rounds/current', _this.messages.success, current, response);
-    });
+      });
+    }, callback);
   };
 
   // API Endpoint for /rounds/[height]
-  this.handleRoundsHeight = function(pool, height, response) {
+  this.handleRoundsHeight = function(pool, height, callback) {
     const commands = [
       ['hgetall', `${ pool }:rounds:primary:round-${ height }:shares`],
       ['hgetall', `${ pool }:rounds:primary:round-${ height }:times`],
       ['hgetall', `${ pool }:rounds:auxiliary:round-${ height }:shares`],
       ['hgetall', `${ pool }:rounds:auxiliary:round-${ height }:times`]];
-    _this.executeCommands(pool, `/rounds/${ height }`, commands, response, (results) => {
-      const current = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: {
           shares: utils.processShares(results[0]),
           times: utils.processTimes(results[1]),
@@ -399,21 +391,20 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           shares: utils.processShares(results[2]),
           times: utils.processTimes(results[3]),
         }
-      };
-      _this.buildPayload(pool, `/rounds/${ height }`, _this.messages.success, current, response);
-    });
+      });
+    }, callback);
   };
 
   // Helper Function for /rounds
-  this.processRounds = function(pool, rounds, blockType, response, callback) {
+  this.processRounds = function(pool, rounds, blockType, callback, handler) {
     const combined = {};
     if (rounds.length >= 1) {
-      const handler = new Promise((resolve,) => {
+      const processor = new Promise((resolve,) => {
         rounds.forEach((height, idx) => {
           const commands = [
             ['hgetall', `${ pool }:rounds:${ blockType }:round-${ height }:shares`],
             ['hgetall', `${ pool }:rounds:${ blockType }:round-${ height }:times`]];
-          _this.executeCommands(pool, '/rounds', commands, response, (results) => {
+          _this.executeCommands(commands, (results) => {
             combined[height] = {
               shares: utils.processShares(results[0]),
               times: utils.processTimes(results[1])
@@ -421,10 +412,10 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
             if (idx === rounds.length - 1) {
               resolve(combined);
             }
-          });
+          }, handler);
         });
       });
-      handler.then((combined) => {
+      processor.then((combined) => {
         callback(combined);
       });
     } else {
@@ -433,27 +424,27 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /rounds
-  this.handleRounds = function(pool, response) {
+  this.handleRounds = function(pool, callback) {
     const keys = [
       ['keys', `${ pool }:rounds:primary:round-*:shares`],
       ['keys', `${ pool }:rounds:auxiliary:round-*:shares`]];
-    _this.executeCommands(pool, '/rounds', keys, response, (results) => {
+    _this.executeCommands(keys, (results) => {
       const rounds = {};
       const primaryRounds = results[0].map((key) => key.split(':')[3].split('-')[1]);
       const auxiliaryRounds = results[1].map((key) => key.split(':')[3].split('-')[1]);
-      _this.processRounds(pool, primaryRounds, 'primary', response, (combined) => {
+      _this.processRounds(pool, primaryRounds, 'primary', (combined) => {
         rounds.primary = combined;
-        _this.processRounds(pool, auxiliaryRounds, 'auxiliary', response, (combined) => {
+        _this.processRounds(pool, auxiliaryRounds, 'auxiliary', (combined) => {
           rounds.auxiliary = combined;
-          _this.buildPayload(pool, '/rounds', _this.messages.success, rounds, response);
-        });
-      });
-    });
+          callback(200, rounds);
+        }, callback);
+      }, callback);
+    }, callback);
   };
 
   // API Endpoint for /statistics
   /* istanbul ignore next */
-  this.handleStatistics = function(pool, response) {
+  this.handleStatistics = function(pool, callback) {
     const config = _this.poolConfigs[pool] || {};
     const algorithm = config.primary.coin.algorithms.mining;
     const hashrateWindow = config.settings.hashrateWindow;
@@ -477,96 +468,90 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:statistics:auxiliary:network`],
     ];
-    _this.executeCommands(pool, '/statistics', commands, response, (results) => {
-      const statistics = {
-        configuration: {
-          primary: {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
+        primary: {
+          config: {
             coin: config.enabled ? config.primary.coin.name : "",
             symbol: config.enabled ? config.primary.coin.symbol : "",
             algorithm: config.enabled ? config.primary.coin.algorithms.mining : "",
-            fee: config.enabled ? config.primary.recipients.reduce((prev, cur) => prev.percentage + cur.percentage).percentage : 0.0,
-            paymentInterval: config.enabled ? config.primary.payments.paymentInterval : 1200,
-            minimumPayment: config.enabled ? config.primary.payments.minPayment : 10,
+            paymentInterval: config.enabled ? config.primary.payments.paymentInterval : 0,
+            minPayment: config.enabled ? config.primary.payments.minPayment : 0,
+            recipientFee: config.enabled ? config.primary.recipients.reduce((p_sum, a) => p_sum + a.percentage, 0) : 0,
           },
-          auxiliary: {
+          blocks: {
+            valid: parseFloat(results[0] ? results[0].valid || 0 : 0),
+            invalid: parseFloat(results[0] ? results[0].invalid || 0 : 0),
+          },
+          shares: {
+            valid: parseFloat(results[4] ? results[4].valid || 0 : 0),
+            invalid: parseFloat(results[4] ? results[4].invalid || 0 : 0),
+          },
+          hashrate: {
+            shared: (multiplier * utils.processDifficulty(results[5])) / hashrateWindow,
+            solo: (multiplier * utils.processDifficulty(results[6])) / hashrateWindow,
+          },
+          network: {
+            difficulty: parseFloat(results[7] ? results[7].difficulty || 0 : 0),
+            hashrate: parseFloat(results[7] ? results[7].hashrate || 0 : 0),
+            height: parseFloat(results[7] ? results[7].height || 0 : 0),
+          },
+          payments: {
+            last: parseFloat(results[3] ? results[3].last || 0 : 0),
+            next: parseFloat(results[3] ? results[3].next || 0 : 0),
+            total: parseFloat(results[3] ? results[3].total || 0 : 0),
+          },
+          status: {
+            effort: parseFloat(results[4] ? results[4].effort || 0 : 0),
+            luck: utils.processLuck(results[1], results[2]),
+            miners: utils.combineMiners(results[5], results[6]),
+            workers: utils.combineWorkers(results[5], results[6]),
+          },
+        },
+        auxiliary: {
+          config: {
             coin: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.coin.name : "",
             symbol: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.coin.symbol : "",
             algorithm: (config.auxiliary && config.auxiliary.enabled) ? config.primary.coin.algorithms.mining : "",
-            fee: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.recipients.reduce((prev, cur) => prev.percentage + cur.percentage).percentage : 0.0,
-            paymentInterval: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.payments.paymentInterval : 1200,
-            minimumPayment: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.payments.minPayment : 10,
+            paymentInterval: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.payments.paymentInterval : 0,
+            minPayment: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.payments.minPayment : 0,
+            recipientFee: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.recipients.reduce((p_sum, a) => p_sum + a.percentage, 0) : 0,
           },
-          ports: config.enabled ? config.ports : [],
-        },
-        statistics: {
-          primary: {
-            blocks: {
-              valid: parseFloat(results[0] ? results[0].valid || 0 : 0),
-              invalid: parseFloat(results[0] ? results[0].invalid || 0 : 0),
-            },
-            shares: {
-              valid: parseFloat(results[4] ? results[4].valid || 0 : 0),
-              invalid: parseFloat(results[4] ? results[4].invalid || 0 : 0),
-            },
-            hashrate: {
-              shared: (multiplier * utils.processDifficulty(results[5])) / hashrateWindow,
-              solo: (multiplier * utils.processDifficulty(results[6])) / hashrateWindow,
-            },
-            network: {
-              difficulty: parseFloat(results[7] ? results[7].difficulty || 0 : 0),
-              hashrate: parseFloat(results[7] ? results[7].hashrate || 0 : 0),
-              height: parseFloat(results[7] ? results[7].height || 0 : 0),
-            },
-            payments: {
-              last: parseFloat(results[3] ? results[3].last || 0 : 0),
-              next: parseFloat(results[3] ? results[3].next || 0 : 0),
-              total: parseFloat(results[3] ? results[3].total || 0 : 0),
-            },
-            status: {
-              effort: parseFloat(results[4] ? results[4].effort || 0 : 0),
-              luck: utils.processLuck(results[1], results[2]),
-              miners: utils.combineMiners(results[5], results[6]),
-              workers: utils.combineWorkers(results[5], results[6]),
-            },
+          blocks: {
+            valid: parseFloat(results[8] ? results[8].valid || 0 : 0),
+            invalid: parseFloat(results[8] ? results[8].invalid || 0 : 0),
           },
-          auxiliary: {
-            blocks: {
-              valid: parseFloat(results[8] ? results[8].valid || 0 : 0),
-              invalid: parseFloat(results[8] ? results[8].invalid || 0 : 0),
-            },
-            shares: {
-              valid: parseFloat(results[12] ? results[12].valid || 0 : 0),
-              invalid: parseFloat(results[12] ? results[12].invalid || 0 : 0),
-            },
-            hashrate: {
-              shared: (multiplier * utils.processDifficulty(results[13])) / hashrateWindow,
-              solo: (multiplier * utils.processDifficulty(results[14])) / hashrateWindow,
-            },
-            network: {
-              difficulty: parseFloat(results[15] ? results[15].difficulty || 0 : 0),
-              hashrate: parseFloat(results[15] ? results[15].hashrate || 0 : 0),
-              height: parseFloat(results[15] ? results[15].height || 0 : 0),
-            },
-            payments: {
-              last: parseFloat(results[11] ? results[11].last || 0 : 0),
-              next: parseFloat(results[11] ? results[11].next || 0 : 0),
-              total: parseFloat(results[11] ? results[11].total || 0 : 0),
-            },
-            status: {
-              effort: parseFloat(results[12] ? results[12].effort || 0 : 0),
-              luck: utils.processLuck(results[9], results[10]),
-              miners: utils.combineMiners(results[13], results[14]),
-              workers: utils.combineWorkers(results[13], results[14]),
-            },
+          shares: {
+            valid: parseFloat(results[12] ? results[12].valid || 0 : 0),
+            invalid: parseFloat(results[12] ? results[12].invalid || 0 : 0),
+          },
+          hashrate: {
+            shared: (multiplier * utils.processDifficulty(results[13])) / hashrateWindow,
+            solo: (multiplier * utils.processDifficulty(results[14])) / hashrateWindow,
+          },
+          network: {
+            difficulty: parseFloat(results[15] ? results[15].difficulty || 0 : 0),
+            hashrate: parseFloat(results[15] ? results[15].hashrate || 0 : 0),
+            height: parseFloat(results[15] ? results[15].height || 0 : 0),
+          },
+          payments: {
+            last: parseFloat(results[11] ? results[11].last || 0 : 0),
+            next: parseFloat(results[11] ? results[11].next || 0 : 0),
+            total: parseFloat(results[11] ? results[11].total || 0 : 0),
+          },
+          status: {
+            effort: parseFloat(results[12] ? results[12].effort || 0 : 0),
+            luck: utils.processLuck(results[9], results[10]),
+            miners: utils.combineMiners(results[13], results[14]),
+            workers: utils.combineWorkers(results[13], results[14]),
           },
         }
-      };
-      _this.buildPayload(pool, '/statistics', _this.messages.success, statistics, response);
-    });
+      });
+    }, callback);
   };
 
   // API Endpoint for /workers/active
-  this.handleWorkersActive = function(pool, response) {
+  this.handleWorkersActive = function(pool, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
@@ -582,8 +567,8 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(pool, '/workers/active', commands, response, (results) => {
-      const workers = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: {
           shared: utils.processWorkers(results[0], results[2], results[1], multiplier, hashrateWindow, true),
           solo: utils.processWorkers(results[3], results[4], null, multiplier, hashrateWindow, true),
@@ -592,13 +577,12 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           shared: utils.processWorkers(results[5], results[7], results[6], multiplier, hashrateWindow, true),
           solo: utils.processWorkers(results[8], results[9], null, multiplier, hashrateWindow, true),
         }
-      };
-      _this.buildPayload(pool, '/workers/active', _this.messages.success, workers, response);
-    });
+      });
+    }, callback);
   };
 
   // API Endpoint for /workers/[worker]
-  this.handleWorkersSpecific = function(pool, worker, response) {
+  this.handleWorkersSpecific = function(pool, worker, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
@@ -614,7 +598,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(pool, `/workers/${ worker }`, commands, response, (results) => {
+    _this.executeCommands(commands, (results) => {
 
       // Structure Round Data
       const primarySharedShareData = utils.processShares(results[0], worker);
@@ -631,7 +615,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       const auxiliarySoloDifficultyData = utils.processDifficulty(results[9], worker);
 
       // Build Worker Statistics
-      const statistics = {
+      callback(200, {
         primary: {
           current: {
             shared: primarySharedShareData[worker] || 0,
@@ -654,15 +638,12 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
             solo: (multiplier * auxiliarySoloDifficultyData) / hashrateWindow,
           },
         }
-      };
-
-      // Output Final Payload
-      _this.buildPayload(pool, `/workers/${ worker }`, _this.messages.success, statistics, response);
-    });
+      });
+    }, callback);
   };
 
   // API Endpoint for /workers
-  this.handleWorkers = function(pool, response) {
+  this.handleWorkers = function(pool, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
@@ -678,8 +659,8 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
-    _this.executeCommands(pool, '/workers', commands, response, (results) => {
-      const workers = {
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
         primary: {
           shared: utils.processWorkers(results[0], results[2], results[1], multiplier, hashrateWindow, false),
           solo: utils.processWorkers(results[3], results[4], null, multiplier, hashrateWindow, false),
@@ -688,53 +669,41 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           shared: utils.processWorkers(results[5], results[7], results[6], multiplier, hashrateWindow, false),
           solo: utils.processWorkers(results[8], results[9], null, multiplier, hashrateWindow, false),
         }
-      };
-      _this.buildPayload(pool, '/workers', _this.messages.success, workers, response);
-    });
-  };
-
-  // Miscellaneous Endpoints
-  //////////////////////////////////////////////////////////////////////////////
-
-  // API Endpoint for /pools
-  this.handlePools = function(response) {
-    const pools = Object.keys(_this.poolConfigs);
-    _this.buildPayload('Pool', '/pools', _this.messages.success, pools, response);
+      });
+    }, callback);
   };
 
   //////////////////////////////////////////////////////////////////////////////
-
-  // Build API Payload for each Endpoint
-  this.buildPayload = function(pool, endpoint, message, data, response) {
-    const payload = {
-      pool: pool,
-      endpoint: endpoint,
-      time: Date.now(),
-      response: message,
-      data: data,
-      version: '0.0.1',
-    };
-    response.writeHead(message.code, { 'Content-Type': 'application/json' });
-    response.end(JSON.stringify(payload));
-    return;
-  };
 
   // Execute Redis Commands
   /* istanbul ignore next */
-  this.executeCommands = function(pool, endpoint, commands, response, callback) {
+  this.executeCommands = function(commands, callback, handler) {
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
-        _this.buildPayload(pool, endpoint, _this.messages.invalid, null, response);
+        handler(500, 'The server was unable to handle your request. Verify your input or try again later');
       } else {
         callback(results);
       }
     });
   };
 
+  // Build API Payload for each Endpoint
+  this.buildResponse = function(code, message, response) {
+    const payload = {
+      version: '0.0.2',
+      statusCode: code,
+      headers: _this.headers,
+      body: message,
+    };
+    response.writeHead(code, _this.headers);
+    response.end(JSON.stringify(payload));
+  };
+
   // Determine API Endpoint Called
-  this.handleApiV1 = function(req, res) {
+  this.handleApiV1 = function(req, callback) {
 
     let pool, endpoint, method;
+    const miscellaneous = ['pools'];
 
     // If Path Params Exist
     if (req.params) {
@@ -747,9 +716,9 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       method = utils.validateInput(req.query.method || '');
     }
 
-    const miscellaneous = ['pools'];
+    // Check if Requested Pool Exists
     if (!(pool in _this.poolConfigs) && !(miscellaneous.includes(pool))) {
-      _this.buildPayload(pool, '/unknown', _this.messages.pool, null, res);
+      callback(400, 'The requested pool was not found. Verify your input and try again');
       return;
     }
 
@@ -758,87 +727,92 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
 
     // Blocks Endpoints
     case (endpoint === 'blocks' && method === 'confirmed'):
-      _this.handleBlocksConfirmed(pool, res);
+      _this.handleBlocksConfirmed(pool, (code, message) => callback(code, message));
       break;
     case (endpoint === 'blocks' && method === 'kicked'):
-      _this.handleBlocksKicked(pool, res);
+      _this.handleBlocksKicked(pool, (code, message) => callback(code, message));
       break;
     case (endpoint === 'blocks' && method === 'pending'):
-      _this.handleBlocksPending(pool, res);
+      _this.handleBlocksPending(pool, (code, message) => callback(code, message));
       break;
     case (endpoint === 'blocks' && method === ''):
-      _this.handleBlocks(pool, res);
+      _this.handleBlocks(pool, (code, message) => callback(code, message));
       break;
 
     // Miners Endpoints
     case (endpoint === 'miners' && method === 'active'):
-      _this.handleMinersActive(pool, res);
+      _this.handleMinersActive(pool, (code, message) => callback(code, message));
       break;
     case (endpoint === 'miners' && method.length >= 1):
-      _this.handleMinersSpecific(pool, method, res);
+      _this.handleMinersSpecific(pool, method, (code, message) => callback(code, message));
       break;
     case (endpoint === 'miners' && method === ''):
-      _this.handleMiners(pool, res);
+      _this.handleMiners(pool, (code, message) => callback(code, message));
       break;
 
     // Payments Endpoints
     case (endpoint === 'payments' && method === 'balances'):
-      _this.handlePaymentsBalances(pool, res);
+      _this.handlePaymentsBalances(pool, (code, message) => callback(code, message));
       break;
     case (endpoint === 'payments' && method === 'generate'):
-      _this.handlePaymentsGenerate(pool, res);
+      _this.handlePaymentsGenerate(pool, (code, message) => callback(code, message));
       break;
     case (endpoint === 'payments' && method === 'immature'):
-      _this.handlePaymentsImmature(pool, res);
+      _this.handlePaymentsImmature(pool, (code, message) => callback(code, message));
       break;
     case (endpoint === 'payments' && method === 'paid'):
-      _this.handlePaymentsPaid(pool, res);
+      _this.handlePaymentsPaid(pool, (code, message) => callback(code, message));
       break;
     case (endpoint === 'payments' && method === 'records'):
-      _this.handlePaymentsRecords(pool, res);
+      _this.handlePaymentsRecords(pool, (code, message) => callback(code, message));
       break;
     case (endpoint === 'payments' && method === ''):
-      _this.handlePayments(pool, res);
+      _this.handlePayments(pool, (code, message) => callback(code, message));
+      break;
+
+    // Ports Endpoints
+    case (endpoint === 'ports' && method === ''):
+      callback(200, { ports: _this.poolConfigs[pool].ports });
       break;
 
     // Rounds Endpoints
     case (endpoint === 'rounds' && method === 'current'):
-      _this.handleRoundsCurrent(pool, res);
+      _this.handleRoundsCurrent(pool, (code, message) => callback(code, message));
       break;
     case (endpoint === 'rounds' && utils.checkNumber(method)):
-      _this.handleRoundsHeight(pool, method, res);
+      _this.handleRoundsHeight(pool, method, (code, message) => callback(code, message));
       break;
     case (endpoint === 'rounds' && method === ''):
-      _this.handleRounds(pool, res);
+      _this.handleRounds(pool, (code, message) => callback(code, message));
       break;
 
     // Statistics Endpoints
     case (endpoint === 'statistics' && method === ''):
-      _this.handleStatistics(pool, res);
+      _this.handleStatistics(pool, (code, message) => callback(code, message));
       break;
 
     // Workers Endpoints
     case (endpoint === 'workers' && method === 'active'):
-      _this.handleWorkersActive(pool, res);
+      _this.handleWorkersActive(pool, (code, message) => callback(code, message));
       break;
     case (endpoint === 'workers' && method.length >= 1):
-      _this.handleWorkersSpecific(pool, method, res);
+      _this.handleWorkersSpecific(pool, method, (code, message) => callback(code, message));
       break;
     case (endpoint === 'workers' && method === ''):
-      _this.handleWorkers(pool, res);
+      _this.handleWorkers(pool, (code, message) => callback(code, message));
       break;
 
     // Miscellaneous Endpoints
     case (endpoint === '' && method === '' && pool === 'pools'):
-      _this.handlePools(res);
+      callback(200, Object.keys(_this.poolConfigs));
       break;
     case (endpoint === '' && method === '' && !(miscellaneous.includes(pool))):
-      _this.handleStatistics(pool, res);
+      _this.handleStatistics(pool, (code, message) => callback(code, message));
       break;
 
     // Unknown Endpoints
     default:
-      _this.buildPayload(pool, '/unknown', _this.messages.method, null, res);
+      callback(400, 'The requested method is not currently supported. Verify your input and try again');
       break;
     }
   };

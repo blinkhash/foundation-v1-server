@@ -65,26 +65,24 @@ describe('Test API functionality', () => {
   test('Test initialization of API', () => {
     const poolApi = new PoolApi(client, poolConfigs, portalConfig);
     expect(typeof poolApi.handleBlocksConfirmed).toBe('function');
-    expect(typeof poolApi.messages).toBe('object');
-    expect(poolApi.messages.success.code).toBe(200);
-    expect(poolApi.messages.invalid.message).toBe('The server was unable to handle your request. Verify your input or try again later.');
+    expect(typeof poolApi.handleMinersActive).toBe('function');
+    expect(typeof poolApi.handleApiV1).toBe('function');
   });
 
   test('Test unknownPool API endpoint', (done) => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('');
-      expect(processed.endpoint).toBe('/unknown');
-      expect(processed.response.code).toBe(405);
-      expect(processed.response.message).toBe('The requested pool was not found. Verify your input and try again.');
-      expect(processed.data).toBe(null);
+      expect(processed.statusCode).toBe(400);
+      expect(processed.body).toBe('The requested pool was not found. Verify your input and try again');
       done();
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest();
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -92,17 +90,16 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/unknown');
-      expect(processed.response.code).toBe(405);
-      expect(processed.response.message).toBe('The requested method is not currently supported. Verify your input and try again.');
-      expect(processed.data).toBe(null);
+      expect(processed.statusCode).toBe(400);
+      expect(processed.body).toBe('The requested method is not currently supported. Verify your input and try again');
       done();
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest('Pool1', 'unknown', 'unknown');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -110,18 +107,17 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/unknown');
-      expect(processed.response.code).toBe(405);
-      expect(processed.response.message).toBe('The requested method is not currently supported. Verify your input and try again.');
-      expect(processed.data).toBe(null);
+      expect(processed.statusCode).toBe(400);
+      expect(processed.body).toBe('The requested method is not currently supported. Verify your input and try again');
       done();
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest('Pool1', 'unknown', 'unknown');
       const poolConfigsCopy = JSON.parse(JSON.stringify(poolConfigs));
       const poolApi = new PoolApi(client, poolConfigsCopy, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -129,16 +125,16 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.endpoint).toBe('/unknown');
-      expect(processed.response.code).toBe(405);
-      expect(processed.response.message).toBe('The requested pool was not found. Verify your input and try again.');
-      expect(processed.data).toBe(null);
+      expect(processed.statusCode).toBe(400);
+      expect(processed.body).toBe('The requested pool was not found. Verify your input and try again');
       done();
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = {};
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -153,20 +149,19 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/blocks/confirmed');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(Object.keys(processed.data).length).toBe(2);
-      expect(processed.data.primary.length).toBe(4);
-      expect(processed.data.auxiliary.length).toBe(2);
-      expect(processed.data.primary[0].height).toBe(183);
+      expect(processed.statusCode).toBe(200);
+      expect(Object.keys(processed.body).length).toBe(2);
+      expect(processed.body.primary.length).toBe(4);
+      expect(processed.body.auxiliary.length).toBe(2);
+      expect(processed.body.primary[0].height).toBe(183);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'blocks', 'confirmed');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -181,20 +176,19 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/blocks/kicked');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(Object.keys(processed.data).length).toBe(2);
-      expect(processed.data.primary.length).toBe(4);
-      expect(processed.data.auxiliary.length).toBe(2);
-      expect(processed.data.primary[0].height).toBe(183);
+      expect(processed.statusCode).toBe(200);
+      expect(Object.keys(processed.body).length).toBe(2);
+      expect(processed.body.primary.length).toBe(4);
+      expect(processed.body.auxiliary.length).toBe(2);
+      expect(processed.body.primary[0].height).toBe(183);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'blocks', 'kicked');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -209,20 +203,19 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/blocks/pending');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(Object.keys(processed.data).length).toBe(2);
-      expect(processed.data.primary.length).toBe(4);
-      expect(processed.data.auxiliary.length).toBe(2);
-      expect(processed.data.primary[0].height).toBe(183);
+      expect(processed.statusCode).toBe(200);
+      expect(Object.keys(processed.body).length).toBe(2);
+      expect(processed.body.primary.length).toBe(4);
+      expect(processed.body.auxiliary.length).toBe(2);
+      expect(processed.body.primary[0].height).toBe(183);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'blocks', 'pending');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -237,26 +230,26 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.endpoint).toBe('/blocks');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(Object.keys(processed.data).length).toBe(2);
-      expect(Object.keys(processed.data.primary).length).toBe(3);
-      expect(Object.keys(processed.data.auxiliary).length).toBe(3);
-      expect(processed.data.primary.confirmed.length).toBe(1);
-      expect(processed.data.primary.confirmed[0].height).toBe(180);
-      expect(processed.data.primary.kicked.length).toBe(1);
-      expect(processed.data.primary.pending.length).toBe(2);
-      expect(processed.data.primary.pending[0].height).toBe(183);
-      expect(processed.data.auxiliary.pending.length).toBe(2);
-      expect(processed.data.auxiliary.pending[0].height).toBe(184);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(Object.keys(processed.body).length).toBe(2);
+      expect(Object.keys(processed.body.primary).length).toBe(3);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(3);
+      expect(processed.body.primary.confirmed.length).toBe(1);
+      expect(processed.body.primary.confirmed[0].height).toBe(180);
+      expect(processed.body.primary.kicked.length).toBe(1);
+      expect(processed.body.primary.pending.length).toBe(2);
+      expect(processed.body.primary.pending[0].height).toBe(183);
+      expect(processed.body.auxiliary.pending.length).toBe(2);
+      expect(processed.body.auxiliary.pending[0].height).toBe(184);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'blocks');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -264,19 +257,18 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool');
-      expect(processed.endpoint).toBe('/pools');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(processed.data.length).toBe(1);
-      expect(processed.data[0]).toBe('Pool1');
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(processed.body.length).toBe(1);
+      expect(processed.body[0]).toBe('Pool1');
       done();
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest('pools');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -294,25 +286,25 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/miners/active');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(processed.data.primary.shared.length).toBe(1);
-      expect(processed.data.primary.solo.length).toBe(1);
-      expect(processed.data.primary.shared[0].worker).toBe('worker2');
-      expect(processed.data.primary.shared[0].shares).toBe(108);
-      expect(processed.data.primary.shared[0].hashrate).toBe(1546188226.56);
-      expect(processed.data.primary.solo[0].worker).toBe('worker1');
-      expect(processed.data.primary.solo[0].shares).toBe(64);
-      expect(processed.data.primary.solo[0].hashrate).toBe(916259689.8133334);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(processed.body.primary.shared.length).toBe(1);
+      expect(processed.body.primary.solo.length).toBe(1);
+      expect(processed.body.primary.shared[0].worker).toBe('worker2');
+      expect(processed.body.primary.shared[0].shares).toBe(108);
+      expect(processed.body.primary.shared[0].hashrate).toBe(1546188226.56);
+      expect(processed.body.primary.solo[0].worker).toBe('worker1');
+      expect(processed.body.primary.solo[0].shares).toBe(64);
+      expect(processed.body.primary.solo[0].hashrate).toBe(916259689.8133334);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'miners', 'active');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -341,30 +333,29 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/miners/worker2');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(Object.keys(processed.data.primary).length).toBe(4);
-      expect(Object.keys(processed.data.auxiliary).length).toBe(4);
-      expect(processed.data.primary.current.shared).toBe(108);
-      expect(processed.data.primary.current.solo).toBe(0);
-      expect(processed.data.primary.current.times).toBe(0);
-      expect(processed.data.primary.payments.balances).toBe(37.43);
-      expect(processed.data.primary.payments.generate).toBe(255.17);
-      expect(processed.data.primary.payments.immature).toBe(12.17);
-      expect(processed.data.primary.payments.paid).toBe(123.5);
-      expect(processed.data.primary.hashrate.shared).toBe(1546188226.56);
-      expect(processed.data.primary.workers.shared.length).toBe(2);
-      expect(processed.data.primary.workers.shared[0]).toBe('worker2.w1');
-      expect(processed.data.primary.workers.shared[1]).toBe('worker2.w2');
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(Object.keys(processed.body.primary).length).toBe(4);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(4);
+      expect(processed.body.primary.current.shared).toBe(108);
+      expect(processed.body.primary.current.solo).toBe(0);
+      expect(processed.body.primary.current.times).toBe(0);
+      expect(processed.body.primary.payments.balances).toBe(37.43);
+      expect(processed.body.primary.payments.generate).toBe(255.17);
+      expect(processed.body.primary.payments.immature).toBe(12.17);
+      expect(processed.body.primary.payments.paid).toBe(123.5);
+      expect(processed.body.primary.hashrate.shared).toBe(1546188226.56);
+      expect(processed.body.primary.workers.shared.length).toBe(2);
+      expect(processed.body.primary.workers.shared[0]).toBe('worker2.w1');
+      expect(processed.body.primary.workers.shared[1]).toBe('worker2.w2');
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'miners', 'worker2');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -390,28 +381,27 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/miners/worker1');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(Object.keys(processed.data.primary).length).toBe(4);
-      expect(Object.keys(processed.data.auxiliary).length).toBe(4);
-      expect(processed.data.auxiliary.current.shared).toBe(0);
-      expect(processed.data.auxiliary.current.solo).toBe(64);
-      expect(processed.data.auxiliary.current.times).toBe(20.15);
-      expect(processed.data.auxiliary.payments.generate).toBe(0);
-      expect(processed.data.auxiliary.payments.immature).toBe(0);
-      expect(processed.data.auxiliary.payments.paid).toBe(0);
-      expect(processed.data.auxiliary.hashrate.solo).toBe(916259689.8133334);
-      expect(processed.data.auxiliary.workers.solo.length).toBe(1);
-      expect(processed.data.auxiliary.workers.solo[0]).toBe('worker1');
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(Object.keys(processed.body.primary).length).toBe(4);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(4);
+      expect(processed.body.auxiliary.current.shared).toBe(0);
+      expect(processed.body.auxiliary.current.solo).toBe(64);
+      expect(processed.body.auxiliary.current.times).toBe(20.15);
+      expect(processed.body.auxiliary.payments.generate).toBe(0);
+      expect(processed.body.auxiliary.payments.immature).toBe(0);
+      expect(processed.body.auxiliary.payments.paid).toBe(0);
+      expect(processed.body.auxiliary.hashrate.solo).toBe(916259689.8133334);
+      expect(processed.body.auxiliary.workers.solo.length).toBe(1);
+      expect(processed.body.auxiliary.workers.solo[0]).toBe('worker1');
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'miners', 'worker1');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -430,28 +420,27 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/miners');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(processed.data.primary.shared.length).toBe(2);
-      expect(processed.data.primary.solo.length).toBe(1);
-      expect(processed.data.primary.shared[0].worker).toBe('worker2');
-      expect(processed.data.primary.shared[0].shares).toBe(108);
-      expect(processed.data.primary.shared[0].hashrate).toBe(1546188226.56);
-      expect(processed.data.primary.shared[1].worker).toBe('worker3');
-      expect(processed.data.primary.shared[1].shares).toBe(8);
-      expect(processed.data.primary.shared[1].hashrate).toBe(114532461.22666667);
-      expect(processed.data.primary.solo[0].worker).toBe('worker1');
-      expect(processed.data.primary.solo[0].shares).toBe(64);
-      expect(processed.data.primary.solo[0].hashrate).toBe(916259689.8133334);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(processed.body.primary.shared.length).toBe(2);
+      expect(processed.body.primary.solo.length).toBe(1);
+      expect(processed.body.primary.shared[0].worker).toBe('worker2');
+      expect(processed.body.primary.shared[0].shares).toBe(108);
+      expect(processed.body.primary.shared[0].hashrate).toBe(1546188226.56);
+      expect(processed.body.primary.shared[1].worker).toBe('worker3');
+      expect(processed.body.primary.shared[1].shares).toBe(8);
+      expect(processed.body.primary.shared[1].hashrate).toBe(114532461.22666667);
+      expect(processed.body.primary.solo[0].worker).toBe('worker1');
+      expect(processed.body.primary.solo[0].shares).toBe(64);
+      expect(processed.body.primary.solo[0].hashrate).toBe(916259689.8133334);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'miners');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -465,23 +454,22 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/payments/balances');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(Object.keys(processed.data.primary).length).toBe(2);
-      expect(Object.keys(processed.data.auxiliary).length).toBe(2);
-      expect(processed.data.primary.worker1).toBe(134.3);
-      expect(processed.data.primary.worker2).toBe(255.17);
-      expect(processed.data.auxiliary.worker2).toBe(1255.17);
-      expect(processed.data.auxiliary.worker3).toBe(135);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(Object.keys(processed.body.primary).length).toBe(2);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(2);
+      expect(processed.body.primary.worker1).toBe(134.3);
+      expect(processed.body.primary.worker2).toBe(255.17);
+      expect(processed.body.auxiliary.worker2).toBe(1255.17);
+      expect(processed.body.auxiliary.worker3).toBe(135);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'balances');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -495,23 +483,22 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/payments/generate');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(Object.keys(processed.data.primary).length).toBe(2);
-      expect(Object.keys(processed.data.auxiliary).length).toBe(2);
-      expect(processed.data.primary.worker1).toBe(134.3);
-      expect(processed.data.primary.worker2).toBe(255.17);
-      expect(processed.data.auxiliary.worker2).toBe(1255.17);
-      expect(processed.data.auxiliary.worker3).toBe(135);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(Object.keys(processed.body.primary).length).toBe(2);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(2);
+      expect(processed.body.primary.worker1).toBe(134.3);
+      expect(processed.body.primary.worker2).toBe(255.17);
+      expect(processed.body.auxiliary.worker2).toBe(1255.17);
+      expect(processed.body.auxiliary.worker3).toBe(135);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'generate');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -525,23 +512,22 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/payments/immature');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(Object.keys(processed.data.primary).length).toBe(2);
-      expect(Object.keys(processed.data.auxiliary).length).toBe(2);
-      expect(processed.data.primary.worker1).toBe(134.3);
-      expect(processed.data.primary.worker2).toBe(255.17);
-      expect(processed.data.auxiliary.worker2).toBe(1255.17);
-      expect(processed.data.auxiliary.worker3).toBe(135);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(Object.keys(processed.body.primary).length).toBe(2);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(2);
+      expect(processed.body.primary.worker1).toBe(134.3);
+      expect(processed.body.primary.worker2).toBe(255.17);
+      expect(processed.body.auxiliary.worker2).toBe(1255.17);
+      expect(processed.body.auxiliary.worker3).toBe(135);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'immature');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -555,23 +541,46 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/payments/paid');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(Object.keys(processed.data.primary).length).toBe(2);
-      expect(Object.keys(processed.data.auxiliary).length).toBe(2);
-      expect(processed.data.primary.worker1).toBe(134.3);
-      expect(processed.data.primary.worker2).toBe(255.17);
-      expect(processed.data.auxiliary.worker2).toBe(1255.17);
-      expect(processed.data.auxiliary.worker3).toBe(135);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(Object.keys(processed.body.primary).length).toBe(2);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(2);
+      expect(processed.body.primary.worker1).toBe(134.3);
+      expect(processed.body.primary.worker2).toBe(255.17);
+      expect(processed.body.auxiliary.worker2).toBe(1255.17);
+      expect(processed.body.auxiliary.worker3).toBe(135);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'paid');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
+    });
+  });
+
+  test('Test handlePorts API endpoint', (done) => {
+    const response = mockResponse();
+    response.on('end', (payload) => {
+      const processed = JSON.parse(payload);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(typeof processed.body.ports[0]).toBe('object');
+      expect(processed.body.ports[0].difficulty.initial).toBe(32);
+      expect(processed.body.ports[0].difficulty.maximum).toBe(512);
+      expect(processed.body.ports[0].difficulty.minimum).toBe(8);
+      expect(processed.body.ports[0].enabled).toBe(true);
+      expect(processed.body.ports[0].port).toBe(3002);
+      expect(processed.body.ports[1].port).toBe(3003);
+      done();
+    });
+    mockSetupClient(client, [], 'Pool1', () => {
+      const request = mockRequest('Pool1', 'ports');
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -583,28 +592,27 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/payments/records');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(processed.data.primary.length).toBe(2);
-      expect(processed.data.auxiliary.length).toBe(1);
-      expect(processed.data.primary[0].paid).toBe(200.15);
-      expect(processed.data.primary[0].transaction).toBe('hash1');
-      expect(processed.data.primary[0].records).toBe('record1');
-      expect(processed.data.primary[1].paid).toBe(84.23);
-      expect(processed.data.primary[1].transaction).toBe('hash2');
-      expect(processed.data.primary[1].records).toBe('record2');
-      expect(processed.data.auxiliary[0].paid).toBe(760.133);
-      expect(processed.data.auxiliary[0].transaction).toBe('hash3');
-      expect(processed.data.auxiliary[0].records).toBe('record3');
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(processed.body.primary.length).toBe(2);
+      expect(processed.body.auxiliary.length).toBe(1);
+      expect(processed.body.primary[0].paid).toBe(200.15);
+      expect(processed.body.primary[0].transaction).toBe('hash1');
+      expect(processed.body.primary[0].records).toBe('record1');
+      expect(processed.body.primary[1].paid).toBe(84.23);
+      expect(processed.body.primary[1].transaction).toBe('hash2');
+      expect(processed.body.primary[1].records).toBe('record2');
+      expect(processed.body.auxiliary[0].paid).toBe(760.133);
+      expect(processed.body.auxiliary[0].transaction).toBe('hash3');
+      expect(processed.body.auxiliary[0].records).toBe('record3');
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'records');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -626,30 +634,29 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/payments');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(Object.keys(processed.data.primary).length).toBe(4);
-      expect(Object.keys(processed.data.auxiliary).length).toBe(4);
-      expect(processed.data.primary.generate.worker1).toBe(134.3);
-      expect(processed.data.primary.generate.worker2).toBe(255.17);
-      expect(processed.data.primary.immature.worker1).toBe(76.23);
-      expect(processed.data.primary.immature.worker2).toBe(12.17);
-      expect(processed.data.primary.immature.worker3).toBe(76.4);
-      expect(processed.data.primary.paid.worker2).toBe(123.5);
-      expect(processed.data.primary.paid.worker3).toBe(45.66);
-      expect(processed.data.auxiliary.generate.worker1).toBe(134.3);
-      expect(processed.data.auxiliary.generate.worker2).toBe(255.17);
-      expect(processed.data.auxiliary.immature.worker1).toBe(76.23);
-      expect(processed.data.auxiliary.paid.worker2).toBe(123.5);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(Object.keys(processed.body.primary).length).toBe(4);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(4);
+      expect(processed.body.primary.generate.worker1).toBe(134.3);
+      expect(processed.body.primary.generate.worker2).toBe(255.17);
+      expect(processed.body.primary.immature.worker1).toBe(76.23);
+      expect(processed.body.primary.immature.worker2).toBe(12.17);
+      expect(processed.body.primary.immature.worker3).toBe(76.4);
+      expect(processed.body.primary.paid.worker2).toBe(123.5);
+      expect(processed.body.primary.paid.worker3).toBe(45.66);
+      expect(processed.body.auxiliary.generate.worker1).toBe(134.3);
+      expect(processed.body.auxiliary.generate.worker2).toBe(255.17);
+      expect(processed.body.auxiliary.immature.worker1).toBe(76.23);
+      expect(processed.body.auxiliary.paid.worker2).toBe(123.5);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -663,22 +670,21 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/rounds/current');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(processed.data.primary.shared.worker1).toBe(64);
-      expect(processed.data.primary.solo.worker2).toBe(108);
-      expect(processed.data.primary.times.worker1).toBe(20.15);
-      expect(processed.data.auxiliary.solo.worker2).toBe(108);
-      expect(processed.data.auxiliary.times.worker1).toBe(20.15);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(processed.body.primary.shared.worker1).toBe(64);
+      expect(processed.body.primary.solo.worker2).toBe(108);
+      expect(processed.body.primary.times.worker1).toBe(20.15);
+      expect(processed.body.auxiliary.solo.worker2).toBe(108);
+      expect(processed.body.auxiliary.times.worker1).toBe(20.15);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'rounds', 'current');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -691,21 +697,20 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/rounds/180');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(processed.data.primary.shares.worker1).toBe(64);
-      expect(processed.data.primary.times.worker1).toBe(20.15);
-      expect(processed.data.auxiliary.shares.worker2).toBe(108);
-      expect(processed.data.auxiliary.times.worker1).toBe(20.15);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(processed.body.primary.shares.worker1).toBe(64);
+      expect(processed.body.primary.times.worker1).toBe(20.15);
+      expect(processed.body.auxiliary.shares.worker2).toBe(108);
+      expect(processed.body.auxiliary.times.worker1).toBe(20.15);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'rounds', '180');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -722,25 +727,24 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/rounds');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(processed.data.primary['180'].shares.worker1).toBe(64);
-      expect(processed.data.primary['181'].shares.worker1).toBe(128);
-      expect(processed.data.primary['180'].times.worker1).toBe(20.15);
-      expect(processed.data.primary['181'].times.worker1).toBe(25.15);
-      expect(processed.data.auxiliary['180'].shares.worker2).toBe(108);
-      expect(processed.data.auxiliary['181'].shares.worker2).toBe(256);
-      expect(processed.data.auxiliary['180'].times.worker2).toBe(20.15);
-      expect(processed.data.auxiliary['181'].times.worker2).toBe(25.15);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(processed.body.primary['180'].shares.worker1).toBe(64);
+      expect(processed.body.primary['181'].shares.worker1).toBe(128);
+      expect(processed.body.primary['180'].times.worker1).toBe(20.15);
+      expect(processed.body.primary['181'].times.worker1).toBe(25.15);
+      expect(processed.body.auxiliary['180'].shares.worker2).toBe(108);
+      expect(processed.body.auxiliary['181'].shares.worker2).toBe(256);
+      expect(processed.body.auxiliary['180'].times.worker2).toBe(20.15);
+      expect(processed.body.auxiliary['181'].times.worker2).toBe(25.15);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'rounds');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -748,20 +752,19 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/rounds');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(Object.keys(processed.data).length).toBe(2);
-      expect(Object.keys(processed.data.primary).length).toBe(0);
-      expect(Object.keys(processed.data.auxiliary).length).toBe(0);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(Object.keys(processed.body).length).toBe(2);
+      expect(Object.keys(processed.body.primary).length).toBe(0);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(0);
       done();
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest('Pool1', 'rounds');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -789,35 +792,30 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/statistics');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(processed.data.configuration.primary.fee).toBe(0);
-      expect(processed.data.configuration.primary.paymentInterval).toBe(1200);
-      expect(processed.data.configuration.primary.minimumPayment).toBe(10);
-      expect(processed.data.statistics.primary.blocks.invalid).toBe(2);
-      expect(processed.data.statistics.primary.blocks.valid).toBe(500);
-      expect(processed.data.statistics.primary.payments.last).toBe(0);
-      expect(processed.data.statistics.primary.payments.next).toBe(1);
-      expect(processed.data.statistics.primary.payments.total).toBe(200.5);
-      expect(processed.data.statistics.primary.shares.invalid).toBe(465);
-      expect(processed.data.statistics.primary.shares.valid).toBe(3190);
-      expect(processed.data.statistics.primary.hashrate.shared).toBe(2576980377.6);
-      expect(processed.data.statistics.primary.status.miners).toBe(6);
-      expect(processed.data.statistics.primary.status.workers).toBe(8);
-      expect(processed.data.configuration.auxiliary.fee).toBe(0);
-      expect(processed.data.configuration.auxiliary.paymentInterval).toBe(1200);
-      expect(processed.data.configuration.auxiliary.minimumPayment).toBe(10);
-      expect(processed.data.statistics.auxiliary.blocks.invalid).toBe(2);
-      expect(processed.data.statistics.auxiliary.blocks.valid).toBe(500);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(processed.body.primary.blocks.invalid).toBe(2);
+      expect(processed.body.primary.blocks.valid).toBe(500);
+      expect(processed.body.primary.payments.last).toBe(0);
+      expect(processed.body.primary.payments.next).toBe(1);
+      expect(processed.body.primary.payments.total).toBe(200.5);
+      expect(processed.body.primary.shares.invalid).toBe(465);
+      expect(processed.body.primary.shares.valid).toBe(3190);
+      expect(processed.body.primary.hashrate.shared).toBe(2576980377.6);
+      expect(processed.body.primary.status.miners).toBe(6);
+      expect(processed.body.primary.status.workers).toBe(8);
+      expect(processed.body.auxiliary.blocks.invalid).toBe(2);
+      expect(processed.body.auxiliary.blocks.valid).toBe(500);
+      expect(processed.body.auxiliary.blocks.invalid).toBe(2);
+      expect(processed.body.auxiliary.blocks.valid).toBe(500);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'statistics');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -845,29 +843,28 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/statistics');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(processed.data.statistics.primary.blocks.invalid).toBe(2);
-      expect(processed.data.statistics.primary.blocks.valid).toBe(500);
-      expect(processed.data.statistics.primary.payments.last).toBe(0);
-      expect(processed.data.statistics.primary.payments.next).toBe(1);
-      expect(processed.data.statistics.primary.payments.total).toBe(200.5);
-      expect(processed.data.statistics.primary.shares.invalid).toBe(465);
-      expect(processed.data.statistics.primary.shares.valid).toBe(3190);
-      expect(processed.data.statistics.primary.hashrate.shared).toBe(2576980377.6);
-      expect(processed.data.statistics.primary.status.miners).toBe(6);
-      expect(processed.data.statistics.primary.status.workers).toBe(8);
-      expect(processed.data.statistics.auxiliary.blocks.invalid).toBe(2);
-      expect(processed.data.statistics.auxiliary.blocks.valid).toBe(500);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(processed.body.primary.blocks.invalid).toBe(2);
+      expect(processed.body.primary.blocks.valid).toBe(500);
+      expect(processed.body.primary.payments.last).toBe(0);
+      expect(processed.body.primary.payments.next).toBe(1);
+      expect(processed.body.primary.payments.total).toBe(200.5);
+      expect(processed.body.primary.shares.invalid).toBe(465);
+      expect(processed.body.primary.shares.valid).toBe(3190);
+      expect(processed.body.primary.hashrate.shared).toBe(2576980377.6);
+      expect(processed.body.primary.status.miners).toBe(6);
+      expect(processed.body.primary.status.workers).toBe(8);
+      expect(processed.body.auxiliary.blocks.invalid).toBe(2);
+      expect(processed.body.auxiliary.blocks.valid).toBe(500);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -885,28 +882,27 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/workers/active');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(processed.data.primary.shared.length).toBe(2);
-      expect(processed.data.primary.solo.length).toBe(1);
-      expect(processed.data.primary.shared[0].worker).toBe('worker2.w1');
-      expect(processed.data.primary.shared[0].shares).toBe(64);
-      expect(processed.data.primary.shared[0].hashrate).toBe(916259689.8133334);
-      expect(processed.data.primary.shared[1].worker).toBe('worker2.w2');
-      expect(processed.data.primary.shared[1].shares).toBe(44);
-      expect(processed.data.primary.shared[1].hashrate).toBe(629928536.7466667);
-      expect(processed.data.primary.solo[0].worker).toBe('worker1');
-      expect(processed.data.primary.solo[0].shares).toBe(64);
-      expect(processed.data.primary.solo[0].hashrate).toBe(916259689.8133334);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(processed.body.primary.shared.length).toBe(2);
+      expect(processed.body.primary.solo.length).toBe(1);
+      expect(processed.body.primary.shared[0].worker).toBe('worker2.w1');
+      expect(processed.body.primary.shared[0].shares).toBe(64);
+      expect(processed.body.primary.shared[0].hashrate).toBe(916259689.8133334);
+      expect(processed.body.primary.shared[1].worker).toBe('worker2.w2');
+      expect(processed.body.primary.shared[1].shares).toBe(44);
+      expect(processed.body.primary.shared[1].hashrate).toBe(629928536.7466667);
+      expect(processed.body.primary.solo[0].worker).toBe('worker1');
+      expect(processed.body.primary.solo[0].shares).toBe(64);
+      expect(processed.body.primary.solo[0].hashrate).toBe(916259689.8133334);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'workers', 'active');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -934,23 +930,22 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/workers/worker2.w1');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(Object.keys(processed.data.primary).length).toBe(2);
-      expect(Object.keys(processed.data.auxiliary).length).toBe(2);
-      expect(processed.data.primary.current.shared).toBe(64);
-      expect(processed.data.primary.current.solo).toBe(0);
-      expect(processed.data.primary.current.times).toBe(0);
-      expect(processed.data.primary.hashrate.shared).toBe(916259689.8133334);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(Object.keys(processed.body.primary).length).toBe(2);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(2);
+      expect(processed.body.primary.current.shared).toBe(64);
+      expect(processed.body.primary.current.solo).toBe(0);
+      expect(processed.body.primary.current.times).toBe(0);
+      expect(processed.body.primary.hashrate.shared).toBe(916259689.8133334);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'workers', 'worker2.w1');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -975,22 +970,21 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/workers/worker1');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(Object.keys(processed.data.primary).length).toBe(2);
-      expect(Object.keys(processed.data.auxiliary).length).toBe(2);
-      expect(processed.data.auxiliary.current.shared).toBe(0);
-      expect(processed.data.auxiliary.current.solo).toBe(64);
-      expect(processed.data.auxiliary.hashrate.solo).toBe(916259689.8133334);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(Object.keys(processed.body.primary).length).toBe(2);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(2);
+      expect(processed.body.auxiliary.current.shared).toBe(0);
+      expect(processed.body.auxiliary.current.solo).toBe(64);
+      expect(processed.body.auxiliary.hashrate.solo).toBe(916259689.8133334);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'workers', 'worker1');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 
@@ -1009,31 +1003,30 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.pool).toBe('Pool1');
-      expect(processed.endpoint).toBe('/workers');
-      expect(processed.response.code).toBe(200);
-      expect(processed.response.message).toBe('');
-      expect(typeof processed.data).toBe('object');
-      expect(processed.data.primary.shared.length).toBe(3);
-      expect(processed.data.primary.solo.length).toBe(1);
-      expect(processed.data.primary.shared[0].worker).toBe('worker2.w1');
-      expect(processed.data.primary.shared[0].shares).toBe(64);
-      expect(processed.data.primary.shared[0].hashrate).toBe(916259689.8133334);
-      expect(processed.data.primary.shared[1].worker).toBe('worker2.w2');
-      expect(processed.data.primary.shared[1].shares).toBe(44);
-      expect(processed.data.primary.shared[1].hashrate).toBe(629928536.7466667);
-      expect(processed.data.primary.shared[2].worker).toBe('worker3');
-      expect(processed.data.primary.shared[2].shares).toBe(8);
-      expect(processed.data.primary.shared[2].hashrate).toBe(114532461.22666667);
-      expect(processed.data.primary.solo[0].worker).toBe('worker1');
-      expect(processed.data.primary.solo[0].shares).toBe(64);
-      expect(processed.data.primary.solo[0].hashrate).toBe(916259689.8133334);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(processed.body.primary.shared.length).toBe(3);
+      expect(processed.body.primary.solo.length).toBe(1);
+      expect(processed.body.primary.shared[0].worker).toBe('worker2.w1');
+      expect(processed.body.primary.shared[0].shares).toBe(64);
+      expect(processed.body.primary.shared[0].hashrate).toBe(916259689.8133334);
+      expect(processed.body.primary.shared[1].worker).toBe('worker2.w2');
+      expect(processed.body.primary.shared[1].shares).toBe(44);
+      expect(processed.body.primary.shared[1].hashrate).toBe(629928536.7466667);
+      expect(processed.body.primary.shared[2].worker).toBe('worker3');
+      expect(processed.body.primary.shared[2].shares).toBe(8);
+      expect(processed.body.primary.shared[2].hashrate).toBe(114532461.22666667);
+      expect(processed.body.primary.solo[0].worker).toBe('worker1');
+      expect(processed.body.primary.solo[0].shares).toBe(64);
+      expect(processed.body.primary.solo[0].hashrate).toBe(916259689.8133334);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'workers');
       const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, response);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
     });
   });
 });
