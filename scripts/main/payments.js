@@ -15,6 +15,8 @@ const Stratum = require('foundation-stratum');
 const PoolPayments = function (logger, client) {
 
   const _this = this;
+  process.setMaxListeners(0);
+
   this.pools = [];
   this.client = client;
   this.poolConfigs = JSON.parse(process.env.poolConfigs);

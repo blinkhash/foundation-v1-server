@@ -12,6 +12,8 @@ const Stratum = require('foundation-stratum');
 const PoolStratum = function (logger, poolConfig, poolShares, poolStatistics) {
 
   const _this = this;
+  process.setMaxListeners(0);
+
   this.pool = poolConfig.name;
   this.poolConfig = poolConfig;
   this.poolShares = poolShares;
