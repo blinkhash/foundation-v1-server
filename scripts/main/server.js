@@ -25,6 +25,12 @@ const PoolServer = function (logger, client) {
   this.poolConfigs = JSON.parse(process.env.poolConfigs);
   this.portalConfig = JSON.parse(process.env.portalConfig);
 
+  // Handle Errors with API Responses
+  this.handleErrors = function(api, error, res) {
+    logger.error('Server', 'Website', `API call threw an unknown error: (${ error })`);
+    api.buildResponse(500, 'The server was unable to handle your request. Verify your input or try again later', res);
+  };
+
   // Build Server w/ Middleware
   this.buildServer = function() {
 
@@ -50,20 +56,18 @@ const PoolServer = function (logger, client) {
       });
     });
 
+    // ERRORS - Handles API Errors
+    /* istanbul ignore next */
+    /* eslint-disable-next-line no-unused-vars */
+    app.use((err, req, res) => {
+      _this.handleErrors(api, err, res);
+    });
+
     // Handle Health Check
     /* istanbul ignore next */
     app.get('/health/', (req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ 'status': 'OK' }));
-    });
-
-    // Handle Error Responses
-    /* istanbul ignore next */
-    /* eslint-disable-next-line no-unused-vars */
-    app.use((err, req, res, next) => {
-      logger.error('Server', 'Website', `API call threw an unknown error: (${ err })`);
-      _this.buildResponse(500, 'The server was unable to handle your request. Verify your input or try again later', res);
-      next();
     });
 
     // Set Existing Server Variable

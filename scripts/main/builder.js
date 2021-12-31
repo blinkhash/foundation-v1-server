@@ -87,6 +87,7 @@ const PoolBuilder = function(logger, portalConfig) {
 
     // Handle Worker Events
     worker.on('message', (msg) => {
+      let roundValue;
       switch (msg.type) {
       case 'banIP':
         Object.keys(cluster.workers).forEach(id => {
@@ -96,7 +97,7 @@ const PoolBuilder = function(logger, portalConfig) {
         });
         break;
       case 'roundUpdate':
-        const roundValue = _this.roundCounter.next();
+        roundValue = _this.roundCounter.next();
         Object.keys(cluster.workers).forEach(id => {
           if (cluster.workers[id].type === 'worker') {
             cluster.workers[id].send({ type: 'roundUpdate', pool: msg.pool, value: roundValue });

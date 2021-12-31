@@ -105,28 +105,28 @@ describe('Test utility functionality', () => {
 
   test('Test implemented countMiners [1]', () => {
     const shares = [
-      { time: 1623901893182, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2", solo: false, difficulty: 8 },
-      { time: 1623901919389, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2", solo: false, difficulty: 8 },
-      { time: 1623901929800, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2", solo: false, difficulty: 8 },
-      { time: 1623901944054, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2", solo: false, difficulty: 8 }];
+      { time: 1623901893182, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', solo: false, difficulty: 8 },
+      { time: 1623901919389, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', solo: false, difficulty: 8 },
+      { time: 1623901929800, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', solo: false, difficulty: 8 },
+      { time: 1623901944054, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', solo: false, difficulty: 8 }];
     expect(utils.countMiners(shares)).toBe(1);
   });
 
   test('Test implemented countMiners [2]', () => {
     const shares = [
-      { time: 1623901893182, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1", solo: false, difficulty: 8 },
-      { time: 1623901919389, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2", solo: false, difficulty: 8 },
-      { time: 1623901929800, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1", solo: false, difficulty: 8 },
-      { time: 1623901944054, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2", solo: false, difficulty: 8 }];
+      { time: 1623901893182, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1', solo: false, difficulty: 8 },
+      { time: 1623901919389, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', solo: false, difficulty: 8 },
+      { time: 1623901929800, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1', solo: false, difficulty: 8 },
+      { time: 1623901944054, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', solo: false, difficulty: 8 }];
     expect(utils.countMiners(shares)).toBe(1);
   });
 
   test('Test implemented countMiners [3]', () => {
     const shares = [
-      { time: 1623901893182, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1", solo: false, difficulty: 8 },
-      { time: 1623901919389, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1", solo: false, difficulty: 8 },
-      { time: 1623901929800, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1", solo: false, difficulty: 8 },
-      { time: 1623901944054, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3d.worker1", solo: false, difficulty: 8 }];
+      { time: 1623901893182, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1', solo: false, difficulty: 8 },
+      { time: 1623901919389, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1', solo: false, difficulty: 8 },
+      { time: 1623901929800, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1', solo: false, difficulty: 8 },
+      { time: 1623901944054, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3d.worker1', solo: false, difficulty: 8 }];
     expect(utils.countMiners(shares)).toBe(4);
   });
 
@@ -134,8 +134,8 @@ describe('Test utility functionality', () => {
     const shares = [
       { time: 1623901893182, solo: false, difficulty: 8 },
       { time: 1623901919389, solo: false, difficulty: 8 },
-      { time: 1623901929800, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1", solo: false, difficulty: 8 },
-      { time: 1623901944054, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3d.worker1", solo: false, difficulty: 8 }];
+      { time: 1623901929800, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1', solo: false, difficulty: 8 },
+      { time: 1623901944054, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3d.worker1', solo: false, difficulty: 8 }];
     expect(utils.countMiners(shares)).toBe(2);
   });
 
@@ -184,28 +184,28 @@ describe('Test utility functionality', () => {
 
   test('Test implemented countWorkers [1]', () => {
     const shares = [
-      { time: 1623901893182, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2", solo: false, difficulty: 8 },
-      { time: 1623901919389, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2", solo: false, difficulty: 8 },
-      { time: 1623901929800, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2", solo: false, difficulty: 8 },
-      { time: 1623901944054, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2", solo: false, difficulty: 8 }];
+      { time: 1623901893182, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', solo: false, difficulty: 8 },
+      { time: 1623901919389, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', solo: false, difficulty: 8 },
+      { time: 1623901929800, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', solo: false, difficulty: 8 },
+      { time: 1623901944054, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', solo: false, difficulty: 8 }];
     expect(utils.countWorkers(shares)).toBe(1);
   });
 
   test('Test implemented countWorkers [2]', () => {
     const shares = [
-      { time: 1623901893182, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1", solo: false, difficulty: 8 },
-      { time: 1623901919389, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2", solo: false, difficulty: 8 },
-      { time: 1623901929800, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1", solo: false, difficulty: 8 },
-      { time: 1623901944054, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2", solo: false, difficulty: 8 }];
+      { time: 1623901893182, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1', solo: false, difficulty: 8 },
+      { time: 1623901919389, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', solo: false, difficulty: 8 },
+      { time: 1623901929800, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1', solo: false, difficulty: 8 },
+      { time: 1623901944054, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', solo: false, difficulty: 8 }];
     expect(utils.countWorkers(shares)).toBe(2);
   });
 
   test('Test implemented countWorkers [3]', () => {
     const shares = [
-      { time: 1623901893182, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1", solo: false, difficulty: 8 },
-      { time: 1623901919389, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1", solo: false, difficulty: 8 },
-      { time: 1623901929800, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1", solo: false, difficulty: 8 },
-      { time: 1623901944054, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3d.worker1", solo: false, difficulty: 8 }];
+      { time: 1623901893182, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1', solo: false, difficulty: 8 },
+      { time: 1623901919389, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1', solo: false, difficulty: 8 },
+      { time: 1623901929800, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1', solo: false, difficulty: 8 },
+      { time: 1623901944054, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3d.worker1', solo: false, difficulty: 8 }];
     expect(utils.countWorkers(shares)).toBe(4);
   });
 
@@ -213,8 +213,8 @@ describe('Test utility functionality', () => {
     const shares = [
       { time: 1623901893182, solo: false, difficulty: 8 },
       { time: 1623901919389, solo: false, difficulty: 8 },
-      { time: 1623901929800, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1", solo: false, difficulty: 8 },
-      { time: 1623901944054, worker: "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3d.worker1", solo: false, difficulty: 8 }];
+      { time: 1623901929800, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1', solo: false, difficulty: 8 },
+      { time: 1623901944054, worker: 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3d.worker1', solo: false, difficulty: 8 }];
     expect(utils.countWorkers(shares)).toBe(2);
   });
 

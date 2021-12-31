@@ -472,9 +472,9 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       callback(200, {
         primary: {
           config: {
-            coin: config.enabled ? config.primary.coin.name : "",
-            symbol: config.enabled ? config.primary.coin.symbol : "",
-            algorithm: config.enabled ? config.primary.coin.algorithms.mining : "",
+            coin: config.enabled ? config.primary.coin.name : '',
+            symbol: config.enabled ? config.primary.coin.symbol : '',
+            algorithm: config.enabled ? config.primary.coin.algorithms.mining : '',
             paymentInterval: config.enabled ? config.primary.payments.paymentInterval : 0,
             minPayment: config.enabled ? config.primary.payments.minPayment : 0,
             recipientFee: config.enabled ? config.primary.recipients.reduce((p_sum, a) => p_sum + a.percentage, 0) : 0,
@@ -510,9 +510,9 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
         },
         auxiliary: {
           config: {
-            coin: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.coin.name : "",
-            symbol: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.coin.symbol : "",
-            algorithm: (config.auxiliary && config.auxiliary.enabled) ? config.primary.coin.algorithms.mining : "",
+            coin: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.coin.name : '',
+            symbol: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.coin.symbol : '',
+            algorithm: (config.auxiliary && config.auxiliary.enabled) ? config.primary.coin.algorithms.mining : '',
             paymentInterval: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.payments.paymentInterval : 0,
             minPayment: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.payments.minPayment : 0,
             recipientFee: (config.auxiliary && config.auxiliary.enabled) ? config.auxiliary.recipients.reduce((p_sum, a) => p_sum + a.percentage, 0) : 0,
