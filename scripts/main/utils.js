@@ -374,7 +374,7 @@ exports.satoshisToCoins = function(satoshis, magnitude, precision) {
 // Validate Entered Address
 exports.validateInput = function(address) {
   if (address.length >= 1) {
-    address = address.toString().replace(/[^a-zA-Z0-9.]+/g, '');
+    address = address.toString().replace(/[^a-zA-Z0-9.-]+/g, '');
   }
   return address;
 };
