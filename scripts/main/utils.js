@@ -246,7 +246,7 @@ exports.processMiners = function(shares, hashrate, times, multiplier, hashrateWi
         } else {
           if (!active || (active && hashrateValue > 0)) {
             miners[address] = {
-              worker: address,
+              miner: address,
               shares: shareValue,
               times: timeValue || null,
               hashrate: (multiplier * hashrateValue) / hashrateWindow,
