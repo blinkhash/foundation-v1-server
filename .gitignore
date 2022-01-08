@@ -3,8 +3,10 @@ node_modules/
 npm-debug.log
 config.json
 configs/main/*
-!configs/main/example.js
 configs/pools/*
+!configs/main/example.js
 !configs/pools/example.js
+certificates/*
+!certificates/tutorial.txt
 coverage/
 .DS_Store

@@ -124,7 +124,7 @@ const PoolBuilder = function(logger, portalConfig) {
 
     // Check if No Configs Exist
     if (Object.keys(_this.poolConfigs).length === 0) {
-      logger.warning('Builder', 'Workers', 'No pool configs exists or are enabled in configs folder. No pools started.');
+      logger.warning('Builder', 'Workers', 'No valid pool configs exist or are enabled in configs folder. No pools started.');
       return;
     }
 

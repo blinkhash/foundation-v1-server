@@ -1,0 +1,12 @@
+TLS/SSL Integration (Self-Signed):
+
+1. openssl genrsa -out private-key.pem 1024
+2. openssl req -new -key private-key.pem -out csr.pem
+3. openssl x509 -req -in csr.pem -signkey private-key.pem -out public-cert.pem
+4. Place the private-key.pem and public-cert.pem files in the /certificates folder
+5. Enable SSL for ports as necessary
+
+Example:
+ports1.ssl.enabled = true;
+ports1.ssl.key = "private-key.pem";
+ports1.ssl.cert = "public-cert.pem";

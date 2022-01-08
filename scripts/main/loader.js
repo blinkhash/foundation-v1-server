@@ -36,6 +36,38 @@ const PoolLoader = function(logger, portalConfig) {
     return true;
   };
 
+  // Validate Pool Keys
+  /* istanbul ignore next */
+  this.validatePoolKeys = function(poolConfig) {
+    const configSSL = poolConfig.ports
+      .filter(config => config.enabled)
+      .flatMap(config => config.ssl)
+      .filter(config => config ? config.enabled : false);
+    const keys = configSSL.flatMap(config => config.key);
+    const validated = keys.filter((key) => fs.existsSync(`./certificates/${ key }`));
+    if (keys.length !== validated.length) {
+      logger.error('Builder', 'Setup', 'Invalid key file specified for SSL port. Check your configuration files');
+      return false;
+    }
+    return true;
+  }
+
+  // Validate Pool Certificates
+  /* istanbul ignore next */
+  this.validatePoolCertificates = function(poolConfig) {
+    const configSSL = poolConfig.ports
+      .filter(config => config.enabled)
+      .flatMap(config => config.ssl)
+      .filter(config => config ? config.enabled : false);
+    const certs = configSSL.flatMap(config => config.cert);
+    const validated = certs.filter((cert) => fs.existsSync(`./certificates/${ cert }`));
+    if (certs.length !== validated.length) {
+      logger.error('Builder', 'Setup', 'Invalid certificate file specified for SSL port. Check your configuration files');
+      return false;
+    }
+    return true;
+  }
+
   // Check for Overlapping Pool Names
   this.validatePoolNames = function(poolConfigs, poolConfig) {
     let configNames = Object.keys(poolConfigs);
@@ -101,6 +133,8 @@ const PoolLoader = function(logger, portalConfig) {
       }
       const poolConfig = require(normalizedPath + file);
       if (!_this.validatePoolConfigs(poolConfig)) return;
+      if (!_this.validatePoolKeys(poolConfig)) return;
+      if (!_this.validatePoolCertificates(poolConfig)) return;
       if (!_this.validatePoolNames(poolConfigs, poolConfig)) return;
       if (!_this.validatePoolPorts(poolConfigs, poolConfig)) return;
       poolConfigs[poolConfig.name] = poolConfig;
