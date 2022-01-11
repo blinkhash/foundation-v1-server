@@ -52,7 +52,7 @@
     "compression": "*",
     "cors": "^2.8.5",
     "dateformat": "4.6.3",
-    "express": "*",
+    "express": "4.17.2",
     "express-rate-limit": "^5.5.1",
     "foundation-stratum": "0.0.21",
     "nodemon": "2.0.15",
