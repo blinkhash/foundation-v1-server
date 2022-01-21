@@ -80,7 +80,7 @@ describe('Test shares functionality', () => {
     const expected = [
       ['hincrbyfloat', 'Pool1:rounds:primary:current:shared:times', 'example'],
       ['hset', 'Pool1:rounds:primary:current:shared:submissions', 'example']];
-    const commands = poolShares.buildTimesCommands(results, shareData, true, false);
+    const commands = poolShares.buildTimesCommands(results, shareData, { valid: true, stale: false, invalid: false }, false);
     expect(commands.length).toBe(2);
     expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
     expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
