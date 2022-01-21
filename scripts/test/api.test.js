@@ -776,6 +776,7 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:payments:primary:counts', 'last', 0],
       ['hset', 'Pool1:payments:primary:counts', 'next', 1],
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'valid', 3190],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'stale', 345],
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'invalid', 465],
       ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32 })],
       ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64 })],
@@ -800,6 +801,7 @@ describe('Test API functionality', () => {
       expect(processed.body.primary.payments.next).toBe(1);
       expect(processed.body.primary.payments.total).toBe(200.5);
       expect(processed.body.primary.shares.invalid).toBe(465);
+      expect(processed.body.primary.shares.stale).toBe(345);
       expect(processed.body.primary.shares.valid).toBe(3190);
       expect(processed.body.primary.hashrate.shared).toBe(2576980377.6);
       expect(processed.body.primary.status.miners).toBe(6);
@@ -827,6 +829,7 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:payments:primary:counts', 'last', 0],
       ['hset', 'Pool1:payments:primary:counts', 'next', 1],
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'valid', 3190],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'stale', 345],
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'invalid', 465],
       ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32 })],
       ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64 })],
@@ -851,6 +854,7 @@ describe('Test API functionality', () => {
       expect(processed.body.primary.payments.next).toBe(1);
       expect(processed.body.primary.payments.total).toBe(200.5);
       expect(processed.body.primary.shares.invalid).toBe(465);
+      expect(processed.body.primary.shares.stale).toBe(345);
       expect(processed.body.primary.shares.valid).toBe(3190);
       expect(processed.body.primary.hashrate.shared).toBe(2576980377.6);
       expect(processed.body.primary.status.miners).toBe(6);

@@ -302,7 +302,7 @@ describe('Test stratum functionality', () => {
       'worker': 'example'
     };
     poolStratum.setupStratum(() => {
-      poolStratum.handleShares(shareData, true, false, () => {
+      poolStratum.handleShares(shareData, { valid: true, stale: false, invalid: false }, false, () => {
         expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Share accepted at difficulty'));
         poolStratum.poolStratum.stratum.stopServer();
         console.log.mockClear();
