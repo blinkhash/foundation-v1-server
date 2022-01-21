@@ -485,6 +485,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           },
           shares: {
             valid: parseFloat(results[4] ? results[4].valid || 0 : 0),
+            stale: parseFloat(results[4] ? results[4].stale || 0 : 0),
             invalid: parseFloat(results[4] ? results[4].invalid || 0 : 0),
           },
           hashrate: {
@@ -523,6 +524,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           },
           shares: {
             valid: parseFloat(results[12] ? results[12].valid || 0 : 0),
+            stale: parseFloat(results[12] ? results[12].stale || 0 : 0),
             invalid: parseFloat(results[12] ? results[12].invalid || 0 : 0),
           },
           hashrate: {
