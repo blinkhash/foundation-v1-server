@@ -97,7 +97,7 @@ describe('Test stratum functionality', () => {
   test('Test share viability checker [1]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
-    poolStratum.checkShare({}, false);
+    poolStratum.checkShare({}, { valid: false, stale: false, invalid: true });
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('We thought a share was found but it was rejected by the daemon'));
     console.log.mockClear();
   });
@@ -105,7 +105,7 @@ describe('Test stratum functionality', () => {
   test('Test share viability checker [2]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
-    poolStratum.checkShare({}, true);
+    poolStratum.checkShare({}, { valid: true, stale: false, invalid: false });
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Share accepted at difficulty'));
     console.log.mockClear();
   });
@@ -113,8 +113,16 @@ describe('Test stratum functionality', () => {
   test('Test share viability checker [3]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
-    poolStratum.checkShare({ blockType: 'auxiliary' }, true);
+    poolStratum.checkShare({ blockType: 'auxiliary' }, { valid: true, stale: false, invalid: false });
     expect(consoleSpy).not.toHaveBeenCalled();
+    console.log.mockClear();
+  });
+
+  test('Test share viability checker [4]', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolStratum = new PoolStratum(logger, configCopy, poolShares);
+    poolStratum.checkShare({}, { valid: false, stale: true, invalid: false });
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('We thought a share was found but it was stale and rejected by the daemon.'));
     console.log.mockClear();
   });
 
