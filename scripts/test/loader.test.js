@@ -69,7 +69,7 @@ describe('Test loader functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const algorithms = { mining: 'scrypt', block: 'sha256d', coinbase: 'sha256d' };
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, primary: { coin: { algorithms: algorithms }, recipients: [{ percentage: 0.9 }]}};
+    const poolConfig = { enabled: true, primary: { coin: { algorithms: algorithms }, recipients: [{ percentage: 1 }]}};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(consoleSpy).toHaveBeenCalled();
     expect(response).toBe(false);

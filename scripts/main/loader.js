@@ -108,7 +108,7 @@ const PoolLoader = function(logger, portalConfig) {
   this.validatePoolRecipients = function(poolConfig) {
     if (poolConfig.primary.recipients && poolConfig.primary.recipients.length >= 1) {
       const recipientTotal = poolConfig.primary.recipients.reduce((p_sum, a) => p_sum + a.percentage, 0);
-      if (recipientTotal > 1) {
+      if (recipientTotal >= 1) {
         logger.error('Builder', 'Setup', `Recipient percentage for ${ poolConfig.name } is greater than 100%. Check your configuration files`);
         return false;
       } else if (recipientTotal >= 0.4) {
