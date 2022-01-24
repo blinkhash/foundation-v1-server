@@ -887,6 +887,29 @@ describe('Test utility functionality', () => {
   });
 
   test('Test implemented processWorkers [5]', () => {
+    const shares = {
+      'RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j': '{"time":1623901893182,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j","solo":false,"difficulty":196}',
+      'RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR': '{"time":1623901893182,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR","solo":false,"difficulty":5517}'};
+    const hashrate = [
+      '{"time":1623901893182,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR","solo":false,"difficulty":8}'];
+    const times = {
+      'RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j': 20.15,
+      'RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR': 20530.15};
+    const processed = utils.processWorkers(shares, hashrate, times, 1, 300, false);
+    expect(processed.length).toBe(2);
+    expect(processed[0].worker).toBe('RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j');
+    expect(processed[0].hashrate).toBe(0);
+    expect(processed[0].shares).toBe(196);
+    expect(processed[0].times).toBe(20.15);
+    expect(processed[1].worker).toBe('RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR');
+    expect(processed[1].hashrate).toBe(0.08);
+    expect(processed[1].shares).toBe(5517);
+    expect(processed[1].times).toBe(20530.15);
+  });
+
+  test('Test implemented processWorkers [6]', () => {
     expect(utils.processWorkers(null)).toStrictEqual([]);
   });
 
