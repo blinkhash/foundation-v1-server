@@ -97,7 +97,7 @@ describe('Test stratum functionality', () => {
   test('Test share viability checker [1]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
-    poolStratum.checkShare({}, false);
+    poolStratum.checkShare({}, 'invalid');
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('We thought a share was found but it was rejected by the daemon'));
     console.log.mockClear();
   });
@@ -105,12 +105,20 @@ describe('Test stratum functionality', () => {
   test('Test share viability checker [2]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
-    poolStratum.checkShare({}, true);
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Share accepted at difficulty'));
+    poolStratum.checkShare({}, 'stale');
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('We thought a share was found but it was stale and rejected by the daemon'));
     console.log.mockClear();
   });
 
   test('Test share viability checker [3]', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const poolStratum = new PoolStratum(logger, configCopy, poolShares);
+    poolStratum.checkShare({}, 'valid');
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Share accepted at difficulty'));
+    console.log.mockClear();
+  });
+
+  test('Test share viability checker [4]', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolStratum = new PoolStratum(logger, configCopy, poolShares);
     poolStratum.checkShare({ blockType: 'auxiliary' }, true);
@@ -302,7 +310,7 @@ describe('Test stratum functionality', () => {
       'worker': 'example'
     };
     poolStratum.setupStratum(() => {
-      poolStratum.handleShares(shareData, true, false, () => {
+      poolStratum.handleShares(shareData, 'valid', false, () => {
         expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Share accepted at difficulty'));
         poolStratum.poolStratum.stratum.stopServer();
         console.log.mockClear();

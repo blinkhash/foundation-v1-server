@@ -43,8 +43,10 @@ const PoolStratum = function (logger, poolConfig, poolShares, poolStatistics) {
   };
 
   // Determine Share Viability
-  this.checkShare = function(shareData, shareValid) {
-    if (!shareValid) {
+  this.checkShare = function(shareData, shareType) {
+    if (shareType === 'stale') {
+      logger.debug(logSystem, logComponent, logSubCat, 'We thought a share was found but it was stale and rejected by the daemon.');
+    } else if (shareType === 'invalid') {
       logger.debug(logSystem, logComponent, logSubCat, 'We thought a share was found but it was rejected by the daemon.');
     } else if (shareData.blockType !== 'auxiliary') {
       logger.debug(logSystem, logComponent, logSubCat, `Share accepted at difficulty ${ shareData.difficulty }/${ shareData.shareDiff } by ${ shareData.addrPrimary } [${ shareData.ip }]`);
@@ -96,11 +98,11 @@ const PoolStratum = function (logger, poolConfig, poolShares, poolStatistics) {
 
   // Handle Share Submissions
   /* istanbul ignore next */
-  this.handleShares = function(shareData, shareValid, blockValid, callback) {
-    _this.poolShares.handleShares(shareData, shareValid, blockValid, () => {
+  this.handleShares = function(shareData, shareType, blockValid, callback) {
+    _this.poolShares.handleShares(shareData, shareType, blockValid, () => {
       _this.checkPrimary(shareData, blockValid);
       _this.checkAuxiliary(shareData, blockValid);
-      _this.checkShare(shareData, shareValid);
+      _this.checkShare(shareData, shareType);
       callback();
     }, () => {});
   };
@@ -116,8 +118,8 @@ const PoolStratum = function (logger, poolConfig, poolShares, poolStatistics) {
     poolStratum.on('difficultyUpdate', (workerName, diff) => {
       logger.debug(logSystem, logComponent, logSubCat, `Difficulty update to ${ diff } for worker: ${ JSON.stringify(workerName) }`);
     });
-    poolStratum.on('share', (shareData, shareValid, blockValid, callback) => {
-      _this.handleShares(shareData, shareValid, blockValid, callback);
+    poolStratum.on('share', (shareData, shareType, blockValid, callback) => {
+      _this.handleShares(shareData, shareType, blockValid, callback);
     });
     return poolStratum;
   };
