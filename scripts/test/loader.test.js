@@ -76,7 +76,7 @@ describe('Test loader functionality', () => {
     console.log.mockClear();
   });
 
-  test('Test pool configuration validation [5]', () => {
+  test('Test pool configuration validation [6]', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: false, name: 'Litecoin', primary: { coin: { name: 'Litecoin' }}};
     const response = poolLoader.validatePoolConfigs(poolConfig);
