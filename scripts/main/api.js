@@ -167,12 +167,12 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       const auxiliaryPaidData = utils.processPayments(results[12], miner)[miner];
 
       // Structure Miscellaneous Data
-      const primarySharedDifficultyData = utils.processDifficulty(results[6], miner);
-      const primarySoloDifficultyData = utils.processDifficulty(results[8], miner);
+      const primarySharedDifficultyData = utils.processDifficulty(results[6], miner, 'miner');
+      const primarySoloDifficultyData = utils.processDifficulty(results[8], miner, 'miner');
       const primarySharedWorkerData = utils.listWorkers(results[6], miner);
       const primarySoloWorkerData = utils.listWorkers(results[8], miner);
-      const auxiliarySharedDifficultyData = utils.processDifficulty(results[15], miner);
-      const auxiliarySoloDifficultyData = utils.processDifficulty(results[17], miner);
+      const auxiliarySharedDifficultyData = utils.processDifficulty(results[15], miner, 'miner');
+      const auxiliarySoloDifficultyData = utils.processDifficulty(results[17], miner, 'miner');
       const auxiliarySharedWorkerData = utils.listWorkers(results[15], miner);
       const auxiliarySoloWorkerData = utils.listWorkers(results[17], miner);
 
@@ -611,10 +611,10 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       const auxiliarySharedTimesData = utils.processTimes(results[7], worker);
 
       // Structure Miscellaneous Data
-      const primarySharedDifficultyData = utils.processDifficulty(results[3], worker);
-      const primarySoloDifficultyData = utils.processDifficulty(results[4], worker);
-      const auxiliarySharedDifficultyData = utils.processDifficulty(results[8], worker);
-      const auxiliarySoloDifficultyData = utils.processDifficulty(results[9], worker);
+      const primarySharedDifficultyData = utils.processDifficulty(results[3], worker, 'worker');
+      const primarySoloDifficultyData = utils.processDifficulty(results[4], worker, 'worker');
+      const auxiliarySharedDifficultyData = utils.processDifficulty(results[8], worker, 'worker');
+      const auxiliarySoloDifficultyData = utils.processDifficulty(results[9], worker, 'worker');
 
       // Build Worker Statistics
       callback(200, {

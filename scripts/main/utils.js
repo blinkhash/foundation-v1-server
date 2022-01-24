@@ -193,15 +193,15 @@ exports.processBlocks = function(blocks) {
 };
 
 // Process Difficulty for API Endpoints
-exports.processDifficulty = function(shares, miner) {
+exports.processDifficulty = function(shares, miner, type) {
   let count = 0;
   if (shares) {
     shares = shares.map((share) => JSON.parse(share));
     shares.forEach((share) => {
       if (share.worker && share.difficulty) {
-        const address = (miner && miner.includes('.')) ? share.worker : share.worker.split('.')[0];
+        const address = share.worker.split('.')[0];
         const shareValue = /^-?\d*(\.\d+)?$/.test(share.difficulty) ? parseFloat(share.difficulty) : 0;
-        if (!miner || miner === address) {
+        if (!miner || miner === share.worker || (type === 'miner' && miner === address)) {
           count += shareValue;
         }
       }
@@ -234,7 +234,7 @@ exports.processMiners = function(shares, hashrate, times, multiplier, hashrateWi
       const shareValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
       const effortValue = (!times) ? (/^-?\d*(\.\d+)?$/.test(details.effort) ? parseFloat(details.effort) : 0) : null;
       const timeValue = (times) ? (/^-?\d*(\.\d+)?$/.test(times[entry]) ? parseFloat(times[entry]) : 0) : null;
-      const hashrateValue = exports.processDifficulty(hashrate, address);
+      const hashrateValue = exports.processDifficulty(hashrate, address, 'miner');
       if (details.worker && shareValue > 0) {
         if (address in miners) {
           miners[address].shares += shareValue;
@@ -338,7 +338,7 @@ exports.processWorkers = function(shares, hashrate, times, multiplier, hashrateW
       const shareValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
       const effortValue = (!times) ? (/^-?\d*(\.\d+)?$/.test(details.effort) ? parseFloat(details.effort) : 0) : null;
       const timeValue = (times) ? (/^-?\d*(\.\d+)?$/.test(times[entry]) ? parseFloat(times[entry]) : 0) : null;
-      const hashrateValue = exports.processDifficulty(hashrate, entry);
+      const hashrateValue = exports.processDifficulty(hashrate, entry, 'worker');
       if (details.worker && shareValue > 0) {
         if (!active || (active && hashrateValue > 0)) {
           workers[entry] = {

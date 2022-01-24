@@ -345,7 +345,7 @@ describe('Test utility functionality', () => {
       '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}'];
-    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2')).toBe(16);
+    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', 'worker')).toBe(16);
   });
 
   test('Test implemented processDifficulty [3]', () => {
@@ -354,7 +354,7 @@ describe('Test utility functionality', () => {
       '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"difficulty":8}',
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}'];
-    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2')).toBe(8);
+    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', 'worker')).toBe(8);
   });
 
   test('Test implemented processDifficulty [4]', () => {
@@ -363,7 +363,7 @@ describe('Test utility functionality', () => {
       '{"time":1623901919389,"solo":false,"difficulty":8}',
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","solo":false,"difficulty":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"difficulty":8}'];
-    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1')).toBe(8);
+    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1', 'worker')).toBe(8);
   });
 
   test('Test implemented processDifficulty [5]', () => {
@@ -372,7 +372,7 @@ describe('Test utility functionality', () => {
       '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":"test"}',
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}'];
-    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2')).toBe(16);
+    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', 'worker')).toBe(16);
   });
 
   test('Test implemented processDifficulty [6]', () => {
@@ -381,7 +381,7 @@ describe('Test utility functionality', () => {
       '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}'];
-    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2')).toBe(32);
+    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2', 'worker')).toBe(32);
   });
 
   test('Test implemented processDifficulty [7]', () => {
@@ -390,10 +390,19 @@ describe('Test utility functionality', () => {
       '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}'];
-    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a')).toBe(32);
+    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a', 'miner')).toBe(32);
   });
 
-  test('Test implemented processDifficulty [6]', () => {
+  test('Test implemented processDifficulty [8]', () => {
+    const shares = [
+      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
+      '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
+      '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
+      '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}'];
+    expect(utils.processDifficulty(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a', 'worker')).toBe(0);
+  });
+
+  test('Test implemented processDifficulty [9]', () => {
     expect(utils.processDifficulty(null)).toBe(0);
   });
 
@@ -870,15 +879,11 @@ describe('Test utility functionality', () => {
       'RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j': 20.15,
       'RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR': 20530.15};
     const processed = utils.processWorkers(shares, hashrate, times, 1, 300, true);
-    expect(processed.length).toBe(2);
-    expect(processed[0].worker).toBe('RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j');
+    expect(processed.length).toBe(1);
+    expect(processed[0].worker).toBe('RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR');
     expect(processed[0].hashrate).toBe(0.08);
-    expect(processed[0].shares).toBe(196);
-    expect(processed[0].times).toBe(20.15);
-    expect(processed[1].worker).toBe('RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR');
-    expect(processed[1].hashrate).toBe(0.08);
-    expect(processed[1].shares).toBe(5517);
-    expect(processed[1].times).toBe(20530.15);
+    expect(processed[0].shares).toBe(5517);
+    expect(processed[0].times).toBe(20530.15);
   });
 
   test('Test implemented processWorkers [5]', () => {

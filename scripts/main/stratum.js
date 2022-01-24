@@ -44,9 +44,7 @@ const PoolStratum = function (logger, poolConfig, poolShares, poolStatistics) {
 
   // Determine Share Viability
   this.checkShare = function(shareData, shareType) {
-    if (shareType === 'stale') {
-      logger.debug(logSystem, logComponent, logSubCat, 'We thought a share was found but it was stale and rejected by the daemon.');
-    } else if (shareType === 'invalid') {
+    if (['stale', 'invalid'].includes(shareType)) {
       logger.debug(logSystem, logComponent, logSubCat, 'We thought a share was found but it was rejected by the daemon.');
     } else if (shareData.blockType !== 'auxiliary') {
       logger.debug(logSystem, logComponent, logSubCat, `Share accepted at difficulty ${ shareData.difficulty }/${ shareData.shareDiff } by ${ shareData.addrPrimary } [${ shareData.ip }]`);
