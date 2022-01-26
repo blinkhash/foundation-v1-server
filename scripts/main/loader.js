@@ -50,7 +50,7 @@ const PoolLoader = function(logger, portalConfig) {
       return false;
     }
     return true;
-  }
+  };
 
   // Validate Pool Certificates
   /* istanbul ignore next */
@@ -66,7 +66,7 @@ const PoolLoader = function(logger, portalConfig) {
       return false;
     }
     return true;
-  }
+  };
 
   // Check for Overlapping Pool Names
   this.validatePoolNames = function(poolConfigs, poolConfig) {
