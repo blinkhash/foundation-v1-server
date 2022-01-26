@@ -1,6 +1,6 @@
 {
   "name": "foundation-server",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "An extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool",
   "main": "./scripts/init.js",
   "keywords": [
@@ -37,7 +37,8 @@
     "prod:update": "pm2 update",
     "clean": "eslint . --ext .js --ignore-pattern node_modules/",
     "clean:fix": "eslint . --ext .js --fix --ignore-pattern node_modules/",
-    "test": "jest --coverage"
+    "test": "jest --coverage",
+    "deploy": "npm run clean:fix && npm run test"
   },
   "contributors": [],
   "repository": {
@@ -54,7 +55,7 @@
     "dateformat": "4.6.3",
     "express": "4.17.2",
     "express-rate-limit": "^5.5.1",
-    "foundation-stratum": "0.0.26",
+    "foundation-stratum": "0.0.27",
     "nodemon": "2.0.15",
     "pm2": "^5.1.2",
     "redis": "^3.1.1"

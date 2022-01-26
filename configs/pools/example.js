@@ -85,9 +85,9 @@ config.primary.coin.name = 'Bitcoin';
 config.primary.coin.symbol = 'BTC';
 config.primary.coin.asicboost = true;
 config.primary.coin.getinfo = false;
+config.primary.coin.hybrid = false;
 config.primary.coin.parameters = {};
 config.primary.coin.segwit = true;
-config.primary.coin.staking = false;
 config.primary.coin.version = 4;
 
 // Algorithm Configuration
