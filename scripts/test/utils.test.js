@@ -330,6 +330,34 @@ describe('Test utility functionality', () => {
     expect(processed[1].worker).toBe('tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
   });
 
+  test('Test implemented listBlocks [1]', () => {
+    const miner = 'miner1';
+    const blocks = [
+      '{"time":1623901893182,"height":123456,"hash":"8de06f6e73dbff454023a95f29f87c3","reward":123,"transaction":"bc0b3f953ff408cfb298b034daf5ecd480","difficulty":234,"luck":34.56,"worker":"miner2","solo":false,"round":"12345678"}',
+      '{"time":1623901893183,"height":123457,"hash":"8de0623a95f29f6e73dbff4540f87c3","reward":123,"transaction":"b53ff408cfb298c0b3f9b034daf5ecd480","difficulty":234,"luck":34.56,"worker":"miner1","solo":false,"round":"12345679"}',
+      '{"time":1623901893184,"height":123458,"hash":"8de0bff4540236f6e73da95f29f87c3","reward":123,"transaction":"bc0b3f4daf5ecd4953ff408cfb298b0380","difficulty":234,"luck":34.56,"worker":"miner1","solo":false,"round":"12345680"}'];
+    const processed = utils.listBlocks(blocks, miner);
+    expect(processed.length).toBe(2);
+    expect(processed[0].height).toBe(123457);
+    expect(processed[1].height).toBe(123458);
+  });
+
+  test('Test implemented listBlocks [2]', () => {
+    const miner = 'miner3';
+    const blocks = [
+      '{"time":1623901893182,"height":123456,"hash":"8de06f6e73dbff454023a95f29f87c3","reward":123,"transaction":"bc0b3f953ff408cfb298b034daf5ecd480","difficulty":234,"luck":34.56,"worker":"miner2","solo":false,"round":"12345678"}',
+      '{"time":1623901893183,"height":123457,"hash":"8de0623a95f29f6e73dbff4540f87c3","reward":123,"transaction":"b53ff408cfb298c0b3f9b034daf5ecd480","difficulty":234,"luck":34.56,"worker":"miner1","solo":false,"round":"12345679"}',
+      '{"time":1623901893184,"height":123458,"hash":"8de0bff4540236f6e73da95f29f87c3","reward":123,"transaction":"bc0b3f4daf5ecd4953ff408cfb298b0380","difficulty":234,"luck":34.56,"worker":"miner1","solo":false,"round":"12345680"}'];
+    const processed = utils.listBlocks(blocks, miner);
+    expect(processed.length).toBe(0);
+  });
+
+  test('Test implemented listBlocks [3]', () => {
+    const miner = 'miner3';
+    const processed = utils.listBlocks(null, miner);
+    expect(processed.length).toBe(0);
+  });
+
   test('Test implemented processDifficulty [1]', () => {
     const shares = [
       '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"difficulty":8}',
@@ -655,6 +683,33 @@ describe('Test utility functionality', () => {
     expect(processed[0].paid).toBe(11.8749);
     expect(processed[0].transaction).toBe('31f5978a31a2bac842e383170b019e17415c12fd425f155269bafe7b4bb00a22');
     expect(processed[1].transaction).toBe('31f5978a31a2bac842e383170b019e17415c12fd425f155269bafe7b4bb00a21');
+  });
+
+  test('Test implemented processMinerPayments [1]', () => {
+    const miner = 'miner1';
+    const payments = [
+      '{"time":1623901893182,"paid":123.456,"transaction":"bc0b3f953ff408cfb298b034daf5ecd480","miner":"miner1"}',
+      '{"time":1623902893182,"paid":124.456,"transaction":"bc0b4f953ff408cfb298b034daf5ecd480","miner":"miner1"}',
+      '{"time":1623903893182,"paid":125.456,"transaction":"bc0b5f953ff408cfb298b034daf5ecd480","miner":"miner2"}'];
+    const processed = utils.processMinerPayments(payments, miner);
+    expect(processed.length).toBe(2);
+    expect(processed[0].time).toBe(1623901893182);
+    expect(processed[1].time).toBe(1623902893182);
+  });
+
+    test('Test implemented processMinerPayments [2]', () => {
+    const miner = 'miner3';
+    const payments = [
+      '{"time":1623901893182,"paid":123.456,"transaction":"bc0b3f953ff408cfb298b034daf5ecd480","miner":"miner1"}',
+      '{"time":1623903893182,"paid":125.456,"transaction":"bc0b5f953ff408cfb298b034daf5ecd480","miner":"miner2"}'];
+    const processed = utils.processMinerPayments(payments, miner);
+    expect(processed.length).toBe(0);
+  });
+
+  test('Test implemented processMinerPayments [3]', () => {
+    const miner = 'miner1';
+    const processed = utils.processMinerPayments(null, miner);
+    expect(processed.length).toBe(0);
   });
 
   test('Test implemented processShares [1]', () => {
