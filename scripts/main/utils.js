@@ -198,10 +198,7 @@ exports.listBlocks = function(blockData, miner) {
   if (blockData) {
     blockData = blockData.map((block) => JSON.parse(block));
     blockData.forEach((block) => {
-      const test = block.worker.split('.')[0]
-      console.log('first: ' + test);
-      console.log('second: ' + test.split('.')[0]);
-      if (block.worker === miner) {
+      if (block.worker.split('.')[0] === miner) {
         blocks.push(block);
       }
     });
