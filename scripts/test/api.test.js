@@ -253,6 +253,51 @@ describe('Test API functionality', () => {
     });
   });
 
+  test('Test handleMinerBlocks API endpoint', (done) => {
+    const commands = [
+      ['sadd', 'Pool1:blocks:primary:confirmed', mockBuildBlock(180, 'hash', 12.5, 'txid', 8, 'worker1', false)],
+      ['sadd', 'Pool1:blocks:primary:confirmed', mockBuildBlock(181, 'hash', 12.5, 'txid', 8, 'worker2', false)],
+      ['sadd', 'Pool1:blocks:primary:pending', mockBuildBlock(182, 'hash', 12.5, 'txid', 8, 'worker1', false)],
+      ['sadd', 'Pool1:blocks:primary:pending', mockBuildBlock(183, 'hash', 12.5, 'txid', 8, 'worker2', false)],
+      ['sadd', 'Pool1:blocks:primary:kicked', mockBuildBlock(184, 'hash', 12.5, 'txid', 8, 'worker1', false)],
+      ['sadd', 'Pool1:blocks:primary:kicked', mockBuildBlock(185, 'hash', 12.5, 'txid', 8, 'worker2', false)],
+      ['sadd', 'Pool1:blocks:auxiliary:confirmed', mockBuildBlock(186, 'hash', 12.5, 'txid', 8, 'worker1', false)],
+      ['sadd', 'Pool1:blocks:auxiliary:confirmed', mockBuildBlock(187, 'hash', 12.5, 'txid', 8, 'worker2', false)],
+      ['sadd', 'Pool1:blocks:auxiliary:pending', mockBuildBlock(188, 'hash', 12.5, 'txid', 8, 'worker1', false)],
+      ['sadd', 'Pool1:blocks:auxiliary:pending', mockBuildBlock(189, 'hash', 12.5, 'txid', 8, 'worker2', false)],
+      ['sadd', 'Pool1:blocks:auxiliary:kicked', mockBuildBlock(190, 'hash', 12.5, 'txid', 8, 'worker1', false)],
+      ['sadd', 'Pool1:blocks:auxiliary:kicked', mockBuildBlock(191, 'hash', 12.5, 'txid', 8, 'worker2', false)]];
+    const response = mockResponse();
+    response.on('end', (payload) => {
+      const processed = JSON.parse(payload);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(Object.keys(processed.body).length).toBe(2);
+      expect(Object.keys(processed.body.primary).length).toBe(3);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(3);
+      expect(processed.body.primary.confirmed.length).toBe(1);
+      expect(processed.body.primary.confirmed[0].height).toBe(180);
+      expect(processed.body.primary.pending.length).toBe(1);
+      expect(processed.body.primary.pending[0].height).toBe(182);
+      expect(processed.body.primary.kicked.length).toBe(1);
+      expect(processed.body.primary.kicked[0].height).toBe(184);
+      expect(processed.body.auxiliary.confirmed.length).toBe(1);
+      expect(processed.body.auxiliary.confirmed[0].height).toBe(186);
+      expect(processed.body.auxiliary.pending.length).toBe(1);
+      expect(processed.body.auxiliary.pending[0].height).toBe(188);
+      expect(processed.body.auxiliary.kicked.length).toBe(1);
+      expect(processed.body.auxiliary.kicked[0].height).toBe(190);
+      done();
+    });
+    mockSetupClient(client, commands, 'Pool1', () => {
+      const request = mockRequest('Pool1', 'blocks', 'worker1');
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
+    });
+  });
+
   test('Test handlePools API endpoint', (done) => {
     const response = mockResponse();
     response.on('end', (payload) => {
@@ -559,6 +604,38 @@ describe('Test API functionality', () => {
       });
     });
   });
+
+  test('Test handlePaymentsMinerRecords API endpoint', (done) => {
+    const commands = [
+      ['zadd', 'Pool1:payments:primary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12345, paid: 200.15, transaction: 'hash1', miner: 'miner1' })],
+      ['zadd', 'Pool1:payments:primary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12346, paid: 200.15, transaction: 'hash2', miner: 'miner1' })],
+      ['zadd', 'Pool1:payments:primary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12347, paid: 200.15, transaction: 'hash3', miner: 'miner2' })],
+      ['zadd', 'Pool1:payments:primary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12348, paid: 200.15, transaction: 'hash4', miner: 'miner3' })],
+      ['zadd', 'Pool1:payments:auxiliary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12349, paid: 200.15, transaction: 'hash5', miner: 'miner1' })],
+      ['zadd', 'Pool1:payments:auxiliary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12351, paid: 200.15, transaction: 'hash6', miner: 'miner1' })],
+      ['zadd', 'Pool1:payments:auxiliary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12352, paid: 200.15, transaction: 'hash7', miner: 'miner2' })],
+      ['zadd', 'Pool1:payments:auxiliary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12353, paid: 200.15, transaction: 'hash8', miner: 'miner3' })]];
+    const response = mockResponse();
+    response.on('end', (payload) => {
+      const processed = JSON.parse(payload);
+      expect(processed.statusCode).toBe(200);
+      expect(typeof processed.body).toBe('object');
+      expect(processed.body.primary.length).toBe(2);
+      expect(processed.body.primary[0].time).toBe(12345);
+      expect(processed.body.auxiliary.length).toBe(2);
+      expect(processed.body.auxiliary[0].time).toBe(12349);
+      done();
+    });
+    mockSetupClient(client, commands, 'Pool1', () => {
+      const request = mockRequest('Pool1', 'payments', 'miner1');
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
+    });
+  });
+
+
 
   test('Test handlePorts API endpoint', (done) => {
     const response = mockResponse();

@@ -192,6 +192,22 @@ exports.processBlocks = function(blocks) {
   return output;
 };
 
+// List Blocks per miner for API Endpoints
+exports.listBlocks = function(blockData, miner) {
+  const blocks = [];
+  if (blockData) {
+    blockData = blockData
+      .map((block) => JSON.parse(block))
+      .sort((a, b) => (b.height - a.height));
+    blockData.forEach((block) => {
+      if (block.worker.split('.')[0] === miner) {
+        blocks.push(block);
+      }
+    });
+  }
+  return blocks;
+};
+
 // Process Difficulty for API Endpoints
 exports.processDifficulty = function(shares, miner, type) {
   let count = 0;
@@ -282,6 +298,21 @@ exports.processRecords = function(records) {
     .map((record) => JSON.parse(record))
     .sort((a, b) => (a.time - b.time));
 };
+
+// Process Payments for defined Miner for API Endpoints
+exports.processMinerPayments = function(paymentData, miner) {
+  const payments = [];
+  if (paymentData) {
+    paymentData = paymentData.map((payment) => JSON.parse(payment));
+    paymentData.forEach((payment) => {
+      if (payment.miner === miner) {
+        payments.push(payment);
+      }
+    });
+  }
+  return payments;
+};
+
 
 // Process Shares for API Endpoints
 exports.processShares = function(shares, miner) {

@@ -90,6 +90,31 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     }, callback);
   };
 
+  // API Endpoint for /blocks/[miner]
+  this.handleBlocksSpecific = function(pool, miner, callback) {
+    const commands = [
+      ['smembers', `${ pool }:blocks:primary:confirmed`],
+      ['smembers', `${ pool }:blocks:primary:kicked`],
+      ['smembers', `${ pool }:blocks:primary:pending`],
+      ['smembers', `${ pool }:blocks:auxiliary:confirmed`],
+      ['smembers', `${ pool }:blocks:auxiliary:kicked`],
+      ['smembers', `${ pool }:blocks:auxiliary:pending`]];
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
+        primary: {
+          confirmed: utils.listBlocks(results[0], miner),
+          kicked: utils.listBlocks(results[1], miner),
+          pending: utils.listBlocks(results[2], miner),
+        },
+        auxiliary: {
+          confirmed: utils.listBlocks(results[3], miner),
+          kicked: utils.listBlocks(results[4], miner),
+          pending: utils.listBlocks(results[5], miner),
+        }
+      });
+    }, callback);
+  };
+
   // API Endpoint for /miners/active
   this.handleMinersActive = function(pool, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
@@ -319,6 +344,20 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       });
     }, callback);
   };
+
+  // API Endpoint for /payments/[miner]
+  this.handlePaymentsMinerRecords = function(pool, miner, callback) {
+      const commands = [
+        ['zrangebyscore', `${ pool }:payments:primary:minerpayments`, '-inf', '+inf'],
+        ['zrangebyscore', `${ pool }:payments:auxiliary:minerpayments`, '-inf', '+inf']];
+      _this.executeCommands(commands, (results) => {
+        callback(200, {
+          primary: utils.processMinerPayments(results[0], miner),
+          auxiliary: utils.processMinerPayments(results[1], miner),
+        });
+      }, callback);
+  };
+  
 
   // API Endpoint for /payments
   this.handlePayments = function(pool, callback) {
@@ -740,6 +779,9 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     case (endpoint === 'blocks' && method === ''):
       _this.handleBlocks(pool, (code, message) => callback(code, message));
       break;
+    case (endpoint === 'blocks' && method.length >= 1):
+      _this.handleBlocksSpecific(pool, method, (code, message) => callback(code, message));
+      break;
 
     // Miners Endpoints
     case (endpoint === 'miners' && method === 'active'):
@@ -768,9 +810,14 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     case (endpoint === 'payments' && method === 'records'):
       _this.handlePaymentsRecords(pool, (code, message) => callback(code, message));
       break;
+    case (endpoint === 'payments' && method.length >= 1):
+      _this.handlePaymentsMinerRecords(pool, method, (code, message) => callback(code, message));
+      break;
     case (endpoint === 'payments' && method === ''):
       _this.handlePayments(pool, (code, message) => callback(code, message));
       break;
+    
+    
 
     // Ports Endpoints
     case (endpoint === 'ports' && method === ''):
