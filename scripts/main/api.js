@@ -112,6 +112,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           pending: utils.listBlocks(results[5], miner),
         }
       });
+      console.log('something confirmed:' + results[0]);
     }, callback);
   };
 
