@@ -351,7 +351,6 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
         ['zrangebyscore', `${ pool }:payments:primary:minerpayments`, '-inf', '+inf'],
         ['zrangebyscore', `${ pool }:payments:auxiliary:minerpayments`, '-inf', '+inf']];
       _this.executeCommands(commands, (results) => {
-        console.log(results[0]);
         callback(200, {
           primary: utils.processMinerPayments(results[0], miner),
           auxiliary: utils.processMinerPayments(results[1], miner),
