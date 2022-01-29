@@ -196,7 +196,9 @@ exports.processBlocks = function(blocks) {
 exports.listBlocks = function(blockData, miner) {
   const blocks = [];
   if (blockData) {
-    blockData = blockData.map((block) => JSON.parse(block));
+    blockData = blockData
+      .map((block) => JSON.parse(block))
+      .sort((a, b) => (b.height - a.height));
     blockData.forEach((block) => {
       if (block.worker.split('.')[0] === miner) {
         blocks.push(block);
