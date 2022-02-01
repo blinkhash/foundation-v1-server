@@ -605,38 +605,6 @@ describe('Test API functionality', () => {
     });
   });
 
-  test('Test handlePaymentsMinerRecords API endpoint', (done) => {
-    const commands = [
-      ['zadd', 'Pool1:payments:primary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12345, paid: 200.15, transaction: 'hash1', miner: 'miner1' })],
-      ['zadd', 'Pool1:payments:primary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12346, paid: 200.15, transaction: 'hash2', miner: 'miner1' })],
-      ['zadd', 'Pool1:payments:primary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12347, paid: 200.15, transaction: 'hash3', miner: 'miner2' })],
-      ['zadd', 'Pool1:payments:primary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12348, paid: 200.15, transaction: 'hash4', miner: 'miner3' })],
-      ['zadd', 'Pool1:payments:auxiliary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12349, paid: 200.15, transaction: 'hash5', miner: 'miner1' })],
-      ['zadd', 'Pool1:payments:auxiliary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12351, paid: 200.15, transaction: 'hash6', miner: 'miner1' })],
-      ['zadd', 'Pool1:payments:auxiliary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12352, paid: 200.15, transaction: 'hash7', miner: 'miner2' })],
-      ['zadd', 'Pool1:payments:auxiliary:minerpayments', Date.now() / 1000 | 0, JSON.stringify({ time: 12353, paid: 200.15, transaction: 'hash8', miner: 'miner3' })]];
-    const response = mockResponse();
-    response.on('end', (payload) => {
-      const processed = JSON.parse(payload);
-      expect(processed.statusCode).toBe(200);
-      expect(typeof processed.body).toBe('object');
-      expect(processed.body.primary.length).toBe(2);
-      expect(processed.body.primary[0].time).toBe(12345);
-      expect(processed.body.auxiliary.length).toBe(2);
-      expect(processed.body.auxiliary[0].time).toBe(12349);
-      done();
-    });
-    mockSetupClient(client, commands, 'Pool1', () => {
-      const request = mockRequest('Pool1', 'payments', 'miner1');
-      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, (code, message) => {
-        poolApi.buildResponse(code, message, response);
-      });
-    });
-  });
-
-
-
   test('Test handlePorts API endpoint', (done) => {
     const response = mockResponse();
     response.on('end', (payload) => {

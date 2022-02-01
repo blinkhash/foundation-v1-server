@@ -742,17 +742,6 @@ const PoolPayments = function (logger, client) {
           transaction: transaction,
         };
 
-        // Update Redis with miner payment records
-        for (const [address, amount] of Object.entries(amounts)) {
-          const entry = { 
-            time: currentDate,
-            paid: amount,
-            transaction: transaction,
-            miner: address,
-          };
-          commands.push(['zadd', `${ pool }:payments:${ blockType }:minerpayments`, Date.now() / 1000 | 0, JSON.stringify(entry)]);
-        }
-
         // Update Redis Database with Payment Record
         logger.special('Payments', pool, `Sent ${ totalSent } ${ processingConfig.coin.symbol } to ${ Object.keys(amounts).length } workers, txid: ${ transaction }`);
         commands.push(['zadd', `${ pool }:payments:${ blockType }:records`, Date.now(), JSON.stringify(payments)]);

@@ -345,20 +345,6 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     }, callback);
   };
 
-  // API Endpoint for /payments/[miner]
-  this.handlePaymentsMinerRecords = function(pool, miner, callback) {
-      const commands = [
-        ['zrangebyscore', `${ pool }:payments:primary:minerpayments`, '-inf', '+inf'],
-        ['zrangebyscore', `${ pool }:payments:auxiliary:minerpayments`, '-inf', '+inf']];
-      _this.executeCommands(commands, (results) => {
-        callback(200, {
-          primary: utils.processMinerPayments(results[0], miner),
-          auxiliary: utils.processMinerPayments(results[1], miner),
-        });
-      }, callback);
-  };
-  
-
   // API Endpoint for /payments
   this.handlePayments = function(pool, callback) {
     const commands = [
@@ -810,14 +796,9 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     case (endpoint === 'payments' && method === 'records'):
       _this.handlePaymentsRecords(pool, (code, message) => callback(code, message));
       break;
-    case (endpoint === 'payments' && method.length >= 1):
-      _this.handlePaymentsMinerRecords(pool, method, (code, message) => callback(code, message));
-      break;
     case (endpoint === 'payments' && method === ''):
       _this.handlePayments(pool, (code, message) => callback(code, message));
       break;
-    
-    
 
     // Ports Endpoints
     case (endpoint === 'ports' && method === ''):

@@ -685,33 +685,6 @@ describe('Test utility functionality', () => {
     expect(processed[1].transaction).toBe('31f5978a31a2bac842e383170b019e17415c12fd425f155269bafe7b4bb00a21');
   });
 
-  test('Test implemented processMinerPayments [1]', () => {
-    const miner = 'miner1';
-    const payments = [
-      '{"time":1623901893182,"paid":123.456,"transaction":"bc0b3f953ff408cfb298b034daf5ecd480","miner":"miner1"}',
-      '{"time":1623902893182,"paid":124.456,"transaction":"bc0b4f953ff408cfb298b034daf5ecd480","miner":"miner1"}',
-      '{"time":1623903893182,"paid":125.456,"transaction":"bc0b5f953ff408cfb298b034daf5ecd480","miner":"miner2"}'];
-    const processed = utils.processMinerPayments(payments, miner);
-    expect(processed.length).toBe(2);
-    expect(processed[0].time).toBe(1623901893182);
-    expect(processed[1].time).toBe(1623902893182);
-  });
-
-    test('Test implemented processMinerPayments [2]', () => {
-    const miner = 'miner3';
-    const payments = [
-      '{"time":1623901893182,"paid":123.456,"transaction":"bc0b3f953ff408cfb298b034daf5ecd480","miner":"miner1"}',
-      '{"time":1623903893182,"paid":125.456,"transaction":"bc0b5f953ff408cfb298b034daf5ecd480","miner":"miner2"}'];
-    const processed = utils.processMinerPayments(payments, miner);
-    expect(processed.length).toBe(0);
-  });
-
-  test('Test implemented processMinerPayments [3]', () => {
-    const miner = 'miner1';
-    const processed = utils.processMinerPayments(null, miner);
-    expect(processed.length).toBe(0);
-  });
-
   test('Test implemented processShares [1]', () => {
     const shares = {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': '{"time":1623862569778,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","difficulty":24,"effort":42.16}',
