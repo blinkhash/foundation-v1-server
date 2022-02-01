@@ -4,6 +4,8 @@
  *
  */
 
+const fs = require('fs');
+const path = require('path');
 const redis = require('redis');
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -16,18 +18,22 @@ const PoolDatabase = function(logger, portalConfig) {
 
   // Connect to Redis Client
   this.buildRedisClient = function() {
+    const connectionOptions = {};
+    connectionOptions.socket = {};
+    connectionOptions.socket.port = _this.portalConfig.redis.port;
+    connectionOptions.socket.host = _this.portalConfig.redis.host;
+
     if (_this.portalConfig.redis.password !== '') {
-      return redis.createClient({
-        port: _this.portalConfig.redis.port,
-        host: _this.portalConfig.redis.host,
-        password: _this.portalConfig.redis.password
-      });
-    } else {
-      return redis.createClient({
-        port: _this.portalConfig.redis.port,
-        host: _this.portalConfig.redis.host,
-      });
+      connectionOptions.password = _this.portalConfig.redis.password;
     }
+
+    if (_this.portalConfig.redis.tls == true) {
+      connectionOptions.socket.tls = true;
+      connectionOptions.socket.cert = fs.readFileSync(path.join('./certificates',_this.portalConfig.tls.serverCert));
+      connectionOptions.socket.ca = fs.readFileSync(path.join('./certificates',_this.portalConfig.tls.rootCA));
+    }
+
+    return redis.createClient(connectionOptions);
   };
 
   // Check Redis Client Version

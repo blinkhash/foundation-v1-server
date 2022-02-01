@@ -9,13 +9,14 @@ const Stratum = require('foundation-stratum');
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Stratum Function
-const PoolStratum = function (logger, poolConfig, poolShares, poolStatistics) {
+const PoolStratum = function (logger, poolConfig, portalConfig, poolShares, poolStatistics) {
 
   const _this = this;
   process.setMaxListeners(0);
 
   this.pool = poolConfig.name;
   this.poolConfig = poolConfig;
+  this.portalConfig = portalConfig;
   this.poolShares = poolShares;
   this.poolStatistics = poolStatistics;
   this.forkId = process.env.forkId;
@@ -132,7 +133,7 @@ const PoolStratum = function (logger, poolConfig, poolShares, poolStatistics) {
 
   // Build Pool from Configuration
   this.setupStratum = function(callback) {
-    let poolStratum = Stratum.create(_this.poolConfig, _this.authorizeWorker, callback);
+    let poolStratum = Stratum.create(_this.poolConfig, _this.portalConfig, _this.authorizeWorker, callback);
     poolStratum = _this.handleEvents(poolStratum);
     poolStratum.setupPool();
     _this.handleStatistics(poolStratum);
