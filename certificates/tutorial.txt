@@ -1,12 +1,56 @@
-TLS/SSL Integration (Self-Signed):
+SSL/TLS SETUP
+=============
 
-1. openssl genrsa -out private-key.pem 1024
-2. openssl req -new -key private-key.pem -out csr.pem
-3. openssl x509 -req -in csr.pem -signkey private-key.pem -out public-cert.pem
-4. Place the private-key.pem and public-cert.pem files in the /certificates folder
-5. Enable SSL for ports as necessary
+Foundation supports secure communication to the Redis database and between miners and the stratum server. This guide helps you create a set of self-signed certificates using openssl to use these features.
 
-Example:
-ports1.ssl.enabled = true;
-ports1.ssl.key = "private-key.pem";
-ports1.ssl.cert = "public-cert.pem";
+Creating the Root CA
+--------------------
+The Root key is used to sign certificate requests, so keep it safe! If you want to create a key without password protection remove the -des3 option.
+
+openssl genrsa -des3 -out rootCA.key 2048
+
+Create and self sign the Root Certificate which identifies your root certificate authority (CA). It is valid for three years and by then it might be a good idea to check if 2048 bits is still secure enough for your needs. If you want to change this behaviour alter or remove the -days 1095 option.
+
+openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1095 -out rootCA.crt
+
+Creating the server Certificate
+-------------------------------
+First create a new key for the server:
+
+openssl genrsa -out server.key 2048
+
+Use the key to create the certificate signing request (csr): 
+
+openssl req -new -sha256 -key server.key -out server.csr
+
+Generate the server certificate:
+
+openssl x509 -req -in server.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out server.crt -days 500 -sha256 -ext SAN -extensions SAN
+
+Create the DH parameters file:
+
+openssl dhparam -out dhparam.pem 2048
+
+Foundation certificate configuration
+------------------------------------
+Copy server key, server certificate and root certificate to ./certificates folder and set the following options in config.js
+
+config.tls.rootCA = 'rootCA.crt';
+config.tls.serverKey = 'server.key';
+config.tls.serverCert = 'server.crt';
+
+
+Redis TLS configuration
+-----------------------
+Redis supports TLS connections since version 6. For configuration options see https://redis.io/topics/encryption. Four of the generated files are linked to redis parameters:
+
+tls-cert-file /path/to/server.crt
+tls-key-file /path/to/server.key
+tls-ca-cert-file /path/to/rootCA.crt
+tls-dh-params-file /path/to/dhparam.pem
+
+After Redis TLS is working set config.redis.tls = true
+
+Miner TLS configuration
+-----------------------
+For the required port set portsX.ssl.enabled = true

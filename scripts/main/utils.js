@@ -4,6 +4,7 @@
  *
  */
 
+const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
 
@@ -393,4 +394,34 @@ exports.validateInput = function(address) {
     address = address.toString().replace(/[^a-zA-Z0-9.-]+/g, '');
   }
   return address;
+};
+
+// Validate RootCA
+exports.validateRootCertificate = function(portalConfig) {
+  const rootCA = portalConfig.tls.rootCA;
+  const validated = fs.existsSync(`./certificates/${ rootCA }`);
+  if (!validated) {
+    return false;
+  }
+  return true;
+};
+
+// Validate Server Key  
+exports.validateServerKey = function(portalConfig) {
+  const key = portalConfig.tls.serverKey;
+  const validated = fs.existsSync(`./certificates/${ key }`);
+  if (!validated) {
+    return false;
+  }
+  return true;
+};
+
+// Validate Server Certificate
+exports.validateServerCertificate = function(portalConfig) {
+  const cert = portalConfig.tls.serverCert;
+    const validated = fs.existsSync(`./certificates/${ cert }`);
+  if (!validated) {
+    return false;
+  }
+  return true;
 };

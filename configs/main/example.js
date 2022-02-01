@@ -17,6 +17,7 @@ config.clustering.enabled = true;
 config.clustering.forks = 'auto';
 
 // TLS Configuration
+config.tls = {};
 config.tls.rootCA = '';
 config.tls.serverKey = '';
 config.tls.serverCert = '';

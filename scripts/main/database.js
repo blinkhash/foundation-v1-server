@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const redis = require('redis');
+const utils = require('./utils');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -15,6 +16,9 @@ const PoolDatabase = function(logger, portalConfig) {
 
   const _this = this;
   this.portalConfig = portalConfig;
+
+        //  logger.error('Builder', 'Setup', 'Invalid Server certificate file specified. Check your config.js file.');
+
 
   // Connect to Redis Client
   this.buildRedisClient = function() {
@@ -28,9 +32,22 @@ const PoolDatabase = function(logger, portalConfig) {
     }
 
     if (_this.portalConfig.redis.tls == true) {
-      connectionOptions.socket.tls = true;
-      connectionOptions.socket.cert = fs.readFileSync(path.join('./certificates',_this.portalConfig.tls.serverCert));
-      connectionOptions.socket.ca = fs.readFileSync(path.join('./certificates',_this.portalConfig.tls.rootCA));
+      tlsTest = true;
+      if (!utils.validateRootCertificate(_this.portalConfig)) {
+        logger.error('Server', 'Redis', 'Invalid Root certificate file specified. Check your config.js file.');
+        tlsTest = false;
+      }
+      if (!utils.validateServerKey(_this.portalConfig)) {
+        logger.error('Server', 'Redis', 'Invalid Server key file specified. Check your config.js file.');
+        tlsTest = false;
+      }
+      if (tlsTest) {
+        connectionOptions.socket.tls = true;
+        connectionOptions.socket.cert = fs.readFileSync(path.join('./certificates',_this.portalConfig.tls.serverCert));
+        connectionOptions.socket.ca = fs.readFileSync(path.join('./certificates',_this.portalConfig.tls.rootCA));
+      } else {
+        logger.error('Server', 'Redis', 'TLS connection to Redis cannot be made.')
+      } 
     }
 
     return redis.createClient(connectionOptions);
