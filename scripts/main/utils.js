@@ -396,6 +396,7 @@ exports.validateInput = function(address) {
   return address;
 };
 
+/* istanbul ignore next */
 // Validate RootCA
 exports.validateRootCertificate = function(portalConfig) {
   const rootCA = portalConfig.tls.rootCA;
@@ -406,6 +407,7 @@ exports.validateRootCertificate = function(portalConfig) {
   return true;
 };
 
+/* istanbul ignore next */
 // Validate Server Key  
 exports.validateServerKey = function(portalConfig) {
   const key = portalConfig.tls.serverKey;
@@ -416,6 +418,7 @@ exports.validateServerKey = function(portalConfig) {
   return true;
 };
 
+/* istanbul ignore next */
 // Validate Server Certificate
 exports.validateServerCertificate = function(portalConfig) {
   const cert = portalConfig.tls.serverCert;

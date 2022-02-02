@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const utils = require('./utils');
 const Algorithms = require('foundation-stratum').algorithms;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,6 +34,23 @@ const PoolLoader = function(logger, portalConfig) {
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.block, name)) return false;
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.coinbase, name)) return false;
     if (!_this.validatePoolRecipients(poolConfig)) return false;
+    return true;
+  };
+
+  // Validate Server certificate and key
+  /* istanbul ignore next */
+  this.validateServerCerts = function(poolConfig, portalConfig) {
+    const tlsUsed = poolConfig.ports
+      .filter(config => config.enabled)
+      .flatMap(config => config.ssl)
+      .filter(config => config ? config.enabled : false).length;
+    console.log('here: ' + tlsUsed);
+    if (tlsUsed > 0) {
+      if (!utils.validateServerKey(portalConfig) || !utils.validateServerCertificate(portalConfig)) {
+        logger.error('Builder', 'Setup', 'Invalid certificate or key files specified for TLS. Check your config.js file.');
+        return false;
+      } 
+    }
     return true;
   };
 
@@ -101,9 +119,7 @@ const PoolLoader = function(logger, portalConfig) {
       }
       const poolConfig = require(normalizedPath + file);
       if (!_this.validatePoolConfigs(poolConfig)) return;
-      // if (!_this.validateRootCertificate(portalConfig)) return;
-      // if (!_this.validateServerKey(portalConfig)) return;
-      // if (!_this.validateServerCertificate(portalConfig)) return;
+      if (!_this.validateServerCerts(poolConfig, portalConfig)) return;
       if (!_this.validatePoolNames(poolConfigs, poolConfig)) return;
       if (!_this.validatePoolPorts(poolConfigs, poolConfig)) return;
       poolConfigs[poolConfig.name] = poolConfig;
