@@ -18,9 +18,9 @@ config.clustering.forks = 'auto';
 
 // TLS Configuration
 config.tls = {};
-config.tls.rootCA = '';
-config.tls.serverKey = '';
-config.tls.serverCert = '';
+config.tls.ca = '';
+config.tls.key = '';
+config.tls.cert = '';
 
 // Redis Configuration
 config.redis = {};
