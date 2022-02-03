@@ -29,7 +29,7 @@ const PoolWorkers = function (logger, client) {
       const poolConfig = _this.poolConfigs[configName];
       const poolShares = new PoolShares(logger, _this.client, poolConfig, _this.portalConfig);
       const poolStatistics = new PoolStatistics(logger, _this.client, poolConfig, _this.portalConfig);
-      const poolStratum = new PoolStratum(logger, poolConfig, poolShares, poolStatistics);
+      const poolStratum = new PoolStratum(logger, poolConfig, _this.portalConfig, poolShares, poolStatistics);
       poolStratum.setupStratum((response) => {
         if (response === true) resolve(poolStratum);
         else reject(`Error thrown on pool creation: ${ response }`);
