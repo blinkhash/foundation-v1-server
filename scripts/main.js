@@ -7,6 +7,7 @@
 const path = require('path');
 
 const PoolDatabase = require('./main/database');
+const PoolLoader = require('./main/loader');
 const PoolLogger = require('./main/logger');
 const PoolThreads = require('./main/threads');
 
@@ -24,6 +25,14 @@ try {
 
 const logger = new PoolLogger(config);
 const database = new PoolDatabase(logger, config);
+const loader = new PoolLoader(logger, config);
+
+// Check for Valid TLS Files
+if (config.redis.tls && !loader.validatePortalTLS(config)) {
+  throw new Error('Unable to find or validate TLS files. Read the tutorial in the \'./certificates\' folder.');
+}
+
+// Build Database Client
 const client = database.buildRedisClient({ detect_buffers: true });
 
 // Check for Redis Connection Errors

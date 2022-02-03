@@ -18,25 +18,25 @@ const PoolDatabase = function(logger, portalConfig) {
   this.portalConfig = portalConfig;
 
   // Connect to Redis Client
+  /* istanbul ignore next */
   this.buildRedisClient = function() {
-    const connectionOptions = {};
-    connectionOptions.socket = {};
-    connectionOptions.socket.port = _this.portalConfig.redis.port;
-    connectionOptions.socket.host = _this.portalConfig.redis.host;
 
+    // Build Connection Options
+    const connectionOptions = {};
+    connectionOptions.port = _this.portalConfig.redis.port;
+    connectionOptions.host = _this.portalConfig.redis.host;
+
+    // Check if Authentication is Set
     if (_this.portalConfig.redis.password !== '') {
       connectionOptions.password = _this.portalConfig.redis.password;
     }
 
-    /* istanbul ignore next */
-    if (_this.portalConfig.redis.tls == true) {
-      if (!utils.validateRootCertificate(_this.portalConfig) || !utils.validateServerKey(_this.portalConfig)) {
-        logger.error('Server', 'Redis', 'Invalid certificate files specified. Check your config.js file.');
-      } else {
-        connectionOptions.socket.tls = true;
-        connectionOptions.socket.cert = fs.readFileSync(path.join('./certificates',_this.portalConfig.tls.serverCert));
-        connectionOptions.socket.ca = fs.readFileSync(path.join('./certificates',_this.portalConfig.tls.rootCA));
-      } 
+    // Check if TLS Configuration is Set
+    if (_this.portalConfig.redis.tls) {
+      connectionOptions.tls = {};
+      connectionOptions.tls.key = fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.key));
+      connectionOptions.tls.cert = fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.cert));
+      connectionOptions.tls.ca = fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.ca));
     }
 
     return redis.createClient(connectionOptions);

@@ -26,34 +26,6 @@ const PoolLoader = function(logger, portalConfig) {
     return true;
   };
 
-  // Validate Pool Configs
-  this.validatePoolConfigs = function(poolConfig) {
-    const name = poolConfig.name;
-    if (!poolConfig.enabled) return false;
-    if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.mining, name)) return false;
-    if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.block, name)) return false;
-    if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.coinbase, name)) return false;
-    if (!_this.validatePoolRecipients(poolConfig)) return false;
-    return true;
-  };
-
-  // Validate Server certificate and key
-  /* istanbul ignore next */
-  this.validateServerCerts = function(poolConfig, portalConfig) {
-    const tlsUsed = poolConfig.ports
-      .filter(config => config.enabled)
-      .flatMap(config => config.ssl)
-      .filter(config => config ? config.enabled : false).length;
-    console.log('here: ' + tlsUsed);
-    if (tlsUsed > 0) {
-      if (!utils.validateServerKey(portalConfig) || !utils.validateServerCertificate(portalConfig)) {
-        logger.error('Builder', 'Setup', 'Invalid certificate or key files specified for TLS. Check your config.js file.');
-        return false;
-      } 
-    }
-    return true;
-  };
-
   // Check for Overlapping Pool Names
   this.validatePoolNames = function(poolConfigs, poolConfig) {
     let configNames = Object.keys(poolConfigs);
@@ -108,6 +80,48 @@ const PoolLoader = function(logger, portalConfig) {
     }
   };
 
+  // Check for Valid Portal TLS Files
+  /* istanbul ignore next */
+  this.validatePortalTLS = function(portalConfig) {
+    if (portalConfig.redis.tls) {
+      const certExists = fs.existsSync(`./certificates/${ portalConfig.tls.cert }`) && portalConfig.tls.cert.length >= 1;
+      const authorityExists = fs.existsSync(`./certificates/${ portalConfig.tls.ca }`) && portalConfig.tls.ca.length >= 1;
+      if (!certExists || !authorityExists) {
+        logger.error('Builder', 'Setup', 'Invalid key, certificate, or authority file specified for TLS. Check your configuration files.');
+        return false;
+      };
+    }
+    return true;
+  }
+
+  // Check for Valid Pool TLS Files
+  /* istanbul ignore next */
+  this.validatePoolTLS = function(poolConfig, portalConfig) {
+    const tlsCount = poolConfig.ports
+      .filter(config => config.enabled)
+      .filter(config => config ? config.tls : false).length;
+    if (tlsCount >= 1) {
+      const keyExists = fs.existsSync(`./certificates/${ portalConfig.tls.key }`) && portalConfig.tls.key.length >= 1;
+      const certExists = fs.existsSync(`./certificates/${ portalConfig.tls.cert }`) && portalConfig.tls.cert.length >= 1;
+      if (!keyExists || !certExists) {
+        logger.error('Builder', 'Setup', 'Invalid key or certificate file specified for TLS. Check your configuration files.');
+        return false;
+      };
+    }
+    return true;
+  };
+
+  // Validate Pool Configs
+  this.validatePoolConfigs = function(poolConfig) {
+    const name = poolConfig.name;
+    if (!poolConfig.enabled) return false;
+    if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.mining, name)) return false;
+    if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.block, name)) return false;
+    if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.coinbase, name)) return false;
+    if (!_this.validatePoolRecipients(poolConfig)) return false;
+    return true;
+  };
+
   // Build Pool Configurations
   /* istanbul ignore next */
   this.buildPoolConfigs = function() {
@@ -119,7 +133,7 @@ const PoolLoader = function(logger, portalConfig) {
       }
       const poolConfig = require(normalizedPath + file);
       if (!_this.validatePoolConfigs(poolConfig)) return;
-      if (!_this.validateServerCerts(poolConfig, portalConfig)) return;
+      if (!_this.validatePoolTLS(poolConfig, portalConfig)) return;
       if (!_this.validatePoolNames(poolConfigs, poolConfig)) return;
       if (!_this.validatePoolPorts(poolConfigs, poolConfig)) return;
       poolConfigs[poolConfig.name] = poolConfig;
