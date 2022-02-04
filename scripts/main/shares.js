@@ -121,9 +121,11 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       effort: effort,
       worker: worker,
       solo: isSoloMining,
-      identifier: shareData.identifier,
       round: _this.roundValue,
     };
+
+    // Identify source Stratum Server
+    if (shareData.identifier != '') outputShare.identifier = shareData.identifier;
 
     // Reset Share Data (If Necessary)
     if ((!isSoloMining) &&
@@ -212,7 +214,6 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       luck: luck,
       worker: worker,
       solo: isSoloMining,
-      identifier: shareData.identifier,
       round: _this.roundValue,
     };
 
@@ -223,8 +224,13 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       effort: 0,
       worker: worker,
       solo: isSoloMining,
-      identifier: shareData.identifier,
       round: _this.roundValue,
+    };
+
+    // Identify source Stratum Server
+    if (shareData.identifier != '') {
+      outputBlock.identifier = shareData.identifier;
+      outputShare.identifier = shareData.identifier;
     };
 
     // Build Secondary Output (Solo)
