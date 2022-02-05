@@ -87,6 +87,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const dateNow = Date.now();
     const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
     const minerType = isSoloMining ? 'solo' : 'shared';
+    const identifier = shareData.identifier || '';
 
     const worker = ['share', 'primary'].includes(blockType) ? shareData.addrPrimary : shareData.addrAuxiliary;
     const blockDifficulty = ['share', 'primary'].includes(blockType) ? shareData.blockDiffPrimary : shareData.blockDiffAuxiliary;
@@ -118,14 +119,12 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const outputShare = {
       time: dateNow,
       difficulty: difficulty + (lastShare.difficulty || 0),
+      identifier: identifier,
       effort: effort,
       worker: worker,
       solo: isSoloMining,
       round: _this.roundValue,
     };
-
-    // Identify source Stratum Server
-    if (shareData.identifier != '') outputShare.identifier = shareData.identifier;
 
     // Reset Share Data (If Necessary)
     if ((!isSoloMining) &&
@@ -176,6 +175,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const blockType = shareData.blockType;
     const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
     const minerType = isSoloMining ? 'solo' : 'shared';
+    const identifier = shareData.identifier || '';
 
     const worker = ['share', 'primary'].includes(blockType) ? shareData.addrPrimary : shareData.addrAuxiliary;
     const blockDifficulty = ['share', 'primary'].includes(blockType) ? shareData.blockDiffPrimary : shareData.blockDiffAuxiliary;
@@ -209,6 +209,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       height: shareData.height,
       hash: shareData.hash,
       reward: shareData.reward,
+      identifier: identifier,
       transaction: shareData.transaction,
       difficulty: blockDifficulty,
       luck: luck,
@@ -221,16 +222,11 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const outputShare = {
       time: dateNow,
       difficulty: difficulty,
+      identifier: identifier,
       effort: 0,
       worker: worker,
       solo: isSoloMining,
       round: _this.roundValue,
-    };
-
-    // Identify source Stratum Server
-    if (shareData.identifier != '') {
-      outputBlock.identifier = shareData.identifier;
-      outputShare.identifier = shareData.identifier;
     };
 
     // Build Secondary Output (Solo)

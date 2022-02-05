@@ -455,6 +455,48 @@ describe('Test shares functionality', () => {
     expect(commands[0].slice(0, 2)).toStrictEqual(expected[0]);
     expect(commands[1]).toStrictEqual(expected[1]);
   });
+
+  test('Test share command handling [8]', () => {
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    poolShares.roundValue = 'aaaaaaaa';
+    poolShares.prevRoundValue = '361aae45';
+    const results = [{ 'example': '{"time":1637348736715,"difficulty":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
+    const shareData = {
+      'job': '4',
+      'ip': '::1',
+      'port': 3002,
+      'addrPrimary': 'example',
+      'addrAuxiliary': null,
+      'blockDiffPrimary': 137403310.58987552,
+      'blockType': 'share',
+      'difficulty': 1,
+      'hash': null,
+      'hashInvalid': null,
+      'identifier': 'master',
+      'height': 1972211,
+      'reward': 10006839,
+      'shareDiff': '2.35170820',
+    };
+    const expected = [
+      ['hincrbyfloat', 'Pool1:rounds:primary:current:shared:times', 'example'],
+      ['hset', 'Pool1:rounds:primary:current:shared:submissions', 'example'],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example'],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 0.0000014555690044249697]];
+    const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
+    expect(commands.length).toBe(6);
+    expect(commands[0].slice(0, 3)).toStrictEqual(expected[0]);
+    expect(commands[1].slice(0, 3)).toStrictEqual(expected[1]);
+    expect(commands[2].slice(0, 2)).toStrictEqual(expected[2]);
+    expect(commands[3]).toStrictEqual(expected[3]);
+    expect(commands[4].slice(0, 3)).toStrictEqual(expected[4]);
+    expect(JSON.parse(commands[4][3]).difficulty).toBe(1);
+    expect(JSON.parse(commands[4][3]).identifier).toBe('master');
+    expect(commands[5]).toStrictEqual(expected[5]);
+    expect();
+  });
+
   test('Test block command handling [1]', () => {
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const results = [];

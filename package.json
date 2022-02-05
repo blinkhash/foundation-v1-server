@@ -55,7 +55,7 @@
     "dateformat": "4.6.3",
     "express": "4.17.2",
     "express-rate-limit": "^5.5.1",
-    "foundation-stratum": "0.0.30",
+    "foundation-stratum": "0.0.31",
     "nodemon": "2.0.15",
     "pm2": "^5.1.2",
     "redis": "^3.1.1"

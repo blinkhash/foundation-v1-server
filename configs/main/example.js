@@ -6,7 +6,7 @@
 
 const config = {};
 
-// Stratum Server identification
+// Server Identifier
 config.identifier = '';
 
 // Logger Configuration
