@@ -24,7 +24,7 @@ try {
 }
 
 const logger = new PoolLogger(config);
-const database = new PoolDatabase(logger, config);
+const database = new PoolDatabase(config);
 const loader = new PoolLoader(logger, config);
 
 // Check for Valid TLS Files
