@@ -83,14 +83,13 @@ const PoolLoader = function(logger, portalConfig) {
   // Check for Valid Portal TLS Files
   /* istanbul ignore next */
   this.validatePortalTLS = function(portalConfig) {
-    if (portalConfig.redis.tls) {
-      const certExists = fs.existsSync(`./certificates/${ portalConfig.tls.cert }`) && portalConfig.tls.cert.length >= 1;
-      const authorityExists = fs.existsSync(`./certificates/${ portalConfig.tls.ca }`) && portalConfig.tls.ca.length >= 1;
-      if (!certExists || !authorityExists) {
-        logger.error('Builder', 'Setup', 'Invalid key, certificate, or authority file specified for TLS. Check your configuration files.');
-        return false;
-      };
-    }
+    const keyExists = fs.existsSync(`./certificates/${ portalConfig.tls.key }`) && portalConfig.tls.key.length >= 1;
+    const certExists = fs.existsSync(`./certificates/${ portalConfig.tls.cert }`) && portalConfig.tls.cert.length >= 1;
+    const authorityExists = fs.existsSync(`./certificates/${ portalConfig.tls.ca }`) && portalConfig.tls.ca.length >= 1;
+    if (!keyExists || !certExists || !authorityExists) {
+      logger.error('Builder', 'Setup', 'Invalid key, certificate, or authority file specified for TLS. Check your configuration files.');
+      return false;
+    };
     return true;
   }
 

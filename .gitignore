@@ -7,6 +7,6 @@ configs/pools/*
 !configs/main/example.js
 !configs/pools/example.js
 certificates/*
-!certificates/tutorial.md
+!certificates/README.md
 coverage/
 .DS_Store

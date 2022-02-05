@@ -9,8 +9,11 @@ const bodyParser = require('body-parser');
 const compress = require('compression');
 const cors = require('cors');
 const express = require('express');
-const rateLimit = require('express-rate-limit');
+const fs = require('fs');
 const http = require('http');
+const https = require('https');
+const path = require('path');
+const rateLimit = require('express-rate-limit');
 const PoolApi = require('./api.js');
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +74,17 @@ const PoolServer = function (logger, client) {
     });
 
     // Set Existing Server Variable
-    this.server = http.createServer(app);
+    /* istanbul ignore next */
+    if (_this.portalConfig.server.tls) {
+      const options = {
+        key: fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.key)),
+        cert: fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.cert)),
+      };
+      logger.debug('Server', 'Website', 'Enabling TLS/SSL encryption on API endpoints');
+      this.server = https.createServer(options, app);
+    } else {
+      this.server = http.createServer(app);
+    }
   };
 
   // Start Worker Capabilities

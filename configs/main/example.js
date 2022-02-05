@@ -36,6 +36,7 @@ config.redis.tls = false;
 config.server = {};
 config.server.host = '127.0.0.1';
 config.server.port = 3001;
+config.server.tls = false;
 
 // Export Configuration
 module.exports = config;

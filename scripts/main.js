@@ -28,7 +28,7 @@ const database = new PoolDatabase(logger, config);
 const loader = new PoolLoader(logger, config);
 
 // Check for Valid TLS Files
-if (config.redis.tls && !loader.validatePortalTLS(config)) {
+if ((config.redis.tls || config.server.tls) && !loader.validatePortalTLS(config)) {
   throw new Error('Unable to find or validate TLS files. Read the tutorial in the \'./certificates\' folder.');
 }
 
