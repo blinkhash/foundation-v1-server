@@ -6,6 +6,9 @@
 
 const config = {};
 
+// Stratum Server identification
+config.identifier = '';
+
 // Logger Configuration
 config.logger = {};
 config.logger.logColors = true;
