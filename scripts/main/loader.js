@@ -58,6 +58,12 @@ const PoolLoader = function(logger, portalConfig) {
     if (new Set(configPorts).size !== configPorts.length) {
       logger.error('Builder', 'Setup', 'Overlapping port configuration. Check your configuration files');
       return false;
+    } else if (configPorts.includes(_this.portalConfig.server.port)) {
+      logger.error('Builder', 'Setup', 'Overlapping port configuration with server port. Check your configuration files');
+      return false;
+    } else if (configPorts.includes(_this.portalConfig.redis.port)) {
+      logger.error('Builder', 'Setup', 'Overlapping port configuration with database port. Check your configuration files');
+      return false;
     }
     return true;
   };
