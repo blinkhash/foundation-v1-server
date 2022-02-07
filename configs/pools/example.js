@@ -63,6 +63,7 @@ config.settings.blockRefreshInterval = 1000;
 config.settings.statisticsRefreshInterval = 20000;
 config.settings.connectionTimeout = 600;
 config.settings.hashrateWindow = 300;
+config.settings.shareTypeWindow = 86400;
 config.settings.jobRebroadcastTimeout = 60;
 config.settings.tcpProxyProtocol = false;
 

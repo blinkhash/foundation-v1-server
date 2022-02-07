@@ -104,11 +104,11 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const lastShare = JSON.parse(shares[worker] || '{}');
     Object.keys(shares).forEach((share) => {
       const shareInfo = JSON.parse(shares[share]);
-      const shareValue = /^-?\d*(\.\d+)?$/.test(shareInfo.difficulty) ? parseFloat(shareInfo.difficulty) : 0;
+      const difficultyValue = /^-?\d*(\.\d+)?$/.test(shareInfo.difficulty) ? parseFloat(shareInfo.difficulty) : 0;
       if (isSoloMining && share === worker && shareInfo.solo) {
-        difficulties += shareValue;
+        difficulties += difficultyValue;
       } else if (!isSoloMining && !shareInfo.solo) {
-        difficulties += shareValue;
+        difficulties += difficultyValue;
       }
     });
 
@@ -138,6 +138,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Build Secondary Output (Solo)
     const hashrateShare = JSON.parse(JSON.stringify(outputShare));
     hashrateShare.difficulty = difficulty;
+    hashrateShare.type = shareType;
 
     // No Shared Effort if Solo Share
     if (shareType === 'valid' && isSoloMining) {
@@ -192,11 +193,11 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const lastShare = JSON.parse(shares[worker] || '{}');
     Object.keys(shares).forEach((share) => {
       const shareInfo = JSON.parse(shares[share]);
-      const shareValue = /^-?\d*(\.\d+)?$/.test(shareInfo.difficulty) ? parseFloat(shareInfo.difficulty) : 0;
+      const difficultyValue = /^-?\d*(\.\d+)?$/.test(shareInfo.difficulty) ? parseFloat(shareInfo.difficulty) : 0;
       if (isSoloMining && share === worker && shareInfo.solo) {
-        difficulties += shareValue;
+        difficulties += difficultyValue;
       } else if (!isSoloMining && !shareInfo.solo) {
-        difficulties += shareValue;
+        difficulties += difficultyValue;
       }
     });
 

@@ -544,18 +544,18 @@ const PoolPayments = function (logger, client) {
         Object.keys(round || {}).forEach((entry) => {
           const details = JSON.parse(round[entry]);
           const address = entry.split('.')[0];
-          const shareValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
+          const difficultyValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
           if (details.solo) {
             if (address in soloRound) {
-              soloRound[address] += parseFloat(shareValue);
+              soloRound[address] += parseFloat(difficultyValue);
             } else {
-              soloRound[address] = parseFloat(shareValue);
+              soloRound[address] = parseFloat(difficultyValue);
             }
           } else {
             if (address in sharedRound) {
-              sharedRound[address] += parseFloat(shareValue);
+              sharedRound[address] += parseFloat(difficultyValue);
             } else {
-              sharedRound[address] = parseFloat(shareValue);
+              sharedRound[address] = parseFloat(difficultyValue);
             }
           }
         });
