@@ -12,7 +12,7 @@ const utils = require('./utils');
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Database Function
-const PoolDatabase = function(logger, portalConfig) {
+const PoolDatabase = function(portalConfig) {
 
   const _this = this;
   this.portalConfig = portalConfig;
