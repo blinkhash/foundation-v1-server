@@ -1024,8 +1024,6 @@ describe('Test API functionality', () => {
       expect(processed.body.primary.shares.solo.valid).toBe(0);
       expect(processed.body.primary.shares.solo.stale).toBe(0);
       expect(processed.body.primary.shares.solo.invalid).toBe(0);
-      
-      
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {

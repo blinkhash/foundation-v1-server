@@ -402,34 +402,6 @@ exports.processWorkers = function(shares, hashrate, times, multiplier, hashrateW
   return Object.values(workers);
 };
 
-// Process Workers for API Endpoints
-exports.newProcessWorkers = function(sharedShares, soloShares, times, sharedHashrate, soloHashrate, sharedTypes, soloTypes, multiplier, hashrateWindow, shareTypeWindow, active) {
-  const workers = {};
-  if (shares) {
-    Object.keys(shares).forEach((entry) => {
-      const details = JSON.parse(shares[entry]);
-      const difficultyValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
-      const effortValue = (!times) ? (/^-?\d*(\.\d+)?$/.test(details.effort) ? parseFloat(details.effort) : 0) : null;
-      const timeValue = (times) ? (/^-?\d*(\.\d+)?$/.test(times[entry]) ? parseFloat(times[entry]) : 0) : null;
-      const hashrateValue = exports.processDifficulty(hashrate, entry, 'worker');
-      const shareTypeCounts = exports.processShareTypes(hashrate, entry, 'worker');
-      if (details.worker && difficultyValue > 0) {
-        if (!active || (active && hashrateValue > 0)) {
-          workers[entry] = {
-            worker: entry,
-            difficulty: difficultyValue,
-            times: timeValue || null,
-            hashrate: (multiplier * hashrateValue) / hashrateWindow,
-            effort: effortValue || null,
-            shares: shareTypeCounts,
-          };
-        }
-      }
-    });
-  }
-  return Object.values(workers);
-};
-
 // Round to # of Digits Given
 exports.roundTo = function(n, digits) {
   if (!digits) {
