@@ -210,7 +210,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       const primarySoloWorkerData = utils.listWorkers(results[8], miner);
       const auxiliarySharedWorkerData = utils.listWorkers(results[15], miner);
       const auxiliarySoloWorkerData = utils.listWorkers(results[17], miner);
-      
+
       // Build Miner Statistics
       callback(200, {
         primary: {
@@ -218,7 +218,6 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
             shared: primarySharedShareData[miner] || 0,
             solo: primarySoloShareData[miner] || 0,
           },
-          times: primarySharedTimesData[miner] || 0,
           hashrate: {
             shared: (multiplier * primarySharedDifficultyData) / hashrateWindow,
             solo: (multiplier * primarySoloDifficultyData) / hashrateWindow,
@@ -233,6 +232,9 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
             shared: primarySharedShareTypeData,
             solo: primarySoloShareTypeData,
           },
+          times: {
+            shared: primarySharedTimesData[miner] || 0,
+          },
           workers: {
             shared: primarySharedWorkerData,
             solo: primarySoloWorkerData,
@@ -243,7 +245,6 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
             shared: auxiliarySharedShareData[miner] || 0,
             solo: auxiliarySoloShareData[miner] || 0,
           },
-          times: auxiliarySharedTimesData[miner] || 0,
           hashrate: {
             shared: (multiplier * auxiliarySharedDifficultyData) / hashrateWindow,
             solo: (multiplier * auxiliarySoloDifficultyData) / hashrateWindow,
@@ -257,6 +258,9 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           shares: {
             shared: auxiliarySharedShareTypeData,
             solo: auxiliarySoloShareTypeData,
+          },
+          times: {
+            shared: auxiliarySharedTimesData[miner] || 0,
           },
           workers: {
             shared: auxiliarySharedWorkerData,
@@ -524,7 +528,6 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           },
           blocks: {
             valid: parseFloat(results[0] ? results[0].valid || 0 : 0),
-            // kicked?
             invalid: parseFloat(results[0] ? results[0].invalid || 0 : 0),
           },
           shares: {
@@ -564,7 +567,6 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           },
           blocks: {
             valid: parseFloat(results[8] ? results[8].valid || 0 : 0),
-            // kicked?
             invalid: parseFloat(results[8] ? results[8].invalid || 0 : 0),
           },
           shares: {
@@ -674,9 +676,8 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
         primary: {
           difficulty: {
             shared: primarySharedShareData[worker] || 0,
-            solo: primarySoloShareData[worker] || 0,            
+            solo: primarySoloShareData[worker] || 0,
           },
-          times: primarySharedTimesData[worker] || 0,
           hashrate: {
             shared: (multiplier * primarySharedDifficultyData) / hashrateWindow,
             solo: (multiplier * primarySoloDifficultyData) / hashrateWindow,
@@ -685,13 +686,15 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
             shared: primarySharedShareTypeData,
             solo: primarySoloShareTypeData,
           },
+          times: {
+            shared: primarySharedTimesData[worker] || 0,
+          },
         },
         auxiliary: {
           difficulty: {
             shared: auxiliarySharedShareData[worker] || 0,
             solo: auxiliarySoloShareData[worker] || 0,
           },
-          times: auxiliarySharedTimesData[worker] || 0,
           hashrate: {
             shared: (multiplier * auxiliarySharedDifficultyData) / hashrateWindow,
             solo: (multiplier * auxiliarySoloDifficultyData) / hashrateWindow,
@@ -699,6 +702,9 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           shares: {
             shared: auxiliarySharedShareTypeData,
             solo: auxiliarySoloShareTypeData,
+          },
+          times: {
+            shared: auxiliarySharedTimesData[worker] || 0,
           },
         }
       });

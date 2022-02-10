@@ -391,7 +391,6 @@ describe('Test API functionality', () => {
       expect(Object.keys(processed.body.auxiliary).length).toBe(6);
       expect(processed.body.primary.difficulty.shared).toBe(108);
       expect(processed.body.primary.difficulty.solo).toBe(0);
-      expect(processed.body.primary.times).toBe(0);
       expect(processed.body.primary.payments.balances).toBe(37.43);
       expect(processed.body.primary.payments.generate).toBe(255.17);
       expect(processed.body.primary.payments.immature).toBe(12.17);
@@ -403,6 +402,7 @@ describe('Test API functionality', () => {
       expect(processed.body.primary.shares.solo.valid).toBe(0);
       expect(processed.body.primary.shares.solo.stale).toBe(0);
       expect(processed.body.primary.shares.solo.invalid).toBe(0);
+      expect(processed.body.primary.times.shared).toBe(0);
       expect(processed.body.primary.workers.shared.length).toBe(2);
       expect(processed.body.primary.workers.shared[0]).toBe('worker2.w1');
       expect(processed.body.primary.workers.shared[1]).toBe('worker2.w2');
@@ -447,7 +447,6 @@ describe('Test API functionality', () => {
       expect(Object.keys(processed.body.auxiliary).length).toBe(6);
       expect(processed.body.auxiliary.difficulty.shared).toBe(0);
       expect(processed.body.auxiliary.difficulty.solo).toBe(64);
-      expect(processed.body.auxiliary.times).toBe(20.15);
       expect(processed.body.auxiliary.payments.generate).toBe(0);
       expect(processed.body.auxiliary.payments.immature).toBe(0);
       expect(processed.body.auxiliary.payments.paid).toBe(0);
@@ -455,6 +454,7 @@ describe('Test API functionality', () => {
       expect(processed.body.auxiliary.shares.solo.valid).toBe(2);
       expect(processed.body.auxiliary.shares.solo.stale).toBe(1);
       expect(processed.body.auxiliary.shares.solo.invalid).toBe(1);
+      expect(processed.body.auxiliary.times.shared).toBe(20.15);
       expect(processed.body.auxiliary.workers.solo.length).toBe(1);
       expect(processed.body.auxiliary.workers.solo[0]).toBe('worker1');
       done();
@@ -1015,7 +1015,6 @@ describe('Test API functionality', () => {
       expect(Object.keys(processed.body.auxiliary).length).toBe(4);
       expect(processed.body.primary.difficulty.shared).toBe(64);
       expect(processed.body.primary.difficulty.solo).toBe(0);
-      expect(processed.body.primary.times).toBe(0);
       expect(processed.body.primary.hashrate.shared).toBe(916259689.8133334);
       expect(processed.body.primary.hashrate.solo).toBe(0);
       expect(processed.body.primary.shares.shared.valid).toBe(1);
@@ -1024,6 +1023,7 @@ describe('Test API functionality', () => {
       expect(processed.body.primary.shares.solo.valid).toBe(0);
       expect(processed.body.primary.shares.solo.stale).toBe(0);
       expect(processed.body.primary.shares.solo.invalid).toBe(0);
+      expect(processed.body.primary.times.shared).toBe(0);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
@@ -1064,7 +1064,6 @@ describe('Test API functionality', () => {
       expect(Object.keys(processed.body.auxiliary).length).toBe(4);
       expect(processed.body.auxiliary.difficulty.shared).toBe(0);
       expect(processed.body.auxiliary.difficulty.solo).toBe(64);
-      expect(processed.body.auxiliary.times).toBe(0);
       expect(processed.body.auxiliary.hashrate.shared).toBe(0);
       expect(processed.body.auxiliary.hashrate.solo).toBe(916259689.8133334);
       expect(processed.body.auxiliary.shares.shared.valid).toBe(0);
@@ -1073,6 +1072,7 @@ describe('Test API functionality', () => {
       expect(processed.body.auxiliary.shares.solo.valid).toBe(2);
       expect(processed.body.auxiliary.shares.solo.stale).toBe(1);
       expect(processed.body.auxiliary.shares.solo.invalid).toBe(1);
+      expect(processed.body.auxiliary.times.shared).toBe(0);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {

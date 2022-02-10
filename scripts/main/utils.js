@@ -327,27 +327,21 @@ exports.processShares = function(shares, miner) {
 
 // Process Share Types for API Endpoints
 exports.processShareTypes = function(shares, miner, type) {
-  let shareTypes = {
-    valid: 0,
-    stale: 0,
-    invalid: 0,
-  };
-
+  const output = { valid: 0, stale: 0, invalid: 0 };
   if (shares) {
-    shares = shares
-      .map((share) => JSON.parse(share));
+    shares = shares.map((share) => JSON.parse(share));
     shares.forEach((share) => {
       if (share.worker && share.type) {
         const address = share.worker.split('.')[0];
         if (!miner || miner === share.worker || (type === 'miner' && miner === address)) {
-          if (share.type === 'valid') shareTypes.valid += 1
-          else if (share.type === 'stale')  shareTypes.stale += 1
-          else if (share.type === 'invalid')  shareTypes.invalid += 1
+          if (share.type === 'valid') output.valid += 1
+          else if (share.type === 'stale')  output.stale += 1
+          else if (share.type === 'invalid')  output.invalid += 1
         }
       }
     });
   }
-  return shareTypes;
+  return output;
 };
 
 // Process Times for API Endpoints
