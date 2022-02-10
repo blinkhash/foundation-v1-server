@@ -212,13 +212,15 @@ exports.listBlocks = function(blocks, miner) {
 exports.processDifficulty = function(shares, miner, type) {
   let count = 0;
   if (shares) {
-    shares = shares.map((share) => JSON.parse(share));
+    shares = shares
+      .map((share) => JSON.parse(share))
+      .filter((share) => share.type === 'valid');
     shares.forEach((share) => {
       if (share.worker && share.difficulty) {
         const address = share.worker.split('.')[0];
-        const shareValue = /^-?\d*(\.\d+)?$/.test(share.difficulty) ? parseFloat(share.difficulty) : 0;
+        const difficultyValue = /^-?\d*(\.\d+)?$/.test(share.difficulty) ? parseFloat(share.difficulty) : 0;
         if (!miner || miner === share.worker || (type === 'miner' && miner === address)) {
-          count += shareValue;
+          count += difficultyValue;
         }
       }
     });
@@ -247,13 +249,14 @@ exports.processMiners = function(shares, hashrate, times, multiplier, hashrateWi
     Object.keys(shares).forEach((entry) => {
       const details = JSON.parse(shares[entry]);
       const address = entry.split('.')[0];
-      const shareValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
+      const difficultyValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
       const effortValue = (!times) ? (/^-?\d*(\.\d+)?$/.test(details.effort) ? parseFloat(details.effort) : 0) : null;
       const timeValue = (times) ? (/^-?\d*(\.\d+)?$/.test(times[entry]) ? parseFloat(times[entry]) : 0) : null;
       const hashrateValue = exports.processDifficulty(hashrate, address, 'miner');
-      if (details.worker && shareValue > 0) {
+      const shareTypeCounts = exports.processShareTypes(hashrate, address, 'miner');
+      if (details.worker && difficultyValue > 0) {
         if (address in miners) {
-          miners[address].shares += shareValue;
+          miners[address].difficulty += difficultyValue;
           if (times && timeValue >= miners[address].times) {
             miners[address].times = timeValue;
           } else if (!times) {
@@ -263,10 +266,11 @@ exports.processMiners = function(shares, hashrate, times, multiplier, hashrateWi
           if (!active || (active && hashrateValue > 0)) {
             miners[address] = {
               miner: address,
-              shares: shareValue,
+              difficulty: difficultyValue,
               times: timeValue || null,
               hashrate: (multiplier * hashrateValue) / hashrateWindow,
               effort: effortValue || null,
+              shares: shareTypeCounts,
             };
           }
         }
@@ -306,19 +310,44 @@ exports.processShares = function(shares, miner) {
     Object.keys(shares).forEach((entry) => {
       const details = JSON.parse(shares[entry]);
       const address = (miner && miner.includes('.')) ? entry : entry.split('.')[0];
-      const shareValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
+      const difficultyValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
       if (!miner || miner === address) {
-        if (shareValue > 0) {
+        if (difficultyValue > 0) {
           if (address in output) {
-            output[address] += shareValue;
+            output[address] += difficultyValue;
           } else {
-            output[address] = shareValue;
+            output[address] = difficultyValue;
           }
         }
       }
     });
   }
   return output;
+};
+
+// Process Share Types for API Endpoints
+exports.processShareTypes = function(shares, miner, type) {
+  let shareTypes = {
+    valid: 0,
+    stale: 0,
+    invalid: 0,
+  };
+
+  if (shares) {
+    shares = shares
+      .map((share) => JSON.parse(share));
+    shares.forEach((share) => {
+      if (share.worker && share.type) {
+        const address = share.worker.split('.')[0];
+        if (!miner || miner === share.worker || (type === 'miner' && miner === address)) {
+          if (share.type === 'valid') shareTypes.valid += 1
+          else if (share.type === 'stale')  shareTypes.stale += 1
+          else if (share.type === 'invalid')  shareTypes.invalid += 1
+        }
+      }
+    });
+  }
+  return shareTypes;
 };
 
 // Process Times for API Endpoints
@@ -351,18 +380,20 @@ exports.processWorkers = function(shares, hashrate, times, multiplier, hashrateW
   if (shares) {
     Object.keys(shares).forEach((entry) => {
       const details = JSON.parse(shares[entry]);
-      const shareValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
+      const difficultyValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
       const effortValue = (!times) ? (/^-?\d*(\.\d+)?$/.test(details.effort) ? parseFloat(details.effort) : 0) : null;
       const timeValue = (times) ? (/^-?\d*(\.\d+)?$/.test(times[entry]) ? parseFloat(times[entry]) : 0) : null;
       const hashrateValue = exports.processDifficulty(hashrate, entry, 'worker');
-      if (details.worker && shareValue > 0) {
+      const shareTypeCounts = exports.processShareTypes(hashrate, entry, 'worker');
+      if (details.worker && difficultyValue > 0) {
         if (!active || (active && hashrateValue > 0)) {
           workers[entry] = {
             worker: entry,
-            shares: shareValue,
+            difficulty: difficultyValue,
             times: timeValue || null,
             hashrate: (multiplier * hashrateValue) / hashrateWindow,
             effort: effortValue || null,
+            shares: shareTypeCounts,
           };
         }
       }

@@ -324,10 +324,12 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker2.w2', JSON.stringify({ time: 0, difficulty: 44, worker: 'worker2.w2' })],
       ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker3', JSON.stringify({ time: 0, difficulty: 8, worker: 'worker3' })],
       ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'worker1', 20.15],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44 })]];
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32, type: 'stale' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32, type: 'invalid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44, type: 'valid' })]];
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
@@ -336,11 +338,14 @@ describe('Test API functionality', () => {
       expect(processed.body.primary.shared.length).toBe(1);
       expect(processed.body.primary.solo.length).toBe(1);
       expect(processed.body.primary.shared[0].miner).toBe('worker2');
-      expect(processed.body.primary.shared[0].shares).toBe(108);
+      expect(processed.body.primary.shared[0].difficulty).toBe(108);
       expect(processed.body.primary.shared[0].hashrate).toBe(1546188226.56);
       expect(processed.body.primary.solo[0].miner).toBe('worker1');
-      expect(processed.body.primary.solo[0].shares).toBe(64);
+      expect(processed.body.primary.solo[0].difficulty).toBe(64);
       expect(processed.body.primary.solo[0].hashrate).toBe(916259689.8133334);
+      expect(processed.body.primary.solo[0].shares.valid).toBe(2);
+      expect(processed.body.primary.solo[0].shares.stale).toBe(1);
+      expect(processed.body.primary.solo[0].shares.invalid).toBe(1);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
@@ -370,26 +375,34 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker2.w2', JSON.stringify({ time: 0, difficulty: 44, worker: 'worker2.w2' })],
       ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker3', JSON.stringify({ time: 0, difficulty: 8, worker: 'worker3' })],
       ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'worker1', 20.15],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', difficulty: 8 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44 })]];
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64, type: 'stale' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64, type: 'invalid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', difficulty: 8, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44, type: 'valid' })]];
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
       expect(typeof processed.body).toBe('object');
-      expect(Object.keys(processed.body.primary).length).toBe(4);
-      expect(Object.keys(processed.body.auxiliary).length).toBe(4);
-      expect(processed.body.primary.current.shared).toBe(108);
-      expect(processed.body.primary.current.solo).toBe(0);
-      expect(processed.body.primary.current.times).toBe(0);
+      expect(Object.keys(processed.body.primary).length).toBe(6);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(6);
+      expect(processed.body.primary.difficulty.shared).toBe(108);
+      expect(processed.body.primary.difficulty.solo).toBe(0);
+      expect(processed.body.primary.times).toBe(0);
       expect(processed.body.primary.payments.balances).toBe(37.43);
       expect(processed.body.primary.payments.generate).toBe(255.17);
       expect(processed.body.primary.payments.immature).toBe(12.17);
       expect(processed.body.primary.payments.paid).toBe(123.5);
       expect(processed.body.primary.hashrate.shared).toBe(1546188226.56);
+      expect(processed.body.primary.shares.shared.valid).toBe(2);
+      expect(processed.body.primary.shares.shared.stale).toBe(1);
+      expect(processed.body.primary.shares.shared.invalid).toBe(1);
+      expect(processed.body.primary.shares.solo.valid).toBe(0);
+      expect(processed.body.primary.shares.solo.stale).toBe(0);
+      expect(processed.body.primary.shares.solo.invalid).toBe(0);
       expect(processed.body.primary.workers.shared.length).toBe(2);
       expect(processed.body.primary.workers.shared[0]).toBe('worker2.w1');
       expect(processed.body.primary.workers.shared[1]).toBe('worker2.w2');
@@ -418,25 +431,30 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:auxiliary:current:shared:shares', 'worker2.w2', JSON.stringify({ time: 0, difficulty: 44, solo: false, worker: 'worker2.w2' })],
       ['hset', 'Pool1:rounds:auxiliary:current:shared:shares', 'worker3', JSON.stringify({ time: 0, difficulty: 8, solo: false, worker: 'worker3' })],
       ['hincrbyfloat', 'Pool1:rounds:auxiliary:current:shared:times', 'worker1', 20.15],
-      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64 })],
-      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', difficulty: 8 })],
-      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44 })]];
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32, type: 'stale' })],
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32, type: 'invalid' })],
+      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', difficulty: 8, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44, type: 'valid' })]];
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
       expect(typeof processed.body).toBe('object');
-      expect(Object.keys(processed.body.primary).length).toBe(4);
-      expect(Object.keys(processed.body.auxiliary).length).toBe(4);
-      expect(processed.body.auxiliary.current.shared).toBe(0);
-      expect(processed.body.auxiliary.current.solo).toBe(64);
-      expect(processed.body.auxiliary.current.times).toBe(20.15);
+      expect(Object.keys(processed.body.primary).length).toBe(6);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(6);
+      expect(processed.body.auxiliary.difficulty.shared).toBe(0);
+      expect(processed.body.auxiliary.difficulty.solo).toBe(64);
+      expect(processed.body.auxiliary.times).toBe(20.15);
       expect(processed.body.auxiliary.payments.generate).toBe(0);
       expect(processed.body.auxiliary.payments.immature).toBe(0);
       expect(processed.body.auxiliary.payments.paid).toBe(0);
       expect(processed.body.auxiliary.hashrate.solo).toBe(916259689.8133334);
+      expect(processed.body.auxiliary.shares.solo.valid).toBe(2);
+      expect(processed.body.auxiliary.shares.solo.stale).toBe(1);
+      expect(processed.body.auxiliary.shares.solo.invalid).toBe(1);
       expect(processed.body.auxiliary.workers.solo.length).toBe(1);
       expect(processed.body.auxiliary.workers.solo[0]).toBe('worker1');
       done();
@@ -457,11 +475,11 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker2.w2', JSON.stringify({ time: 0, difficulty: 44, worker: 'worker2.w2' })],
       ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker3', JSON.stringify({ time: 0, difficulty: 8, worker: 'worker3' })],
       ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'worker1', 20.15],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', difficulty: 8 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44 })]];
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', difficulty: 8, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44, type: 'valid' })]];
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
@@ -470,13 +488,13 @@ describe('Test API functionality', () => {
       expect(processed.body.primary.shared.length).toBe(2);
       expect(processed.body.primary.solo.length).toBe(1);
       expect(processed.body.primary.shared[0].miner).toBe('worker2');
-      expect(processed.body.primary.shared[0].shares).toBe(108);
+      expect(processed.body.primary.shared[0].difficulty).toBe(108);
       expect(processed.body.primary.shared[0].hashrate).toBe(1546188226.56);
       expect(processed.body.primary.shared[1].miner).toBe('worker3');
-      expect(processed.body.primary.shared[1].shares).toBe(8);
+      expect(processed.body.primary.shared[1].difficulty).toBe(8);
       expect(processed.body.primary.shared[1].hashrate).toBe(114532461.22666667);
       expect(processed.body.primary.solo[0].miner).toBe('worker1');
-      expect(processed.body.primary.solo[0].shares).toBe(64);
+      expect(processed.body.primary.solo[0].difficulty).toBe(64);
       expect(processed.body.primary.solo[0].hashrate).toBe(916259689.8133334);
       done();
     });
@@ -823,16 +841,16 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'valid', 3190],
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'stale', 123],
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'invalid', 465],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44 })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44, type: 'valid' })],
       ['hset', 'Pool1:blocks:auxiliary:counts', 'valid', 500],
       ['hset', 'Pool1:blocks:auxiliary:counts', 'invalid', 2]];
     const response = mockResponse();
@@ -876,16 +894,16 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'valid', 3190],
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'stale', 123],
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'invalid', 465],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44 })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44, type: 'valid' })],
       ['hset', 'Pool1:blocks:auxiliary:counts', 'valid', 500],
       ['hset', 'Pool1:blocks:auxiliary:counts', 'invalid', 2]];
     const response = mockResponse();
@@ -924,10 +942,12 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker2.w2', JSON.stringify({ time: 0, difficulty: 44, worker: 'worker2.w2' })],
       ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker3', JSON.stringify({ time: 0, difficulty: 8, worker: 'worker3' })],
       ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'worker1', 20.15],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44 })]];
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32, type: 'stale' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32, type: 'invalid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44, type: 'valid' })]];
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
@@ -936,14 +956,20 @@ describe('Test API functionality', () => {
       expect(processed.body.primary.shared.length).toBe(2);
       expect(processed.body.primary.solo.length).toBe(1);
       expect(processed.body.primary.shared[0].worker).toBe('worker2.w1');
-      expect(processed.body.primary.shared[0].shares).toBe(64);
+      expect(processed.body.primary.shared[0].difficulty).toBe(64);
       expect(processed.body.primary.shared[0].hashrate).toBe(916259689.8133334);
+      expect(processed.body.primary.shared[0].shares.valid).toBe(1);
+      expect(processed.body.primary.shared[0].shares.stale).toBe(0);
+      expect(processed.body.primary.shared[0].shares.invalid).toBe(0);
       expect(processed.body.primary.shared[1].worker).toBe('worker2.w2');
-      expect(processed.body.primary.shared[1].shares).toBe(44);
+      expect(processed.body.primary.shared[1].difficulty).toBe(44);
       expect(processed.body.primary.shared[1].hashrate).toBe(629928536.7466667);
       expect(processed.body.primary.solo[0].worker).toBe('worker1');
-      expect(processed.body.primary.solo[0].shares).toBe(64);
+      expect(processed.body.primary.solo[0].difficulty).toBe(64);
       expect(processed.body.primary.solo[0].hashrate).toBe(916259689.8133334);
+      expect(processed.body.primary.solo[0].shares.valid).toBe(2);
+      expect(processed.body.primary.solo[0].shares.stale).toBe(1);
+      expect(processed.body.primary.solo[0].shares.invalid).toBe(1);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
@@ -971,22 +997,33 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker3', JSON.stringify({ time: 1, difficulty: 8, worker: 'worker3', solo: false })],
       ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker2.w2', JSON.stringify({ time: 1, difficulty: 44, worker: 'worker2.w2', solo: false })],
       ['hset', 'Pool1:rounds:primary:current:shared:times', 'worker1', 20.15],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44 })]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64, type: 'stale' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64, type: 'invalid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 8, type: 'stale' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 8, type: 'invalid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44, type: 'valid' })]];
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
       expect(typeof processed.body).toBe('object');
-      expect(Object.keys(processed.body.primary).length).toBe(2);
-      expect(Object.keys(processed.body.auxiliary).length).toBe(2);
-      expect(processed.body.primary.current.shared).toBe(64);
-      expect(processed.body.primary.current.solo).toBe(0);
-      expect(processed.body.primary.current.times).toBe(0);
+      expect(Object.keys(processed.body.primary).length).toBe(4);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(4);
+      expect(processed.body.primary.difficulty.shared).toBe(64);
+      expect(processed.body.primary.difficulty.solo).toBe(0);
+      expect(processed.body.primary.times).toBe(0);
       expect(processed.body.primary.hashrate.shared).toBe(916259689.8133334);
+      expect(processed.body.primary.hashrate.solo).toBe(0);
+      expect(processed.body.primary.shares.shared.valid).toBe(1);
+      expect(processed.body.primary.shares.shared.stale).toBe(1);
+      expect(processed.body.primary.shares.shared.invalid).toBe(1);
+      expect(processed.body.primary.shares.solo.valid).toBe(0);
+      expect(processed.body.primary.shares.solo.stale).toBe(0);
+      expect(processed.body.primary.shares.solo.invalid).toBe(0);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
@@ -1011,21 +1048,31 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:auxiliary:current:solo:shares', 'worker2.w1', JSON.stringify({ time: 0, difficulty: 64, worker: 'worker2.w1', solo: false })],
       ['hset', 'Pool1:rounds:auxiliary:current:solo:shares', 'worker3', JSON.stringify({ time: 1, difficulty: 8, worker: 'worker3', solo: false })],
       ['hset', 'Pool1:rounds:auxiliary:current:solo:shares', 'worker2.w2', JSON.stringify({ time: 1, difficulty: 44, worker: 'worker2.w2', solo: false })],
-      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64 })],
-      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8 })],
-      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44 })]];
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', solo: true, difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', solo: false, difficulty: 64, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: true, difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: false, difficulty: 8, type: 'stale' })],
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', solo: false, difficulty: 8, type: 'invalid' })],
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', solo: false, difficulty: 8, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', solo: false, difficulty: 44, type: 'valid' })]];
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
       expect(typeof processed.body).toBe('object');
-      expect(Object.keys(processed.body.primary).length).toBe(2);
-      expect(Object.keys(processed.body.auxiliary).length).toBe(2);
-      expect(processed.body.auxiliary.current.shared).toBe(0);
-      expect(processed.body.auxiliary.current.solo).toBe(64);
+      expect(Object.keys(processed.body.primary).length).toBe(4);
+      expect(Object.keys(processed.body.auxiliary).length).toBe(4);
+      expect(processed.body.auxiliary.difficulty.shared).toBe(0);
+      expect(processed.body.auxiliary.difficulty.solo).toBe(64);
+      expect(processed.body.auxiliary.times).toBe(0);
+      expect(processed.body.auxiliary.hashrate.shared).toBe(0);
       expect(processed.body.auxiliary.hashrate.solo).toBe(916259689.8133334);
+      expect(processed.body.auxiliary.shares.shared.valid).toBe(0);
+      expect(processed.body.auxiliary.shares.shared.stale).toBe(0);
+      expect(processed.body.auxiliary.shares.shared.invalid).toBe(0);
+      expect(processed.body.auxiliary.shares.solo.valid).toBe(2);
+      expect(processed.body.auxiliary.shares.solo.stale).toBe(1);
+      expect(processed.body.auxiliary.shares.solo.invalid).toBe(1);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {
@@ -1044,11 +1091,13 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker2.w2', JSON.stringify({ time: 0, difficulty: 44, worker: 'worker2.w2' })],
       ['hset', 'Pool1:rounds:primary:current:shared:shares', 'worker3', JSON.stringify({ time: 0, difficulty: 8, worker: 'worker3' })],
       ['hincrbyfloat', 'Pool1:rounds:primary:current:times', 'worker1', 20.15],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64 })],
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', difficulty: 8 })],
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44 })]];
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker1', difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 0, worker: 'worker2.w1', difficulty: 64, type: 'stale' })],
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', difficulty: 32, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', difficulty: 8, type: 'valid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker3', difficulty: 8, type: 'invalid' })],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker2.w2', difficulty: 44, type: 'valid' })]];
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
@@ -1057,16 +1106,25 @@ describe('Test API functionality', () => {
       expect(processed.body.primary.shared.length).toBe(3);
       expect(processed.body.primary.solo.length).toBe(1);
       expect(processed.body.primary.shared[0].worker).toBe('worker2.w1');
-      expect(processed.body.primary.shared[0].shares).toBe(64);
+      expect(processed.body.primary.shared[0].difficulty).toBe(64);
       expect(processed.body.primary.shared[0].hashrate).toBe(916259689.8133334);
+      expect(processed.body.primary.shared[0].shares.valid).toBe(1);
+      expect(processed.body.primary.shared[0].shares.stale).toBe(1);
+      expect(processed.body.primary.shared[0].shares.invalid).toBe(0);
       expect(processed.body.primary.shared[1].worker).toBe('worker2.w2');
-      expect(processed.body.primary.shared[1].shares).toBe(44);
+      expect(processed.body.primary.shared[1].difficulty).toBe(44);
       expect(processed.body.primary.shared[1].hashrate).toBe(629928536.7466667);
+      expect(processed.body.primary.shared[1].shares.valid).toBe(1);
+      expect(processed.body.primary.shared[1].shares.stale).toBe(0);
+      expect(processed.body.primary.shared[1].shares.invalid).toBe(0);
       expect(processed.body.primary.shared[2].worker).toBe('worker3');
-      expect(processed.body.primary.shared[2].shares).toBe(8);
+      expect(processed.body.primary.shared[2].difficulty).toBe(8);
       expect(processed.body.primary.shared[2].hashrate).toBe(114532461.22666667);
+      expect(processed.body.primary.shared[2].shares.valid).toBe(1);
+      expect(processed.body.primary.shared[2].shares.stale).toBe(0);
+      expect(processed.body.primary.shared[2].shares.invalid).toBe(1);
       expect(processed.body.primary.solo[0].worker).toBe('worker1');
-      expect(processed.body.primary.solo[0].shares).toBe(64);
+      expect(processed.body.primary.solo[0].difficulty).toBe(64);
       expect(processed.body.primary.solo[0].hashrate).toBe(916259689.8133334);
       done();
     });
