@@ -133,24 +133,23 @@ const PoolPayments = function (logger, client) {
     const dateNow = Date.now();
 
     if (typeof round.orphanShares !== 'undefined') {
-      logger.warning('Payments', pool, `Moving shares/times from orphaned block ${ round.height } to current round.`);
+      logger.warning('Payments', pool, `Moving shares from orphaned block ${ round.height } to current round.`);
 
       // Move Orphaned Shares to Following Round
       Object.keys(round.orphanShares).forEach((address) => {
         const outputShare = {
           time: dateNow,
-          difficulty: round.orphanShares[address],
           effort: 0,
-          worker: address,
+          identifier: null,
+          round: 'orphan',
           solo: false,
+          times: round.orphanTimes[address] || 0,
+          types: { valid: 1, invalid: 0, stale: 0 },
+          work: round.orphanShares[address],
+          worker: address,
         };
-        commands.push(['hincrby', `${ pool }:rounds:${ blockType }:current:counts`, 'valid', 1]);
-        commands.push(['hincrby', `${ pool }:rounds:${ blockType }:current:shares`, JSON.stringify(outputShare), round.orphanShares[address]]);
-      });
-
-      // Move Orphaned Times to Following Round
-      Object.keys(round.orphanTimes).forEach((address) => {
-        commands.push(['hincrbyfloat', `${ pool }:rounds:${ blockType }:current:times`, address, round.orphanTimes[address]]);
+        commands.push(['hincrby', `${ pool }:rounds:${ blockType }:current:shared:counts`, 'valid', 1]);
+        commands.push(['hset', `${ pool }:rounds:${ blockType }:current:shared:shares`, address, JSON.stringify(outputShare)]);
       });
     }
 
@@ -318,7 +317,9 @@ const PoolPayments = function (logger, client) {
 
     // Load Blocks from Database
     const pool = config.name;
-    const commands = [['smembers', `${ pool }:blocks:${ blockType }:pending`]];
+    const commands = [
+      ['smembers', `${ pool }:blocks:${ blockType }:pending`],
+      ['smembers', `${ pool }:blocks:${ blockType }:confirmed`]];
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
         logger.error('Payments', pool, `Could not get blocks from database: ${ JSON.stringify(error) }`);
@@ -327,7 +328,7 @@ const PoolPayments = function (logger, client) {
       }
 
       // Manage Individual Rounds
-      const rounds = results[0].map((r) => {
+      let rounds = results[0].map((r) => {
         const details = JSON.parse(r);
         return {
           time: details.time,
@@ -343,9 +344,18 @@ const PoolPayments = function (logger, client) {
         };
       });
 
+      // Managed Confirmed Rounds
+      let confirmed = results[1].map((r) => {
+        const details = JSON.parse(r);
+        return {
+          height: details.height,
+          serialized: r
+        };
+      });
+
       // Check for Block Duplicates
       let duplicateFound = false;
-      rounds.sort((a, b) => a.height - b.height);
+      rounds = rounds.sort((a, b) => a.height - b.height);
       const roundHeights = rounds.flatMap(round => round.height);
       rounds.forEach((round) => {
         if (utils.countOccurences(roundHeights, round.height) > 1) {
@@ -354,11 +364,15 @@ const PoolPayments = function (logger, client) {
         }
       });
 
+      // Check for Blocks to Delete
+      const blocksToKeep = confirmed.sort((a, b) => a.height - b.height).slice(0, 100);
+      const blocksToDelete = confirmed.filter(value => !blocksToKeep.includes(value));
+
       // Handle Duplicate Blocks
       if (duplicateFound) {
         _this.handleDuplicates(daemon, rounds, pool, blockType, callback);
       } else {
-        callback(null, [rounds]);
+        callback(null, [rounds, blocksToDelete]);
       }
     });
   };
@@ -387,7 +401,7 @@ const PoolPayments = function (logger, client) {
       });
 
       // Return Workers as Callback
-      callback(null, [data[0], workers]);
+      callback(null, [data[0], data[1], workers]);
     });
   };
 
@@ -473,46 +487,7 @@ const PoolPayments = function (logger, client) {
       });
 
       // Return Rounds as Callback
-      callback(null, [rounds, data[1]]);
-    });
-  };
-
-  // Calculate Scores from Round Data
-  /* istanbul ignore next */
-  this.handleTimes = function(config, blockType, data, callback) {
-
-    const times = [];
-    const pool = config.name;
-    const commands = data[0].map((round) => {
-      return ['hgetall', `${ pool }:rounds:${ blockType }:round-${ round.height }:times`];
-    });
-
-    // Build Commands from Rounds
-    _this.client.multi(commands).exec((error, results) => {
-      if (error) {
-        logger.error('Payments', pool, `Could not load times data from database: ${ JSON.stringify(error) }`);
-        callback(true, []);
-        return;
-      }
-
-      // Build Worker Times Data w/ Results
-      results.forEach((round) => {
-        const timesRound = {};
-        Object.keys(round || {}).forEach((entry) => {
-          const address = entry.split('.')[0];
-          if (address in timesRound) {
-            if (parseFloat(round[entry]) >= timesRound[address]) {
-              timesRound[address] = parseFloat(round[entry]);
-            }
-          } else {
-            timesRound[address] = parseFloat(round[entry]);
-          }
-        });
-        times.push(timesRound);
-      });
-
-      // Return Times Data as Callback
-      callback(null, [data[0], data[1], times]);
+      callback(null, [rounds, data[1], data[2]]);
     });
   };
 
@@ -520,6 +495,7 @@ const PoolPayments = function (logger, client) {
   /* istanbul ignore next */
   this.handleShares = function(config, blockType, data, callback) {
 
+    const times = [];
     const solo = [];
     const shared = [];
     const pool = config.name;
@@ -539,32 +515,52 @@ const PoolPayments = function (logger, client) {
 
       // Build Worker Shares Data w/ Results
       results.forEach((round) => {
+        const timesRound = {};
         const soloRound = {};
         const sharedRound = {};
+
+        // Iterate Through Each Round
         Object.keys(round || {}).forEach((entry) => {
+
+          // Calculate Round Values
           const details = JSON.parse(round[entry]);
           const address = entry.split('.')[0];
-          const difficultyValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
+          const timesValue = /^-?\d*(\.\d+)?$/.test(details.times) ? parseFloat(details.times) : 0;
+          const workValue = /^-?\d*(\.\d+)?$/.test(details.work) ? parseFloat(details.work) : 0;
+
+          // Process Round Times Data
+          if (address in timesRound) {
+            if (timesValue >= timesRound[address]) {
+              timesRound[address] = timesValue;
+            }
+          } else {
+            timesRound[address] = timesValue;
+          }
+
+          // Process Round Share Data
           if (details.solo) {
             if (address in soloRound) {
-              soloRound[address] += parseFloat(difficultyValue);
+              soloRound[address] += parseFloat(workValue);
             } else {
-              soloRound[address] = parseFloat(difficultyValue);
+              soloRound[address] = parseFloat(workValue);
             }
           } else {
             if (address in sharedRound) {
-              sharedRound[address] += parseFloat(difficultyValue);
+              sharedRound[address] += parseFloat(workValue);
             } else {
-              sharedRound[address] = parseFloat(difficultyValue);
+              sharedRound[address] = parseFloat(workValue);
             }
           }
         });
+
+        // Push Round Data to Main
+        times.push(timesRound);
         solo.push(soloRound);
         shared.push(sharedRound);
       });
 
-      // Return Times Data as Callback
-      callback(null, [data[0], data[1], data[2], solo, shared]);
+      // Return Share Data as Callback
+      callback(null, [data[0], data[1], data[2], times, solo, shared]);
     });
   };
 
@@ -586,7 +582,7 @@ const PoolPayments = function (logger, client) {
     });
 
     // Add to Total Owed from Unpaid
-    Object.keys(data[1]).forEach((worker) => {
+    Object.keys(data[2]).forEach((worker) => {
       totalOwed += worker.balance || 0;
     });
 
@@ -606,14 +602,14 @@ const PoolPayments = function (logger, client) {
       }
 
       // Return Payment Data as Callback
-      callback(null, [rounds, data[1], data[2], data[3], data[4]]);
+      callback(null, [rounds, data[1], data[2], data[3], data[4], data[5]]);
     });
   };
 
   // Calculate Scores Given Times/Shares
   this.handleRewards = function(config, category, blockType, data, callback) {
 
-    let workers = data[1];
+    let workers = data[2];
     const rounds = data[0];
     const pool = config.name;
 
@@ -621,9 +617,9 @@ const PoolPayments = function (logger, client) {
     rounds.forEach((round, i) => {
 
       let maxTime = 0;
-      const times = data[2][i];
-      const solo = data[3][i];
-      const shared = data[4][i];
+      const times = data[3][i];
+      const solo = data[4][i];
+      const shared = data[5][i];
 
       // Check if Shares Exist in Round
       if (Object.keys(solo).length <= 0 && Object.keys(shared).length <= 0) {
@@ -665,7 +661,7 @@ const PoolPayments = function (logger, client) {
     });
 
     // Return Updated Rounds/Workers as Callback
-    callback(null, [rounds, workers]);
+    callback(null, [rounds, data[1], workers]);
   };
 
   // Send Payments if Applicable
@@ -676,7 +672,7 @@ const PoolPayments = function (logger, client) {
     const commands = [];
 
     const rounds = data[0];
-    const workers = data[1];
+    const workers = data[2];
     const pool = config.name;
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
 
@@ -700,7 +696,7 @@ const PoolPayments = function (logger, client) {
 
     // Check if No Workers/Rounds
     if (Object.keys(amounts).length === 0) {
-      callback(null, [rounds, workers]);
+      callback(null, [rounds, data[1], workers]);
       return;
     }
 
@@ -745,7 +741,7 @@ const PoolPayments = function (logger, client) {
         // Update Redis Database with Payment Record
         logger.special('Payments', pool, `Sent ${ totalSent } ${ processingConfig.coin.symbol } to ${ Object.keys(amounts).length } workers, txid: ${ transaction }`);
         commands.push(['zadd', `${ pool }:payments:${ blockType }:records`, Date.now(), JSON.stringify(payments)]);
-        callback(null, [rounds, workers, commands]);
+        callback(null, [rounds, data[1], workers, commands]);
         return;
 
       // Invalid/No Transaction ID
@@ -762,10 +758,12 @@ const PoolPayments = function (logger, client) {
   this.handleUpdates = function(config, category, blockType, interval, data, callback) {
 
     let totalPaid = 0;
-    let commands = data[2] || [];
+    let commands = data[3] || [];
 
     const rounds = data[0];
-    const workers = data[1];
+    const confirmed = data[1];
+    const workers = data[2];
+
     const pool = config.name;
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
 
@@ -811,8 +809,7 @@ const PoolPayments = function (logger, client) {
     const deleteCurrent = function(round, pool, blockType) {
       return [
         ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:counts`],
-        ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:shares`],
-        ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:times`]];
+        ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:shares`]];
     };
 
     // Update Round Shares/Times
@@ -844,6 +841,11 @@ const PoolPayments = function (logger, client) {
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     commands.push(['zremrangebyscore', `${ pool }:rounds:${ blockType }:current:shared:hashrate`, 0, `(${ windowTime }`]);
     commands.push(['zremrangebyscore', `${ pool }:rounds:${ blockType }:current:solo:hashrate`, 0, `(${ windowTime }`]);
+
+    // Update Expired Confirmed Blocks
+    confirmed.forEach((block) => {
+      commands.push(['srem', `${ pool }:blocks:${ blockType }:confirmed`, block.serialized]);
+    })
 
     // Update Miscellaneous Statistics
     if ((category === 'start') || (category === 'payments')) {
@@ -878,7 +880,6 @@ const PoolPayments = function (logger, client) {
       (callback) => _this.handleBlocks(daemon, config, blockType, callback),
       (data, callback) => _this.handleWorkers(config, blockType, data, callback),
       (data, callback) => _this.handleTransactions(daemon, config, blockType, data, callback),
-      (data, callback) => _this.handleTimes(config, blockType, data, callback),
       (data, callback) => _this.handleShares(config, blockType, data, callback),
       (data, callback) => _this.handleRewards(config, category, blockType, data, callback),
       (data, callback) => _this.handleUpdates(config, category, blockType, interval, data, callback),
@@ -900,7 +901,6 @@ const PoolPayments = function (logger, client) {
       (callback) => _this.handleBlocks(daemon, config, blockType, callback),
       (data, callback) => _this.handleWorkers(config, blockType, data, callback),
       (data, callback) => _this.handleTransactions(daemon, config, blockType, data, callback),
-      (data, callback) => _this.handleTimes(config, blockType, data, callback),
       (data, callback) => _this.handleShares(config, blockType, data, callback),
       (data, callback) => _this.handleOwed(daemon, config, category, blockType, data, callback),
       (data, callback) => _this.handleRewards(config, category, blockType, data, callback),

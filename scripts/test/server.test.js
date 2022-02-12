@@ -59,7 +59,7 @@ describe('Test server functionality', () => {
     const mainApi = new PoolApi();
     const response = mockResponse();
     response.on('end', (payload) => {
-      const expected = '{"version":"0.0.2","statusCode":500,"headers":{"Access-Control-Allow-Headers":"Content-Type, Access-Control-Allow-Headers, Access-Control-Allow-Origin, Access-Control-Allow-Methods","Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"GET","Content-Type":"application/json"},"body":"The server was unable to handle your request. Verify your input or try again later"}';
+      const expected = '{"version":"0.0.3","statusCode":500,"headers":{"Access-Control-Allow-Headers":"Content-Type, Access-Control-Allow-Headers, Access-Control-Allow-Origin, Access-Control-Allow-Methods","Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"GET","Content-Type":"application/json"},"body":"The server was unable to handle your request. Verify your input or try again later"}';
       expect(payload).toBe(expected);
     });
     poolServer.handleErrors(mainApi, 'test', response);

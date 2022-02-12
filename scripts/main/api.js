@@ -123,24 +123,22 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
       ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
-      ['hgetall', `${ pool }:rounds:primary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
     _this.executeCommands(commands, (results) => {
       callback(200, {
         primary: {
-          shared: utils.processMiners(results[0], results[2], results[1], multiplier, hashrateWindow, true),
-          solo: utils.processMiners(results[3], results[4], null, multiplier, hashrateWindow, true),
+          shared: utils.processMiners(results[0], results[1], multiplier, hashrateWindow, true),
+          solo: utils.processMiners(results[2], results[3], multiplier, hashrateWindow, true),
         },
         auxiliary: {
-          shared: utils.processMiners(results[5], results[7], results[6], multiplier, hashrateWindow, true),
-          solo: utils.processMiners(results[8], results[9], null, multiplier, hashrateWindow, true),
+          shared: utils.processMiners(results[4], results[5], multiplier, hashrateWindow, true),
+          solo: utils.processMiners(results[6], results[7], multiplier, hashrateWindow, true),
         }
       });
     }, callback);
@@ -158,7 +156,6 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       ['hgetall', `${ pool }:payments:primary:immature`],
       ['hgetall', `${ pool }:payments:primary:paid`],
       ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
-      ['hgetall', `${ pool }:rounds:primary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
@@ -167,60 +164,55 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       ['hgetall', `${ pool }:payments:auxiliary:immature`],
       ['hgetall', `${ pool }:payments:auxiliary:paid`],
       ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
     _this.executeCommands(commands, (results) => {
 
-      // Structure Difficulty Data
+      // Structure Share Data
       const primarySharedShareData = utils.processShares(results[4], miner);
-      const primarySoloShareData = utils.processShares(results[7], miner);
-      const auxiliarySharedShareData = utils.processShares(results[13], miner);
-      const auxiliarySoloShareData = utils.processShares(results[16], miner);
+      const primarySoloShareData = utils.processShares(results[6], miner);
+      const auxiliarySharedShareData = utils.processShares(results[12], miner);
+      const auxiliarySoloShareData = utils.processShares(results[14], miner);
 
       // Structure Times Data
-      const primarySharedTimesData = utils.processTimes(results[5], miner);
-      const auxiliarySharedTimesData = utils.processTimes(results[14], miner);
+      const primarySharedTimesData = utils.processTimes(results[4], miner);
+      const auxiliarySharedTimesData = utils.processTimes(results[12], miner);
 
       // Structure Hashrate Data
-      const primarySharedDifficultyData = utils.processDifficulty(results[6], miner, 'miner');
-      const primarySoloDifficultyData = utils.processDifficulty(results[8], miner, 'miner');
-      const auxiliarySharedDifficultyData = utils.processDifficulty(results[15], miner, 'miner');
-      const auxiliarySoloDifficultyData = utils.processDifficulty(results[17], miner, 'miner');
+      const primarySharedHashrateData = utils.processWork(results[5], miner, 'miner');
+      const primarySoloHashrateData = utils.processWork(results[7], miner, 'miner');
+      const auxiliarySharedHashrateData = utils.processWork(results[13], miner, 'miner');
+      const auxiliarySoloHashrateData = utils.processWork(results[15], miner, 'miner');
 
       // Structure Payments Data
       const primaryBalanceData = utils.processPayments(results[0], miner)[miner];
       const primaryGenerateData = utils.processPayments(results[1], miner)[miner];
       const primaryImmatureData = utils.processPayments(results[2], miner)[miner];
       const primaryPaidData = utils.processPayments(results[3], miner)[miner];
-      const auxiliaryBalanceData = utils.processPayments(results[9], miner)[miner];
-      const auxiliaryGenerateData = utils.processPayments(results[10], miner)[miner];
-      const auxiliaryImmatureData = utils.processPayments(results[11], miner)[miner];
-      const auxiliaryPaidData = utils.processPayments(results[12], miner)[miner];
+      const auxiliaryBalanceData = utils.processPayments(results[8], miner)[miner];
+      const auxiliaryGenerateData = utils.processPayments(results[9], miner)[miner];
+      const auxiliaryImmatureData = utils.processPayments(results[10], miner)[miner];
+      const auxiliaryPaidData = utils.processPayments(results[11], miner)[miner];
 
       // Structure Share Type Data
-      const primarySharedShareTypeData = utils.processShareTypes(results[6], miner, 'miner');
-      const primarySoloShareTypeData = utils.processShareTypes(results[8], miner, 'miner');
-      const auxiliarySharedShareTypeData = utils.processShareTypes(results[15], miner, 'miner');
-      const auxiliarySoloShareTypeData = utils.processShareTypes(results[17], miner, 'miner');
+      const primarySharedTypesData = utils.processTypes(results[4], miner);
+      const primarySoloTypesData = utils.processTypes(results[6], miner);
+      const auxiliarySharedTypesData = utils.processTypes(results[12], miner);
+      const auxiliarySoloTypesData = utils.processTypes(results[14], miner);
 
       // Structure Worker Type Data
-      const primarySharedWorkerData = utils.listWorkers(results[6], miner);
-      const primarySoloWorkerData = utils.listWorkers(results[8], miner);
-      const auxiliarySharedWorkerData = utils.listWorkers(results[15], miner);
-      const auxiliarySoloWorkerData = utils.listWorkers(results[17], miner);
+      const primarySharedWorkerData = utils.listWorkers(results[4], miner);
+      const primarySoloWorkerData = utils.listWorkers(results[6], miner);
+      const auxiliarySharedWorkerData = utils.listWorkers(results[12], miner);
+      const auxiliarySoloWorkerData = utils.listWorkers(results[14], miner);
 
       // Build Miner Statistics
       callback(200, {
         primary: {
-          difficulty: {
-            shared: primarySharedShareData[miner] || 0,
-            solo: primarySoloShareData[miner] || 0,
-          },
           hashrate: {
-            shared: (multiplier * primarySharedDifficultyData) / hashrateWindow,
-            solo: (multiplier * primarySoloDifficultyData) / hashrateWindow,
+            shared: (multiplier * primarySharedHashrateData) / hashrateWindow,
+            solo: (multiplier * primarySoloHashrateData) / hashrateWindow,
           },
           payments: {
             balances: primaryBalanceData || 0,
@@ -229,11 +221,15 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
             paid: primaryPaidData || 0,
           },
           shares: {
-            shared: primarySharedShareTypeData,
-            solo: primarySoloShareTypeData,
+            shared: primarySharedTypesData[miner] || {},
+            solo: primarySoloTypesData[miner] || {},
           },
           times: {
             shared: primarySharedTimesData[miner] || 0,
+          },
+          work: {
+            shared: primarySharedShareData[miner] || 0,
+            solo: primarySoloShareData[miner] || 0,
           },
           workers: {
             shared: primarySharedWorkerData,
@@ -241,13 +237,9 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           },
         },
         auxiliary: {
-          difficulty: {
-            shared: auxiliarySharedShareData[miner] || 0,
-            solo: auxiliarySoloShareData[miner] || 0,
-          },
           hashrate: {
-            shared: (multiplier * auxiliarySharedDifficultyData) / hashrateWindow,
-            solo: (multiplier * auxiliarySoloDifficultyData) / hashrateWindow,
+            shared: (multiplier * auxiliarySharedHashrateData) / hashrateWindow,
+            solo: (multiplier * auxiliarySoloHashrateData) / hashrateWindow,
           },
           payments: {
             balances: auxiliaryBalanceData || 0,
@@ -256,11 +248,15 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
             paid: auxiliaryPaidData || 0,
           },
           shares: {
-            shared: auxiliarySharedShareTypeData,
-            solo: auxiliarySoloShareTypeData,
+            shared: auxiliarySharedTypesData[miner] || {},
+            solo: auxiliarySoloTypesData[miner] || {},
           },
           times: {
             shared: auxiliarySharedTimesData[miner] || 0,
+          },
+          work: {
+            shared: auxiliarySharedShareData[miner] || 0,
+            solo: auxiliarySoloShareData[miner] || 0,
           },
           workers: {
             shared: auxiliarySharedWorkerData,
@@ -279,24 +275,22 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
       ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
-      ['hgetall', `${ pool }:rounds:primary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
     _this.executeCommands(commands, (results) => {
       callback(200, {
         primary: {
-          shared: utils.processMiners(results[0], results[2], results[1], multiplier, hashrateWindow, false),
-          solo: utils.processMiners(results[3], results[4], null, multiplier, hashrateWindow, false),
+          shared: utils.processMiners(results[0], results[1], multiplier, hashrateWindow, false),
+          solo: utils.processMiners(results[2], results[3], multiplier, hashrateWindow, false),
         },
         auxiliary: {
-          shared: utils.processMiners(results[5], results[7], results[6], multiplier, hashrateWindow, false),
-          solo: utils.processMiners(results[8], results[9], null, multiplier, hashrateWindow, false),
+          shared: utils.processMiners(results[4], results[5], multiplier, hashrateWindow, false),
+          solo: utils.processMiners(results[6], results[7], multiplier, hashrateWindow, false),
         }
       });
     }, callback);
@@ -401,21 +395,19 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     const commands = [
       ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
       ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
-      ['hgetall', `${ pool }:rounds:primary:current:shared:times`],
       ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`]];
+      ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`]];
     _this.executeCommands(commands, (results) => {
       callback(200, {
         primary: {
           shared: utils.processShares(results[0]),
           solo: utils.processShares(results[1]),
-          times: utils.processTimes(results[2]),
+          times: utils.processTimes(results[0]),
         },
         auxiliary: {
-          shared: utils.processShares(results[3]),
-          solo: utils.processShares(results[4]),
-          times: utils.processTimes(results[5]),
+          shared: utils.processShares(results[2]),
+          solo: utils.processShares(results[3]),
+          times: utils.processTimes(results[2]),
         }
       });
     }, callback);
@@ -425,18 +417,16 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
   this.handleRoundsHeight = function(pool, height, callback) {
     const commands = [
       ['hgetall', `${ pool }:rounds:primary:round-${ height }:shares`],
-      ['hgetall', `${ pool }:rounds:primary:round-${ height }:times`],
-      ['hgetall', `${ pool }:rounds:auxiliary:round-${ height }:shares`],
-      ['hgetall', `${ pool }:rounds:auxiliary:round-${ height }:times`]];
+      ['hgetall', `${ pool }:rounds:auxiliary:round-${ height }:shares`]];
     _this.executeCommands(commands, (results) => {
       callback(200, {
         primary: {
           shares: utils.processShares(results[0]),
-          times: utils.processTimes(results[1]),
+          times: utils.processTimes(results[0]),
         },
         auxiliary: {
-          shares: utils.processShares(results[2]),
-          times: utils.processTimes(results[3]),
+          shares: utils.processShares(results[1]),
+          times: utils.processTimes(results[1]),
         }
       });
     }, callback);
@@ -449,12 +439,11 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       const processor = new Promise((resolve,) => {
         rounds.forEach((height, idx) => {
           const commands = [
-            ['hgetall', `${ pool }:rounds:${ blockType }:round-${ height }:shares`],
-            ['hgetall', `${ pool }:rounds:${ blockType }:round-${ height }:times`]];
+            ['hgetall', `${ pool }:rounds:${ blockType }:round-${ height }:shares`]];
           _this.executeCommands(commands, (results) => {
             combined[height] = {
               shares: utils.processShares(results[0]),
-              times: utils.processTimes(results[1])
+              times: utils.processTimes(results[0])
             };
             if (idx === rounds.length - 1) {
               resolve(combined);
@@ -536,8 +525,8 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
             invalid: parseFloat(results[4] ? results[4].invalid || 0 : 0),
           },
           hashrate: {
-            shared: (multiplier * utils.processDifficulty(results[5])) / hashrateWindow,
-            solo: (multiplier * utils.processDifficulty(results[6])) / hashrateWindow,
+            shared: (multiplier * utils.processWork(results[5])) / hashrateWindow,
+            solo: (multiplier * utils.processWork(results[6])) / hashrateWindow,
           },
           network: {
             difficulty: parseFloat(results[7] ? results[7].difficulty || 0 : 0),
@@ -575,8 +564,8 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
             invalid: parseFloat(results[12] ? results[12].invalid || 0 : 0),
           },
           hashrate: {
-            shared: (multiplier * utils.processDifficulty(results[13])) / hashrateWindow,
-            solo: (multiplier * utils.processDifficulty(results[14])) / hashrateWindow,
+            shared: (multiplier * utils.processWork(results[13])) / hashrateWindow,
+            solo: (multiplier * utils.processWork(results[14])) / hashrateWindow,
           },
           network: {
             difficulty: parseFloat(results[15] ? results[15].difficulty || 0 : 0),
@@ -607,24 +596,22 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
       ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
-      ['hgetall', `${ pool }:rounds:primary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
     _this.executeCommands(commands, (results) => {
       callback(200, {
         primary: {
-          shared: utils.processWorkers(results[0], results[2], results[1], multiplier, hashrateWindow, true),
-          solo: utils.processWorkers(results[3], results[4], null, multiplier, hashrateWindow, true),
+          shared: utils.processWorkers(results[0], results[1], multiplier, hashrateWindow, true),
+          solo: utils.processWorkers(results[2], results[3], multiplier, hashrateWindow, true),
         },
         auxiliary: {
-          shared: utils.processWorkers(results[5], results[7], results[6], multiplier, hashrateWindow, true),
-          solo: utils.processWorkers(results[8], results[9], null, multiplier, hashrateWindow, true),
+          shared: utils.processWorkers(results[4], results[5], multiplier, hashrateWindow, true),
+          solo: utils.processWorkers(results[6], results[7], multiplier, hashrateWindow, true),
         }
       });
     }, callback);
@@ -638,73 +625,71 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
       ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
-      ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
-      ['hgetall', `${ pool }:rounds:primary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
     _this.executeCommands(commands, (results) => {
 
-      // Structure Difficulty Data
+      // Structure Share Data
       const primarySharedShareData = utils.processShares(results[0], worker);
-      const primarySoloShareData = utils.processShares(results[1], worker);
-      const auxiliarySharedShareData = utils.processShares(results[5], worker);
+      const primarySoloShareData = utils.processShares(results[2], worker);
+      const auxiliarySharedShareData = utils.processShares(results[4], worker);
       const auxiliarySoloShareData = utils.processShares(results[6], worker);
 
       // Structure Times Data
-      const primarySharedTimesData = utils.processTimes(results[2], worker);
-      const auxiliarySharedTimesData = utils.processTimes(results[7], worker);
+      const primarySharedTimesData = utils.processTimes(results[0], worker);
+      const auxiliarySharedTimesData = utils.processTimes(results[4], worker);
 
       // Structure Hashrate Data
-      const primarySharedDifficultyData = utils.processDifficulty(results[3], worker, 'worker');
-      const primarySoloDifficultyData = utils.processDifficulty(results[4], worker, 'worker');
-      const auxiliarySharedDifficultyData = utils.processDifficulty(results[8], worker, 'worker');
-      const auxiliarySoloDifficultyData = utils.processDifficulty(results[9], worker, 'worker');
+      const primarySharedHashrateData = utils.processWork(results[1], worker, 'worker');
+      const primarySoloHashrateData = utils.processWork(results[3], worker, 'worker');
+      const auxiliarySharedHashrateData = utils.processWork(results[5], worker, 'worker');
+      const auxiliarySoloHashrateData = utils.processWork(results[7], worker, 'worker');
 
       // Structure Share Type Data
-      const primarySharedShareTypeData = utils.processShareTypes(results[3], worker, 'worker');
-      const primarySoloShareTypeData = utils.processShareTypes(results[4], worker, 'worker');
-      const auxiliarySharedShareTypeData = utils.processShareTypes(results[8], worker, 'worker');
-      const auxiliarySoloShareTypeData = utils.processShareTypes(results[9], worker, 'worker');
+      const primarySharedTypesData = utils.processTypes(results[0], worker);
+      const primarySoloTypesData = utils.processTypes(results[2], worker);
+      const auxiliarySharedTypesData = utils.processTypes(results[4], worker);
+      const auxiliarySoloTypesData = utils.processTypes(results[6], worker);
 
       // Build Worker Statistics
       callback(200, {
         primary: {
-          difficulty: {
-            shared: primarySharedShareData[worker] || 0,
-            solo: primarySoloShareData[worker] || 0,
-          },
           hashrate: {
-            shared: (multiplier * primarySharedDifficultyData) / hashrateWindow,
-            solo: (multiplier * primarySoloDifficultyData) / hashrateWindow,
+            shared: (multiplier * primarySharedHashrateData) / hashrateWindow,
+            solo: (multiplier * primarySoloHashrateData) / hashrateWindow,
           },
           shares: {
-            shared: primarySharedShareTypeData,
-            solo: primarySoloShareTypeData,
+            shared: primarySharedTypesData[worker] || {},
+            solo: primarySoloTypesData[worker] || {},
           },
           times: {
             shared: primarySharedTimesData[worker] || 0,
           },
+          work: {
+            shared: primarySharedShareData[worker] || 0,
+            solo: primarySoloShareData[worker] || 0,
+          },
         },
         auxiliary: {
-          difficulty: {
-            shared: auxiliarySharedShareData[worker] || 0,
-            solo: auxiliarySoloShareData[worker] || 0,
-          },
           hashrate: {
-            shared: (multiplier * auxiliarySharedDifficultyData) / hashrateWindow,
-            solo: (multiplier * auxiliarySoloDifficultyData) / hashrateWindow,
+            shared: (multiplier * auxiliarySharedHashrateData) / hashrateWindow,
+            solo: (multiplier * auxiliarySoloHashrateData) / hashrateWindow,
           },
           shares: {
-            shared: auxiliarySharedShareTypeData,
-            solo: auxiliarySoloShareTypeData,
+            shared: auxiliarySharedTypesData[worker] || {},
+            solo: auxiliarySoloTypesData[worker] || {},
           },
           times: {
             shared: auxiliarySharedTimesData[worker] || 0,
+          },
+          work: {
+            shared: auxiliarySharedShareData[worker] || 0,
+            solo: auxiliarySoloShareData[worker] || 0,
           },
         }
       });
@@ -719,24 +704,22 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
       ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
-      ['hgetall', `${ pool }:rounds:primary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
-      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:times`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
       ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
       ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
     _this.executeCommands(commands, (results) => {
       callback(200, {
         primary: {
-          shared: utils.processWorkers(results[0], results[2], results[1], multiplier, hashrateWindow, false),
-          solo: utils.processWorkers(results[3], results[4], null, multiplier, hashrateWindow, false),
+          shared: utils.processWorkers(results[0], results[1], multiplier, hashrateWindow, false),
+          solo: utils.processWorkers(results[2], results[3], multiplier, hashrateWindow, false),
         },
         auxiliary: {
-          shared: utils.processWorkers(results[5], results[7], results[6], multiplier, hashrateWindow, false),
-          solo: utils.processWorkers(results[8], results[9], null, multiplier, hashrateWindow, false),
+          shared: utils.processWorkers(results[4], results[5], multiplier, hashrateWindow, false),
+          solo: utils.processWorkers(results[6], results[7], multiplier, hashrateWindow, false),
         }
       });
     }, callback);
@@ -759,7 +742,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
   // Build API Payload for each Endpoint
   this.buildResponse = function(code, message, response) {
     const payload = {
-      version: '0.0.2',
+      version: '0.0.3',
       statusCode: code,
       headers: _this.headers,
       body: message,

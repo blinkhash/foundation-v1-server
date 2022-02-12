@@ -49,37 +49,53 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     }
   });
 
-  // Manage Times Calculations
-  /* istanbul ignore next */
-  this.calculateTimes = function(results, address, blockValid, blockType, isSoloMining) {
+  // Handle Times Updates
+  this.handleTimes = function(lastShare) {
 
-    const commands = [];
     const dateNow = Date.now();
-    const lastTimes = results || {};
-    const minerType = isSoloMining ? 'solo' : 'shared';
-
-    // Check if Worker Recently Joined
-    if (!lastTimes[address]) {
-      lastTimes[address] = dateNow;
-    }
+    const lastTime = lastShare.time || dateNow;
 
     // Check for Continous Primary Mining
-    const lastTime = lastTimes[address];
+    let times = lastShare.times || 0;
     const timeChange = utils.roundTo(Math.max(dateNow - lastTime, 0) / 1000, 4);
     if (timeChange < 900) {
-      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, address, timeChange]);
+      times = times + timeChange;
     }
 
-    // Ensure Block Hasn't Been Found
-    if (!blockValid) {
-      commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:submissions`, address, dateNow]);
-    }
+    return times;
+  }
 
-    return commands;
-  };
+  // Handle Effort Updates
+  this.handleEffort = function(shares, worker, shareData, blockDifficulty, isSoloMining) {
+
+    // Calculate Work Sum from Shared/Solo Mining
+    let difficulties = 0;
+    Object.keys(shares).forEach((share) => {
+      const shareInfo = JSON.parse(shares[share]);
+      const workValue = /^-?\d*(\.\d+)?$/.test(shareInfo.work) ? parseFloat(shareInfo.work) : 0;
+      if (isSoloMining && share === worker && shareInfo.solo) {
+        difficulties += workValue;
+      } else if (!isSoloMining && !shareInfo.solo) {
+        difficulties += workValue;
+      }
+    });
+
+    // Calculate Effort for Shared/Solo Mining
+    return (difficulties + shareData.difficulty) / blockDifficulty * 100;
+  }
+
+  // Handle Type Updates
+  this.handleTypes = function(lastShare, shareType) {
+
+    // Increment Type of Last Share Submitted
+    const types = { valid: 0, invalid: 0, stale: 0 };
+    const lastTypes = lastShare.types || types;
+    lastTypes[shareType] += 1;
+
+    return lastTypes
+  }
 
   // Manage Shares Calculations
-  /* istanbul ignore next */
   this.calculateShares = function(results, shareData, shareType, blockType, isSoloMining) {
 
     let shares;
@@ -94,51 +110,51 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Establish Previous Share Data
     if (isSoloMining) {
-      shares = (['share', 'primary'].includes(blockType)) ? (results[4] || {}) : (results[6] || {});
+      shares = (['share', 'primary'].includes(blockType)) ? (results[2] || {}) : (results[3] || {});
     } else {
-      shares = (['share', 'primary'].includes(blockType)) ? (results[0] || {}) : (results[2] || {});
+      shares = (['share', 'primary'].includes(blockType)) ? (results[0] || {}) : (results[1] || {});
     }
 
-    // Calculate Difficulty Sum from Shared/Solo Mining
-    let difficulties = 0;
+    // Establish Last Share Data for Miner
     const lastShare = JSON.parse(shares[worker] || '{}');
-    Object.keys(shares).forEach((share) => {
-      const shareInfo = JSON.parse(shares[share]);
-      const difficultyValue = /^-?\d*(\.\d+)?$/.test(shareInfo.difficulty) ? parseFloat(shareInfo.difficulty) : 0;
-      if (isSoloMining && share === worker && shareInfo.solo) {
-        difficulties += difficultyValue;
-      } else if (!isSoloMining && !shareInfo.solo) {
-        difficulties += difficultyValue;
-      }
-    });
 
-    // Calculate Effort for Shared/Solo Mining
-    const effort = (difficulties + shareData.difficulty) / blockDifficulty * 100;
+    // Calculate Times/Effort Data
+    const times = _this.handleTimes(lastShare);
+    const effort = _this.handleEffort(shares, worker, shareData, blockDifficulty, isSoloMining);
+    const types = _this.handleTypes(lastShare, shareType);
 
     // Build Output Share
     const outputShare = {
       time: dateNow,
-      difficulty: difficulty + (lastShare.difficulty || 0),
-      identifier: identifier,
       effort: effort,
-      worker: worker,
-      solo: isSoloMining,
+      identifier: identifier,
       round: _this.roundValue,
+      solo: isSoloMining,
+      times: times,
+      types: types,
+      work: difficulty + (lastShare.work || 0),
+      worker: worker,
     };
+
+    // Update Last Share if Orphaned
+    if (lastShare.round === 'orphan') {
+      lastShare.round = _this.roundValue;
+    }
 
     // Reset Share Data (If Necessary)
     if ((!isSoloMining) &&
         (lastShare.round === _this.prevRoundValue) &&
         (lastShare.round !== _this.roundValue)) {
       logger.warning(logSystem, logComponent, logSubCat, `Resetting share data for ${ worker } due to rounds overlapping.`);
-      outputShare.difficulty = difficulty;
       outputShare.effort = shareData.difficulty / blockDifficulty * 100;
+      outputShare.times = 0;
+      outputShare.types = { valid: 0, invalid: 0, stale: 0 };
+      outputShare.work = difficulty;
     }
 
     // Build Secondary Output (Solo)
     const hashrateShare = JSON.parse(JSON.stringify(outputShare));
-    hashrateShare.difficulty = difficulty;
-    hashrateShare.type = shareType;
+    hashrateShare.work = difficulty;
 
     // No Shared Effort if Solo Share
     if (shareType === 'valid' && isSoloMining) {
@@ -167,7 +183,6 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Manage Blocks Calculations
-  /* istanbul ignore next */
   this.calculateBlocks = function(results, shareData, shareType, blockValid, isSoloMining) {
 
     let shares;
@@ -183,26 +198,14 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Establish Previous Share Data
     if (isSoloMining) {
-      shares = (['share', 'primary'].includes(blockType)) ? (results[4] || {}) : (results[6] || {});
+      shares = (['share', 'primary'].includes(blockType)) ? (results[2] || {}) : (results[3] || {});
     } else {
-      shares = (['share', 'primary'].includes(blockType)) ? (results[0] || {}) : (results[2] || {});
+      shares = (['share', 'primary'].includes(blockType)) ? (results[0] || {}) : (results[1] || {});
     }
 
-    // Calculate Difficulty Sum from Shared/Solo Mining
-    let difficulties = 0;
+    // Establish Last Share Data for Miner
     const lastShare = JSON.parse(shares[worker] || '{}');
-    Object.keys(shares).forEach((share) => {
-      const shareInfo = JSON.parse(shares[share]);
-      const difficultyValue = /^-?\d*(\.\d+)?$/.test(shareInfo.difficulty) ? parseFloat(shareInfo.difficulty) : 0;
-      if (isSoloMining && share === worker && shareInfo.solo) {
-        difficulties += difficultyValue;
-      } else if (!isSoloMining && !shareInfo.solo) {
-        difficulties += difficultyValue;
-      }
-    });
-
-    // Calculate Luck for Shared/Solo Mining
-    const luck = (difficulties + shareData.difficulty) / blockDifficulty * 100;
+    const luck = _this.handleEffort(shares, worker, shareData, blockDifficulty, isSoloMining);
 
     // Build Output Block
     const outputBlock = {
@@ -222,21 +225,25 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Build Primary Output (Solo)
     const outputShare = {
       time: dateNow,
-      difficulty: difficulty,
-      identifier: identifier,
       effort: 0,
-      worker: worker,
-      solo: isSoloMining,
+      identifier: identifier,
       round: _this.roundValue,
+      solo: isSoloMining,
+      times: 0,
+      types: { valid: 0, invalid: 0, stale: 0 },
+      work: difficulty,
+      worker: worker,
     };
 
     // Build Secondary Output (Solo)
     const roundShare = JSON.parse(JSON.stringify(outputShare));
-    roundShare.difficulty = difficulty + (lastShare.difficulty || 0);
     roundShare.effort = luck;
+    roundShare.times = lastShare.times;
+    roundShare.types = lastShare.types;
+    roundShare.work = difficulty + (lastShare.work || 0);
 
     // Check for Multiple Workers (Solo);
-    const workers = Object.keys(results[4] || {}).filter((result) => {
+    const workers = Object.keys(results[2] || {}).filter((result) => {
       const address = worker ? worker.split('.')[0] : '';
       return result.split('.')[0] === address;
     });
@@ -255,10 +262,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     } else if (blockValid) {
       commands.push(['sadd', `${ _this.pool }:blocks:${ blockType }:pending`, JSON.stringify(outputBlock)]);
       commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'valid', 1]);
-      commands.push(['del', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:submissions`]),
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:counts`]);
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:shares`]);
-      commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:times`]);
       process.send({ pool: _this.pool, type: 'roundUpdate' });
 
     // Handle Invalid Block Submitted
@@ -270,28 +275,14 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Manage Worker Times
-  this.buildTimesCommands = function(results, shareData, shareType, blockValid, isSoloMining) {
-    let commands = [];
-    if (shareType === 'valid' && !isSoloMining) {
-      commands = commands.concat(_this.calculateTimes(results[1], shareData.addrPrimary, blockValid, 'primary', isSoloMining));
-      if (_this.poolConfig.auxiliary && _this.poolConfig.auxiliary.enabled) {
-        commands = commands.concat(_this.calculateTimes(results[3], shareData.addrAuxiliary, blockValid, 'auxiliary', isSoloMining));
-      }
-    }
-    return commands;
-  };
-
-  // Manage Worker Times
   this.buildSharesCommands = function(results, shareData, shareType, blockValid, isSoloMining) {
     let commands = [];
-    commands = commands.concat(_this.buildTimesCommands(results, shareData, shareType, blockValid, isSoloMining));
     commands = commands.concat(_this.calculateShares(results, shareData, shareType, 'primary', isSoloMining));
     if (_this.poolConfig.auxiliary && _this.poolConfig.auxiliary.enabled) {
       commands = commands.concat(_this.calculateShares(results, shareData, shareType, 'auxiliary', isSoloMining));
     }
     return commands;
   };
-
 
   // Build Redis Commands
   this.buildCommands = function(results, shareData, shareType, blockValid, callback, handler) {
@@ -321,13 +312,9 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   this.handleShares = function(shareData, shareType, blockValid, callback, handler) {
     const shareLookups = [
       ['hgetall', `${ _this.pool }:rounds:primary:current:shared:shares`],
-      ['hgetall', `${ _this.pool }:rounds:primary:current:shared:submissions`],
       ['hgetall', `${ _this.pool }:rounds:auxiliary:current:shared:shares`],
-      ['hgetall', `${ _this.pool }:rounds:auxiliary:current:shared:submissions`],
       ['hgetall', `${ _this.pool }:rounds:primary:current:solo:shares`],
-      ['hgetall', `${ _this.pool }:rounds:primary:current:solo:submissions`],
-      ['hgetall', `${ _this.pool }:rounds:auxiliary:current:solo:shares`],
-      ['hgetall', `${ _this.pool }:rounds:auxiliary:current:solo:submissions`]];
+      ['hgetall', `${ _this.pool }:rounds:auxiliary:current:solo:shares`]];
     this.executeCommands(shareLookups, (results) => {
       _this.buildCommands(results, shareData, shareType, blockValid, callback, handler);
     }, handler);
