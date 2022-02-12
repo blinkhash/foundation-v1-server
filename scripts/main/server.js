@@ -46,8 +46,8 @@ const PoolServer = function (logger, client) {
     // Establish Middleware
     app.set('trust proxy', 1);
     app.use(bodyParser.json());
-    //app.use(limiter);
-    //app.use(cache('5 minutes'));
+    app.use(limiter);
+    app.use(cache('5 minutes'));
     app.use(compress());
     app.use(cors());
 
