@@ -4,6 +4,9 @@
  *
  */
 
+const utils = require('./utils');
+const Algorithms = require('foundation-stratum').algorithms;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Statistics Function
@@ -23,7 +26,65 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
 
   // Current Statistics Refresh Interval
-  _this.refreshInterval = _this.poolConfig.settings.statisticsRefreshInterval || 20000;
+  _this.hashrateInterval = _this.poolConfig.statistics.hashrateInterval || 20000;
+  _this.historicalInterval = _this.poolConfig.statistics.historicalInterval || 300000;
+  _this.refreshInterval = _this.poolConfig.statistics.refreshInterval || 20000;
+  _this.hashrateWindow = _this.poolConfig.statistics.hashrateWindow || 300;
+  _this.historicalWindow = _this.poolConfig.statistics.historicalWindow || 86400;
+
+  // Calculate Historical Information
+  this.calculateHistoricalInfo = function(results, blockType) {
+
+    const commands = [];
+    const dateNow = Date.now();
+    const algorithm = _this.poolConfig.primary.coin.algorithms.mining;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+
+    // Build Historical Output
+    const output = {
+      hashrate: {
+        shared: (multiplier * utils.processWork(results[1])) / _this.hashrateWindow,
+        solo: (multiplier * utils.processWork(results[2])) / _this.hashrateWindow,
+      },
+      network: {
+        difficulty: results[0].difficulty,
+        hashrate: results[0].hashrate,
+      },
+      status: {
+        miners: utils.combineMiners(results[1], results[2]),
+        workers: utils.combineWorkers(results[1], results[2]),
+      }
+    };
+
+    // Handle Historical Updates
+    commands.push(['zadd', `${ _this.pool }:statistics:${ blockType }:historical`, dateNow / 1000 | 0, JSON.stringify(output)]);
+    return commands;
+  }
+
+  // Handle Hashrate Information in Redis
+  this.handleHashrateInfo = function(blockType, callback, handler) {
+    const commands = [];
+    const windowTime = (((Date.now() / 1000) - _this.hashrateWindow) | 0).toString();
+    commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, 0, `(${ windowTime }`]);
+    commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:solo:hashrate`, 0, `(${ windowTime }`]);
+    console.log(commands);
+    callback(commands);
+  }
+
+  // Get Historical Information from Redis
+  this.handleHistoricalInfo = function(blockType, callback, handler) {
+    const windowTime = (((Date.now() / 1000) - _this.hashrateWindow) | 0).toString();
+    const windowHistorical = (((Date.now() / 1000) - _this.historicalWindow) | 0).toString();
+    const historicalLookups = [
+      ['hgetall', `${ _this.pool }:statistics:${ blockType }:network`],
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:solo:hashrate`, windowTime, '+inf'],
+      ['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, 0, `(${ windowHistorical }`]];
+    this.executeCommands(historicalLookups, (results) => {
+      const commands = _this.calculateHistoricalInfo(results, blockType);
+      callback(commands);
+    });
+  }
 
   // Get Mining Statistics from Daemon
   this.handleMiningInfo = function(daemon, blockType, callback, handler) {
@@ -58,11 +119,35 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   // Start Interval Initialization
   /* istanbul ignore next */
   this.handleIntervals = function(daemon, blockType) {
+
+    // Handle Hashrate Data Interval
+    setInterval(() => {
+      _this.handleHashrateInfo(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating hashrate statistics for ${ blockType } configuration.`);
+          }
+        }, () => {});
+      }, () => {});
+    }, _this.hashrateInterval);
+
+    // Handle Historical Data Interval
+    setInterval(() => {
+      _this.handleHistoricalInfo(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating historical statistics for ${ blockType } configuration.`);
+          }
+        }, () => {});
+      }, () => {});
+    }, _this.historicalInterval);
+
+    // Handle Mining Info Interval
     setInterval(() => {
       _this.handleMiningInfo(daemon, blockType, (results) => {
         _this.executeCommands(results, () => {
           if (_this.poolConfig.debug) {
-            logger.debug('Statistics', _this.pool, `Finished updating statistics for ${ blockType } configuration.`);
+            logger.debug('Statistics', _this.pool, `Finished updating network statistics for ${ blockType } configuration.`);
           }
         }, () => {});
       }, () => {});

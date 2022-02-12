@@ -1489,9 +1489,7 @@ describe('Test payments functionality', () => {
     const workers = { 'example1': { immature: 1250000000 }};
     const expected = [
       ["hset", "Pool1:payments:primary:generate", "example1", 0],
-      ["hset", "Pool1:payments:primary:immature", "example1", 12.5],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:solo:hashrate", 0, "(1637877785"]];
+      ["hset", "Pool1:payments:primary:immature", "example1", 12.5]];
     poolPayments.handleUpdates(config, 'checks', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1512,8 +1510,6 @@ describe('Test payments functionality', () => {
     const workers = { 'example1': { immature: 1250000000 }};
     const expected = [
       ["hset", "Pool1:payments:primary:immature", "example1", 12.5],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:solo:hashrate", 0, "(1637877785"],
       ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 0],
       ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
       ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
@@ -1537,8 +1533,6 @@ describe('Test payments functionality', () => {
     const workers = { 'example1': { generate: 1250000000 }};
     const expected = [
       ["hset", "Pool1:payments:primary:immature", "example1", 0],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:solo:hashrate", 0, "(1637877785"],
       ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 0],
       ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
       ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
@@ -1565,8 +1559,6 @@ describe('Test payments functionality', () => {
       ["smove", "Pool1:blocks:primary:pending", "Pool1:blocks:primary:confirmed", "serialized"],
       ["del", "Pool1:rounds:primary:round-180:counts"],
       ["del", "Pool1:rounds:primary:round-180:shares"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:solo:hashrate", 0, "(1637877785"],
       ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 0],
       ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
       ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
@@ -1590,9 +1582,7 @@ describe('Test payments functionality', () => {
     const workers = { 'example1': { generate: 1250000000 }};
     const expected = [
       ["hset", "Pool1:payments:primary:generate", "example1", 12.5],
-      ["hset", "Pool1:payments:primary:immature", "example1", 0],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:solo:hashrate", 0, "(1637877785"]];
+      ["hset", "Pool1:payments:primary:immature", "example1", 0]];
     poolPayments.handleUpdates(config, 'checks', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1619,8 +1609,6 @@ describe('Test payments functionality', () => {
       ["smove", "Pool1:blocks:primary:pending", "Pool1:blocks:primary:confirmed", "serialized"],
       ["del", "Pool1:rounds:primary:round-180:counts"],
       ["del", "Pool1:rounds:primary:round-180:shares"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:solo:hashrate", 0, "(1637877785"],
       ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 12.5],
       ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
       ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
@@ -1650,8 +1638,6 @@ describe('Test payments functionality', () => {
       ["smove", "Pool1:blocks:primary:pending", "Pool1:blocks:primary:confirmed", "serialized"],
       ["del", "Pool1:rounds:primary:round-180:counts"],
       ["del", "Pool1:rounds:primary:round-180:shares"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:solo:hashrate", 0, "(1637877785"],
       ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 12.5],
       ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
       ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
@@ -1681,8 +1667,6 @@ describe('Test payments functionality', () => {
       ["smove", "Pool1:blocks:primary:pending", "Pool1:blocks:primary:confirmed", "serialized"],
       ["del", "Pool1:rounds:primary:round-180:counts"],
       ["del", "Pool1:rounds:primary:round-180:shares"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:solo:hashrate", 0, "(1637877785"],
       ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 12.5],
       ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
       ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
@@ -1707,8 +1691,6 @@ describe('Test payments functionality', () => {
     const expected = [
       ["hset", "Pool1:payments:primary:immature", "example1", 0],
       ["smove", "Pool1:blocks:primary:pending", "Pool1:blocks:primary:kicked", "serialized"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:solo:hashrate", 0, "(1637877785"],
       ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 0],
       ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
       ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
@@ -1735,8 +1717,6 @@ describe('Test payments functionality', () => {
       ["smove", "Pool1:blocks:primary:pending", "Pool1:blocks:primary:kicked", "serialized"],
       ["del", "Pool1:rounds:primary:round-180:counts"],
       ["del", "Pool1:rounds:primary:round-180:shares"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:solo:hashrate", 0, "(1637877785"],
       ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 0],
       ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
       ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
@@ -1762,8 +1742,6 @@ describe('Test payments functionality', () => {
       ["hset", "Pool1:payments:primary:balances", "example1", 0.5],
       ["hset", "Pool1:payments:primary:generate", "example1", 0],
       ["hset", "Pool1:payments:primary:immature", "example1", 12.5],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:solo:hashrate", 0, "(1637877785"],
       ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 0],
       ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
       ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
@@ -1788,9 +1766,7 @@ describe('Test payments functionality', () => {
     const workers = { 'example1': { immature: 1250000000 }};
     const expected = [
       ["hset", "Pool1:payments:auxiliary:generate", "example1", 0],
-      ["hset", "Pool1:payments:auxiliary:immature", "example1", 12.5],
-      ["zremrangebyscore", "Pool1:rounds:auxiliary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:auxiliary:current:solo:hashrate", 0, "(1637877785"]];
+      ["hset", "Pool1:payments:auxiliary:immature", "example1", 12.5]];
     poolPayments.handleUpdates(config, 'checks', 'auxiliary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1814,8 +1790,6 @@ describe('Test payments functionality', () => {
     const expected = [
       ["hset", "Pool1:payments:auxiliary:generate", "example1", 0],
       ["hset", "Pool1:payments:auxiliary:immature", "example1", 12.5],
-      ["zremrangebyscore", "Pool1:rounds:auxiliary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:auxiliary:current:solo:hashrate", 0, "(1637877785"],
       ["srem", "Pool1:blocks:auxiliary:confirmed", "serialized1"],
       ["srem", "Pool1:blocks:auxiliary:confirmed", "serialized2"]];
     poolPayments.handleUpdates(config, 'checks', 'auxiliary', Date.now(), [rounds, confirmed, workers], (error, results) => {

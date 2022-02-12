@@ -836,12 +836,6 @@ const PoolPayments = function (logger, client) {
       }
     });
 
-    // Update Hashrate Calculation
-    const hashrateWindow = config.settings.hashrateWindow;
-    const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
-    commands.push(['zremrangebyscore', `${ pool }:rounds:${ blockType }:current:shared:hashrate`, 0, `(${ windowTime }`]);
-    commands.push(['zremrangebyscore', `${ pool }:rounds:${ blockType }:current:solo:hashrate`, 0, `(${ windowTime }`]);
-
     // Update Expired Confirmed Blocks
     confirmed.forEach((block) => {
       commands.push(['srem', `${ pool }:blocks:${ blockType }:confirmed`, block.serialized]);

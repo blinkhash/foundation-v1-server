@@ -116,6 +116,19 @@ const PoolLoader = function(logger, portalConfig) {
     return true;
   };
 
+  // Validate Pool Settings
+  this.validatePoolVariables = function(poolConfig) {
+    if (poolConfig.statistics.historicalInterval < 300000) {
+      logger.error('Builder', 'Setup', 'Historical interval must be set to >= 5 minutes, or 300,000ms. Check your configuration files.');
+      return false;
+    }
+    if (poolConfig.statistics.historicalWindow > 86400) {
+      logger.error('Builder', 'Setup', 'Historical interval must be set to <= 24 hours, or 86400s. Check your configuration files.');
+      return false;
+    }
+    return true;
+  }
+
   // Validate Pool Configs
   this.validatePoolConfigs = function(poolConfig) {
     const name = poolConfig.name;
@@ -123,6 +136,7 @@ const PoolLoader = function(logger, portalConfig) {
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.mining, name)) return false;
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.block, name)) return false;
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.coinbase, name)) return false;
+    if (!_this.validatePoolVariables(poolConfig)) return false;
     if (!_this.validatePoolRecipients(poolConfig)) return false;
     return true;
   };

@@ -118,7 +118,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
   // API Endpoint for /miners/active
   this.handleMinersActive = function(pool, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
-    const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
@@ -147,7 +147,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
   // API Endpoint for /miners/[miner]
   this.handleMinersSpecific = function(pool, miner, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
-    const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
@@ -270,7 +270,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
   // API Endpoint for /miners
   this.handleMiners = function(pool, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
-    const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
@@ -483,7 +483,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
   this.handleStatistics = function(pool, callback) {
     const config = _this.poolConfigs[pool] || {};
     const algorithm = config.primary.coin.algorithms.mining;
-    const hashrateWindow = config.settings.hashrateWindow;
+    const hashrateWindow = config.statistics.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
@@ -591,7 +591,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
   // API Endpoint for /workers/active
   this.handleWorkersActive = function(pool, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
-    const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
@@ -620,7 +620,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
   // API Endpoint for /workers/[worker]
   this.handleWorkersSpecific = function(pool, worker, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
-    const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
@@ -699,7 +699,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
   // API Endpoint for /workers
   this.handleWorkers = function(pool, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
-    const hashrateWindow = _this.poolConfigs[pool].settings.hashrateWindow;
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const commands = [
