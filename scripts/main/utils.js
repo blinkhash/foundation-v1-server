@@ -229,7 +229,7 @@ exports.processMiners = function(shares, hashrate, multiplier, hashrateWindow, a
 
       // Generate Miner Data
       const address = entry.split('.')[0];
-      const hashrateValue = exports.processWork(hashrate, address, "miner");
+      const hashrateValue = exports.processWork(hashrate, address, 'miner');
       const effortValue = (/^-?\d*(\.\d+)?$/.test(details.effort) ? parseFloat(details.effort) : null);
       const timeValue = (/^-?\d*(\.\d+)?$/.test(details.times) ? parseFloat(details.times) : null);
       const workValue = /^-?\d*(\.\d+)?$/.test(details.work) ? parseFloat(details.work) : 0;
@@ -355,7 +355,7 @@ exports.processTypes = function(shares, address) {
             valid: (details.types || {}).valid || 0,
             invalid: (details.types || {}).invalid || 0,
             stale: (details.types || {}).stale || 0,
-          }
+          };
         }
       }
     });
@@ -376,7 +376,7 @@ exports.processWork = function(shares, address, type) {
           output += workValue;
         }
       }
-    })
+    });
   }
   return output;
 };
@@ -389,7 +389,7 @@ exports.processWorkers = function(shares, hashrate, multiplier, hashrateWindow, 
       const details = JSON.parse(shares[entry]);
 
       // Generate Worker Data
-      const hashrateValue = exports.processWork(hashrate, entry, "worker");
+      const hashrateValue = exports.processWork(hashrate, entry, 'worker');
       const effortValue = (/^-?\d*(\.\d+)?$/.test(details.effort) ? parseFloat(details.effort) : null);
       const timeValue = (/^-?\d*(\.\d+)?$/.test(details.times) ? parseFloat(details.times) : null);
       const workValue = /^-?\d*(\.\d+)?$/.test(details.work) ? parseFloat(details.work) : 0;

@@ -8,7 +8,6 @@ const MockDate = require('mockdate');
 const redis = require('redis-mock');
 jest.mock('redis', () => jest.requireActual('redis-mock'));
 
-const utils = require('../main/utils');
 const PoolLogger = require('../main/logger');
 const PoolShares = require('../main/shares');
 const poolConfig = require('../../configs/pools/example.js');
@@ -167,10 +166,10 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"master\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example\"}"],
-      ["hincrby", "Pool1:rounds:primary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:current:shared:shares", "example", "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"master\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example\"}"],
-      ["hset", "Pool1:rounds:primary:current:shared:counts", "effort", 7.277845022124848e-7]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 7.277845022124848e-7]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
   });
@@ -196,8 +195,8 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"master\",\"solo\":false,\"times\":0,\"types\":{\"valid\":0,\"invalid\":1,\"stale\":0},\"work\":-1,\"worker\":\"example\"}"],
-      ["hincrby", "Pool1:rounds:primary:current:shared:counts", "invalid", 1]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","solo":false,"times":0,"types":{"valid":0,"invalid":1,"stale":0},"work":-1,"worker":"example"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'invalid', 1]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'invalid', true, false);
     expect(commands).toStrictEqual(expected);
   });
@@ -224,14 +223,14 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example1\"}"],
-      ["hincrby", "Pool1:rounds:primary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:current:shared:shares", "example1", "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example1\"}"],
-      ["hset", "Pool1:rounds:primary:current:shared:counts", "effort", 7.277845022124848e-7],
-      ["zadd", "Pool1:rounds:auxiliary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":28.57142857142857,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example2\"}"],
-      ["hincrby", "Pool1:rounds:auxiliary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:auxiliary:current:shared:shares", "example2", "{\"time\":1637878085886,\"effort\":28.57142857142857,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example2\"}"],
-      ["hset", "Pool1:rounds:auxiliary:current:shared:counts", "effort", 28.57142857142857]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 7.277845022124848e-7],
+      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['hincrby', 'Pool1:rounds:auxiliary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:auxiliary:current:shared:shares', 'example2', '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['hset', 'Pool1:rounds:auxiliary:current:shared:counts', 'effort', 28.57142857142857]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
   });
@@ -257,8 +256,8 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:solo:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":0.0000014555690044249697,\"identifier\":\"\",\"round\":\"361aae45\",\"solo\":true,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example\"}"],
-      ["hset", "Pool1:rounds:primary:current:solo:shares", "example", "{\"time\":1637878085886,\"effort\":0.0000014555690044249697,\"identifier\":\"\",\"round\":\"361aae45\",\"solo\":true,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":2,\"worker\":\"example\"}"]];
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","round":"361aae45","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'example', '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","round":"361aae45","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":2,"worker":"example"}']];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, true);
     expect(commands).toStrictEqual(expected);
   });
@@ -284,10 +283,10 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":0.0000014555690044249697,\"identifier\":\"\",\"round\":\"361aae45\",\"solo\":false,\"times\":80,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example\"}"],
-      ["hincrby", "Pool1:rounds:primary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:current:shared:shares", "example", "{\"time\":1637878085886,\"effort\":0.0000014555690044249697,\"identifier\":\"\",\"round\":\"361aae45\",\"solo\":false,\"times\":80,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":2,\"worker\":\"example\"}"],
-      ["hset", "Pool1:rounds:primary:current:shared:counts", "effort", 0.0000014555690044249697]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","round":"361aae45","solo":false,"times":80,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","round":"361aae45","solo":false,"times":80,"types":{"valid":1,"invalid":0,"stale":0},"work":2,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 0.0000014555690044249697]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
   });
@@ -314,10 +313,10 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"round\":\"aaaaaaaa\",\"solo\":false,\"times\":0,\"types\":{\"valid\":0,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example\"}"],
-      ["hincrby", "Pool1:rounds:primary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:current:shared:shares", "example", "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"round\":\"aaaaaaaa\",\"solo\":false,\"times\":0,\"types\":{\"valid\":0,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example\"}"],
-      ["hset", "Pool1:rounds:primary:current:shared:counts", "effort", 0.0000014555690044249697]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":"aaaaaaaa","solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":"aaaaaaaa","solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 0.0000014555690044249697]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
   });
@@ -342,8 +341,8 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":0,\"invalid\":0,\"stale\":1},\"work\":-1,\"worker\":\"example\"}"],
-      ["hincrby", "Pool1:rounds:primary:current:shared:counts", "stale", 1]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":1},"work":-1,"worker":"example"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'stale', 1]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'stale', true, false);
     expect(commands).toStrictEqual(expected);
   });
@@ -371,10 +370,10 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"master\",\"round\":\"aaaaaaaa\",\"solo\":false,\"times\":0,\"types\":{\"valid\":0,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example\"}"],
-      ["hincrby", "Pool1:rounds:primary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:current:shared:shares", "example", "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"master\",\"round\":\"aaaaaaaa\",\"solo\":false,\"times\":0,\"types\":{\"valid\":0,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example\"}"],
-      ["hset", "Pool1:rounds:primary:current:shared:counts", "effort", 0.0000014555690044249697]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","round":"aaaaaaaa","solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","round":"aaaaaaaa","solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 0.0000014555690044249697]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
   });
@@ -401,14 +400,14 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example1\"}"],
-      ["hincrby", "Pool1:rounds:primary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:current:shared:shares", "example1", "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example1\"}"],
-      ["hset", "Pool1:rounds:primary:current:shared:counts", "effort", 7.277845022124848e-7],
-      ["zadd", "Pool1:rounds:auxiliary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":57.14285714285714,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example2\"}"],
-      ["hincrby", "Pool1:rounds:auxiliary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:auxiliary:current:shared:shares", "example2", "{\"time\":1637878085886,\"effort\":57.14285714285714,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example2\"}"],
-      ["hset", "Pool1:rounds:auxiliary:current:shared:counts", "effort", 57.14285714285714]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 7.277845022124848e-7],
+      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":57.14285714285714,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['hincrby', 'Pool1:rounds:auxiliary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:auxiliary:current:shared:shares', 'example2', '{"time":1637878085886,"effort":57.14285714285714,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['hset', 'Pool1:rounds:auxiliary:current:shared:counts', 'effort', 57.14285714285714]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
   });
@@ -435,14 +434,14 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example1\"}"],
-      ["hincrby", "Pool1:rounds:primary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:current:shared:shares", "example1", "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example1\"}"],
-      ["hset", "Pool1:rounds:primary:current:shared:counts", "effort", 7.277845022124848e-7],
-      ["zadd", "Pool1:rounds:auxiliary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":28.57142857142857,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example2\"}"],
-      ["hincrby", "Pool1:rounds:auxiliary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:auxiliary:current:shared:shares", "example2", "{\"time\":1637878085886,\"effort\":28.57142857142857,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example2\"}"],
-      ["hset", "Pool1:rounds:auxiliary:current:shared:counts", "effort", 28.57142857142857]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 7.277845022124848e-7],
+      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['hincrby', 'Pool1:rounds:auxiliary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:auxiliary:current:shared:shares', 'example2', '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['hset', 'Pool1:rounds:auxiliary:current:shared:counts', 'effort', 28.57142857142857]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
   });
@@ -468,10 +467,10 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"master\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example\"}"],
-      ["hincrby", "Pool1:rounds:primary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:current:shared:shares", "example", "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"master\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example\"}"],
-      ["hset", "Pool1:rounds:primary:current:shared:counts", "effort", 7.277845022124848e-7]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 7.277845022124848e-7]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
   });
@@ -498,10 +497,10 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:solo:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":true,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example1\"}"],
-      ["hset", "Pool1:rounds:primary:current:solo:shares", "example1", "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":true,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example1\"}"],
-      ["zadd", "Pool1:rounds:auxiliary:current:solo:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":28.57142857142857,\"identifier\":\"\",\"solo\":true,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example2\"}"],
-      ["hset", "Pool1:rounds:auxiliary:current:solo:shares", "example2", "{\"time\":1637878085886,\"effort\":28.57142857142857,\"identifier\":\"\",\"solo\":true,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example2\"}"]];
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['hset', 'Pool1:rounds:auxiliary:current:solo:shares', 'example2', '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}']];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, true);
     expect(commands).toStrictEqual(expected);
   });
@@ -528,10 +527,10 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:solo:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":true,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example1\"}"],
-      ["hset", "Pool1:rounds:primary:current:solo:shares", "example1", "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":true,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example1\"}"],
-      ["zadd", "Pool1:rounds:auxiliary:current:solo:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":28.57142857142857,\"identifier\":\"\",\"solo\":true,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example2\"}"],
-      ["hset", "Pool1:rounds:auxiliary:current:solo:shares", "example2", "{\"time\":1637878085886,\"effort\":28.57142857142857,\"identifier\":\"\",\"solo\":true,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example2\"}"]];
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['hset', 'Pool1:rounds:auxiliary:current:solo:shares', 'example2', '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}']];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, true);
     expect(commands).toStrictEqual(expected);
   });
@@ -557,10 +556,10 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":0.000011644552035399757,\"identifier\":\"\",\"round\":\"361aae45\",\"solo\":false,\"times\":80,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example\"}"],
-      ["hincrby", "Pool1:rounds:primary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:current:shared:shares", "example", "{\"time\":1637878085886,\"effort\":0.000011644552035399757,\"identifier\":\"\",\"round\":\"361aae45\",\"solo\":false,\"times\":80,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":16,\"worker\":\"example\"}"],
-      ["hset", "Pool1:rounds:primary:current:shared:counts", "effort", 0.000011644552035399757]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":0.000011644552035399757,"identifier":"","round":"361aae45","solo":false,"times":80,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":0.000011644552035399757,"identifier":"","round":"361aae45","solo":false,"times":80,"types":{"valid":1,"invalid":0,"stale":0},"work":16,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 0.000011644552035399757]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
   });
@@ -585,11 +584,11 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["sadd", "Pool1:blocks:primary:pending", "{\"time\":1637878085886,\"height\":1972211,\"hash\":null,\"reward\":10006839,\"identifier\":\"\",\"difficulty\":137403310.58987552,\"luck\":7.277845022124848e-7,\"worker\":\"example\",\"solo\":false}"],
-      ["hincrby", "Pool1:blocks:primary:counts", "valid", 1],
-      ["rename", "Pool1:rounds:primary:current:shared:counts", "Pool1:rounds:primary:round-1972211:counts"],
-      ["rename", "Pool1:rounds:primary:current:shared:shares", "Pool1:rounds:primary:round-1972211:shares"]];
-    const commands = poolShares.calculateBlocks(results, shareData, "valid", true, false);
+      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":7.277845022124848e-7,"worker":"example","solo":false}'],
+      ['hincrby', 'Pool1:blocks:primary:counts', 'valid', 1],
+      ['rename', 'Pool1:rounds:primary:current:shared:counts', 'Pool1:rounds:primary:round-1972211:counts'],
+      ['rename', 'Pool1:rounds:primary:current:shared:shares', 'Pool1:rounds:primary:round-1972211:shares']];
+    const commands = poolShares.calculateBlocks(results, shareData, 'valid', true, false);
     expect(commands).toStrictEqual(expected);
   });
 
@@ -613,8 +612,8 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
       'transaction': 'example',
     };
-    const expected = [["hincrby", "Pool1:blocks:primary:counts", "invalid", 1]]
-    const commands = poolShares.calculateBlocks(results, shareData, "valid", false, false);
+    const expected = [['hincrby', 'Pool1:blocks:primary:counts', 'invalid', 1]];
+    const commands = poolShares.calculateBlocks(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
   });
 
@@ -638,7 +637,7 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [];
-    const commands = poolShares.calculateBlocks(results, shareData, "valid", false, false);
+    const commands = poolShares.calculateBlocks(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
   });
 
@@ -662,7 +661,7 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [];
-    const commands = poolShares.calculateBlocks(results, shareData, "invalid", false, false);
+    const commands = poolShares.calculateBlocks(results, shareData, 'invalid', false, false);
     expect(commands).toStrictEqual(expected);
   });
 
@@ -686,11 +685,11 @@ describe('Test shares functionality', () => {
       'shareDiff': '4',
     };
     const expected = [
-      ["sadd", "Pool1:blocks:primary:pending", "{\"time\":1637878085886,\"height\":1972211,\"hash\":null,\"reward\":10006839,\"identifier\":\"\",\"difficulty\":32,\"luck\":87.5,\"worker\":\"example\",\"solo\":false}"],
-      ["hincrby", "Pool1:blocks:primary:counts", "valid", 1],
-      ["rename", "Pool1:rounds:primary:current:shared:counts", "Pool1:rounds:primary:round-1972211:counts"],
-      ["rename", "Pool1:rounds:primary:current:shared:shares", "Pool1:rounds:primary:round-1972211:shares"]];
-    const commands = poolShares.calculateBlocks(results, shareData, "valid", true, false);
+      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":32,"luck":87.5,"worker":"example","solo":false}'],
+      ['hincrby', 'Pool1:blocks:primary:counts', 'valid', 1],
+      ['rename', 'Pool1:rounds:primary:current:shared:counts', 'Pool1:rounds:primary:round-1972211:counts'],
+      ['rename', 'Pool1:rounds:primary:current:shared:shares', 'Pool1:rounds:primary:round-1972211:shares']];
+    const commands = poolShares.calculateBlocks(results, shareData, 'valid', true, false);
     expect(commands).toStrictEqual(expected);
   });
 
@@ -714,11 +713,11 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["sadd", "Pool1:blocks:primary:pending", "{\"time\":1637878085886,\"height\":1972211,\"hash\":null,\"reward\":10006839,\"identifier\":\"\",\"difficulty\":137403310.58987552,\"luck\":0.0000014555690044249697,\"worker\":\"example\",\"solo\":true}"],
-      ["hincrby", "Pool1:blocks:primary:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:round-1972211:shares", "example", "{\"time\":1637878085886,\"effort\":0.0000014555690044249697,\"identifier\":\"\",\"solo\":true,\"work\":2,\"worker\":\"example\"}"],
-      ["hset", "Pool1:rounds:primary:current:solo:shares", "example", "{\"time\":1637878085886,\"effort\":0,\"identifier\":\"\",\"solo\":true,\"times\":0,\"types\":{\"valid\":0,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example\"}"]];
-    const commands = poolShares.calculateBlocks(results, shareData, "valid", true, true);
+      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":0.0000014555690044249697,"worker":"example","solo":true}'],
+      ['hincrby', 'Pool1:blocks:primary:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:round-1972211:shares', 'example', '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","solo":true,"work":2,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'example', '{"time":1637878085886,"effort":0,"identifier":"","solo":true,"times":0,"types":{"valid":0,"invalid":0,"stale":0},"work":1,"worker":"example"}']];
+    const commands = poolShares.calculateBlocks(results, shareData, 'valid', true, true);
     expect(commands).toStrictEqual(expected);
   });
 
@@ -742,10 +741,10 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["sadd", "Pool1:blocks:primary:pending", "{\"time\":1637878085886,\"height\":1972211,\"hash\":null,\"reward\":10006839,\"identifier\":\"\",\"difficulty\":137403310.58987552,\"luck\":7.277845022124848e-7,\"worker\":\"example\",\"solo\":true}"],
-      ["hincrby", "Pool1:blocks:primary:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:round-1972211:shares", "example", "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":true,\"work\":1,\"worker\":\"example\"}"]];
-    const commands = poolShares.calculateBlocks(results, shareData, "valid", true, true);
+      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":7.277845022124848e-7,"worker":"example","solo":true}'],
+      ['hincrby', 'Pool1:blocks:primary:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:round-1972211:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":true,"work":1,"worker":"example"}']];
+    const commands = poolShares.calculateBlocks(results, shareData, 'valid', true, true);
     expect(commands).toStrictEqual(expected);
   });
 
@@ -769,11 +768,11 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["sadd", "Pool1:blocks:primary:pending", "{\"time\":1637878085886,\"height\":1972211,\"hash\":null,\"reward\":10006839,\"identifier\":\"\",\"difficulty\":137403310.58987552,\"luck\":7.277845022124848e-7,\"worker\":\"example\",\"solo\":false}"],
-      ["hincrby", "Pool1:blocks:primary:counts", "valid", 1],
-      ["rename", "Pool1:rounds:primary:current:shared:counts", "Pool1:rounds:primary:round-1972211:counts"],
-      ["rename", "Pool1:rounds:primary:current:shared:shares", "Pool1:rounds:primary:round-1972211:shares"]];
-    const commands = poolShares.calculateBlocks(results, shareData, "valid", true, false);
+      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":7.277845022124848e-7,"worker":"example","solo":false}'],
+      ['hincrby', 'Pool1:blocks:primary:counts', 'valid', 1],
+      ['rename', 'Pool1:rounds:primary:current:shared:counts', 'Pool1:rounds:primary:round-1972211:counts'],
+      ['rename', 'Pool1:rounds:primary:current:shared:shares', 'Pool1:rounds:primary:round-1972211:shares']];
+    const commands = poolShares.calculateBlocks(results, shareData, 'valid', true, false);
     expect(commands).toStrictEqual(expected);
   });
 
@@ -799,7 +798,7 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [];
-    const commands = poolShares.calculateBlocks(results, shareData, "valid", false, true);
+    const commands = poolShares.calculateBlocks(results, shareData, 'valid', false, true);
     expect(commands).toStrictEqual(expected);
   });
 
@@ -825,11 +824,11 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["sadd", "Pool1:blocks:auxiliary:pending", "{\"time\":1637878085886,\"height\":1972211,\"hash\":null,\"reward\":10006839,\"identifier\":\"\",\"difficulty\":3.5,\"luck\":28.57142857142857,\"worker\":\"example2\",\"solo\":false}"],
-      ["hincrby", "Pool1:blocks:auxiliary:counts", "valid", 1],
-      ["rename", "Pool1:rounds:auxiliary:current:shared:counts", "Pool1:rounds:auxiliary:round-1972211:counts"],
-      ["rename", "Pool1:rounds:auxiliary:current:shared:shares", "Pool1:rounds:auxiliary:round-1972211:shares"]];
-    const commands = poolShares.calculateBlocks(results, shareData, "valid", true, false);
+      ['sadd', 'Pool1:blocks:auxiliary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":3.5,"luck":28.57142857142857,"worker":"example2","solo":false}'],
+      ['hincrby', 'Pool1:blocks:auxiliary:counts', 'valid', 1],
+      ['rename', 'Pool1:rounds:auxiliary:current:shared:counts', 'Pool1:rounds:auxiliary:round-1972211:counts'],
+      ['rename', 'Pool1:rounds:auxiliary:current:shared:shares', 'Pool1:rounds:auxiliary:round-1972211:shares']];
+    const commands = poolShares.calculateBlocks(results, shareData, 'valid', true, false);
     expect(commands).toStrictEqual(expected);
   });
 
@@ -855,11 +854,11 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["sadd", "Pool1:blocks:auxiliary:pending", "{\"time\":1637878085886,\"height\":1972211,\"hash\":null,\"reward\":10006839,\"identifier\":\"\",\"difficulty\":3.5,\"luck\":28.57142857142857,\"worker\":\"example2\",\"solo\":false}"],
-      ["hincrby", "Pool1:blocks:auxiliary:counts", "valid", 1],
-      ["rename", "Pool1:rounds:auxiliary:current:shared:counts", "Pool1:rounds:auxiliary:round-1972211:counts"],
-      ["rename", "Pool1:rounds:auxiliary:current:shared:shares", "Pool1:rounds:auxiliary:round-1972211:shares"]];
-    const commands = poolShares.calculateBlocks(results, shareData, "valid", true, false);
+      ['sadd', 'Pool1:blocks:auxiliary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":3.5,"luck":28.57142857142857,"worker":"example2","solo":false}'],
+      ['hincrby', 'Pool1:blocks:auxiliary:counts', 'valid', 1],
+      ['rename', 'Pool1:rounds:auxiliary:current:shared:counts', 'Pool1:rounds:auxiliary:round-1972211:counts'],
+      ['rename', 'Pool1:rounds:auxiliary:current:shared:shares', 'Pool1:rounds:auxiliary:round-1972211:shares']];
+    const commands = poolShares.calculateBlocks(results, shareData, 'valid', true, false);
     expect(commands).toStrictEqual(expected);
   });
 
@@ -883,10 +882,10 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["sadd", "Pool1:blocks:primary:pending", "{\"time\":1637878085886,\"height\":1972211,\"hash\":null,\"reward\":10006839,\"identifier\":\"\",\"difficulty\":137403310.58987552,\"luck\":7.277845022124848e-7,\"worker\":null,\"solo\":true}"],
-      ["hincrby", "Pool1:blocks:primary:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:round-1972211:shares", null, "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":true,\"work\":1,\"worker\":null}"]];
-    const commands = poolShares.calculateBlocks(results, shareData, "valid", true, true);
+      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":7.277845022124848e-7,"worker":null,"solo":true}'],
+      ['hincrby', 'Pool1:blocks:primary:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:round-1972211:shares', null, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":true,"work":1,"worker":null}']];
+    const commands = poolShares.calculateBlocks(results, shareData, 'valid', true, true);
     expect(commands).toStrictEqual(expected);
   });
 
@@ -910,10 +909,10 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ["zadd", "Pool1:rounds:primary:current:shared:hashrate", 1637878085, "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example\"}"],
-      ["hincrby", "Pool1:rounds:primary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:current:shared:shares", "example", "{\"time\":1637878085886,\"effort\":7.277845022124848e-7,\"identifier\":\"\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":1,\"worker\":\"example\"}"],
-      ["hset", "Pool1:rounds:primary:current:shared:counts", "effort", 7.277845022124848e-7]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 7.277845022124848e-7]];
     const commands = poolShares.buildCommands(results, shareData, 'valid', false, () => {
       return done();
     });

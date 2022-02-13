@@ -185,7 +185,7 @@ describe('Test loader functionality', () => {
   });
 
   test('Test pool port validation [3]', () => {
-    configCopy.server.port = 3005
+    configCopy.server.port = 3005;
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: true, ports: [{ enabled: true, port: 3005 }]};
     const poolConfigs = { Pool1: { enabled: true, ports: [{ enabled: true, port: 3006 }]}};
@@ -194,7 +194,7 @@ describe('Test loader functionality', () => {
   });
 
   test('Test pool port validation [4]', () => {
-    configCopy.redis.port = 3005
+    configCopy.redis.port = 3005;
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: true, ports: [{ enabled: true, port: 3005 }]};
     const poolConfigs = { Pool1: { enabled: true, ports: [{ enabled: true, port: 3006 }]}};

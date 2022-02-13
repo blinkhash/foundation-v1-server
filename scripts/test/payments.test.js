@@ -239,8 +239,8 @@ describe('Test payments functionality', () => {
     const poolPayments = new PoolPayments(logger, client);
     const round = { orphanShares: { 'example': 8 }, orphanTimes: { 'example': 1 }};
     const expected = [
-      ["hincrby", "Pool1:rounds:primary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:current:shared:shares", "example", "{\"time\":1637878085886,\"effort\":0,\"identifier\":null,\"round\":\"orphan\",\"solo\":false,\"times\":1,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":8,\"worker\":\"example\"}"]];
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":0,"identifier":null,"round":"orphan","solo":false,"times":1,"types":{"valid":1,"invalid":0,"stale":0},"work":8,"worker":"example"}']];
     poolPayments.handleOrphans(round, 'Pool1', 'primary', (error, results) => {
       expect(error).toBe(null);
       expect(results).toStrictEqual(expected);
@@ -253,8 +253,8 @@ describe('Test payments functionality', () => {
     const poolPayments = new PoolPayments(logger, client);
     const round = { orphanShares: { 'example': 8 }, orphanTimes: {}};
     const expected = [
-      ["hincrby", "Pool1:rounds:primary:current:shared:counts", "valid", 1],
-      ["hset", "Pool1:rounds:primary:current:shared:shares", "example", "{\"time\":1637878085886,\"effort\":0,\"identifier\":null,\"round\":\"orphan\",\"solo\":false,\"times\":0,\"types\":{\"valid\":1,\"invalid\":0,\"stale\":0},\"work\":8,\"worker\":\"example\"}"]];
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":0,"identifier":null,"round":"orphan","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":8,"worker":"example"}']];
     poolPayments.handleOrphans(round, 'Pool1', 'primary', (error, results) => {
       expect(error).toBe(null);
       expect(results).toStrictEqual(expected);
@@ -1488,8 +1488,8 @@ describe('Test payments functionality', () => {
     const rounds = [{ category: 'immature', hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { immature: 1250000000 }};
     const expected = [
-      ["hset", "Pool1:payments:primary:generate", "example1", 0],
-      ["hset", "Pool1:payments:primary:immature", "example1", 12.5]];
+      ['hset', 'Pool1:payments:primary:generate', 'example1', 0],
+      ['hset', 'Pool1:payments:primary:immature', 'example1', 12.5]];
     poolPayments.handleUpdates(config, 'checks', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1509,10 +1509,10 @@ describe('Test payments functionality', () => {
     const rounds = [{ category: 'immature', hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { immature: 1250000000 }};
     const expected = [
-      ["hset", "Pool1:payments:primary:immature", "example1", 12.5],
-      ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 0],
-      ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
-      ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
+      ['hset', 'Pool1:payments:primary:immature', 'example1', 12.5],
+      ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
+      ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
+      ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1532,10 +1532,10 @@ describe('Test payments functionality', () => {
     const rounds = [{ category: 'immature', hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { generate: 1250000000 }};
     const expected = [
-      ["hset", "Pool1:payments:primary:immature", "example1", 0],
-      ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 0],
-      ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
-      ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
+      ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+      ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
+      ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
+      ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1555,13 +1555,13 @@ describe('Test payments functionality', () => {
     const rounds = [{ category: 'generate', height: 180, hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { generate: 1250000000 }};
     const expected = [
-      ["hset", "Pool1:payments:primary:immature", "example1", 0],
-      ["smove", "Pool1:blocks:primary:pending", "Pool1:blocks:primary:confirmed", "serialized"],
-      ["del", "Pool1:rounds:primary:round-180:counts"],
-      ["del", "Pool1:rounds:primary:round-180:shares"],
-      ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 0],
-      ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
-      ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
+      ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+      ['smove', 'Pool1:blocks:primary:pending', 'Pool1:blocks:primary:confirmed', 'serialized'],
+      ['del', 'Pool1:rounds:primary:round-180:counts'],
+      ['del', 'Pool1:rounds:primary:round-180:shares'],
+      ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
+      ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
+      ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1581,8 +1581,8 @@ describe('Test payments functionality', () => {
     const rounds = [{ category: 'generate', height: 180, hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { generate: 1250000000 }};
     const expected = [
-      ["hset", "Pool1:payments:primary:generate", "example1", 12.5],
-      ["hset", "Pool1:payments:primary:immature", "example1", 0]];
+      ['hset', 'Pool1:payments:primary:generate', 'example1', 12.5],
+      ['hset', 'Pool1:payments:primary:immature', 'example1', 0]];
     poolPayments.handleUpdates(config, 'checks', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1602,16 +1602,16 @@ describe('Test payments functionality', () => {
     const rounds = [{ category: 'generate', height: 180, hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { sent: 12.5 }};
     const expected = [
-      ["hincrbyfloat", "Pool1:payments:primary:paid", "example1", 12.5],
-      ["hset", "Pool1:payments:primary:balances", "example1", 0],
-      ["hset", "Pool1:payments:primary:generate", "example1", 0],
-      ["hset", "Pool1:payments:primary:immature", "example1", 0],
-      ["smove", "Pool1:blocks:primary:pending", "Pool1:blocks:primary:confirmed", "serialized"],
-      ["del", "Pool1:rounds:primary:round-180:counts"],
-      ["del", "Pool1:rounds:primary:round-180:shares"],
-      ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 12.5],
-      ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
-      ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
+      ['hincrbyfloat', 'Pool1:payments:primary:paid', 'example1', 12.5],
+      ['hset', 'Pool1:payments:primary:balances', 'example1', 0],
+      ['hset', 'Pool1:payments:primary:generate', 'example1', 0],
+      ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+      ['smove', 'Pool1:blocks:primary:pending', 'Pool1:blocks:primary:confirmed', 'serialized'],
+      ['del', 'Pool1:rounds:primary:round-180:counts'],
+      ['del', 'Pool1:rounds:primary:round-180:shares'],
+      ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 12.5],
+      ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
+      ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1631,16 +1631,16 @@ describe('Test payments functionality', () => {
     const rounds = [{ category: 'generate', height: 180, hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { sent: 12.5, change: 0 }};
     const expected = [
-      ["hincrbyfloat", "Pool1:payments:primary:paid", "example1", 12.5],
-      ["hset", "Pool1:payments:primary:balances", "example1", 0],
-      ["hset", "Pool1:payments:primary:generate", "example1", 0],
-      ["hset", "Pool1:payments:primary:immature", "example1", 0],
-      ["smove", "Pool1:blocks:primary:pending", "Pool1:blocks:primary:confirmed", "serialized"],
-      ["del", "Pool1:rounds:primary:round-180:counts"],
-      ["del", "Pool1:rounds:primary:round-180:shares"],
-      ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 12.5],
-      ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
-      ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
+      ['hincrbyfloat', 'Pool1:payments:primary:paid', 'example1', 12.5],
+      ['hset', 'Pool1:payments:primary:balances', 'example1', 0],
+      ['hset', 'Pool1:payments:primary:generate', 'example1', 0],
+      ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+      ['smove', 'Pool1:blocks:primary:pending', 'Pool1:blocks:primary:confirmed', 'serialized'],
+      ['del', 'Pool1:rounds:primary:round-180:counts'],
+      ['del', 'Pool1:rounds:primary:round-180:shares'],
+      ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 12.5],
+      ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
+      ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1660,16 +1660,16 @@ describe('Test payments functionality', () => {
     const rounds = [{ category: 'generate', height: 180, hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { sent: 12.5, change: 150000 }};
     const expected = [
-      ["hincrbyfloat", "Pool1:payments:primary:paid", "example1", 12.5],
-      ["hset", "Pool1:payments:primary:balances", "example1", 0],
-      ["hset", "Pool1:payments:primary:generate", "example1", 0],
-      ["hset", "Pool1:payments:primary:immature", "example1", 0],
-      ["smove", "Pool1:blocks:primary:pending", "Pool1:blocks:primary:confirmed", "serialized"],
-      ["del", "Pool1:rounds:primary:round-180:counts"],
-      ["del", "Pool1:rounds:primary:round-180:shares"],
-      ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 12.5],
-      ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
-      ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
+      ['hincrbyfloat', 'Pool1:payments:primary:paid', 'example1', 12.5],
+      ['hset', 'Pool1:payments:primary:balances', 'example1', 0],
+      ['hset', 'Pool1:payments:primary:generate', 'example1', 0],
+      ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+      ['smove', 'Pool1:blocks:primary:pending', 'Pool1:blocks:primary:confirmed', 'serialized'],
+      ['del', 'Pool1:rounds:primary:round-180:counts'],
+      ['del', 'Pool1:rounds:primary:round-180:shares'],
+      ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 12.5],
+      ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
+      ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1689,11 +1689,11 @@ describe('Test payments functionality', () => {
     const rounds = [{ category: 'kicked', height: 180, hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { immature: 0 }};
     const expected = [
-      ["hset", "Pool1:payments:primary:immature", "example1", 0],
-      ["smove", "Pool1:blocks:primary:pending", "Pool1:blocks:primary:kicked", "serialized"],
-      ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 0],
-      ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
-      ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
+      ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+      ['smove', 'Pool1:blocks:primary:pending', 'Pool1:blocks:primary:kicked', 'serialized'],
+      ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
+      ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
+      ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1713,13 +1713,13 @@ describe('Test payments functionality', () => {
     const rounds = [{ category: 'kicked', delete: true, height: 180, hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { immature: 0 }};
     const expected = [
-      ["hset", "Pool1:payments:primary:immature", "example1", 0],
-      ["smove", "Pool1:blocks:primary:pending", "Pool1:blocks:primary:kicked", "serialized"],
-      ["del", "Pool1:rounds:primary:round-180:counts"],
-      ["del", "Pool1:rounds:primary:round-180:shares"],
-      ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 0],
-      ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
-      ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
+      ['hset', 'Pool1:payments:primary:immature', 'example1', 0],
+      ['smove', 'Pool1:blocks:primary:pending', 'Pool1:blocks:primary:kicked', 'serialized'],
+      ['del', 'Pool1:rounds:primary:round-180:counts'],
+      ['del', 'Pool1:rounds:primary:round-180:shares'],
+      ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
+      ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
+      ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1739,12 +1739,12 @@ describe('Test payments functionality', () => {
     const rounds = [{ category: 'immature', hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { immature: 1250000000, change: 50000000 }};
     const expected = [
-      ["hset", "Pool1:payments:primary:balances", "example1", 0.5],
-      ["hset", "Pool1:payments:primary:generate", "example1", 0],
-      ["hset", "Pool1:payments:primary:immature", "example1", 12.5],
-      ["hincrbyfloat", "Pool1:payments:primary:counts", "total", 0],
-      ["hset", "Pool1:payments:primary:counts", "last", 1637878085886],
-      ["hset", "Pool1:payments:primary:counts", "next", 1637885285886]];
+      ['hset', 'Pool1:payments:primary:balances', 'example1', 0.5],
+      ['hset', 'Pool1:payments:primary:generate', 'example1', 0],
+      ['hset', 'Pool1:payments:primary:immature', 'example1', 12.5],
+      ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
+      ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
+      ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
     poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1765,8 +1765,8 @@ describe('Test payments functionality', () => {
     const rounds = [{ category: 'immature', hash: 'hash', serialized: 'serialized', confirmations: 40 }];
     const workers = { 'example1': { immature: 1250000000 }};
     const expected = [
-      ["hset", "Pool1:payments:auxiliary:generate", "example1", 0],
-      ["hset", "Pool1:payments:auxiliary:immature", "example1", 12.5]];
+      ['hset', 'Pool1:payments:auxiliary:generate', 'example1', 0],
+      ['hset', 'Pool1:payments:auxiliary:immature', 'example1', 12.5]];
     poolPayments.handleUpdates(config, 'checks', 'auxiliary', Date.now(), [rounds, [], workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
@@ -1788,10 +1788,10 @@ describe('Test payments functionality', () => {
     const confirmed = [{ height: 10, serialized: 'serialized1' }, { height: 15, serialized: 'serialized2' }];
     const workers = { 'example1': { immature: 1250000000 }};
     const expected = [
-      ["hset", "Pool1:payments:auxiliary:generate", "example1", 0],
-      ["hset", "Pool1:payments:auxiliary:immature", "example1", 12.5],
-      ["srem", "Pool1:blocks:auxiliary:confirmed", "serialized1"],
-      ["srem", "Pool1:blocks:auxiliary:confirmed", "serialized2"]];
+      ['hset', 'Pool1:payments:auxiliary:generate', 'example1', 0],
+      ['hset', 'Pool1:payments:auxiliary:immature', 'example1', 12.5],
+      ['srem', 'Pool1:blocks:auxiliary:confirmed', 'serialized1'],
+      ['srem', 'Pool1:blocks:auxiliary:confirmed', 'serialized2']];
     poolPayments.handleUpdates(config, 'checks', 'auxiliary', Date.now(), [rounds, confirmed, workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();

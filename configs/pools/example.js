@@ -59,17 +59,17 @@ config.p2p.port = 8333;
 
 // Statistics Configuration
 config.statistics = {};
-config.statistics.hashrateInterval = 20000 // ms;
-config.statistics.historicalInterval = 300000 // ms;
-config.statistics.refreshInterval = 20000 // ms;
-config.statistics.hashrateWindow = 300 // s;
-config.statistics.historicalWindow = 86400 // s;
+config.statistics.hashrateInterval = 20000; // ms;
+config.statistics.historicalInterval = 300000; // ms;
+config.statistics.refreshInterval = 20000; // ms;
+config.statistics.hashrateWindow = 300; // s;
+config.statistics.historicalWindow = 86400; // s;
 
 // Settings Configuration
 config.settings = {};
-config.settings.blockRefreshInterval = 1000 // ms;
-config.settings.connectionTimeout = 600 // s;
-config.settings.jobRebroadcastTimeout = 60 // s;
+config.settings.blockRefreshInterval = 1000; // ms;
+config.settings.connectionTimeout = 600; // s;
+config.settings.jobRebroadcastTimeout = 60; // s;
 config.settings.tcpProxyProtocol = false;
 
 // Primary Configuration
@@ -138,8 +138,8 @@ config.primary.daemons.push(daemons1);
 // Payment Configuration
 config.primary.payments = {};
 config.primary.payments.enabled = true;
-config.primary.payments.checkInterval = 20 // s;
-config.primary.payments.paymentInterval = 7200 // s;
+config.primary.payments.checkInterval = 20; // s;
+config.primary.payments.paymentInterval = 7200; // s;
 config.primary.payments.minConfirmations = 10;
 config.primary.payments.minPayment = 0.005;
 config.primary.payments.transactionFee = 0.0004;

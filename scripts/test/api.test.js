@@ -331,10 +331,10 @@ describe('Test API functionality', () => {
       ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', times: 14, work: 32 })]];
     const response = mockResponse();
     const expected = {
-      "auxiliary": {"shared": [], "solo": []},
-      "primary": {
-        "shared": [{"effort": null, "hashrate": 1546188226.56, "miner": "worker2", "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 31, "work": 108}],
-        "solo": [{"effort": null, "hashrate": 916259689.8133334, "miner": "worker1", "shares": {"invalid": 1, "stale": 1, "valid": 2}, "times": 43, "work": 64}]}};
+      'auxiliary': {'shared': [], 'solo': []},
+      'primary': {
+        'shared': [{'effort': null, 'hashrate': 1546188226.56, 'miner': 'worker2', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 31, 'work': 108}],
+        'solo': [{'effort': null, 'hashrate': 916259689.8133334, 'miner': 'worker1', 'shares': {'invalid': 1, 'stale': 1, 'valid': 2}, 'times': 43, 'work': 64}]}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -377,8 +377,8 @@ describe('Test API functionality', () => {
       ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', work: 32 })]];
     const response = mockResponse();
     const expected = {
-      "auxiliary": {"hashrate": {"shared": 0, "solo": 0}, "payments": {"balances": 0, "generate": 0, "immature": 0, "paid": 0}, "shares": {"shared": {}, "solo": {}}, "times": {"shared": 0}, "work": {"shared": 0, "solo": 0}, "workers": {"shared": [], "solo": []}},
-      "primary": {"hashrate": {"shared": 1546188226.56, "solo": 0}, "payments": {"balances": 37.43, "generate": 255.17, "immature": 12.17, "paid": 123.5}, "shares": {"shared": {"invalid": 0, "stale": 0, "valid": 0}, "solo": {}}, "times": {"shared": 31}, "work": {"shared": 108, "solo": 0}, "workers": {"shared": ["worker2.w1", "worker2.w2"], "solo": []}}};
+      'auxiliary': {'hashrate': {'shared': 0, 'solo': 0}, 'payments': {'balances': 0, 'generate': 0, 'immature': 0, 'paid': 0}, 'shares': {'shared': {}, 'solo': {}}, 'times': {'shared': 0}, 'work': {'shared': 0, 'solo': 0}, 'workers': {'shared': [], 'solo': []}},
+      'primary': {'hashrate': {'shared': 1546188226.56, 'solo': 0}, 'payments': {'balances': 37.43, 'generate': 255.17, 'immature': 12.17, 'paid': 123.5}, 'shares': {'shared': {'invalid': 0, 'stale': 0, 'valid': 0}, 'solo': {}}, 'times': {'shared': 31}, 'work': {'shared': 108, 'solo': 0}, 'workers': {'shared': ['worker2.w1', 'worker2.w2'], 'solo': []}}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -417,8 +417,8 @@ describe('Test API functionality', () => {
       ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', work: 32 })]];
     const response = mockResponse();
     const expected = {
-      "auxiliary": {"hashrate": {"shared": 0, "solo": 916259689.8133334}, "payments": {"balances": 0, "generate": 0, "immature": 0, "paid": 0}, "shares": {"shared": {}, "solo": {"invalid": 1, "stale": 1, "valid": 2}}, "times": {"shared": 0}, "work": {"shared": 0, "solo": 64}, "workers": {"shared": [], "solo": ["worker1"]}},
-      "primary": {"hashrate": {"shared": 0, "solo": 0}, "payments": {"balances": 0, "generate": 0, "immature": 0, "paid": 0}, "shares": {"shared": {}, "solo": {}}, "times": {"shared": 0}, "work": {"shared": 0, "solo": 0}, "workers": {"shared": [], "solo": []}}};
+      'auxiliary': {'hashrate': {'shared': 0, 'solo': 916259689.8133334}, 'payments': {'balances': 0, 'generate': 0, 'immature': 0, 'paid': 0}, 'shares': {'shared': {}, 'solo': {'invalid': 1, 'stale': 1, 'valid': 2}}, 'times': {'shared': 0}, 'work': {'shared': 0, 'solo': 64}, 'workers': {'shared': [], 'solo': ['worker1']}},
+      'primary': {'hashrate': {'shared': 0, 'solo': 0}, 'payments': {'balances': 0, 'generate': 0, 'immature': 0, 'paid': 0}, 'shares': {'shared': {}, 'solo': {}}, 'times': {'shared': 0}, 'work': {'shared': 0, 'solo': 0}, 'workers': {'shared': [], 'solo': []}}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -450,8 +450,8 @@ describe('Test API functionality', () => {
       ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', work: 32 })]];
     const response = mockResponse();
     const expected = {
-      "auxiliary": {"shared": [], "solo": []},
-      "primary": {"shared": [{"effort": null, "hashrate": 1546188226.56, "miner": "worker2", "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 31, "work": 108}, {"effort": null, "hashrate": 114532461.22666667, "miner": "worker3", "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 50, "work": 8}], "solo": [{"effort": null, "hashrate": 916259689.8133334, "miner": "worker1", "shares": {"invalid": 1, "stale": 1, "valid": 2}, "times": 43, "work": 64}]}};
+      'auxiliary': {'shared': [], 'solo': []},
+      'primary': {'shared': [{'effort': null, 'hashrate': 1546188226.56, 'miner': 'worker2', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 31, 'work': 108}, {'effort': null, 'hashrate': 114532461.22666667, 'miner': 'worker3', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 50, 'work': 8}], 'solo': [{'effort': null, 'hashrate': 916259689.8133334, 'miner': 'worker1', 'shares': {'invalid': 1, 'stale': 1, 'valid': 2}, 'times': 43, 'work': 64}]}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -692,8 +692,8 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:primary:current:solo:shares', 'worker1', JSON.stringify({ time: 0, work: 64, times: 43, types: { valid: 2, invalid: 1, stale: 1 }, worker: 'worker1' })]];
     const response = mockResponse();
     const expected = {
-      "auxiliary": {"shared": {}, "solo": {}, "times": {}},
-      "primary": {"shared": {"worker2": 108, "worker3": 8}, "solo": {"worker1": 64}, "times": {"worker2": 31, "worker3": 50}}};
+      'auxiliary': {'shared': {}, 'solo': {}, 'times': {}},
+      'primary': {'shared': {'worker2': 108, 'worker3': 8}, 'solo': {'worker1': 64}, 'times': {'worker2': 31, 'worker3': 50}}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -717,8 +717,8 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:auxiliary:round-180:shares', 'worker3', JSON.stringify({ time: 0, work: 8, times: 50, worker: 'worker3' })]];
     const response = mockResponse();
     const expected = {
-      "auxiliary": {"shares": {"worker3": 8}, "times": {"worker3": 50}},
-      "primary": {"shares": {"worker2": 108}, "times": {"worker2": 31}}};
+      'auxiliary': {'shares': {'worker3': 8}, 'times': {'worker3': 50}},
+      'primary': {'shares': {'worker2': 108}, 'times': {'worker2': 31}}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -745,8 +745,8 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:auxiliary:round-181:shares', 'worker3', JSON.stringify({ time: 0, work: 100, times: 105, worker: 'worker3' })]];
     const response = mockResponse();
     const expected = {
-      "auxiliary": {"180": {"shares": {"worker3": 8}, "times": {"worker3": 50}}, "181": {"shares": {"worker3": 100}, "times": {"worker3": 105}}},
-      "primary": {"180": {"shares": {"worker2": 108}, "times": {"worker2": 31}}, "181": {"shares": {"worker2": 118}, "times": {"worker2": 50}}}};
+      'auxiliary': {'180': {'shares': {'worker3': 8}, 'times': {'worker3': 50}}, '181': {'shares': {'worker3': 100}, 'times': {'worker3': 105}}},
+      'primary': {'180': {'shares': {'worker2': 108}, 'times': {'worker2': 31}}, '181': {'shares': {'worker2': 118}, 'times': {'worker2': 50}}}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -804,8 +804,8 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:blocks:auxiliary:counts', 'invalid', 2]];
     const response = mockResponse();
     const expected = {
-      "auxiliary": {"blocks": {"invalid": 2, "valid": 500}, "config": {"algorithm": "", "coin": "", "minPayment": 0, "paymentInterval": 0, "recipientFee": 0, "symbol": ""}, "hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": 0, "hashrate": 0, "height": 0}, "payments": {"last": 0, "next": 0, "total": 0}, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "status": {"effort": 0, "luck": {"luck1": 0, "luck10": 0, "luck100": 0}, "miners": 0, "workers": 0}},
-      "primary": {"blocks": {"invalid": 2, "valid": 500}, "config": {"algorithm": "", "coin": "", "minPayment": 0, "paymentInterval": 0, "recipientFee": 0, "symbol": ""}, "hashrate": {"shared": 1660720687.7866666, "solo": 916259689.8133334}, "network": {"difficulty": 0, "hashrate": 0, "height": 0}, "payments": {"last": 0, "next": 1, "total": 200.5}, "shares": {"invalid": 465, "stale": 123, "valid": 3190}, "status": {"effort": 0, "luck": {"luck1": 0, "luck10": 0, "luck100": 0}, "miners": 3, "workers": 4}}};
+      'auxiliary': {'blocks': {'invalid': 2, 'valid': 500}, 'config': {'algorithm': '', 'coin': '', 'minPayment': 0, 'paymentInterval': 0, 'recipientFee': 0, 'symbol': ''}, 'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': 0, 'hashrate': 0, 'height': 0}, 'payments': {'last': 0, 'next': 0, 'total': 0}, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'status': {'effort': 0, 'luck': {'luck1': 0, 'luck10': 0, 'luck100': 0}, 'miners': 0, 'workers': 0}},
+      'primary': {'blocks': {'invalid': 2, 'valid': 500}, 'config': {'algorithm': '', 'coin': '', 'minPayment': 0, 'paymentInterval': 0, 'recipientFee': 0, 'symbol': ''}, 'hashrate': {'shared': 1660720687.7866666, 'solo': 916259689.8133334}, 'network': {'difficulty': 0, 'hashrate': 0, 'height': 0}, 'payments': {'last': 0, 'next': 1, 'total': 200.5}, 'shares': {'invalid': 465, 'stale': 123, 'valid': 3190}, 'status': {'effort': 0, 'luck': {'luck1': 0, 'luck10': 0, 'luck100': 0}, 'miners': 3, 'workers': 4}}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -843,8 +843,8 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:blocks:auxiliary:counts', 'invalid', 2]];
     const response = mockResponse();
     const expected = {
-      "auxiliary": {"blocks": {"invalid": 2, "valid": 500}, "config": {"algorithm": "", "coin": "", "minPayment": 0, "paymentInterval": 0, "recipientFee": 0, "symbol": ""}, "hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": 0, "hashrate": 0, "height": 0}, "payments": {"last": 0, "next": 0, "total": 0}, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "status": {"effort": 0, "luck": {"luck1": 0, "luck10": 0, "luck100": 0}, "miners": 0, "workers": 0}},
-      "primary": {"blocks": {"invalid": 2, "valid": 500}, "config": {"algorithm": "", "coin": "", "minPayment": 0, "paymentInterval": 0, "recipientFee": 0, "symbol": ""}, "hashrate": {"shared": 1660720687.7866666, "solo": 916259689.8133334}, "network": {"difficulty": 0, "hashrate": 0, "height": 0}, "payments": {"last": 0, "next": 1, "total": 200.5}, "shares": {"invalid": 465, "stale": 123, "valid": 3190}, "status": {"effort": 0, "luck": {"luck1": 0, "luck10": 0, "luck100": 0}, "miners": 3, "workers": 4}}};
+      'auxiliary': {'blocks': {'invalid': 2, 'valid': 500}, 'config': {'algorithm': '', 'coin': '', 'minPayment': 0, 'paymentInterval': 0, 'recipientFee': 0, 'symbol': ''}, 'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': 0, 'hashrate': 0, 'height': 0}, 'payments': {'last': 0, 'next': 0, 'total': 0}, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'status': {'effort': 0, 'luck': {'luck1': 0, 'luck10': 0, 'luck100': 0}, 'miners': 0, 'workers': 0}},
+      'primary': {'blocks': {'invalid': 2, 'valid': 500}, 'config': {'algorithm': '', 'coin': '', 'minPayment': 0, 'paymentInterval': 0, 'recipientFee': 0, 'symbol': ''}, 'hashrate': {'shared': 1660720687.7866666, 'solo': 916259689.8133334}, 'network': {'difficulty': 0, 'hashrate': 0, 'height': 0}, 'payments': {'last': 0, 'next': 1, 'total': 200.5}, 'shares': {'invalid': 465, 'stale': 123, 'valid': 3190}, 'status': {'effort': 0, 'luck': {'luck1': 0, 'luck10': 0, 'luck100': 0}, 'miners': 3, 'workers': 4}}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -875,8 +875,8 @@ describe('Test API functionality', () => {
       ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', times: 14, work: 32 })]];
     const response = mockResponse();
     const expected = {
-      "auxiliary": {"shared": [], "solo": []},
-      "primary": {"shared": [{"effort": null, "hashrate": 916259689.8133334, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 20, "work": 64, "worker": "worker2.w1"}, {"effort": null, "hashrate": 629928536.7466667, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 31, "work": 44, "worker": "worker2.w2"}], "solo": [{"effort": null, "hashrate": 916259689.8133334, "shares": {"invalid": 1, "stale": 1, "valid": 2}, "times": 43, "work": 64, "worker": "worker1"}]}};
+      'auxiliary': {'shared': [], 'solo': []},
+      'primary': {'shared': [{'effort': null, 'hashrate': 916259689.8133334, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20, 'work': 64, 'worker': 'worker2.w1'}, {'effort': null, 'hashrate': 629928536.7466667, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 31, 'work': 44, 'worker': 'worker2.w2'}], 'solo': [{'effort': null, 'hashrate': 916259689.8133334, 'shares': {'invalid': 1, 'stale': 1, 'valid': 2}, 'times': 43, 'work': 64, 'worker': 'worker1'}]}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -916,8 +916,8 @@ describe('Test API functionality', () => {
       ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', times: 14, work: 32 })]];
     const response = mockResponse();
     const expected = {
-      "auxiliary": {"hashrate": {"shared": 0, "solo": 0}, "shares": {"shared": {}, "solo": {}}, "times": {"shared": 0}, "work": {"shared": 0, "solo": 0}},
-      "primary": {"hashrate": {"shared": 916259689.8133334, "solo": 0}, "shares": {"shared": {"invalid": 0, "stale": 0, "valid": 0}, "solo": {}}, "times": {"shared": 20}, "work": {"shared": 64, "solo": 0}}};
+      'auxiliary': {'hashrate': {'shared': 0, 'solo': 0}, 'shares': {'shared': {}, 'solo': {}}, 'times': {'shared': 0}, 'work': {'shared': 0, 'solo': 0}},
+      'primary': {'hashrate': {'shared': 916259689.8133334, 'solo': 0}, 'shares': {'shared': {'invalid': 0, 'stale': 0, 'valid': 0}, 'solo': {}}, 'times': {'shared': 20}, 'work': {'shared': 64, 'solo': 0}}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -955,8 +955,8 @@ describe('Test API functionality', () => {
       ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', times: 14, work: 32 })]];
     const response = mockResponse();
     const expected = {
-      "auxiliary": {"hashrate": {"shared": 0, "solo": 916259689.8133334}, "shares": {"shared": {}, "solo": {"invalid": 1, "stale": 1, "valid": 2}}, "times": {"shared": 0}, "work": {"shared": 0, "solo": 64}},
-      "primary": {"hashrate": {"shared": 0, "solo": 0}, "shares": {"shared": {}, "solo": {}}, "times": {"shared": 0}, "work": {"shared": 0, "solo": 0}}};
+      'auxiliary': {'hashrate': {'shared': 0, 'solo': 916259689.8133334}, 'shares': {'shared': {}, 'solo': {'invalid': 1, 'stale': 1, 'valid': 2}}, 'times': {'shared': 0}, 'work': {'shared': 0, 'solo': 64}},
+      'primary': {'hashrate': {'shared': 0, 'solo': 0}, 'shares': {'shared': {}, 'solo': {}}, 'times': {'shared': 0}, 'work': {'shared': 0, 'solo': 0}}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -987,8 +987,8 @@ describe('Test API functionality', () => {
       ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', Date.now() / 1000, JSON.stringify({ time: 1, worker: 'worker1', times: 14, work: 32 })]];
     const response = mockResponse();
     const expected = {
-      "auxiliary": {"shared": [], "solo": []},
-      "primary": {"shared": [{"effort": null, "hashrate": 916259689.8133334, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 20, "work": 64, "worker": "worker2.w1"}, {"effort": null, "hashrate": 629928536.7466667, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 31, "work": 44, "worker": "worker2.w2"}, {"effort": null, "hashrate": 0, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 50, "work": 8, "worker": "worker3"}], "solo": [{"effort": null, "hashrate": 916259689.8133334, "shares": {"invalid": 1, "stale": 1, "valid": 2}, "times": 43, "work": 64, "worker": "worker1"}]}};
+      'auxiliary': {'shared': [], 'solo': []},
+      'primary': {'shared': [{'effort': null, 'hashrate': 916259689.8133334, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20, 'work': 64, 'worker': 'worker2.w1'}, {'effort': null, 'hashrate': 629928536.7466667, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 31, 'work': 44, 'worker': 'worker2.w2'}, {'effort': null, 'hashrate': 0, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 50, 'work': 8, 'worker': 'worker3'}], 'solo': [{'effort': null, 'hashrate': 916259689.8133334, 'shares': {'invalid': 1, 'stale': 1, 'valid': 2}, 'times': 43, 'work': 64, 'worker': 'worker1'}]}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);

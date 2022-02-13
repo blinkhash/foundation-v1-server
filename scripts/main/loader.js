@@ -6,7 +6,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const utils = require('./utils');
 const Algorithms = require('foundation-stratum').algorithms;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,9 +94,9 @@ const PoolLoader = function(logger, portalConfig) {
     if (!keyExists || !certExists || !authorityExists) {
       logger.error('Builder', 'Setup', 'Invalid key, certificate, or authority file specified for TLS. Check your configuration files.');
       return false;
-    };
+    }
     return true;
-  }
+  };
 
   // Check for Valid Pool TLS Files
   /* istanbul ignore next */
@@ -111,7 +110,7 @@ const PoolLoader = function(logger, portalConfig) {
       if (!keyExists || !certExists) {
         logger.error('Builder', 'Setup', 'Invalid key or certificate file specified for TLS. Check your configuration files.');
         return false;
-      };
+      }
     }
     return true;
   };
@@ -127,7 +126,7 @@ const PoolLoader = function(logger, portalConfig) {
       return false;
     }
     return true;
-  }
+  };
 
   // Validate Pool Configs
   this.validatePoolConfigs = function(poolConfig) {

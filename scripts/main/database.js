@@ -7,7 +7,6 @@
 const fs = require('fs');
 const path = require('path');
 const redis = require('redis');
-const utils = require('./utils');
 
 ////////////////////////////////////////////////////////////////////////////////
 

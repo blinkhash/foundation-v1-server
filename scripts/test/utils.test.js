@@ -245,7 +245,7 @@ describe('Test utility functionality', () => {
   test('Test implemented listWorkers [1]', () => {
     const shares = {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2': '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}'};
-    const expected = ["tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2"];
+    const expected = ['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2'];
     const processed = utils.listWorkers(shares);
     expect(processed).toStrictEqual(expected);
   });
@@ -256,9 +256,9 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2': '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"work":8}'};
     const expected = [
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1",
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2",
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2"];
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2'];
     const processed = utils.listWorkers(shares);
     expect(processed).toStrictEqual(expected);
   });
@@ -269,8 +269,8 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2': '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"work":8}'};
     const expected = [
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1",
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2"];
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1',
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2'];
     const processed = utils.listWorkers(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
     expect(processed).toStrictEqual(expected);
   });
@@ -280,7 +280,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"work":8}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2': '{"time":1623901919389,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"work":8}'};
-    const expected = ["tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1"];
+    const expected = ['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1'];
     const processed = utils.listWorkers(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
     expect(processed).toStrictEqual(expected);
   });
@@ -289,7 +289,7 @@ describe('Test utility functionality', () => {
     const shares = {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"work":8}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","solo":false,"work":8}'};
-    const expected = ["tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1"];
+    const expected = ['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1'];
     const processed = utils.listWorkers(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
     expect(processed).toStrictEqual(expected);
   });
@@ -298,7 +298,7 @@ describe('Test utility functionality', () => {
     const shares = {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"work":8}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2': '{"time":1623901944054,"solo":false,"work":8}'};
-    const expected = ["tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1"];
+    const expected = ['tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1'];
     const processed = utils.listWorkers(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
     expect(processed).toStrictEqual(expected);
   });
@@ -327,8 +327,8 @@ describe('Test utility functionality', () => {
       '{"time":1623862569773,"height":1928702,"hash":"1a26babf21149764100660b6e75bff1e6d34926aa52366dc8323fa7456378943","reward":1250008474,"transaction":"61f857486100d35f5ccb447f55847924d463f7507c54882e5f518c6acdee7328","work":8,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false}',
       '{"time":1623901893184,"height":1928855,"hash":"f5026aa6116665d3e18a4219d9ae93dab3a016feee7921726258bedee418af8d","reward":1250006928,"transaction":"2c81c6aed147484ca41cd977338826875b5e142f94321b1a508b71f29e515a63","work":8,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false}'];
     const expected = [
-      {"hash": "f5026aa6116665d3e18a4219d9ae93dab3a016feee7921726258bedee418af8d", "height": 1928855, "reward": 1250006928, "solo": false, "time": 1623901893184, "transaction": "2c81c6aed147484ca41cd977338826875b5e142f94321b1a508b71f29e515a63", "work": 8, "worker": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a"},
-      {"hash": "1a26babf21149764100660b6e75bff1e6d34926aa52366dc8323fa7456378943", "height": 1928702, "reward": 1250008474, "solo": false, "time": 1623862569773, "transaction": "61f857486100d35f5ccb447f55847924d463f7507c54882e5f518c6acdee7328", "work": 8, "worker": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a"}];
+      {'hash': 'f5026aa6116665d3e18a4219d9ae93dab3a016feee7921726258bedee418af8d', 'height': 1928855, 'reward': 1250006928, 'solo': false, 'time': 1623901893184, 'transaction': '2c81c6aed147484ca41cd977338826875b5e142f94321b1a508b71f29e515a63', 'work': 8, 'worker': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a'},
+      {'hash': '1a26babf21149764100660b6e75bff1e6d34926aa52366dc8323fa7456378943', 'height': 1928702, 'reward': 1250008474, 'solo': false, 'time': 1623862569773, 'transaction': '61f857486100d35f5ccb447f55847924d463f7507c54882e5f518c6acdee7328', 'work': 8, 'worker': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a'}];
     const processed = utils.processBlocks(blocks);
     expect(processed).toStrictEqual(expected);
   });
@@ -339,8 +339,8 @@ describe('Test utility functionality', () => {
       '{"time":1623901893183,"height":123457,"hash":"8de0623a95f29f6e73dbff4540f87c3","reward":123,"transaction":"b53ff408cfb298c0b3f9b034daf5ecd480","work":234,"luck":34.56,"worker":"miner1","solo":false,"round":"12345679"}',
       '{"time":1623901893184,"height":123458,"hash":"8de0bff4540236f6e73da95f29f87c3","reward":123,"transaction":"bc0b3f4daf5ecd4953ff408cfb298b0380","work":234,"luck":34.56,"worker":"miner1","solo":false,"round":"12345680"}'];
     const expected = [
-      {"hash": "8de0bff4540236f6e73da95f29f87c3", "height": 123458, "luck": 34.56, "reward": 123, "round": "12345680", "solo": false, "time": 1623901893184, "transaction": "bc0b3f4daf5ecd4953ff408cfb298b0380", "work": 234, "worker": "miner1"},
-      {"hash": "8de0623a95f29f6e73dbff4540f87c3", "height": 123457, "luck": 34.56, "reward": 123, "round": "12345679", "solo": false, "time": 1623901893183, "transaction": "b53ff408cfb298c0b3f9b034daf5ecd480", "work": 234, "worker": "miner1"}];
+      {'hash': '8de0bff4540236f6e73da95f29f87c3', 'height': 123458, 'luck': 34.56, 'reward': 123, 'round': '12345680', 'solo': false, 'time': 1623901893184, 'transaction': 'bc0b3f4daf5ecd4953ff408cfb298b0380', 'work': 234, 'worker': 'miner1'},
+      {'hash': '8de0623a95f29f6e73dbff4540f87c3', 'height': 123457, 'luck': 34.56, 'reward': 123, 'round': '12345679', 'solo': false, 'time': 1623901893183, 'transaction': 'b53ff408cfb298c0b3f9b034daf5ecd480', 'work': 234, 'worker': 'miner1'}];
     const processed = utils.listBlocks(blocks, 'miner1');
     expect(processed).toStrictEqual(expected);
   });
@@ -406,9 +406,9 @@ describe('Test utility functionality', () => {
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"work":8}',
       '{"time":1623901949876,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"work":8}'];
     const expected = [
-      {"effort": null, "hashrate": 0.02666666666666667, "miner": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a", "shares": {"invalid": 0, "stale": 0, "valid": 1}, "times": 20.15, "work": 8},
-      {"effort": null, "hashrate": 0.02666666666666667, "miner": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b", "shares": {"invalid": 0, "stale": 0, "valid": 1}, "times": 18.75, "work": 8},
-      {"effort": null, "hashrate": 0.05333333333333334, "miner": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c", "shares": {"invalid": 1, "stale": 0, "valid": 2}, "times": 75.15, "work": 16}];
+      {'effort': null, 'hashrate': 0.02666666666666667, 'miner': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a', 'shares': {'invalid': 0, 'stale': 0, 'valid': 1}, 'times': 20.15, 'work': 8},
+      {'effort': null, 'hashrate': 0.02666666666666667, 'miner': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b', 'shares': {'invalid': 0, 'stale': 0, 'valid': 1}, 'times': 18.75, 'work': 8},
+      {'effort': null, 'hashrate': 0.05333333333333334, 'miner': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c', 'shares': {'invalid': 1, 'stale': 0, 'valid': 2}, 'times': 75.15, 'work': 16}];
     const processed = utils.processMiners(shares, hashrate, 1, 300, false);
     expect(processed).toStrictEqual(expected);
   });
@@ -425,8 +425,8 @@ describe('Test utility functionality', () => {
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"work":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"work":8}'];
     const expected = [
-      {"effort": null, "hashrate": 0.02666666666666667, "miner": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b", "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": null, "work": 8},
-      {"effort": null, "hashrate": 0.05333333333333334, "miner": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c", "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": null, "work": 16}];
+      {'effort': null, 'hashrate': 0.02666666666666667, 'miner': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': null, 'work': 8},
+      {'effort': null, 'hashrate': 0.05333333333333334, 'miner': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': null, 'work': 16}];
     const processed = utils.processMiners(shares, hashrate, 1, 300, false);
     expect(processed).toStrictEqual(expected);
   });
@@ -444,8 +444,8 @@ describe('Test utility functionality', () => {
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"work":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"work":8}'];
     const expected = [
-      {"effort": null, "hashrate": 0.02666666666666667, "miner": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a", "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 20.15, "work": 16},
-      {"effort": null, "hashrate": 0.05333333333333334, "miner": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c", "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 75.15, "work": 16}];
+      {'effort': null, 'hashrate': 0.02666666666666667, 'miner': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20.15, 'work': 16},
+      {'effort': null, 'hashrate': 0.05333333333333334, 'miner': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 75.15, 'work': 16}];
     const processed = utils.processMiners(shares, hashrate, 1, 300, true);
     expect(processed).toStrictEqual(expected);
   });
@@ -462,8 +462,8 @@ describe('Test utility functionality', () => {
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"work":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"work":8}'];
     const expected = [
-      {"effort": null, "hashrate": 0.02666666666666667, "miner": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a", "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 20.15, "work": 16},
-      {"effort": null, "hashrate": 0.05333333333333334, "miner": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c", "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 75.15, "work": 16}];
+      {'effort': null, 'hashrate': 0.02666666666666667, 'miner': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20.15, 'work': 16},
+      {'effort': null, 'hashrate': 0.05333333333333334, 'miner': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 75.15, 'work': 16}];
     const processed = utils.processMiners(shares, hashrate, 1, 300, false);
     expect(processed).toStrictEqual(expected);
   });
@@ -480,9 +480,9 @@ describe('Test utility functionality', () => {
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"work":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"work":8}'];
     const expected = [
-      {"effort": null, "hashrate": 0.02666666666666667, "miner": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a", "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 0, "work": 16},
-      {"effort": null, "hashrate": 0, "miner": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b", "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 20.15, "work": 8},
-      {"effort": null, "hashrate": 0.05333333333333334, "miner": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c", "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 20.15, "work": 16}];
+      {'effort': null, 'hashrate': 0.02666666666666667, 'miner': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 0, 'work': 16},
+      {'effort': null, 'hashrate': 0, 'miner': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20.15, 'work': 8},
+      {'effort': null, 'hashrate': 0.05333333333333334, 'miner': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20.15, 'work': 16}];
     const processed = utils.processMiners(shares, hashrate, 1, 300, false);
     expect(processed).toStrictEqual(expected);
   });
@@ -495,7 +495,7 @@ describe('Test utility functionality', () => {
       '{"time":1623901893182,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR","solo":false,"work":8}',
       '{"time":1623901944054,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR","solo":false,"work":8}',
       '{"time":1623901944054,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR","solo":false,"work":8}'];
-    const expected = [{"effort": null, "hashrate": 0.08, "miner": "RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j", "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 20530.15, "work": 5713}];
+    const expected = [{'effort': null, 'hashrate': 0.08, 'miner': 'RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20530.15, 'work': 5713}];
     const processed = utils.processMiners(shares, hashrate, 1, 300, false);
     expect(processed).toStrictEqual(expected);
   });
@@ -505,7 +505,7 @@ describe('Test utility functionality', () => {
       'RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.worker1': '{"time":1623901893182,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.worker1","times":20.15,"solo":true,"effort":42.65,"work":196}',
       'RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.worker2': '{"time":1623901893182,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.worker2","times":20.15,"solo":true,"work":196}',
       'RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.worker3': '{"time":1623901893185,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.worker3","times":77.15,"solo":true,"effort":95.65,"work":5517}'};
-    const expected = [{"effort": 138.3, "hashrate": 0, "miner": "RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j", "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 77.15, "work": 5909}];
+    const expected = [{'effort': 138.3, 'hashrate': 0, 'miner': 'RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 77.15, 'work': 5909}];
     const processed = utils.processMiners(shares, [], 1, 300, false);
     expect(processed).toStrictEqual(expected);
   });
@@ -519,8 +519,8 @@ describe('Test utility functionality', () => {
       tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a: '11.87468051',
       tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b: '11.87468051'};
     const expected = {
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a": 11.87468051,
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b": 11.87468051};
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a': 11.87468051,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b': 11.87468051};
     const processed = utils.processPayments(payments);
     expect(processed).toStrictEqual(expected);
   });
@@ -529,7 +529,7 @@ describe('Test utility functionality', () => {
     const payments = {
       tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a: '11.87468051',
       tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b: '11.87468051'};
-    const expected = {"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a": 11.87468051};
+    const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a': 11.87468051};
     const processed = utils.processPayments(payments, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
     expect(processed).toStrictEqual(expected);
   });
@@ -540,8 +540,8 @@ describe('Test utility functionality', () => {
       tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b: '11.87468051',
       tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c: '0'};
     const expected = {
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a": 11.87468051,
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b": 11.87468051};
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a': 11.87468051,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b': 11.87468051};
     const processed = utils.processPayments(payments);
     expect(processed).toStrictEqual(expected);
   });
@@ -550,7 +550,7 @@ describe('Test utility functionality', () => {
     const payments = {
       tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a: 'test',
       tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b: '11.87468051'};
-    const expected = {"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b": 11.87468051};
+    const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b': 11.87468051};
     const processed = utils.processPayments(payments);
     expect(processed).toStrictEqual(expected);
   });
@@ -564,8 +564,8 @@ describe('Test utility functionality', () => {
       '{"time":1643679193061,"paid":284.9976,"transaction":"6105c705c2db1b4835083e57b6a8ed146681354c628afb08c818472bd392010b"}',
       '{"time":1643679193061,"paid":288.9976,"transaction":"6105c705c2db1b4835083e57b6a8ed146681354c628afb08c818472bd392010c"}'];
     const expected = [
-      {"paid": 284.9976, "time": 1643679193061, "transaction": "6105c705c2db1b4835083e57b6a8ed146681354c628afb08c818472bd392010b"},
-      {"paid": 288.9976, "time": 1643679193061, "transaction": "6105c705c2db1b4835083e57b6a8ed146681354c628afb08c818472bd392010c"}];
+      {'paid': 284.9976, 'time': 1643679193061, 'transaction': '6105c705c2db1b4835083e57b6a8ed146681354c628afb08c818472bd392010b'},
+      {'paid': 288.9976, 'time': 1643679193061, 'transaction': '6105c705c2db1b4835083e57b6a8ed146681354c628afb08c818472bd392010c'}];
     const processed = utils.processRecords(records);
     expect(processed).toStrictEqual(expected);
   });
@@ -576,8 +576,8 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569778,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","work":16,"effort":41.65}',
     };
     const expected = {
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a": 24,
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b": 16};
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a': 24,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b': 16};
     const processed = utils.processShares(shares);
     expect(processed).toStrictEqual(expected);
   });
@@ -589,7 +589,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","work":8,"effort":42.16}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","work":16,"effort":43.11}',
     };
-    const expected = {"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a": 16};
+    const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a': 16};
     const processed = utils.processShares(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
     expect(processed).toStrictEqual(expected);
   });
@@ -602,8 +602,8 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","work":8,"effort":43.11}',
     };
     const expected = {
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a": 8,
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b": 24};
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a': 8,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b': 24};
     const processed = utils.processShares(shares);
     expect(processed).toStrictEqual(expected);
   });
@@ -615,7 +615,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","work":16,"effort":42.16}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","work":8,"effort":43.11}',
     };
-    const expected = {"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1": 8};
+    const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': 8};
     const processed = utils.processShares(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
     expect(processed).toStrictEqual(expected);
   });
@@ -642,8 +642,8 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569778,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","times":15,"work":16,"effort":41.65}',
     };
     const expected = {
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a": 20,
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b": 15};
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a': 20,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b': 15};
     const processed = utils.processTimes(shares);
     expect(processed).toStrictEqual(expected);
   });
@@ -655,7 +655,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","times":13.40,"work":8,"effort":42.16}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","times":20,"work":16,"effort":43.11}',
     };
-    const expected = {"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a": 210};
+    const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a': 210};
     const processed = utils.processTimes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
     expect(processed).toStrictEqual(expected);
   });
@@ -668,8 +668,8 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","times":38.33,"work":8,"effort":43.11}',
     };
     const expected = {
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a": 2130,
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b": 1389.33};
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a': 2130,
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b': 1389.33};
     const processed = utils.processTimes(shares);
     expect(processed).toStrictEqual(expected);
   });
@@ -681,7 +681,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","times":3.120,"work":16,"effort":42.16}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","times":244.30,"work":8,"effort":43.11}',
     };
-    const expected = {"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1": 3320};
+    const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': 3320};
     const processed = utils.processTimes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
     expect(processed).toStrictEqual(expected);
   });
@@ -693,7 +693,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","times":910.1,"work":16,"effort":42.16}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","times":20,"work":8,"effort":43.11}',
     };
-    const expected = {"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1": 38}
+    const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': 38};
     const processed = utils.processTimes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
     expect(processed).toStrictEqual(expected);
   });
@@ -705,7 +705,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","times":910.1,"work":16,"effort":42.16}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","times":-1,"work":8,"effort":43.11}',
     };
-    const expected = {"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a": 398.3};
+    const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a': 398.3};
     const processed = utils.processTimes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
     expect(processed).toStrictEqual(expected);
   });
@@ -721,8 +721,8 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569778,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","types":{"valid":15, "invalid":1, "stale": 0},"times":15,"work":16,"effort":41.65}',
     };
     const expected = {
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a": {"invalid": 0, "stale": 0, "valid": 10},
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b": {"invalid": 1, "stale": 0, "valid": 15}};
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a': {'invalid': 0, 'stale': 0, 'valid': 10},
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b': {'invalid': 1, 'stale': 0, 'valid': 15}};
     const processed = utils.processTypes(shares);
     expect(processed).toStrictEqual(expected);
   });
@@ -734,7 +734,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","types":{"valid":531, "invalid":1, "stale": 1},"times":13.40,"work":8,"effort":42.16}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","types":{"valid":5, "invalid":1, "stale": 0},"times":20,"work":16,"effort":43.11}',
     };
-    const expected = {"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a": {"invalid": 3, "stale": 1, "valid": 123}};
+    const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a': {'invalid': 3, 'stale': 1, 'valid': 123}};
     const processed = utils.processTypes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
     expect(processed).toStrictEqual(expected);
   });
@@ -747,8 +747,8 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","types":{"valid":5, "invalid":0, "stale": 0},"times":38.33,"work":8,"effort":43.11}',
     };
     const expected = {
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a": {"invalid": 6, "stale": 3, "valid": 436},
-      "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b": {"invalid": 0, "stale": 0, "valid": 6}};
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a': {'invalid': 6, 'stale': 3, 'valid': 436},
+      'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b': {'invalid': 0, 'stale': 0, 'valid': 6}};
     const processed = utils.processTypes(shares);
     expect(processed).toStrictEqual(expected);
   });
@@ -760,7 +760,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","types":{"valid":47, "invalid":0, "stale": 0},"times":3.120,"work":16,"effort":42.16}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","types":{"valid":53, "invalid":0, "stale": 0},"times":244.30,"work":8,"effort":43.11}',
     };
-    const expected = {"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1": {"invalid": 0, "stale": 0, "valid": 50}};
+    const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': {'invalid': 0, 'stale': 0, 'valid': 50}};
     const processed = utils.processTypes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
     expect(processed).toStrictEqual(expected);
   });
@@ -772,7 +772,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1","types":{"valid":133, "stale": 0},"times":910.1,"work":16,"effort":42.16}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","types":{"invalid":0},"times":20,"work":8,"effort":43.11}',
     };
-    const expected = {"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1": {"invalid": 0, "stale": 0, "valid": 0}}
+    const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': {'invalid': 0, 'stale': 0, 'valid': 0}};
     const processed = utils.processTypes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
     expect(processed).toStrictEqual(expected);
   });
@@ -783,7 +783,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","times":398.3,"work":8,"effort":43.11}',
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker3': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker3","times":398.3,"work":8,"effort":43.11}',
     };
-    const expected = {"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a": {"invalid": 0, "stale": 0, "valid": 133}}
+    const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a': {'invalid': 0, 'stale': 0, 'valid': 133}};
     const processed = utils.processTypes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a');
     expect(processed).toStrictEqual(expected);
   });
@@ -870,9 +870,6 @@ describe('Test utility functionality', () => {
   });
 
 
-
-
-
   test('Test implemented processWorkers [1]', () => {
     const shares = {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"times":20.15,"types":{"valid":1,"invalid":0,"stale":0},"work":8}',
@@ -886,10 +883,10 @@ describe('Test utility functionality', () => {
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"work":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"work":8}'];
     const expected = [
-      {"effort": null, "hashrate": 0.02666666666666667, "shares": {"invalid": 0, "stale": 0, "valid": 1}, "times": 20.15, "work": 8, "worker": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1"},
-      {"effort": null, "hashrate": 0.02666666666666667, "shares": {"invalid": 0, "stale": 0, "valid": 1}, "times": 18.75, "work": 8, "worker": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1"},
-      {"effort": null, "hashrate": 0.02666666666666667, "shares": {"invalid": 0, "stale": 0, "valid": 1}, "times": 16.14, "work": 8, "worker": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1"},
-      {"effort": null, "hashrate": 0.05333333333333334, "shares": {"invalid": 0, "stale": 1, "valid": 1}, "times": 75.15, "work": 8, "worker": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2"}];
+      {'effort': null, 'hashrate': 0.02666666666666667, 'shares': {'invalid': 0, 'stale': 0, 'valid': 1}, 'times': 20.15, 'work': 8, 'worker': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1'},
+      {'effort': null, 'hashrate': 0.02666666666666667, 'shares': {'invalid': 0, 'stale': 0, 'valid': 1}, 'times': 18.75, 'work': 8, 'worker': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker1'},
+      {'effort': null, 'hashrate': 0.02666666666666667, 'shares': {'invalid': 0, 'stale': 0, 'valid': 1}, 'times': 16.14, 'work': 8, 'worker': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1'},
+      {'effort': null, 'hashrate': 0.05333333333333334, 'shares': {'invalid': 0, 'stale': 1, 'valid': 1}, 'times': 75.15, 'work': 8, 'worker': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2'}];
     const processed = utils.processWorkers(shares, hashrate, 1, 300, false);
     expect(processed).toStrictEqual(expected);
   });
@@ -906,9 +903,9 @@ describe('Test utility functionality', () => {
       '{"time":1623901929800,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1","solo":false,"work":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"work":8}'];
     const expected = [
-      {"effort": 16.15, "hashrate": 0.02666666666666667, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": null, "work": 8, "worker": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1"},
-      {"effort": null, "hashrate": 0.02666666666666667, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": null, "work": 8, "worker": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1"},
-      {"effort": null, "hashrate": 0.02666666666666667, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": null, "work": 8, "worker": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2"}];
+      {'effort': 16.15, 'hashrate': 0.02666666666666667, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': null, 'work': 8, 'worker': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1'},
+      {'effort': null, 'hashrate': 0.02666666666666667, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': null, 'work': 8, 'worker': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker1'},
+      {'effort': null, 'hashrate': 0.02666666666666667, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': null, 'work': 8, 'worker': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2'}];
     const processed = utils.processWorkers(shares, hashrate, 1, 300, false);
     expect(processed).toStrictEqual(expected);
   });
@@ -923,8 +920,8 @@ describe('Test utility functionality', () => {
       '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","solo":false,"work":8}',
       '{"time":1623901944054,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2","solo":false,"work":8}'];
     const expected = [
-      {"effort": null, "hashrate": 0.02666666666666667, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 20.15, "work": 8, "worker": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1"},
-      {"effort": null, "hashrate": 0.02666666666666667, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 75.15, "work": 8, "worker": "tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2"}];
+      {'effort': null, 'hashrate': 0.02666666666666667, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20.15, 'work': 8, 'worker': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1'},
+      {'effort': null, 'hashrate': 0.02666666666666667, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 75.15, 'work': 8, 'worker': 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3c.worker2'}];
     const processed = utils.processWorkers(shares, hashrate, 1, 300, true);
     expect(processed).toStrictEqual(expected);
   });
@@ -937,7 +934,7 @@ describe('Test utility functionality', () => {
       '{"time":1623901893182,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR","solo":false,"work":8}',
       '{"time":1623901944054,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR","solo":false,"work":8}',
       '{"time":1623901944054,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR","solo":false,"work":8}'];
-    const expected = [{"effort": null, "hashrate": 0.08, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 20530.15, "work": 5517, "worker": "RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR"}];
+    const expected = [{'effort': null, 'hashrate': 0.08, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20530.15, 'work': 5517, 'worker': 'RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR'}];
     const processed = utils.processWorkers(shares, hashrate, 1, 300, true);
     expect(processed).toStrictEqual(expected);
   });
@@ -951,8 +948,8 @@ describe('Test utility functionality', () => {
       '{"time":1623901944054,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR","solo":false,"work":8}',
       '{"time":1623901944054,"worker":"RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR","solo":false,"work":8}'];
     const expected = [
-      {"effort": null, "hashrate": 0, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 20.15, "work": 196, "worker": "RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j"},
-      {"effort": null, "hashrate": 0.08, "shares": {"invalid": 0, "stale": 0, "valid": 0}, "times": 20530.15, "work": 5517, "worker": "RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR"}];
+      {'effort': null, 'hashrate': 0, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20.15, 'work': 196, 'worker': 'RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j'},
+      {'effort': null, 'hashrate': 0.08, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20530.15, 'work': 5517, 'worker': 'RFeE924XmUhqJqUpRJykryxumNBwiMfZ4j.minerLHR'}];
     const processed = utils.processWorkers(shares, hashrate, 1, 300, false);
     expect(processed).toStrictEqual(expected);
   });

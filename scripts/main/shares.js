@@ -63,7 +63,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     }
 
     return times;
-  }
+  };
 
   // Handle Effort Updates
   this.handleEffort = function(shares, worker, shareData, blockDifficulty, isSoloMining) {
@@ -82,7 +82,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Calculate Effort for Shared/Solo Mining
     return (difficulties + shareData.difficulty) / blockDifficulty * 100;
-  }
+  };
 
   // Handle Type Updates
   this.handleTypes = function(lastShare, shareType) {
@@ -92,8 +92,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const lastTypes = lastShare.types || types;
     lastTypes[shareType] += 1;
 
-    return lastTypes
-  }
+    return lastTypes;
+  };
 
   // Manage Shares Calculations
   this.calculateShares = function(results, shareData, shareType, blockType, isSoloMining) {

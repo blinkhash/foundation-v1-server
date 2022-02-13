@@ -59,16 +59,16 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     // Handle Historical Updates
     commands.push(['zadd', `${ _this.pool }:statistics:${ blockType }:historical`, dateNow / 1000 | 0, JSON.stringify(output)]);
     return commands;
-  }
+  };
 
   // Handle Hashrate Information in Redis
-  this.handleHashrateInfo = function(blockType, callback, handler) {
+  this.handleHashrateInfo = function(blockType, callback) {
     const commands = [];
     const windowTime = (((Date.now() / 1000) - _this.hashrateWindow) | 0).toString();
     commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, 0, `(${ windowTime }`]);
     commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:solo:hashrate`, 0, `(${ windowTime }`]);
     callback(commands);
-  }
+  };
 
   // Get Historical Information from Redis
   this.handleHistoricalInfo = function(blockType, callback, handler) {
@@ -82,8 +82,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     this.executeCommands(historicalLookups, (results) => {
       const commands = _this.calculateHistoricalInfo(results, blockType);
       callback(commands);
-    });
-  }
+    }, handler);
+  };
 
   // Get Mining Statistics from Daemon
   this.handleMiningInfo = function(daemon, blockType, callback, handler) {
@@ -127,7 +127,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             logger.debug('Statistics', _this.pool, `Finished updating hashrate statistics for ${ blockType } configuration.`);
           }
         }, () => {});
-      }, () => {});
+      });
     }, _this.hashrateInterval);
 
     // Handle Historical Data Interval

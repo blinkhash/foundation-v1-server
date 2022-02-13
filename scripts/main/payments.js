@@ -345,7 +345,7 @@ const PoolPayments = function (logger, client) {
       });
 
       // Managed Confirmed Rounds
-      let confirmed = results[1].map((r) => {
+      const confirmed = results[1].map((r) => {
         const details = JSON.parse(r);
         return {
           height: details.height,
@@ -839,7 +839,7 @@ const PoolPayments = function (logger, client) {
     // Update Expired Confirmed Blocks
     confirmed.forEach((block) => {
       commands.push(['srem', `${ pool }:blocks:${ blockType }:confirmed`, block.serialized]);
-    })
+    });
 
     // Update Miscellaneous Statistics
     if ((category === 'start') || (category === 'payments')) {

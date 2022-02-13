@@ -64,11 +64,11 @@ describe('Test statistics functionality', () => {
     const results = [
       { difficulty: '1.092031593681264', hashrate: '30793089.90778545', height: '2199533' },
       ['{"time":1644418236971,"work":1,"identifier":"","effort":2.777761938931719,"worker":"QRspi5xuc5oaxfNzJD5Pqr9vMNLbF56L3M.worker1","solo":false,"round":"ff40848b"}',
-       '{"time":1644418236972,"work":1,"identifier":"","effort":2.777761938931719,"worker":"QRspi5xuc5oaxfNzJD5Pqr9vMNLbF56L3M.worker2","solo":false,"round":"ff40848b"}'],
+        '{"time":1644418236972,"work":1,"identifier":"","effort":2.777761938931719,"worker":"QRspi5xuc5oaxfNzJD5Pqr9vMNLbF56L3M.worker2","solo":false,"round":"ff40848b"}'],
       ['{"time":1644418236973,"work":1,"identifier":"","effort":2.777761938931719,"worker":"QRspi5xuc5oaxfNzJD5Pqr9vMNLbF56L3N.worker1","solo":true,"round":"ff40848b"}',
-       '{"time":1644418236974,"work":1,"identifier":"","effort":2.777761938931719,"worker":"QRspi5xuc5oaxfNzJD5Pqr9vMNLbF56L3N.worker2","solo":true,"round":"ff40848b"}'], 0];
+        '{"time":1644418236974,"work":1,"identifier":"","effort":2.777761938931719,"worker":"QRspi5xuc5oaxfNzJD5Pqr9vMNLbF56L3N.worker2","solo":true,"round":"ff40848b"}'], 0];
     const expected = [
-      ["zadd", "Pool1:statistics:primary:historical", 1637878085, "{\"hashrate\":{\"shared\":28633115.30666667,\"solo\":28633115.30666667},\"network\":{\"difficulty\":\"1.092031593681264\",\"hashrate\":\"30793089.90778545\"},\"status\":{\"miners\":2,\"workers\":4}}"]];
+      ['zadd', 'Pool1:statistics:primary:historical', 1637878085, '{"hashrate":{"shared":28633115.30666667,"solo":28633115.30666667},"network":{"difficulty":"1.092031593681264","hashrate":"30793089.90778545"},"status":{"miners":2,"workers":4}}']];
     const processed = poolStatistics.calculateHistoricalInfo(results, 'primary');
     expect(processed).toStrictEqual(expected);
   });
@@ -77,8 +77,8 @@ describe('Test statistics functionality', () => {
     MockDate.set(1637878085886);
     const poolStatistics = new PoolStatistics(logger, client, poolConfigCopy, configCopy);
     const expected = [
-      ["zremrangebyscore", "Pool1:rounds:primary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:solo:hashrate", 0, "(1637877785"]]
+      ['zremrangebyscore', 'Pool1:rounds:primary:current:shared:hashrate', 0, '(1637877785'],
+      ['zremrangebyscore', 'Pool1:rounds:primary:current:solo:hashrate', 0, '(1637877785']];
     poolStatistics.handleHashrateInfo('primary', (commands) => {
       expect(commands).toStrictEqual(expected);
       done();
@@ -91,8 +91,8 @@ describe('Test statistics functionality', () => {
     poolConfigCopy.statistics.hashrateWindow = null;
     const poolStatistics = new PoolStatistics(logger, client, poolConfigCopy, configCopy);
     const expected = [
-      ["zremrangebyscore", "Pool1:rounds:primary:current:shared:hashrate", 0, "(1637877785"],
-      ["zremrangebyscore", "Pool1:rounds:primary:current:solo:hashrate", 0, "(1637877785"]]
+      ['zremrangebyscore', 'Pool1:rounds:primary:current:shared:hashrate', 0, '(1637877785'],
+      ['zremrangebyscore', 'Pool1:rounds:primary:current:solo:hashrate', 0, '(1637877785']];
     poolStatistics.handleHashrateInfo('primary', (commands) => {
       expect(commands).toStrictEqual(expected);
       done();
@@ -107,7 +107,7 @@ describe('Test statistics functionality', () => {
       ['hset', 'Pool1:statistics:primary:network', 'hashrate', 52007.68563030699],
       ['hset', 'Pool1:statistics:primary:network', 'height', 611207]];
     const expected = [
-      ["zadd", "Pool1:statistics:primary:historical", 1637878085, "{\"hashrate\":{\"shared\":0,\"solo\":0},\"network\":{\"difficulty\":\"0.001978989105730653\",\"hashrate\":\"52007.68563030699\"},\"status\":{\"miners\":0,\"workers\":0}}"]];
+      ['zadd', 'Pool1:statistics:primary:historical', 1637878085, '{"hashrate":{"shared":0,"solo":0},"network":{"difficulty":"0.001978989105730653","hashrate":"52007.68563030699"},"status":{"miners":0,"workers":0}}']];
     mockSetupClient(client, commands, 'Pool1', () => {
       poolStatistics.handleHistoricalInfo('primary', (output) => {
         expect(output).toStrictEqual(expected);
@@ -124,7 +124,7 @@ describe('Test statistics functionality', () => {
     const commands = [
       ['hset', 'Pool1:statistics:primary:network', 'height', 611207]];
     const expected = [
-      ["zadd", "Pool1:statistics:primary:historical", 1637878085, "{\"hashrate\":{\"shared\":0,\"solo\":0},\"network\":{\"difficulty\":0,\"hashrate\":0},\"status\":{\"miners\":0,\"workers\":0}}"]];
+      ['zadd', 'Pool1:statistics:primary:historical', 1637878085, '{"hashrate":{"shared":0,"solo":0},"network":{"difficulty":0,"hashrate":0},"status":{"miners":0,"workers":0}}']];
     mockSetupClient(client, commands, 'Pool1', () => {
       poolStatistics.handleHistoricalInfo('primary', (output) => {
         expect(output).toStrictEqual(expected);
