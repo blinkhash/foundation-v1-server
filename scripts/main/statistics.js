@@ -47,8 +47,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         solo: (multiplier * utils.processWork(results[2])) / _this.hashrateWindow,
       },
       network: {
-        difficulty: results[0].difficulty,
-        hashrate: results[0].hashrate,
+        difficulty: results[0].difficulty || 0,
+        hashrate: results[0].hashrate || 0,
       },
       status: {
         miners: utils.combineMiners(results[1], results[2]),
@@ -67,7 +67,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const windowTime = (((Date.now() / 1000) - _this.hashrateWindow) | 0).toString();
     commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, 0, `(${ windowTime }`]);
     commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:solo:hashrate`, 0, `(${ windowTime }`]);
-    console.log(commands);
     callback(commands);
   }
 
@@ -140,7 +139,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => {});
       }, () => {});
-    }, _this.historicalInterval);
+    }, 2000);
 
     // Handle Mining Info Interval
     setInterval(() => {
