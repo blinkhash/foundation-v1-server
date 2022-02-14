@@ -365,7 +365,7 @@ const PoolPayments = function (logger, client) {
       });
 
       // Check for Blocks to Delete
-      const blocksToKeep = confirmed.sort((a, b) => a.height - b.height).slice(0, 100);
+      const blocksToKeep = confirmed.sort((a, b) => b.height - a.height).slice(0, 100);
       const blocksToDelete = confirmed.filter(value => !blocksToKeep.includes(value));
 
       // Handle Duplicate Blocks
