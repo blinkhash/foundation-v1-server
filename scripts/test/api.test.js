@@ -325,8 +325,8 @@ describe('Test API functionality', () => {
       ['zadd', 'Pool1:statistics:auxiliary:historical', Date.now() / 1000, '{"time":1637878099113,"hashrate":{"shared":0,"solo":0},"network":{"difficulty":"0.001978989105730653","hashrate":"52007.68563030699"},"status":{"miners":0,"workers":0}}']];
     const response = mockResponse();
     const expected = {
-      'auxiliary': {'1637878095133': {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '0.001978989105730653', 'hashrate': '52007.68563030699'}, 'status': {'miners': 0, 'workers': 0}, 'time': 1637878095133}, '1637878099113': {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '0.001978989105730653', 'hashrate': '52007.68563030699'}, 'status': {'miners': 0, 'workers': 0}, 'time': 1637878099113}},
-      'primary': {'163787808089135': {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '0.001978989105730653', 'hashrate': '52007.68563030699'}, 'status': {'miners': 0, 'workers': 0}, 'time': 163787808089135}, '163787808585313': {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '0.001978989105730653', 'hashrate': '52007.68563030699'}, 'status': {'miners': 0, 'workers': 0}, 'time': 163787808585313}}};
+      'auxiliary': [{'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '0.001978989105730653', 'hashrate': '52007.68563030699'}, 'status': {'miners': 0, 'workers': 0}, 'time': 1637878095133}, {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '0.001978989105730653', 'hashrate': '52007.68563030699'}, 'status': {'miners': 0, 'workers': 0}, 'time': 1637878099113}],
+      'primary': [{'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '0.001978989105730653', 'hashrate': '52007.68563030699'}, 'status': {'miners': 0, 'workers': 0}, 'time': 163787808089135}, {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '0.001978989105730653', 'hashrate': '52007.68563030699'}, 'status': {'miners': 0, 'workers': 0}, 'time': 163787808585313}]};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -716,8 +716,8 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:primary:current:solo:shares', 'worker1', JSON.stringify({ time: 0, work: 64, times: 43, types: { valid: 2, invalid: 1, stale: 1 }, worker: 'worker1' })]];
     const response = mockResponse();
     const expected = {
-      'auxiliary': {'shared': {}, 'solo': {}, 'times': {}},
-      'primary': {'shared': {'worker2': 108, 'worker3': 8}, 'solo': {'worker1': 64}, 'times': {'worker2': 31, 'worker3': 50}}};
+      'auxiliary': {'round': 'current', 'shared': {}, 'solo': {}, 'times': {}},
+      'primary': {'round': 'current', 'shared': {'worker2': 108, 'worker3': 8}, 'solo': {'worker1': 64}, 'times': {'worker2': 31, 'worker3': 50}}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -741,8 +741,8 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:auxiliary:round-180:shares', 'worker3', JSON.stringify({ time: 0, work: 8, times: 50, worker: 'worker3' })]];
     const response = mockResponse();
     const expected = {
-      'auxiliary': {'shares': {'worker3': 8}, 'times': {'worker3': 50}},
-      'primary': {'shares': {'worker2': 108}, 'times': {'worker2': 31}}};
+      'auxiliary': {'round': 180, 'shares': {'worker3': 8}, 'times': {'worker3': 50}},
+      'primary': {'round': 180, 'shares': {'worker2': 108}, 'times': {'worker2': 31}}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -769,8 +769,8 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:auxiliary:round-181:shares', 'worker3', JSON.stringify({ time: 0, work: 100, times: 105, worker: 'worker3' })]];
     const response = mockResponse();
     const expected = {
-      'auxiliary': {'180': {'shares': {'worker3': 8}, 'times': {'worker3': 50}}, '181': {'shares': {'worker3': 100}, 'times': {'worker3': 105}}},
-      'primary': {'180': {'shares': {'worker2': 108}, 'times': {'worker2': 31}}, '181': {'shares': {'worker2': 118}, 'times': {'worker2': 50}}}};
+      'auxiliary': [{'round': 180, 'shares': {'worker3': 8}, 'times': {'worker3': 50}}, {'round': 181, 'shares': {'worker3': 100}, 'times': {'worker3': 105}}],
+      'primary': [{'round': 180, 'shares': {'worker2': 108}, 'times': {'worker2': 31}}, {'round': 181, 'shares': {'worker2': 118}, 'times': {'worker2': 50}}]};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);

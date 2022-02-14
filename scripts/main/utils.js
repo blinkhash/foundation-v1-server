@@ -208,11 +208,10 @@ exports.processBlocks = function(blocks) {
 
 // Process Historical Data for API Endpoints
 exports.processHistorical = function(history) {
-  const output = {};
+  const output = [];
   if (history) {
     history.forEach((entry) => {
-      const details = JSON.parse(entry);
-      output[details.time] = details;
+      output.push(JSON.parse(entry));
     });
   }
   return output;
@@ -305,12 +304,12 @@ exports.processRecords = function(records) {
 };
 
 // Process Shares for API Endpoints
-exports.processShares = function(shares, address) {
+exports.processShares = function(shares, address, type) {
   const output = {};
   if (shares) {
     Object.keys(shares).forEach((entry) => {
       const details = JSON.parse(shares[entry]);
-      const worker = (address && address.includes('.')) ? entry : entry.split('.')[0];
+      const worker = type === 'worker' ? entry : entry.split('.')[0];
       const workValue = /^-?\d*(\.\d+)?$/.test(details.work) ? parseFloat(details.work) : 0;
       if (!address || address === worker) {
         if (workValue > 0) {
@@ -327,12 +326,12 @@ exports.processShares = function(shares, address) {
 };
 
 // Process Times for API Endpoints
-exports.processTimes = function(shares, address) {
+exports.processTimes = function(shares, address, type) {
   const output = {};
   if (shares) {
     Object.keys(shares).forEach((entry) => {
       const details = JSON.parse(shares[entry]);
-      const worker = (address && address.includes('.')) ? entry : entry.split('.')[0];
+      const worker = type === 'worker' ? entry : entry.split('.')[0];
       const timeValue = /^-?\d*(\.\d+)?$/.test(details.times) ? parseFloat(details.times) : 0;
       if (!address || address === worker) {
         if (timeValue > 0 && !details.solo) {
@@ -351,12 +350,12 @@ exports.processTimes = function(shares, address) {
 };
 
 // Process Times for API Endpoints
-exports.processTypes = function(shares, address) {
+exports.processTypes = function(shares, address, type) {
   const output = {};
   if (shares) {
     Object.keys(shares).forEach((entry) => {
       const details = JSON.parse(shares[entry]);
-      const worker = (address && address.includes('.')) ? entry : entry.split('.')[0];
+      const worker = type === 'worker' ? entry : entry.split('.')[0];
       if (!address || address === worker) {
         if (worker in output) {
           output[worker].valid += (details.types || {}).valid || 0;

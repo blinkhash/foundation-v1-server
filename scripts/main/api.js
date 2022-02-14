@@ -185,14 +185,14 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     _this.executeCommands(commands, (results) => {
 
       // Structure Share Data
-      const primarySharedShareData = utils.processShares(results[4], miner);
-      const primarySoloShareData = utils.processShares(results[6], miner);
-      const auxiliarySharedShareData = utils.processShares(results[12], miner);
-      const auxiliarySoloShareData = utils.processShares(results[14], miner);
+      const primarySharedShareData = utils.processShares(results[4], miner, 'miner');
+      const primarySoloShareData = utils.processShares(results[6], miner, 'miner');
+      const auxiliarySharedShareData = utils.processShares(results[12], miner, 'miner');
+      const auxiliarySoloShareData = utils.processShares(results[14], miner, 'miner');
 
       // Structure Times Data
-      const primarySharedTimesData = utils.processTimes(results[4], miner);
-      const auxiliarySharedTimesData = utils.processTimes(results[12], miner);
+      const primarySharedTimesData = utils.processTimes(results[4], miner, 'miner');
+      const auxiliarySharedTimesData = utils.processTimes(results[12], miner, 'miner');
 
       // Structure Hashrate Data
       const primarySharedHashrateData = utils.processWork(results[5], miner, 'miner');
@@ -211,10 +211,10 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       const auxiliaryPaidData = utils.processPayments(results[11], miner)[miner];
 
       // Structure Share Type Data
-      const primarySharedTypesData = utils.processTypes(results[4], miner);
-      const primarySoloTypesData = utils.processTypes(results[6], miner);
-      const auxiliarySharedTypesData = utils.processTypes(results[12], miner);
-      const auxiliarySoloTypesData = utils.processTypes(results[14], miner);
+      const primarySharedTypesData = utils.processTypes(results[4], miner, 'miner');
+      const primarySoloTypesData = utils.processTypes(results[6], miner, 'miner');
+      const auxiliarySharedTypesData = utils.processTypes(results[12], miner, 'miner');
+      const auxiliarySoloTypesData = utils.processTypes(results[14], miner, 'miner');
 
       // Structure Worker Type Data
       const primarySharedWorkerData = utils.listWorkers(results[4], miner);
@@ -415,11 +415,13 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     _this.executeCommands(commands, (results) => {
       callback(200, {
         primary: {
+          round: 'current',
           shared: utils.processShares(results[0]),
           solo: utils.processShares(results[1]),
           times: utils.processTimes(results[0]),
         },
         auxiliary: {
+          round: 'current',
           shared: utils.processShares(results[2]),
           solo: utils.processShares(results[3]),
           times: utils.processTimes(results[2]),
@@ -436,10 +438,12 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     _this.executeCommands(commands, (results) => {
       callback(200, {
         primary: {
+          round: parseFloat(height),
           shares: utils.processShares(results[0]),
           times: utils.processTimes(results[0]),
         },
         auxiliary: {
+          round: parseFloat(height),
           shares: utils.processShares(results[1]),
           times: utils.processTimes(results[1]),
         }
@@ -449,17 +453,18 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
 
   // Helper Function for /rounds
   this.processRounds = function(pool, rounds, blockType, callback, handler) {
-    const combined = {};
+    const combined = [];
     if (rounds.length >= 1) {
       const processor = new Promise((resolve,) => {
         rounds.forEach((height, idx) => {
           const commands = [
             ['hgetall', `${ pool }:rounds:${ blockType }:round-${ height }:shares`]];
           _this.executeCommands(commands, (results) => {
-            combined[height] = {
+            combined.push({
+              round: parseFloat(height),
               shares: utils.processShares(results[0]),
               times: utils.processTimes(results[0])
-            };
+            });
             if (idx === rounds.length - 1) {
               resolve(combined);
             }
@@ -650,14 +655,14 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     _this.executeCommands(commands, (results) => {
 
       // Structure Share Data
-      const primarySharedShareData = utils.processShares(results[0], worker);
-      const primarySoloShareData = utils.processShares(results[2], worker);
-      const auxiliarySharedShareData = utils.processShares(results[4], worker);
-      const auxiliarySoloShareData = utils.processShares(results[6], worker);
+      const primarySharedShareData = utils.processShares(results[0], worker, 'worker');
+      const primarySoloShareData = utils.processShares(results[2], worker, 'worker');
+      const auxiliarySharedShareData = utils.processShares(results[4], worker, 'worker');
+      const auxiliarySoloShareData = utils.processShares(results[6], worker, 'worker');
 
       // Structure Times Data
-      const primarySharedTimesData = utils.processTimes(results[0], worker);
-      const auxiliarySharedTimesData = utils.processTimes(results[4], worker);
+      const primarySharedTimesData = utils.processTimes(results[0], worker, 'worker');
+      const auxiliarySharedTimesData = utils.processTimes(results[4], worker, 'worker');
 
       // Structure Hashrate Data
       const primarySharedHashrateData = utils.processWork(results[1], worker, 'worker');
@@ -666,10 +671,10 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       const auxiliarySoloHashrateData = utils.processWork(results[7], worker, 'worker');
 
       // Structure Share Type Data
-      const primarySharedTypesData = utils.processTypes(results[0], worker);
-      const primarySoloTypesData = utils.processTypes(results[2], worker);
-      const auxiliarySharedTypesData = utils.processTypes(results[4], worker);
-      const auxiliarySoloTypesData = utils.processTypes(results[6], worker);
+      const primarySharedTypesData = utils.processTypes(results[0], worker, 'worker');
+      const primarySoloTypesData = utils.processTypes(results[2], worker, 'worker');
+      const auxiliarySharedTypesData = utils.processTypes(results[4], worker, 'worker');
+      const auxiliarySoloTypesData = utils.processTypes(results[6], worker, 'worker');
 
       // Build Worker Statistics
       callback(200, {

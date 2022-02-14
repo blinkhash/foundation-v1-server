@@ -365,15 +365,15 @@ describe('Test utility functionality', () => {
       '{"time":1644811916016,"hashrate":{"shared":0,"solo":0},"network":{"difficulty":"30.92082613006793","hashrate":"238159035.4426813"},"status":{"miners":0,"workers":0}}',
       '{"time":1644811918017,"hashrate":{"shared":0,"solo":0},"network":{"difficulty":"30.92082613006793","hashrate":"238159035.4426813"},"status":{"miners":0,"workers":0}}'];
     const processed = utils.processHistorical(history);
-    const expected = {
-      '1644811914019': {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '30.92082613006793', 'hashrate': '238159035.4426813'}, 'status': {'miners': 0, 'workers': 0}, 'time': 1644811914019},
-      '1644811916016': {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '30.92082613006793', 'hashrate': '238159035.4426813'}, 'status': {'miners': 0, 'workers': 0}, 'time': 1644811916016},
-      '1644811918017': {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '30.92082613006793', 'hashrate': '238159035.4426813'}, 'status': {'miners': 0, 'workers': 0}, 'time': 1644811918017}};
+    const expected = [
+      {"hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": "30.92082613006793", "hashrate": "238159035.4426813"}, "status": {"miners": 0, "workers": 0}, "time": 1644811914019},
+      {"hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": "30.92082613006793", "hashrate": "238159035.4426813"}, "status": {"miners": 0, "workers": 0}, "time": 1644811916016},
+      {"hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": "30.92082613006793", "hashrate": "238159035.4426813"}, "status": {"miners": 0, "workers": 0}, "time": 1644811918017}];
     expect(processed).toStrictEqual(expected);
   });
 
   test('Test implemented processHistorical [2]', () => {
-    expect(utils.processHistorical(null)).toStrictEqual({});
+    expect(utils.processHistorical(null)).toStrictEqual([]);
   });
 
   test('Test implemented processLuck [1]', () => {
@@ -633,7 +633,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","work":8,"effort":43.11}',
     };
     const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': 8};
-    const processed = utils.processShares(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+    const processed = utils.processShares(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1', 'worker');
     expect(processed).toStrictEqual(expected);
   });
 
@@ -699,7 +699,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","times":244.30,"work":8,"effort":43.11}',
     };
     const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': 3320};
-    const processed = utils.processTimes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+    const processed = utils.processTimes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1', 'worker');
     expect(processed).toStrictEqual(expected);
   });
 
@@ -711,7 +711,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","times":20,"work":8,"effort":43.11}',
     };
     const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': 38};
-    const processed = utils.processTimes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+    const processed = utils.processTimes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1', 'worker');
     expect(processed).toStrictEqual(expected);
   });
 
@@ -778,7 +778,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","types":{"valid":53, "invalid":0, "stale": 0},"times":244.30,"work":8,"effort":43.11}',
     };
     const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': {'invalid': 0, 'stale': 0, 'valid': 50}};
-    const processed = utils.processTypes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+    const processed = utils.processTypes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1', 'worker');
     expect(processed).toStrictEqual(expected);
   });
 
@@ -790,7 +790,7 @@ describe('Test utility functionality', () => {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2': '{"time":1623862569772,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3b.worker2","types":{"invalid":0},"times":20,"work":8,"effort":43.11}',
     };
     const expected = {'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1': {'invalid': 0, 'stale': 0, 'valid': 0}};
-    const processed = utils.processTypes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1');
+    const processed = utils.processTypes(shares, 'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1', 'worker');
     expect(processed).toStrictEqual(expected);
   });
 
