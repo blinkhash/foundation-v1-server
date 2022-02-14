@@ -325,12 +325,12 @@ describe('Test API functionality', () => {
       ['zadd', 'Pool1:statistics:auxiliary:historical', Date.now() / 1000, '{"time":1637878099113,"hashrate":{"shared":0,"solo":0},"network":{"difficulty":"0.001978989105730653","hashrate":"52007.68563030699"},"status":{"miners":0,"workers":0}}']];
     const response = mockResponse();
     const expected = {
-      "auxiliary": {"1637878095133": {"hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": "0.001978989105730653", "hashrate": "52007.68563030699"}, "status": {"miners": 0, "workers": 0}, "time": 1637878095133}, "1637878099113": {"hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": "0.001978989105730653", "hashrate": "52007.68563030699"}, "status": {"miners": 0, "workers": 0}, "time": 1637878099113}},
-      "primary": {"163787808089135": {"hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": "0.001978989105730653", "hashrate": "52007.68563030699"}, "status": {"miners": 0, "workers": 0}, "time": 163787808089135}, "163787808585313": {"hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": "0.001978989105730653", "hashrate": "52007.68563030699"}, "status": {"miners": 0, "workers": 0}, "time": 163787808585313}}};
+      'auxiliary': {'1637878095133': {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '0.001978989105730653', 'hashrate': '52007.68563030699'}, 'status': {'miners': 0, 'workers': 0}, 'time': 1637878095133}, '1637878099113': {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '0.001978989105730653', 'hashrate': '52007.68563030699'}, 'status': {'miners': 0, 'workers': 0}, 'time': 1637878099113}},
+      'primary': {'163787808089135': {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '0.001978989105730653', 'hashrate': '52007.68563030699'}, 'status': {'miners': 0, 'workers': 0}, 'time': 163787808089135}, '163787808585313': {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '0.001978989105730653', 'hashrate': '52007.68563030699'}, 'status': {'miners': 0, 'workers': 0}, 'time': 163787808585313}}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
-      expect(typeof processed.body).toBe('object');      expect(processed.body).toStrictEqual(expected);
+      expect(typeof processed.body).toBe('object'); expect(processed.body).toStrictEqual(expected);
       done();
     });
     mockSetupClient(client, commands, 'Pool1', () => {

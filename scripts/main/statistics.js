@@ -49,7 +49,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       },
       network: {
         difficulty: (results[0] || {}).difficulty || 0,
-        hashrate: (results[0] || {}).hashrate  || 0,
+        hashrate: (results[0] || {}).hashrate || 0,
       },
       status: {
         miners: utils.combineMiners(results[1], results[2]),
