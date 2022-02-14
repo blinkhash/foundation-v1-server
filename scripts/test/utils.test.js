@@ -242,6 +242,32 @@ describe('Test utility functionality', () => {
     expect(utils.countProcessForks(config)).toBe(1);
   });
 
+  test('Test implemented listBlocks [1]', () => {
+    const blocks = [
+      '{"time":1623901893182,"height":123456,"hash":"8de06f6e73dbff454023a95f29f87c3","reward":123,"transaction":"bc0b3f953ff408cfb298b034daf5ecd480","work":234,"luck":34.56,"worker":"miner2","solo":false,"round":"12345678"}',
+      '{"time":1623901893183,"height":123457,"hash":"8de0623a95f29f6e73dbff4540f87c3","reward":123,"transaction":"b53ff408cfb298c0b3f9b034daf5ecd480","work":234,"luck":34.56,"worker":"miner1","solo":false,"round":"12345679"}',
+      '{"time":1623901893184,"height":123458,"hash":"8de0bff4540236f6e73da95f29f87c3","reward":123,"transaction":"bc0b3f4daf5ecd4953ff408cfb298b0380","work":234,"luck":34.56,"worker":"miner1","solo":false,"round":"12345680"}'];
+    const expected = [
+      {'hash': '8de0bff4540236f6e73da95f29f87c3', 'height': 123458, 'luck': 34.56, 'reward': 123, 'round': '12345680', 'solo': false, 'time': 1623901893184, 'transaction': 'bc0b3f4daf5ecd4953ff408cfb298b0380', 'work': 234, 'worker': 'miner1'},
+      {'hash': '8de0623a95f29f6e73dbff4540f87c3', 'height': 123457, 'luck': 34.56, 'reward': 123, 'round': '12345679', 'solo': false, 'time': 1623901893183, 'transaction': 'b53ff408cfb298c0b3f9b034daf5ecd480', 'work': 234, 'worker': 'miner1'}];
+    const processed = utils.listBlocks(blocks, 'miner1');
+    expect(processed).toStrictEqual(expected);
+  });
+
+  test('Test implemented listBlocks [2]', () => {
+    const blocks = [
+      '{"time":1623901893182,"height":123456,"hash":"8de06f6e73dbff454023a95f29f87c3","reward":123,"transaction":"bc0b3f953ff408cfb298b034daf5ecd480","work":234,"luck":34.56,"worker":"miner2","solo":false,"round":"12345678"}',
+      '{"time":1623901893183,"height":123457,"hash":"8de0623a95f29f6e73dbff4540f87c3","reward":123,"transaction":"b53ff408cfb298c0b3f9b034daf5ecd480","work":234,"luck":34.56,"worker":"miner1","solo":false,"round":"12345679"}',
+      '{"time":1623901893184,"height":123458,"hash":"8de0bff4540236f6e73da95f29f87c3","reward":123,"transaction":"bc0b3f4daf5ecd4953ff408cfb298b0380","work":234,"luck":34.56,"worker":"miner1","solo":false,"round":"12345680"}'];
+    const processed = utils.listBlocks(blocks, 'miner3');
+    expect(processed).toStrictEqual([]);
+  });
+
+  test('Test implemented listBlocks [3]', () => {
+    const processed = utils.listBlocks(null, 'miner3');
+    expect(processed).toStrictEqual([]);
+  });
+
   test('Test implemented listWorkers [1]', () => {
     const shares = {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2': '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}'};
@@ -333,30 +359,21 @@ describe('Test utility functionality', () => {
     expect(processed).toStrictEqual(expected);
   });
 
-  test('Test implemented listBlocks [1]', () => {
-    const blocks = [
-      '{"time":1623901893182,"height":123456,"hash":"8de06f6e73dbff454023a95f29f87c3","reward":123,"transaction":"bc0b3f953ff408cfb298b034daf5ecd480","work":234,"luck":34.56,"worker":"miner2","solo":false,"round":"12345678"}',
-      '{"time":1623901893183,"height":123457,"hash":"8de0623a95f29f6e73dbff4540f87c3","reward":123,"transaction":"b53ff408cfb298c0b3f9b034daf5ecd480","work":234,"luck":34.56,"worker":"miner1","solo":false,"round":"12345679"}',
-      '{"time":1623901893184,"height":123458,"hash":"8de0bff4540236f6e73da95f29f87c3","reward":123,"transaction":"bc0b3f4daf5ecd4953ff408cfb298b0380","work":234,"luck":34.56,"worker":"miner1","solo":false,"round":"12345680"}'];
-    const expected = [
-      {'hash': '8de0bff4540236f6e73da95f29f87c3', 'height': 123458, 'luck': 34.56, 'reward': 123, 'round': '12345680', 'solo': false, 'time': 1623901893184, 'transaction': 'bc0b3f4daf5ecd4953ff408cfb298b0380', 'work': 234, 'worker': 'miner1'},
-      {'hash': '8de0623a95f29f6e73dbff4540f87c3', 'height': 123457, 'luck': 34.56, 'reward': 123, 'round': '12345679', 'solo': false, 'time': 1623901893183, 'transaction': 'b53ff408cfb298c0b3f9b034daf5ecd480', 'work': 234, 'worker': 'miner1'}];
-    const processed = utils.listBlocks(blocks, 'miner1');
+  test('Test implemented processHistorical [1]', () => {
+    const history = [
+      '{"time":1644811914019,"hashrate":{"shared":0,"solo":0},"network":{"difficulty":"30.92082613006793","hashrate":"238159035.4426813"},"status":{"miners":0,"workers":0}}',
+      '{"time":1644811916016,"hashrate":{"shared":0,"solo":0},"network":{"difficulty":"30.92082613006793","hashrate":"238159035.4426813"},"status":{"miners":0,"workers":0}}',
+      '{"time":1644811918017,"hashrate":{"shared":0,"solo":0},"network":{"difficulty":"30.92082613006793","hashrate":"238159035.4426813"},"status":{"miners":0,"workers":0}}'];
+    const processed = utils.processHistorical(history);
+    const expected = {
+      "1644811914019": {"hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": "30.92082613006793", "hashrate": "238159035.4426813"}, "status": {"miners": 0, "workers": 0}, "time": 1644811914019},
+      "1644811916016": {"hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": "30.92082613006793", "hashrate": "238159035.4426813"}, "status": {"miners": 0, "workers": 0}, "time": 1644811916016},
+      "1644811918017": {"hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": "30.92082613006793", "hashrate": "238159035.4426813"}, "status": {"miners": 0, "workers": 0}, "time": 1644811918017}};
     expect(processed).toStrictEqual(expected);
   });
 
-  test('Test implemented listBlocks [2]', () => {
-    const blocks = [
-      '{"time":1623901893182,"height":123456,"hash":"8de06f6e73dbff454023a95f29f87c3","reward":123,"transaction":"bc0b3f953ff408cfb298b034daf5ecd480","work":234,"luck":34.56,"worker":"miner2","solo":false,"round":"12345678"}',
-      '{"time":1623901893183,"height":123457,"hash":"8de0623a95f29f6e73dbff4540f87c3","reward":123,"transaction":"b53ff408cfb298c0b3f9b034daf5ecd480","work":234,"luck":34.56,"worker":"miner1","solo":false,"round":"12345679"}',
-      '{"time":1623901893184,"height":123458,"hash":"8de0bff4540236f6e73da95f29f87c3","reward":123,"transaction":"bc0b3f4daf5ecd4953ff408cfb298b0380","work":234,"luck":34.56,"worker":"miner1","solo":false,"round":"12345680"}'];
-    const processed = utils.listBlocks(blocks, 'miner3');
-    expect(processed).toStrictEqual([]);
-  });
-
-  test('Test implemented listBlocks [3]', () => {
-    const processed = utils.listBlocks(null, 'miner3');
-    expect(processed).toStrictEqual([]);
+  test('Test implemented processHistorical [2]', () => {
+    expect(utils.processHistorical(null)).toStrictEqual({});
   });
 
   test('Test implemented processLuck [1]', () => {

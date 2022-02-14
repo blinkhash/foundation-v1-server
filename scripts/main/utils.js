@@ -140,6 +140,22 @@ exports.extraNonceCounter = function(size) {
   };
 };
 
+// List Blocks per Address for API Endpoints
+exports.listBlocks = function(blocks, address) {
+  const output = [];
+  if (blocks) {
+    blocks = blocks
+      .map((block) => JSON.parse(block))
+      .sort((a, b) => (b.height - a.height));
+    blocks.forEach((block) => {
+      if (block.worker.split('.')[0] === address) {
+        output.push(block);
+      }
+    });
+  }
+  return output;
+};
+
 // List Round Workers for API Endpoints
 exports.listWorkers = function(shares, address) {
   const workers = [];
@@ -190,17 +206,13 @@ exports.processBlocks = function(blocks) {
   return output;
 };
 
-// List Blocks per Address for API Endpoints
-exports.listBlocks = function(blocks, address) {
-  const output = [];
-  if (blocks) {
-    blocks = blocks
-      .map((block) => JSON.parse(block))
-      .sort((a, b) => (b.height - a.height));
-    blocks.forEach((block) => {
-      if (block.worker.split('.')[0] === address) {
-        output.push(block);
-      }
+// Process Historical Data for API Endpoints
+exports.processHistorical = function(history) {
+  const output = {};
+  if (history) {
+    history.forEach((entry) => {
+      const details = JSON.parse(entry);
+      output[details.time] = details;
     });
   }
   return output;

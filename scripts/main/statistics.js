@@ -42,18 +42,19 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
     // Build Historical Output
     const output = {
+      time: dateNow,
       hashrate: {
         shared: (multiplier * utils.processWork(results[1])) / _this.hashrateWindow,
         solo: (multiplier * utils.processWork(results[2])) / _this.hashrateWindow,
       },
       network: {
-        difficulty: results[0].difficulty || 0,
-        hashrate: results[0].hashrate || 0,
+        difficulty: (results[0] || {}).difficulty || 0,
+        hashrate: (results[0] || {}).hashrate  || 0,
       },
       status: {
         miners: utils.combineMiners(results[1], results[2]),
         workers: utils.combineWorkers(results[1], results[2]),
-      }
+      },
     };
 
     // Handle Historical Updates
@@ -139,7 +140,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => {});
       }, () => {});
-    }, 2000);
+    }, _this.historicalInterval);
 
     // Handle Mining Info Interval
     setInterval(() => {

@@ -116,6 +116,21 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /miners/active
+  this.handleHistorical = function(pool, callback) {
+    const historicalWindow = _this.poolConfigs[pool].statistics.historicalWindow;
+    const windowHistorical = (((Date.now() / 1000) - historicalWindow) | 0).toString();
+    const commands = [
+      ['zrangebyscore', `${ pool }:statistics:primary:historical`, windowHistorical, '+inf'],
+      ['zrangebyscore', `${ pool }:statistics:auxiliary:historical`, windowHistorical, '+inf']];
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
+        primary: utils.processHistorical(results[0]),
+        auxiliary: utils.processHistorical(results[1]),
+      });
+    }, callback);
+  };
+
+  // API Endpoint for /miners/active
   this.handleMinersActive = function(pool, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
@@ -792,6 +807,11 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       break;
     case (endpoint === 'blocks' && method.length >= 1):
       _this.handleBlocksSpecific(pool, method, (code, message) => callback(code, message));
+      break;
+
+    // Miners Endpoints
+    case (endpoint === 'historical' && method === ''):
+      _this.handleHistorical(pool, (code, message) => callback(code, message));
       break;
 
     // Miners Endpoints
