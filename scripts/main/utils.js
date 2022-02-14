@@ -50,71 +50,71 @@ exports.coinsToSatoshis = function(coins, magnitude) {
 
 // Combine Solo/Shared Miners Count
 exports.combineMiners = function(shared, solo) {
-  let count = 0;
+  let output = 0;
   if (shared || solo) {
     shared = shared ? shared.map((share) => JSON.parse(share)) : [];
     solo = solo ? solo.map((share) => JSON.parse(share)) : [];
-    count += exports.countMiners(shared);
-    count += exports.countMiners(solo);
+    output += exports.countMiners(shared);
+    output += exports.countMiners(solo);
   }
-  return count;
+  return output;
 };
 
 // Count Number of Miners
 exports.countMiners = function(shares) {
-  let count = 0;
+  let output = 0;
   const miners = [];
   if (shares) {
     shares.forEach((share) => {
       if (share.worker) {
-        const address = share.worker.split('.')[0];
-        if (!(miners.includes(address))) {
-          count += 1;
-          miners.push(address);
+        const worker = share.worker.split('.')[0];
+        if (!(miners.includes(worker))) {
+          output += 1;
+          miners.push(worker);
         }
       }
     });
   }
-  return count;
+  return output;
 };
 
 // Count Occurences of Value in Array
 exports.countOccurences = function(array, value) {
-  let count = 0;
+  let output = 0;
   for (let i = 0; i < array.length; i++) {
     if (array[i] === value)
-      count += 1;
+      output += 1;
   }
-  return count;
+  return output;
 };
 
 // Combine Solo/Shared Workers Count
 exports.combineWorkers = function(shared, solo) {
-  let count = 0;
+  let output = 0;
   if (shared || solo) {
     shared = shared ? shared.map((share) => JSON.parse(share)) : [];
     solo = solo ? solo.map((share) => JSON.parse(share)) : [];
-    count += exports.countWorkers(shared);
-    count += exports.countWorkers(solo);
+    output += exports.countWorkers(shared);
+    output += exports.countWorkers(solo);
   }
-  return count;
+  return output;
 };
 
 // Count Number of Workers
 exports.countWorkers = function(shares) {
-  let count = 0;
+  let output = 0;
   const workers = [];
   if (shares) {
     shares.forEach((share) => {
       if (share.worker) {
         if (!(workers.includes(share.worker))) {
-          count += 1;
+          output += 1;
           workers.push(share.worker);
         }
       }
     });
   }
-  return count;
+  return output;
 };
 
 // Count Number of Process Forks
@@ -140,18 +140,32 @@ exports.extraNonceCounter = function(size) {
   };
 };
 
+// List Blocks per Address for API Endpoints
+exports.listBlocks = function(blocks, address) {
+  const output = [];
+  if (blocks) {
+    blocks = blocks
+      .map((block) => JSON.parse(block))
+      .sort((a, b) => (b.height - a.height));
+    blocks.forEach((block) => {
+      if (block.worker.split('.')[0] === address) {
+        output.push(block);
+      }
+    });
+  }
+  return output;
+};
+
 // List Round Workers for API Endpoints
-exports.listWorkers = function(shares, worker) {
+exports.listWorkers = function(shares, address) {
   const workers = [];
   if (shares) {
-    shares = shares.map((share) => JSON.parse(share));
-    shares.forEach((share) => {
-      if (share.worker) {
-        const address = (worker && worker.includes('.')) ? share.worker : share.worker.split('.')[0];
-        if (!worker || worker === address) {
-          if (!(workers.includes(share.worker))) {
-            workers.push(share.worker);
-          }
+    Object.keys(shares).forEach((entry) => {
+      const details = JSON.parse(shares[entry]);
+      const worker = (address && address.includes('.')) ? entry : entry.split('.')[0];
+      if (!address || address === worker) {
+        if (details.worker && !(workers.includes(details.worker))) {
+          workers.push(details.worker);
         }
       }
     });
@@ -192,40 +206,16 @@ exports.processBlocks = function(blocks) {
   return output;
 };
 
-// List Blocks per miner for API Endpoints
-exports.listBlocks = function(blocks, miner) {
-  const output = [];
-  if (blocks) {
-    blocks = blocks
-      .map((block) => JSON.parse(block))
-      .sort((a, b) => (b.height - a.height));
-    blocks.forEach((block) => {
-      if (block.worker.split('.')[0] === miner) {
-        output.push(block);
-      }
+// Process Historical Data for API Endpoints
+exports.processHistorical = function(history) {
+  const output = {};
+  if (history) {
+    history.forEach((entry) => {
+      const details = JSON.parse(entry);
+      output[details.time] = details;
     });
   }
   return output;
-};
-
-// Process Difficulty for API Endpoints
-exports.processDifficulty = function(shares, miner, type) {
-  let count = 0;
-  if (shares) {
-    shares = shares
-      .map((share) => JSON.parse(share))
-      .filter((share) => share.type === 'valid');
-    shares.forEach((share) => {
-      if (share.worker && share.difficulty) {
-        const address = share.worker.split('.')[0];
-        const difficultyValue = /^-?\d*(\.\d+)?$/.test(share.difficulty) ? parseFloat(share.difficulty) : 0;
-        if (!miner || miner === share.worker || (type === 'miner' && miner === address)) {
-          count += difficultyValue;
-        }
-      }
-    });
-  }
-  return count;
 };
 
 // Process Luck for API Endpoints
@@ -243,34 +233,45 @@ exports.processLuck = function(pending, confirmed) {
 };
 
 // Process Miners for API Endpoints
-exports.processMiners = function(shares, hashrate, times, multiplier, hashrateWindow, active) {
+exports.processMiners = function(shares, hashrate, multiplier, hashrateWindow, active) {
   const miners = {};
   if (shares) {
     Object.keys(shares).forEach((entry) => {
       const details = JSON.parse(shares[entry]);
+
+      // Generate Miner Data
       const address = entry.split('.')[0];
-      const difficultyValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
-      const effortValue = (!times) ? (/^-?\d*(\.\d+)?$/.test(details.effort) ? parseFloat(details.effort) : 0) : null;
-      const timeValue = (times) ? (/^-?\d*(\.\d+)?$/.test(times[entry]) ? parseFloat(times[entry]) : 0) : null;
-      const hashrateValue = exports.processDifficulty(hashrate, address, 'miner');
-      const shareTypeCounts = exports.processShareTypes(hashrate, address, 'miner');
-      if (details.worker && difficultyValue > 0) {
-        if (address in miners) {
-          miners[address].difficulty += difficultyValue;
-          if (times && timeValue >= miners[address].times) {
-            miners[address].times = timeValue;
-          } else if (!times) {
-            miners[address].effort += effortValue || 0;
-          }
-        } else {
-          if (!active || (active && hashrateValue > 0)) {
+      const hashrateValue = exports.processWork(hashrate, address, 'miner');
+      const effortValue = (/^-?\d*(\.\d+)?$/.test(details.effort) ? parseFloat(details.effort) : null);
+      const timeValue = (/^-?\d*(\.\d+)?$/.test(details.times) ? parseFloat(details.times) : null);
+      const workValue = /^-?\d*(\.\d+)?$/.test(details.work) ? parseFloat(details.work) : 0;
+
+      // Calculate Miner Information
+      if (details.worker && workValue > 0) {
+        if (!active || (active && hashrateValue > 0)) {
+          if (address in miners) {
+            if (details.solo) {
+              miners[address].effort += effortValue || 0;
+            }
+            if (timeValue >= miners[address].times) {
+              miners[address].times = timeValue;
+            }
+            miners[address].shares.valid += (details.types || {}).valid || 0;
+            miners[address].shares.invalid += (details.types || {}).invalid || 0;
+            miners[address].shares.stale += (details.types || {}).stale || 0;
+            miners[address].work += workValue;
+          } else {
             miners[address] = {
               miner: address,
-              difficulty: difficultyValue,
-              times: timeValue || null,
+              effort: details.solo ? effortValue : null,
               hashrate: (multiplier * hashrateValue) / hashrateWindow,
-              effort: effortValue || null,
-              shares: shareTypeCounts,
+              shares: {
+                valid: (details.types || {}).valid || 0,
+                invalid: (details.types || {}).invalid || 0,
+                stale: (details.types || {}).stale || 0,
+              },
+              times: !details.solo ? timeValue : null,
+              work: workValue,
             };
           }
         }
@@ -281,14 +282,14 @@ exports.processMiners = function(shares, hashrate, times, multiplier, hashrateWi
 };
 
 // Process Payments for API Endpoints
-exports.processPayments = function(payments, miner) {
+exports.processPayments = function(payments, address) {
   const output = {};
   if (payments) {
-    Object.keys(payments).forEach((address) => {
-      const paymentValue = /^-?\d*(\.\d+)?$/.test(payments[address]) ? parseFloat(payments[address]) : 0;
+    Object.keys(payments).forEach((worker) => {
+      const paymentValue = /^-?\d*(\.\d+)?$/.test(payments[worker]) ? parseFloat(payments[worker]) : 0;
       if (paymentValue > 0) {
-        if (!miner || miner === address) {
-          output[address] = paymentValue;
+        if (!address || address === worker) {
+          output[worker] = paymentValue;
         }
       }
     });
@@ -304,39 +305,20 @@ exports.processRecords = function(records) {
 };
 
 // Process Shares for API Endpoints
-exports.processShares = function(shares, miner) {
+exports.processShares = function(shares, address) {
   const output = {};
   if (shares) {
     Object.keys(shares).forEach((entry) => {
       const details = JSON.parse(shares[entry]);
-      const address = (miner && miner.includes('.')) ? entry : entry.split('.')[0];
-      const difficultyValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
-      if (!miner || miner === address) {
-        if (difficultyValue > 0) {
-          if (address in output) {
-            output[address] += difficultyValue;
+      const worker = (address && address.includes('.')) ? entry : entry.split('.')[0];
+      const workValue = /^-?\d*(\.\d+)?$/.test(details.work) ? parseFloat(details.work) : 0;
+      if (!address || address === worker) {
+        if (workValue > 0) {
+          if (worker in output) {
+            output[worker] += workValue;
           } else {
-            output[address] = difficultyValue;
+            output[worker] = workValue;
           }
-        }
-      }
-    });
-  }
-  return output;
-};
-
-// Process Share Types for API Endpoints
-exports.processShareTypes = function(shares, miner, type) {
-  const output = { valid: 0, stale: 0, invalid: 0 };
-  if (shares) {
-    shares = shares.map((share) => JSON.parse(share));
-    shares.forEach((share) => {
-      if (share.worker && share.type) {
-        const address = share.worker.split('.')[0];
-        if (!miner || miner === share.worker || (type === 'miner' && miner === address)) {
-          if (share.type === 'valid') output.valid += 1
-          else if (share.type === 'stale')  output.stale += 1
-          else if (share.type === 'invalid')  output.invalid += 1
         }
       }
     });
@@ -345,21 +327,21 @@ exports.processShareTypes = function(shares, miner, type) {
 };
 
 // Process Times for API Endpoints
-exports.processTimes = function(times, miner) {
+exports.processTimes = function(shares, address) {
   const output = {};
-  if (times) {
-    Object.keys(times).forEach((address) => {
-      const amount = times[address];
-      address = (miner && miner.includes('.')) ? address : address.split('.')[0];
-      const timeValue = /^-?\d*(\.\d+)?$/.test(amount) ? parseFloat(amount) : 0;
-      if (!miner || miner === address) {
-        if (timeValue > 0) {
-          if (address in output) {
-            if (timeValue >= output[address]) {
-              output[address] = parseFloat(timeValue);
+  if (shares) {
+    Object.keys(shares).forEach((entry) => {
+      const details = JSON.parse(shares[entry]);
+      const worker = (address && address.includes('.')) ? entry : entry.split('.')[0];
+      const timeValue = /^-?\d*(\.\d+)?$/.test(details.times) ? parseFloat(details.times) : 0;
+      if (!address || address === worker) {
+        if (timeValue > 0 && !details.solo) {
+          if (worker in output) {
+            if (timeValue >= output[worker]) {
+              output[worker] = timeValue;
             }
           } else {
-            output[address] = parseFloat(timeValue);
+            output[worker] = timeValue;
           }
         }
       }
@@ -368,26 +350,76 @@ exports.processTimes = function(times, miner) {
   return output;
 };
 
+// Process Times for API Endpoints
+exports.processTypes = function(shares, address) {
+  const output = {};
+  if (shares) {
+    Object.keys(shares).forEach((entry) => {
+      const details = JSON.parse(shares[entry]);
+      const worker = (address && address.includes('.')) ? entry : entry.split('.')[0];
+      if (!address || address === worker) {
+        if (worker in output) {
+          output[worker].valid += (details.types || {}).valid || 0;
+          output[worker].invalid += (details.types || {}).invalid || 0;
+          output[worker].stale += (details.types || {}).stale || 0;
+        } else {
+          output[worker] = {
+            valid: (details.types || {}).valid || 0,
+            invalid: (details.types || {}).invalid || 0,
+            stale: (details.types || {}).stale || 0,
+          };
+        }
+      }
+    });
+  }
+  return output;
+};
+
+// Process Work for API Endpoints
+exports.processWork = function(shares, address, type) {
+  let output = 0;
+  if (shares) {
+    shares = shares.map((share) => JSON.parse(share));
+    shares.forEach((share) => {
+      if (share.worker && share.work) {
+        const worker = share.worker.split('.')[0];
+        const workValue = /^-?\d*(\.\d+)?$/.test(share.work) ? parseFloat(share.work) : 0;
+        if (!address || address === share.worker || (type === 'miner' && address === worker)) {
+          output += workValue;
+        }
+      }
+    });
+  }
+  return output;
+};
+
 // Process Workers for API Endpoints
-exports.processWorkers = function(shares, hashrate, times, multiplier, hashrateWindow, active) {
+exports.processWorkers = function(shares, hashrate, multiplier, hashrateWindow, active) {
   const workers = {};
   if (shares) {
     Object.keys(shares).forEach((entry) => {
       const details = JSON.parse(shares[entry]);
-      const difficultyValue = /^-?\d*(\.\d+)?$/.test(details.difficulty) ? parseFloat(details.difficulty) : 0;
-      const effortValue = (!times) ? (/^-?\d*(\.\d+)?$/.test(details.effort) ? parseFloat(details.effort) : 0) : null;
-      const timeValue = (times) ? (/^-?\d*(\.\d+)?$/.test(times[entry]) ? parseFloat(times[entry]) : 0) : null;
-      const hashrateValue = exports.processDifficulty(hashrate, entry, 'worker');
-      const shareTypeCounts = exports.processShareTypes(hashrate, entry, 'worker');
-      if (details.worker && difficultyValue > 0) {
+
+      // Generate Worker Data
+      const hashrateValue = exports.processWork(hashrate, entry, 'worker');
+      const effortValue = (/^-?\d*(\.\d+)?$/.test(details.effort) ? parseFloat(details.effort) : null);
+      const timeValue = (/^-?\d*(\.\d+)?$/.test(details.times) ? parseFloat(details.times) : null);
+      const workValue = /^-?\d*(\.\d+)?$/.test(details.work) ? parseFloat(details.work) : 0;
+
+      // Calculate Worker Information
+      if (details.worker && workValue > 0) {
         if (!active || (active && hashrateValue > 0)) {
           workers[entry] = {
             worker: entry,
-            difficulty: difficultyValue,
-            times: timeValue || null,
+            effort: details.solo ? effortValue : null,
             hashrate: (multiplier * hashrateValue) / hashrateWindow,
-            effort: effortValue || null,
-            shares: shareTypeCounts,
+            shares: {
+              valid: (details.types || {}).valid || 0,
+              invalid: (details.types || {}).invalid || 0,
+              stale: (details.types || {}).stale || 0,
+            },
+            times: !details.solo ? timeValue : null,
+            work: workValue,
           };
         }
       }

@@ -27,7 +27,7 @@ describe('Test loader functionality', () => {
   test('Test pool configuration validation [1]', () => {
     const algorithms = { mining: 'scrypt', block: 'sha256d', coinbase: 'sha256d' };
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, primary: { coin: { algorithms: algorithms }}};
+    const poolConfig = { enabled: true, statistics: {}, primary: { coin: { algorithms: algorithms }}};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(response).toBe(true);
   });
@@ -69,7 +69,7 @@ describe('Test loader functionality', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const algorithms = { mining: 'scrypt', block: 'sha256d', coinbase: 'sha256d' };
     const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, primary: { coin: { algorithms: algorithms }, recipients: [{ percentage: 1 }]}};
+    const poolConfig = { enabled: true, statistics: {}, primary: { coin: { algorithms: algorithms }, recipients: [{ percentage: 1 }]}};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(consoleSpy).toHaveBeenCalled();
     expect(response).toBe(false);
@@ -81,6 +81,28 @@ describe('Test loader functionality', () => {
     const poolConfig = { enabled: false, name: 'Litecoin', primary: { coin: { name: 'Litecoin' }}};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(response).toBe(false);
+  });
+
+  test('Test pool configuration validation [7]', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const algorithms = { mining: 'scrypt', block: 'sha256d', coinbase: 'sha256d' };
+    const poolLoader = new PoolLoader(logger, configCopy);
+    const poolConfig = { enabled: true, statistics: { historicalInterval: 299999 }, primary: { coin: { algorithms: algorithms }}};
+    const response = poolLoader.validatePoolConfigs(poolConfig);
+    expect(consoleSpy).toHaveBeenCalled();
+    expect(response).toBe(false);
+    console.log.mockClear();
+  });
+
+  test('Test pool configuration validation [8]', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const algorithms = { mining: 'scrypt', block: 'sha256d', coinbase: 'sha256d' };
+    const poolLoader = new PoolLoader(logger, configCopy);
+    const poolConfig = { enabled: true, statistics: { historicalWindow: 86401 }, primary: { coin: { algorithms: algorithms }}};
+    const response = poolLoader.validatePoolConfigs(poolConfig);
+    expect(consoleSpy).toHaveBeenCalled();
+    expect(response).toBe(false);
+    console.log.mockClear();
   });
 
   test('Test pool recipient validation [1]', () => {
@@ -163,7 +185,7 @@ describe('Test loader functionality', () => {
   });
 
   test('Test pool port validation [3]', () => {
-    configCopy.server.port = 3005
+    configCopy.server.port = 3005;
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: true, ports: [{ enabled: true, port: 3005 }]};
     const poolConfigs = { Pool1: { enabled: true, ports: [{ enabled: true, port: 3006 }]}};
@@ -172,7 +194,7 @@ describe('Test loader functionality', () => {
   });
 
   test('Test pool port validation [4]', () => {
-    configCopy.redis.port = 3005
+    configCopy.redis.port = 3005;
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: true, ports: [{ enabled: true, port: 3005 }]};
     const poolConfigs = { Pool1: { enabled: true, ports: [{ enabled: true, port: 3006 }]}};

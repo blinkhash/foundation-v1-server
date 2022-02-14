@@ -6,7 +6,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const utils = require('./utils');
 const Algorithms = require('foundation-stratum').algorithms;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,9 +94,9 @@ const PoolLoader = function(logger, portalConfig) {
     if (!keyExists || !certExists || !authorityExists) {
       logger.error('Builder', 'Setup', 'Invalid key, certificate, or authority file specified for TLS. Check your configuration files.');
       return false;
-    };
+    }
     return true;
-  }
+  };
 
   // Check for Valid Pool TLS Files
   /* istanbul ignore next */
@@ -111,7 +110,20 @@ const PoolLoader = function(logger, portalConfig) {
       if (!keyExists || !certExists) {
         logger.error('Builder', 'Setup', 'Invalid key or certificate file specified for TLS. Check your configuration files.');
         return false;
-      };
+      }
+    }
+    return true;
+  };
+
+  // Validate Pool Settings
+  this.validatePoolVariables = function(poolConfig) {
+    if (poolConfig.statistics.historicalInterval < 300000) {
+      logger.error('Builder', 'Setup', 'Historical interval must be set to >= 5 minutes, or 300,000ms. Check your configuration files.');
+      return false;
+    }
+    if (poolConfig.statistics.historicalWindow > 86400) {
+      logger.error('Builder', 'Setup', 'Historical interval must be set to <= 24 hours, or 86400s. Check your configuration files.');
+      return false;
     }
     return true;
   };
@@ -123,6 +135,7 @@ const PoolLoader = function(logger, portalConfig) {
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.mining, name)) return false;
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.block, name)) return false;
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.coinbase, name)) return false;
+    if (!_this.validatePoolVariables(poolConfig)) return false;
     if (!_this.validatePoolRecipients(poolConfig)) return false;
     return true;
   };
