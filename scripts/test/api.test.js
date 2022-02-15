@@ -90,7 +90,7 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.statusCode).toBe(400);
+      expect(processed.statusCode).toBe(405);
       expect(processed.body).toBe('The requested method is not currently supported. Verify your input and try again');
       done();
     });
@@ -107,7 +107,7 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.statusCode).toBe(400);
+      expect(processed.statusCode).toBe(405);
       expect(processed.body).toBe('The requested method is not currently supported. Verify your input and try again');
       done();
     });
@@ -125,7 +125,7 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
-      expect(processed.statusCode).toBe(400);
+      expect(processed.statusCode).toBe(404);
       expect(processed.body).toBe('The requested pool was not found. Verify your input and try again');
       done();
     });

@@ -790,7 +790,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
 
     // Check if Requested Pool Exists
     if (!(pool in _this.poolConfigs) && !(miscellaneous.includes(pool))) {
-      callback(400, 'The requested pool was not found. Verify your input and try again');
+      callback(404, 'The requested pool was not found. Verify your input and try again');
       return;
     }
 
@@ -892,7 +892,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
 
     // Unknown Endpoints
     default:
-      callback(400, 'The requested method is not currently supported. Verify your input and try again');
+      callback(405, 'The requested method is not currently supported. Verify your input and try again');
       break;
     }
   };
