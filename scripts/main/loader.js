@@ -119,13 +119,13 @@ const PoolLoader = function(logger, portalConfig) {
   this.validatePoolVariables = function(poolConfig) {
 
     // Establish Statistics Variables
-    const historicalInterval = poolConfig.statistics.historicalInterval || 1800000;
+    const historicalInterval = poolConfig.statistics.historicalInterval || 1800;
     const historicalWindow = poolConfig.statistics.historicalWindow || 86400;
     const paymentsInterval = poolConfig.primary.payments.paymentInterval || 7200;
     const paymentsWindow = poolConfig.statistics.paymentsWindow || 604800;
 
     // Check Historical Settings
-    if (historicalWindow / (historicalInterval / 1000) >= 50) {
+    if (historicalWindow / historicalInterval >= 50) {
       logger.error('Builder', 'Setup', 'Historical retention must be limited to <= 50 records. Check your configuration files.');
       return false;
     }

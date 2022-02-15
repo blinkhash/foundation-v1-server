@@ -26,10 +26,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
 
   // Current Statistics Intervals
-  _this.hashrateInterval = _this.poolConfig.statistics.hashrateInterval || 20000;
-  _this.historicalInterval = _this.poolConfig.statistics.historicalInterval || 1800000;
-  _this.refreshInterval = _this.poolConfig.statistics.refreshInterval || 20000;
-  _this.paymentsInterval = _this.poolConfig.statistics.paymentsInterval || 20000;
+  _this.hashrateInterval = _this.poolConfig.statistics.hashrateInterval || 20;
+  _this.historicalInterval = _this.poolConfig.statistics.historicalInterval || 1800;
+  _this.refreshInterval = _this.poolConfig.statistics.refreshInterval || 20;
+  _this.paymentsInterval = _this.poolConfig.statistics.paymentsInterval || 20;
 
   // Current Statistics Windows
   _this.hashrateWindow = _this.poolConfig.statistics.hashrateWindow || 300;
@@ -141,7 +141,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => {});
       });
-    }, _this.hashrateInterval);
+    }, _this.hashrateInterval * 1000);
 
     // Handle Historical Data Interval
     setInterval(() => {
@@ -152,7 +152,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => {});
       }, () => {});
-    }, _this.historicalInterval);
+    }, _this.historicalInterval * 1000);
 
     // Handle Mining Info Interval
     setInterval(() => {
@@ -163,7 +163,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => {});
       }, () => {});
-    }, _this.refreshInterval);
+    }, _this.refreshInterval * 1000);
 
     // Handle Payment Info Interval
     setInterval(() => {
@@ -174,7 +174,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => {});
       }, () => {});
-    }, _this.paymentsInterval);
+    }, _this.paymentsInterval * 1000);
   };
 
   // Start Interval Initialization
