@@ -670,6 +670,7 @@ const PoolPayments = function (logger, client) {
     let totalSent = 0;
     const amounts = {};
     const commands = [];
+    const dateNow = Date.now();
 
     const rounds = data[0];
     const workers = data[2];
@@ -740,7 +741,7 @@ const PoolPayments = function (logger, client) {
 
         // Update Redis Database with Payment Record
         logger.special('Payments', pool, `Sent ${ totalSent } ${ processingConfig.coin.symbol } to ${ Object.keys(amounts).length } workers, txid: ${ transaction }`);
-        commands.push(['zadd', `${ pool }:payments:${ blockType }:records`, Date.now(), JSON.stringify(payments)]);
+        commands.push(['zadd', `${ pool }:payments:${ blockType }:records`, dateNow / 1000 | 0, JSON.stringify(payments)]);
         callback(null, [rounds, data[1], workers, commands]);
         return;
 

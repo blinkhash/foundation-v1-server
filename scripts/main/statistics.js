@@ -25,12 +25,16 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   const logComponent = poolConfig.name;
   const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
 
-  // Current Statistics Refresh Interval
+  // Current Statistics Intervals
   _this.hashrateInterval = _this.poolConfig.statistics.hashrateInterval || 20000;
-  _this.historicalInterval = _this.poolConfig.statistics.historicalInterval || 300000;
+  _this.historicalInterval = _this.poolConfig.statistics.historicalInterval || 1800000;
   _this.refreshInterval = _this.poolConfig.statistics.refreshInterval || 20000;
+  _this.paymentsInterval = _this.poolConfig.statistics.paymentsInterval || 20000;
+
+  // Current Statistics Windows
   _this.hashrateWindow = _this.poolConfig.statistics.hashrateWindow || 300;
   _this.historicalWindow = _this.poolConfig.statistics.historicalWindow || 86400;
+  _this.paymentsWindow = _this.poolConfig.statistics.paymentsWindow || 604800;
 
   // Calculate Historical Information
   this.calculateHistoricalInfo = function(results, blockType) {
@@ -48,8 +52,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         solo: (multiplier * utils.processWork(results[2])) / _this.hashrateWindow,
       },
       network: {
-        difficulty: (results[0] || {}).difficulty || 0,
-        hashrate: (results[0] || {}).hashrate || 0,
+        difficulty: parseFloat((results[0] || {}).difficulty || 0),
+        hashrate: parseFloat((results[0] || {}).hashrate || 0),
       },
       status: {
         miners: utils.combineMiners(results[1], results[2]),
@@ -80,7 +84,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, windowTime, '+inf'],
       ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:solo:hashrate`, windowTime, '+inf'],
       ['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, 0, `(${ windowHistorical }`]];
-    this.executeCommands(historicalLookups, (results) => {
+    _this.executeCommands(historicalLookups, (results) => {
       const commands = _this.calculateHistoricalInfo(results, blockType);
       callback(commands);
     }, handler);
@@ -95,12 +99,20 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         handler(result[0].error);
       } else {
         const data = result[0].response;
-        commands.push(['hset', `${ this.pool }:statistics:${ blockType }:network`, 'difficulty', data.difficulty]);
-        commands.push(['hset', `${ this.pool }:statistics:${ blockType }:network`, 'hashrate', data.networkhashps]);
-        commands.push(['hset', `${ this.pool }:statistics:${ blockType }:network`, 'height', data.blocks]);
+        commands.push(['hset', `${ _this.pool }:statistics:${ blockType }:network`, 'difficulty', data.difficulty]);
+        commands.push(['hset', `${ _this.pool }:statistics:${ blockType }:network`, 'hashrate', data.networkhashps]);
+        commands.push(['hset', `${ _this.pool }:statistics:${ blockType }:network`, 'height', data.blocks]);
         callback(commands);
       }
     });
+  };
+
+  // Handle Payments Information in Redis
+  this.handlePaymentsInfo = function(blockType, callback) {
+    const commands = [];
+    const windowPayments = (((Date.now() / 1000) - _this.paymentsWindow) | 0).toString();
+    commands.push(['zremrangebyscore', `${ _this.pool }:payments:${ blockType }:records`, 0, `(${ windowPayments }`]);
+    callback(commands);
   };
 
   // Execute Redis Commands
@@ -152,6 +164,17 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         }, () => {});
       }, () => {});
     }, _this.refreshInterval);
+
+    // Handle Payment Info Interval
+    setInterval(() => {
+      _this.handlePaymentsInfo(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating payments statistics for ${ blockType } configuration.`);
+          }
+        }, () => {});
+      }, () => {});
+    }, _this.paymentsInterval);
   };
 
   // Start Interval Initialization

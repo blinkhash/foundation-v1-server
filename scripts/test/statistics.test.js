@@ -68,7 +68,7 @@ describe('Test statistics functionality', () => {
       ['{"time":1644418236973,"work":1,"identifier":"","effort":2.777761938931719,"worker":"QRspi5xuc5oaxfNzJD5Pqr9vMNLbF56L3N.worker1","solo":true,"round":"ff40848b"}',
         '{"time":1644418236974,"work":1,"identifier":"","effort":2.777761938931719,"worker":"QRspi5xuc5oaxfNzJD5Pqr9vMNLbF56L3N.worker2","solo":true,"round":"ff40848b"}'], 0];
     const expected = [
-      ['zadd', 'Pool1:statistics:primary:historical', 1637878085, '{"time":1637878085886,"hashrate":{"shared":28633115.30666667,"solo":28633115.30666667},"network":{"difficulty":"1.092031593681264","hashrate":"30793089.90778545"},"status":{"miners":2,"workers":4}}']];
+      ['zadd', 'Pool1:statistics:primary:historical', 1637878085, '{"time":1637878085886,"hashrate":{"shared":28633115.30666667,"solo":28633115.30666667},"network":{"difficulty":1.092031593681264,"hashrate":30793089.90778545},"status":{"miners":2,"workers":4}}']];
     const processed = poolStatistics.calculateHistoricalInfo(results, 'primary');
     expect(processed).toStrictEqual(expected);
   });
@@ -107,7 +107,7 @@ describe('Test statistics functionality', () => {
       ['hset', 'Pool1:statistics:primary:network', 'hashrate', 52007.68563030699],
       ['hset', 'Pool1:statistics:primary:network', 'height', 611207]];
     const expected = [
-      ['zadd', 'Pool1:statistics:primary:historical', 1637878085, '{"time":1637878085886,"hashrate":{"shared":0,"solo":0},"network":{"difficulty":"0.001978989105730653","hashrate":"52007.68563030699"},"status":{"miners":0,"workers":0}}']];
+      ['zadd', 'Pool1:statistics:primary:historical', 1637878085, '{"time":1637878085886,"hashrate":{"shared":0,"solo":0},"network":{"difficulty":0.001978989105730653,"hashrate":52007.68563030699},"status":{"miners":0,"workers":0}}']];
     mockSetupClient(client, commands, 'Pool1', () => {
       poolStatistics.handleHistoricalInfo('primary', (output) => {
         expect(output).toStrictEqual(expected);
@@ -175,5 +175,29 @@ describe('Test statistics functionality', () => {
       nock.cleanAll();
       done();
     });
+  });
+
+  test('Test collection of payments statistics [1]', (done) => {
+    MockDate.set(1637878085886);
+    const poolStatistics = new PoolStatistics(logger, client, poolConfigCopy, configCopy);
+    const expected = [
+      ["zremrangebyscore", "Pool1:payments:primary:records", 0, "(1637273285"]];
+    poolStatistics.handlePaymentsInfo('primary', (commands) => {
+      expect(commands).toStrictEqual(expected);
+      done();
+    }, () => {});
+  });
+
+  test('Test collection of hashrate statistics [2]', (done) => {
+    MockDate.set(1637878085886);
+    poolConfigCopy.statistics.paymentsInterval = null;
+    poolConfigCopy.statistics.paymentsWindow = null;
+    const poolStatistics = new PoolStatistics(logger, client, poolConfigCopy, configCopy);
+    const expected = [
+      ["zremrangebyscore", "Pool1:payments:primary:records", 0, "(1637273285"]];
+    poolStatistics.handlePaymentsInfo('primary', (commands) => {
+      expect(commands).toStrictEqual(expected);
+      done();
+    }, () => {});
   });
 });
