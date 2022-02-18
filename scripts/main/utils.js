@@ -300,7 +300,7 @@ exports.processPayments = function(payments, address) {
 exports.processRecords = function(records) {
   return records
     .map((record) => JSON.parse(record))
-    .sort((a, b) => (a.time - b.time));
+    .sort((a, b) => (b.time - a.time));
 };
 
 // Process Shares for API Endpoints

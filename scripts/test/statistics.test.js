@@ -181,7 +181,7 @@ describe('Test statistics functionality', () => {
     MockDate.set(1637878085886);
     const poolStatistics = new PoolStatistics(logger, client, poolConfigCopy, configCopy);
     const expected = [
-      ["zremrangebyscore", "Pool1:payments:primary:records", 0, "(1637273285"]];
+      ['zremrangebyscore', 'Pool1:payments:primary:records', 0, '(1637273285']];
     poolStatistics.handlePaymentsInfo('primary', (commands) => {
       expect(commands).toStrictEqual(expected);
       done();
@@ -194,7 +194,7 @@ describe('Test statistics functionality', () => {
     poolConfigCopy.statistics.paymentsWindow = null;
     const poolStatistics = new PoolStatistics(logger, client, poolConfigCopy, configCopy);
     const expected = [
-      ["zremrangebyscore", "Pool1:payments:primary:records", 0, "(1637273285"]];
+      ['zremrangebyscore', 'Pool1:payments:primary:records', 0, '(1637273285']];
     poolStatistics.handlePaymentsInfo('primary', (commands) => {
       expect(commands).toStrictEqual(expected);
       done();

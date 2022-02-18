@@ -366,9 +366,9 @@ describe('Test utility functionality', () => {
       '{"time":1644811918017,"hashrate":{"shared":0,"solo":0},"network":{"difficulty":"30.92082613006793","hashrate":"238159035.4426813"},"status":{"miners":0,"workers":0}}'];
     const processed = utils.processHistorical(history);
     const expected = [
-      {"hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": "30.92082613006793", "hashrate": "238159035.4426813"}, "status": {"miners": 0, "workers": 0}, "time": 1644811914019},
-      {"hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": "30.92082613006793", "hashrate": "238159035.4426813"}, "status": {"miners": 0, "workers": 0}, "time": 1644811916016},
-      {"hashrate": {"shared": 0, "solo": 0}, "network": {"difficulty": "30.92082613006793", "hashrate": "238159035.4426813"}, "status": {"miners": 0, "workers": 0}, "time": 1644811918017}];
+      {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '30.92082613006793', 'hashrate': '238159035.4426813'}, 'status': {'miners': 0, 'workers': 0}, 'time': 1644811914019},
+      {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '30.92082613006793', 'hashrate': '238159035.4426813'}, 'status': {'miners': 0, 'workers': 0}, 'time': 1644811916016},
+      {'hashrate': {'shared': 0, 'solo': 0}, 'network': {'difficulty': '30.92082613006793', 'hashrate': '238159035.4426813'}, 'status': {'miners': 0, 'workers': 0}, 'time': 1644811918017}];
     expect(processed).toStrictEqual(expected);
   });
 

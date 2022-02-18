@@ -644,12 +644,12 @@ describe('Test API functionality', () => {
       expect(typeof processed.body).toBe('object');
       expect(processed.body.primary.length).toBe(2);
       expect(processed.body.auxiliary.length).toBe(1);
-      expect(processed.body.primary[0].paid).toBe(200.15);
-      expect(processed.body.primary[0].transaction).toBe('hash1');
-      expect(processed.body.primary[0].records).toBe('record1');
-      expect(processed.body.primary[1].paid).toBe(84.23);
-      expect(processed.body.primary[1].transaction).toBe('hash2');
-      expect(processed.body.primary[1].records).toBe('record2');
+      expect(processed.body.primary[0].paid).toBe(84.23);
+      expect(processed.body.primary[0].transaction).toBe('hash2');
+      expect(processed.body.primary[0].records).toBe('record2');
+      expect(processed.body.primary[1].paid).toBe(200.15);
+      expect(processed.body.primary[1].transaction).toBe('hash1');
+      expect(processed.body.primary[1].records).toBe('record1');
       expect(processed.body.auxiliary[0].paid).toBe(760.133);
       expect(processed.body.auxiliary[0].transaction).toBe('hash3');
       expect(processed.body.auxiliary[0].records).toBe('record3');
