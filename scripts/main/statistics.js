@@ -49,7 +49,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       time: dateNow,
       hashrate: {
         shared: utils.processIdentifiedWork(results[1], multiplier, _this.hashrateWindow),
-        solo: utils.processIdentifiedWork(results[1], multiplier, _this.hashrateWindow),
+        solo: utils.processIdentifiedWork(results[2], multiplier, _this.hashrateWindow),
       },
       network: {
         difficulty: parseFloat((results[0] || {}).difficulty || 0),
