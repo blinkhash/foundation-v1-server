@@ -156,6 +156,21 @@ exports.listBlocks = function(blocks, address) {
   return output;
 };
 
+// List Share Identifiers
+exports.listIdentifiers = function(shares) {
+  const output = [];
+  if (shares) {
+    shares.forEach((share) => {
+      if (share.identifier) {
+        if (!(output.includes(share.identifier))) {
+          output.push(share.identifier);
+        }
+      }
+    });
+  }
+  return output;
+};
+
 // List Round Workers for API Endpoints
 exports.listWorkers = function(shares, address) {
   const workers = [];
@@ -203,6 +218,21 @@ exports.processBlocks = function(blocks) {
     .map((block) => JSON.parse(block))
     .sort((a, b) => (b.height - a.height));
   output.forEach((block) => (block.worker = block.worker.split('.')[0]));
+  return output;
+};
+
+exports.processIdentifiedWork = function(shares, multiplier, hashrateWindow) {
+  const output = [];
+  identifiers = exports.listIdentifiers(shares);
+  identifiers.forEach(entry => {
+    const filteredShares = shares.filter(entry == shares.identifier);
+    const hashrateValue = (multiplier * exports.processWork(filteredShares)) / hashrateWindow;
+    const outputValue = {
+      identifier: entry,
+      hashrate: hashrateValue
+    };
+    output.push(outputValue);
+  });
   return output;
 };
 
