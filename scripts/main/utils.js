@@ -156,6 +156,23 @@ exports.listBlocks = function(blocks, address) {
   return output;
 };
 
+// List Share Identifiers
+exports.listIdentifiers = function(shares) {
+  const output = [];
+  if (shares) {
+    shares = shares
+      .map((share) => JSON.parse(share))
+      .forEach((share) => {
+        if (share.identifier) {
+          if (!(output.includes(share.identifier))) {
+            output.push(share.identifier);
+          }
+        }
+    });
+  }
+  return output;
+};
+
 // List Round Workers for API Endpoints
 exports.listWorkers = function(shares, address) {
   const workers = [];
@@ -212,6 +229,33 @@ exports.processHistorical = function(history) {
   if (history) {
     history.forEach((entry) => {
       output.push(JSON.parse(entry));
+    });
+  }
+  return output;
+};
+
+// Process Work for API Endpoints with Identifier
+exports.processIdentifiedWork = function(shares, multiplier, hashrateWindow) {
+  const output = [];
+  if (shares) {
+    const identifiers = exports.listIdentifiers(shares);
+    shares = shares.map((share) => JSON.parse(share));
+    identifiers.forEach((entry) => {
+      let totalWork = 0;
+      shares = shares
+        .filter((share) => entry === share.identifier)
+        .forEach((share) => {
+          if (share.worker && share.work) {
+            const workValue = /^-?\d*(\.\d+)?$/.test(share.work) ? parseFloat(share.work) : 0;
+            totalWork += workValue;
+          }
+        });
+      const hashrateValue = (multiplier * totalWork / hashrateWindow);
+      const outputValue = {
+        identifier: entry,
+        hashrate: hashrateValue
+      };
+      output.push(outputValue);
     });
   }
   return output;
