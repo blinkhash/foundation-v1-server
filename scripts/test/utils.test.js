@@ -294,12 +294,22 @@ describe('Test utility functionality', () => {
     expect(processed).toStrictEqual(expected);
   });
 
+
   test('Test implemented listIdentifiers [4]', () => {
+    const shares = [
+      '{"time":1623901893182,"identifier":"a","worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}',
+      '{"time":1623901893182,"identifier":"a","worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}'];
+    const expected = ['a'];
+    const processed = utils.listIdentifiers(shares);
+    expect(processed).toStrictEqual(expected);
+  });
+
+  test('Test implemented listIdentifiers [5]', () => {
     const processed = utils.listIdentifiers(null);
     expect(processed).toStrictEqual(['']);
   });
 
-  test('Test implemented listIdentifiers [5]', () => {
+  test('Test implemented listIdentifiers [6]', () => {
     const shares = [
       '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}'];
     const expected = [''];
@@ -415,21 +425,21 @@ describe('Test utility functionality', () => {
     expect(utils.processHistorical(null)).toStrictEqual([]);
   });
 
-  test('Test implemented processIdentifiedWork [1]', () => {
+  test('Test implemented processIdentifiers [1]', () => {
     const multiplier = 10;
     const hashrateWindow = 10;
-    const processed = utils.processIdentifiedWork(null, multiplier, hashrateWindow);
+    const processed = utils.processIdentifiers(null, multiplier, hashrateWindow);
     const expected = [];
     expect(processed).toStrictEqual(expected);
   });
 
-  test('Test implemented processIdentifiedWork [2]', () => {
+  test('Test implemented processIdentifiers [2]', () => {
     const shares = [
-      '{"time":1623901893182,"identifier":"a","worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","times":20.15,"solo":false,"types":{"valid":1,"invalid":0,"stale":0},"work":8}']
+      '{"time":1623901893182,"identifier":"a","worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","times":20.15,"solo":false,"types":{"valid":1,"invalid":0,"stale":0},"work":8}'];
     const multiplier = 10;
     const hashrateWindow = 10;
-    const processed = utils.processIdentifiedWork(shares, multiplier, hashrateWindow);
-    const expected = [{"hashrate": 8,"identifier":"a"}];
+    const processed = utils.processIdentifiers(shares, multiplier, hashrateWindow);
+    const expected = [{'hashrate': 8,'identifier':'a'}];
     expect(processed).toStrictEqual(expected);
   });
 

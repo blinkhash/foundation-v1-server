@@ -168,7 +168,7 @@ exports.listIdentifiers = function(shares) {
             output.push(share.identifier);
           }
         }
-    });
+      });
   }
   if (output.length == 0) {
     return [''];
@@ -238,10 +238,10 @@ exports.processHistorical = function(history) {
 };
 
 // Process Work for API Endpoints with Identifier
-exports.processIdentifiedWork = function(shares, multiplier, hashrateWindow) {
+exports.processIdentifiers = function(shares, multiplier, hashrateWindow) {
   const output = [];
   if (shares) {
-    let identifiers = exports.listIdentifiers(shares);
+    const identifiers = exports.listIdentifiers(shares);
     identifiers.forEach((entry) => {
       const hashrateValue = exports.processWork(shares, null, null, entry);
       const outputValue = {
@@ -417,7 +417,7 @@ exports.processWork = function(shares, address, type, identifier) {
   if (shares) {
     shares = shares.map((share) => JSON.parse(share));
     if (identifier && identifier != '') {
-      shares = shares.filter((share) => identifier === share.identifier)
+      shares = shares.filter((share) => identifier === share.identifier);
     }
     shares.forEach((share) => {
       if (share.worker && share.work) {

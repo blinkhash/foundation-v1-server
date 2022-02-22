@@ -48,8 +48,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const output = {
       time: dateNow,
       hashrate: {
-        shared: utils.processIdentifiedWork(results[1], multiplier, _this.hashrateWindow),
-        solo: utils.processIdentifiedWork(results[2], multiplier, _this.hashrateWindow),
+        shared: (multiplier * utils.processWork(results[1])) / _this.hashrateWindow,
+        solo: (multiplier * utils.processWork(results[2])) / _this.hashrateWindow,
       },
       network: {
         difficulty: parseFloat((results[0] || {}).difficulty || 0),
@@ -83,7 +83,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       ['hgetall', `${ _this.pool }:statistics:${ blockType }:network`],
       ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, windowTime, '+inf'],
       ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:solo:hashrate`, windowTime, '+inf'],
-      ['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, 0, `(${ windowHistorical }`]];
+      ['zremrangebyscore', `${ _this.pool }:statistics:${ blockType }:historical`, 0, `(${ windowHistorical }`]];
     _this.executeCommands(historicalLookups, (results) => {
       const commands = _this.calculateHistoricalInfo(results, blockType);
       callback(commands);
