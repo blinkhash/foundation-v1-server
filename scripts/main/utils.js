@@ -156,6 +156,26 @@ exports.listBlocks = function(blocks, address) {
   return output;
 };
 
+// List Share Identifiers
+exports.listIdentifiers = function(shares) {
+  const output = [];
+  if (shares) {
+    shares = shares
+      .map((share) => JSON.parse(share))
+      .forEach((share) => {
+        if (share.identifier || share.identifier == '') {
+          if (!(output.includes(share.identifier))) {
+            output.push(share.identifier);
+          }
+        }
+    });
+  }
+  if (output.length == 0) {
+    return [''];
+  }
+  return output;
+};
+
 // List Round Workers for API Endpoints
 exports.listWorkers = function(shares, address) {
   const workers = [];
@@ -212,6 +232,23 @@ exports.processHistorical = function(history) {
   if (history) {
     history.forEach((entry) => {
       output.push(JSON.parse(entry));
+    });
+  }
+  return output;
+};
+
+// Process Work for API Endpoints with Identifier
+exports.processIdentifiedWork = function(shares, multiplier, hashrateWindow) {
+  const output = [];
+  if (shares) {
+    let identifiers = exports.listIdentifiers(shares);
+    identifiers.forEach((entry) => {
+      const hashrateValue = exports.processWork(shares, null, null, entry);
+      const outputValue = {
+        identifier: entry,
+        hashrate: (multiplier * hashrateValue) / hashrateWindow
+      };
+      output.push(outputValue);
     });
   }
   return output;
@@ -375,10 +412,13 @@ exports.processTypes = function(shares, address, type) {
 };
 
 // Process Work for API Endpoints
-exports.processWork = function(shares, address, type) {
+exports.processWork = function(shares, address, type, identifier) {
   let output = 0;
   if (shares) {
     shares = shares.map((share) => JSON.parse(share));
+    if (identifier && identifier != '') {
+      shares = shares.filter((share) => identifier === share.identifier)
+    }
     shares.forEach((share) => {
       if (share.worker && share.work) {
         const worker = share.worker.split('.')[0];

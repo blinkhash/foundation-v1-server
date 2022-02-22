@@ -268,6 +268,45 @@ describe('Test utility functionality', () => {
     expect(processed).toStrictEqual([]);
   });
 
+  test('Test implemented listIdentifiers [1]', () => {
+    const shares = [
+      '{"time":1623901893182,"identifier":"","worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}'];
+    const expected = [''];
+    const processed = utils.listIdentifiers(shares);
+    expect(processed).toStrictEqual(expected);
+  });
+
+  test('Test implemented listIdentifiers [2]', () => {
+    const shares = [
+      '{"time":1623901893182,"identifier":"a","worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}',
+      '{"time":1623901893182,"identifier":"b","worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}'];
+    const expected = ['a', 'b'];
+    const processed = utils.listIdentifiers(shares);
+    expect(processed).toStrictEqual(expected);
+  });
+
+  test('Test implemented listIdentifiers [3]', () => {
+    const shares = [
+      '{"time":1623901893182,"identifier":"a","worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}',
+      '{"time":1623901893182,"identifier":"","worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}'];
+    const expected = ['a', ''];
+    const processed = utils.listIdentifiers(shares);
+    expect(processed).toStrictEqual(expected);
+  });
+
+  test('Test implemented listIdentifiers [4]', () => {
+    const processed = utils.listIdentifiers(null);
+    expect(processed).toStrictEqual(['']);
+  });
+
+  test('Test implemented listIdentifiers [5]', () => {
+    const shares = [
+      '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}'];
+    const expected = [''];
+    const processed = utils.listIdentifiers(shares);
+    expect(processed).toStrictEqual(expected);
+  });
+
   test('Test implemented listWorkers [1]', () => {
     const shares = {
       'tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2': '{"time":1623901893182,"worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}'};
@@ -374,6 +413,24 @@ describe('Test utility functionality', () => {
 
   test('Test implemented processHistorical [2]', () => {
     expect(utils.processHistorical(null)).toStrictEqual([]);
+  });
+
+  test('Test implemented processIdentifiedWork [1]', () => {
+    const multiplier = 10;
+    const hashrateWindow = 10;
+    const processed = utils.processIdentifiedWork(null, multiplier, hashrateWindow);
+    const expected = [];
+    expect(processed).toStrictEqual(expected);
+  });
+
+  test('Test implemented processIdentifiedWork [2]', () => {
+    const shares = [
+      '{"time":1623901893182,"identifier":"a","worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker1","times":20.15,"solo":false,"types":{"valid":1,"invalid":0,"stale":0},"work":8}']
+    const multiplier = 10;
+    const hashrateWindow = 10;
+    const processed = utils.processIdentifiedWork(shares, multiplier, hashrateWindow);
+    const expected = [{"hashrate": 8,"identifier":"a"}];
+    expect(processed).toStrictEqual(expected);
   });
 
   test('Test implemented processLuck [1]', () => {
@@ -886,6 +943,14 @@ describe('Test utility functionality', () => {
     expect(utils.processWork(null)).toBe(0);
   });
 
+  test('Test implemented processWork [10]', () => {
+    const shares = [
+      '{"time":1623901893182,"identifier":"a","worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}',
+      '{"time":1623901919389,"identifier":"a","worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}',
+      '{"time":1623901929800,"identifier":"","worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}',
+      '{"time":1623901944054,"identifier":"","worker":"tltc1qkek8r3uymzqyajzezqgl84u08c0z8shjuwqv3a.worker2","solo":false,"work":8}'];
+    expect(utils.processWork(shares, null, null, 'a')).toBe(16);
+  });
 
   test('Test implemented processWorkers [1]', () => {
     const shares = {
