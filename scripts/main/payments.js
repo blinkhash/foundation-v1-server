@@ -49,7 +49,7 @@ const PoolPayments = function (logger, client) {
 
   // Check Address to Ensure Viability
   this.checkAddress = function(daemon, address, command, callback) {
-    daemon.cmd(command, [address], (result) => {
+    daemon.cmd(command, [address], true, (result) => {
       if (result.error) {
         callback(true, JSON.stringify(result.error));
       } else if (!result.response || !result.response.ismine) {
@@ -57,7 +57,7 @@ const PoolPayments = function (logger, client) {
       } else {
         callback(null);
       }
-    }, true);
+    });
   };
 
   // Ensure Payment Address is Valid for Daemon
@@ -81,14 +81,14 @@ const PoolPayments = function (logger, client) {
   // Calculate Current Balance in Daemon
   this.handleBalance = function(daemon, config, pool, blockType, callback) {
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
-    daemon.cmd('getbalance', [], (result) => {
+    daemon.cmd('getbalance', [], true, (result) => {
       if (result.error) {
         logger.error('Payments', pool, `Error with payment processing daemon: ${ JSON.stringify(result.error) }`);
         callback(true, []);
         return;
       }
       try {
-        const data = result.data.split('result":')[1].split(',')[0].split('.')[1];
+        const data = result.response.toString().split('.')[1];
         const magnitude = parseInt(`10${ new Array(data.length).join('0') }`);
         const minSatoshis = parseInt(processingConfig.payments.minPayment * magnitude);
         const coinPrecision = magnitude.toString().length - 1;
@@ -97,21 +97,21 @@ const PoolPayments = function (logger, client) {
         logger.error('Payments', pool, `Error detecting number of satoshis in a coin. Tried parsing: ${ result.data }`);
         callback(true, []);
       }
-    }, true, true);
+    });
   };
 
   // Calculate Unspent Balance in Daemon
   this.handleUnspent = function(daemon, config, category, pool, blockType, callback) {
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
     const args = [processingConfig.payments.minConfirmations, 99999999];
-    daemon.cmd('listunspent', args, (result) => {
-      if (!result || result[0].error) {
-        logger.error('Payments', pool, `Error with payment processing daemon: ${ JSON.stringify(result[0].error) }`);
+    daemon.cmd('listunspent', args, true, (result) => {
+      if (!result || result.error) {
+        logger.error('Payments', pool, `Error with payment processing daemon: ${ JSON.stringify(result.error) }`);
         callback(true, []);
       } else {
         let balance = parseFloat(0);
-        if (result[0].response != null && result[0].response.length > 0) {
-          result[0].response.forEach((instance) => {
+        if (result.response != null && result.response.length > 0) {
+          result.response.forEach((instance) => {
             if (instance.address && instance.address !== null) {
               balance += parseFloat(instance.amount || 0);
             }
@@ -202,7 +202,7 @@ const PoolPayments = function (logger, client) {
       } else {
         callback(null, [rounds]);
       }
-    }, true, true);
+    });
   };
 
   // Handle Workers for Immature Blocks
@@ -703,35 +703,34 @@ const PoolPayments = function (logger, client) {
 
     // Send Payments to Workers Through Daemon
     const rpcTracking = `sendmany "" ${ JSON.stringify(amounts) }`;
-    daemon.cmd('sendmany', ['', amounts], (result) => {
+    daemon.cmd('sendmany', ['', amounts], true, (result) => {
 
       // Check Error Edge Cases
-      const output = result[0];
-      if (output.error && output.error.code === -5) {
+      if (result.error && result.error.code === -5) {
         logger.warning('Payments', pool, rpcTracking);
-        logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(output.error)}`);
+        logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(result.error)}`);
         callback(true, []);
         return;
-      } else if (output.error && output.error.code === -6) {
+      } else if (result.error && result.error.code === -6) {
         logger.warning('Payments', pool, rpcTracking);
-        logger.error('Payments', pool, `Insufficient funds for payments: ${ JSON.stringify(output.error)}`);
+        logger.error('Payments', pool, `Insufficient funds for payments: ${ JSON.stringify(result.error)}`);
         callback(true, []);
         return;
-      } else if (output.error && output.error.message != null) {
+      } else if (result.error && result.error.message != null) {
         logger.warning('Payments', pool, rpcTracking);
-        logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(output.error)}`);
+        logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(result.error)}`);
         callback(true, []);
         return;
-      } else if (output.error) {
+      } else if (result.error) {
         logger.warning('Payments', pool, rpcTracking);
-        logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(output.error)}`);
+        logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(result.error)}`);
         callback(true, []);
         return;
       }
 
       // Handle Returned Transaction ID
-      if (output.response) {
-        const transaction = output.response;
+      if (result.response) {
+        const transaction = result.response;
         const currentDate = Date.now();
         const payments = {
           time: currentDate,

@@ -93,12 +93,12 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   // Get Mining Statistics from Daemon
   this.handleMiningInfo = function(daemon, blockType, callback, handler) {
     const commands = [];
-    daemon.cmd('getmininginfo', [], (result) => {
-      if (result[0].error) {
-        logger.error('Statistics', _this.pool, `Error with statistics daemon: ${ JSON.stringify(result[0].error) }`);
-        handler(result[0].error);
+    daemon.cmd('getmininginfo', [], true, (result) => {
+      if (result.error) {
+        logger.error('Statistics', _this.pool, `Error with statistics daemon: ${ JSON.stringify(result.error) }`);
+        handler(result.error);
       } else {
-        const data = result[0].response;
+        const data = result.response;
         commands.push(['hset', `${ _this.pool }:statistics:${ blockType }:network`, 'difficulty', data.difficulty]);
         commands.push(['hset', `${ _this.pool }:statistics:${ blockType }:network`, 'hashrate', data.networkhashps]);
         commands.push(['hset', `${ _this.pool }:statistics:${ blockType }:network`, 'height', data.blocks]);

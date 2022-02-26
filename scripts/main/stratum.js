@@ -70,7 +70,7 @@ const PoolStratum = function (logger, poolConfig, portalConfig, poolShares, pool
   // Check for Valid Primary Worker Address
   this.checkPrimaryWorker = function(workerName, callback) {
     const address = workerName.split('.')[0];
-    _this.poolStratum.primary.daemon.cmd('validateaddress', [address], (results) => {
+    _this.poolStratum.primary.daemon.cmd('validateaddress', [address], false, (results) => {
       const isValid = results.filter((result) => {
         return result.response.isvalid;
       }).length > 0;
@@ -82,7 +82,7 @@ const PoolStratum = function (logger, poolConfig, portalConfig, poolShares, pool
   this.checkAuxiliaryWorker = function(workerName, callback) {
     if (workerName && _this.poolConfig.auxiliary && _this.poolConfig.auxiliary.enabled) {
       const address = workerName.split('.')[0];
-      _this.poolStratum.auxiliary.daemon.cmd('validateaddress', [address], (results) => {
+      _this.poolStratum.auxiliary.daemon.cmd('validateaddress', [address], false, (results) => {
         const isValid = results.filter((result) => {
           return result.response.isvalid;
         }).length > 0;
