@@ -760,9 +760,9 @@ describe('Test payments functionality', () => {
       const config = poolPayments.poolConfigs['Pool1'];
       poolPayments.handleWorkers(config, 'primary', [[]], (error, results) => {
         expect(error).toBe(null);
-        expect(Object.keys(results[2]).length).toBe(2);
-        expect(results[2]['worker1'].balance).toBe(67221000000);
-        expect(results[2]['worker2'].balance).toBe(39115000000);
+        expect(Object.keys(results[1]).length).toBe(2);
+        expect(results[1]['worker1'].balance).toBe(67221000000);
+        expect(results[1]['worker2'].balance).toBe(39115000000);
         console.log.mockClear();
         done();
       });
@@ -781,9 +781,9 @@ describe('Test payments functionality', () => {
       const config = poolPayments.poolConfigs['Pool1'];
       poolPayments.handleWorkers(config, 'auxiliary', [[]], (error, results) => {
         expect(error).toBe(null);
-        expect(Object.keys(results[2]).length).toBe(2);
-        expect(results[2]['worker1'].balance).toBe(67221000000);
-        expect(results[2]['worker2'].balance).toBe(39115000000);
+        expect(Object.keys(results[1]).length).toBe(2);
+        expect(results[1]['worker1'].balance).toBe(67221000000);
+        expect(results[1]['worker2'].balance).toBe(39115000000);
         console.log.mockClear();
         done();
       });
@@ -981,7 +981,7 @@ describe('Test payments functionality', () => {
     poolPayments.handleTransactions(daemon, config, 'primary', [rounds, [], []], (error, results) => {
       expect(error).toBe(null);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Unable to load transaction'));
-      expect(results).toStrictEqual([[], [], []]);
+      expect(results).toStrictEqual([[], []]);
       nock.cleanAll();
       console.log.mockClear();
       done();
@@ -1021,10 +1021,10 @@ describe('Test payments functionality', () => {
       const rounds = [{ height: 180 }];
       poolPayments.handleShares(config, 'primary', [rounds, [], []], (error, results) => {
         expect(error).toBe(null);
-        expect(results[3][0]['worker1']).toBe(20);
-        expect(results[3][0]['worker2']).toBe(40);
-        expect(results[4][0]['worker1']).toBe(8);
-        expect(results[5][0]['worker2']).toBe(28);
+        expect(results[2][0]['worker1']).toBe(20);
+        expect(results[2][0]['worker2']).toBe(40);
+        expect(results[3][0]['worker1']).toBe(8);
+        expect(results[4][0]['worker2']).toBe(28);
         console.log.mockClear();
         done();
       });
@@ -1046,12 +1046,12 @@ describe('Test payments functionality', () => {
       const rounds = [{ height: 180 }, { height: 181 }];
       poolPayments.handleShares(config, 'primary', [rounds, [], []], (error, results) => {
         expect(error).toBe(null);
-        expect(results[3][0]['worker1']).toBe(45);
-        expect(results[3][0]['worker2']).toBe(30);
-        expect(results[4][0]['worker1']).toBe(16);
-        expect(results[5][0]['worker2']).toBe(56);
-        expect(results[4][1]['worker1']).toBe(26);
-        expect(results[5][1]['worker2']).toBe(40);
+        expect(results[2][0]['worker1']).toBe(45);
+        expect(results[2][0]['worker2']).toBe(30);
+        expect(results[3][0]['worker1']).toBe(16);
+        expect(results[4][0]['worker2']).toBe(56);
+        expect(results[3][1]['worker1']).toBe(26);
+        expect(results[4][1]['worker2']).toBe(40);
         console.log.mockClear();
         done();
       });
@@ -1093,7 +1093,7 @@ describe('Test payments functionality', () => {
     const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'immature', reward: 12.5 }, { category: 'generate', reward: 12.5 }];
     const workers = [{ balance: 10.5 }, { balance: 10 }];
-    poolPayments.handleOwed(daemon, config, 'payments', 'primary', [rounds, [], workers, [], [], []], (error, results) => {
+    poolPayments.handleOwed(daemon, config, 'payments', 'primary', [rounds, workers, [], [], []], (error, results) => {
       expect(error).toBe(null);
       expect(results[0][0].category).toBe('immature');
       expect(results[0][0].reward).toBe(12.5);
@@ -1116,7 +1116,7 @@ describe('Test payments functionality', () => {
     const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'immature', reward: 12.5 }, { category: 'generate', reward: 12.5 }];
     const workers = [{ balance: 10.5 }, { balance: 10 }];
-    poolPayments.handleOwed(daemon, config, 'checks', 'primary', [rounds, [], workers, [], [], []], (error, results) => {
+    poolPayments.handleOwed(daemon, config, 'checks', 'primary', [rounds, workers, [], [], []], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error checking pool balance before processing payments'));
       expect(results).toStrictEqual([]);
@@ -1137,7 +1137,7 @@ describe('Test payments functionality', () => {
     const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ category: 'orphan', reward: 12.5 }, { category: 'kicked', reward: 12.5 }, { category: 'other', reward: 12.5 }];
     const workers = [{ balance: 10.5 }, { balance: 10 }];
-    poolPayments.handleOwed(daemon, config, 'checks', 'primary', [rounds, [], workers, [], [], []], (error, results) => {
+    poolPayments.handleOwed(daemon, config, 'checks', 'primary', [rounds, workers, [], [], []], (error, results) => {
       expect(error).toBe(null);
       expect(results[0][0].category).toBe('orphan');
       expect(results[0][0].reward).toBe(12.5);
@@ -1202,10 +1202,10 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'immature', height: 180, reward: 12.50, solo: false, worker: 'example' };
-    poolPayments.handleRewards(config, 'checks', 'primary', [[round], [], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
+    poolPayments.handleRewards(config, 'checks', 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
       expect(error).toBe(null);
-      expect(results[2]['example'].immature).toBe(1249960000);
-      expect(results[2]['example'].shares.round).toBe(8);
+      expect(results[1]['example'].immature).toBe(1249960000);
+      expect(results[1]['example'].shares.round).toBe(8);
       console.log.mockClear();
       done();
     });
@@ -1220,11 +1220,11 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'generate', height: 180, reward: 12.50, solo: false, worker: 'example' };
-    poolPayments.handleRewards(config, 'checks', 'primary', [[round], [], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
+    poolPayments.handleRewards(config, 'checks', 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
       expect(error).toBe(null);
-      expect(results[2]['example'].generate).toBe(1249960000);
-      expect(results[2]['example'].shares.round).toBe(8);
-      expect(results[2]['example'].shares.total).toBe(8);
+      expect(results[1]['example'].generate).toBe(1249960000);
+      expect(results[1]['example'].shares.round).toBe(8);
+      expect(results[1]['example'].shares.total).toBe(8);
       console.log.mockClear();
       done();
     });
@@ -1235,7 +1235,7 @@ describe('Test payments functionality', () => {
     const poolPayments = new PoolPayments(logger, client);
     const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'orphan', height: 180, reward: 12.50, solo: false, worker: 'example' };
-    poolPayments.handleRewards(config, 'checks', 'primary', [[round], [], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
+    poolPayments.handleRewards(config, 'checks', 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
       expect(error).toBe(null);
       expect(results[0][0].orphanShares['example']).toBe(8);
       expect(results[0][0].orphanTimes['example']).toBe(20.15);
@@ -1249,10 +1249,10 @@ describe('Test payments functionality', () => {
     const poolPayments = new PoolPayments(logger, client);
     const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'immature', height: 180, reward: 12.50, solo: false, worker: 'example' };
-    poolPayments.handleRewards(config, 'checks', 'primary', [[round], [], {}, [{ 'example': 20.15 }], [{}], [{}]], (error, results) => {
+    poolPayments.handleRewards(config, 'checks', 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{}]], (error, results) => {
       expect(error).toBe(null);
       expect(consoleSpy).not.toHaveBeenCalledWith(expect.stringMatching('No worker shares for round'));
-      expect(results[2]).toStrictEqual({});
+      expect(results[1]).toStrictEqual({});
       console.log.mockClear();
       done();
     });
@@ -1263,10 +1263,10 @@ describe('Test payments functionality', () => {
     const poolPayments = new PoolPayments(logger, client);
     const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'immature', height: 180, reward: 12.50, solo: false, worker: 'example' };
-    poolPayments.handleRewards(config, 'payments', 'primary', [[round], [], {}, [{ 'example': 20.15 }], [{}], [{}]], (error, results) => {
+    poolPayments.handleRewards(config, 'payments', 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{}]], (error, results) => {
       expect(error).toBe(null);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('No worker shares for round'));
-      expect(results[2]).toStrictEqual({});
+      expect(results[1]).toStrictEqual({});
       console.log.mockClear();
       done();
     });
@@ -1283,12 +1283,12 @@ describe('Test payments functionality', () => {
     const round = { category: 'immature', height: 180, reward: 12.50, solo: false, worker: 'example' };
     const times = [{ 'example1': 20.15, 'example2': 15.267 }];
     const shared = [{ 'example1': 8, 'example2': 16 }];
-    poolPayments.handleRewards(config, 'checks', 'primary', [[round], [], {}, times, [{}], shared], (error, results) => {
+    poolPayments.handleRewards(config, 'checks', 'primary', [[round], {}, times, [{}], shared], (error, results) => {
       expect(error).toBe(null);
-      expect(results[2]['example1'].immature).toBe(416653333);
-      expect(results[2]['example1'].shares.round).toBe(8);
-      expect(results[2]['example2'].immature).toBe(833306667);
-      expect(results[2]['example2'].shares.round).toBe(16);
+      expect(results[1]['example1'].immature).toBe(416653333);
+      expect(results[1]['example1'].shares.round).toBe(8);
+      expect(results[1]['example2'].immature).toBe(833306667);
+      expect(results[1]['example2'].shares.round).toBe(16);
       console.log.mockClear();
       done();
     });
@@ -1305,14 +1305,14 @@ describe('Test payments functionality', () => {
     const round = { category: 'generate', height: 180, reward: 12.50, solo: false, worker: 'example' };
     const times = [{ 'example1': 20.15, 'example2': 4.623 }];
     const shared = [{ 'example1': 8, 'example2': 16 }];
-    poolPayments.handleRewards(config, 'checks', 'primary', [[round], [], {}, times, [{}], shared], (error, results) => {
+    poolPayments.handleRewards(config, 'checks', 'primary', [[round], {}, times, [{}], shared], (error, results) => {
       expect(error).toBe(null);
-      expect(results[2]['example1'].generate).toBe(856136986);
-      expect(results[2]['example1'].shares.round).toBe(8);
-      expect(results[2]['example1'].shares.total).toBe(8);
-      expect(results[2]['example2'].generate).toBe(393823014);
-      expect(results[2]['example2'].shares.round).toBe(3.68);
-      expect(results[2]['example2'].shares.total).toBe(3.68);
+      expect(results[1]['example1'].generate).toBe(856136986);
+      expect(results[1]['example1'].shares.round).toBe(8);
+      expect(results[1]['example1'].shares.total).toBe(8);
+      expect(results[1]['example2'].generate).toBe(393823014);
+      expect(results[1]['example2'].shares.round).toBe(3.68);
+      expect(results[1]['example2'].shares.total).toBe(3.68);
       console.log.mockClear();
       done();
     });
@@ -1328,9 +1328,9 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, [], mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(null);
-      expect(results.length).toBe(4);
+      expect(results.length).toBe(3);
       nock.cleanAll();
       console.log.mockClear();
       done();
@@ -1347,9 +1347,9 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, [], mockPayments.workers2], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers2], (error, results) => {
       expect(error).toBe(null);
-      expect(results.length).toBe(3);
+      expect(results.length).toBe(2);
       nock.cleanAll();
       console.log.mockClear();
       done();
@@ -1366,7 +1366,7 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, [], mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('RPC command did not return txid. Disabling payments to prevent possible double-payouts'));
       expect(results).toStrictEqual([]);
@@ -1386,7 +1386,7 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, [], mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments {"code":-5}'));
       expect(results).toStrictEqual([]);
@@ -1406,7 +1406,7 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, [], mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Insufficient funds for payments: {"code":-6}'));
       expect(results).toStrictEqual([]);
@@ -1426,7 +1426,7 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, [], mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments {"message":"error"}'));
       expect(results).toStrictEqual([]);
@@ -1446,7 +1446,7 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, [], mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments'));
       expect(results).toStrictEqual([]);
@@ -1467,9 +1467,9 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs['Pool1'].auxiliary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'auxiliary', [mockPayments.rounds, [], mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'auxiliary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(null);
-      expect(results.length).toBe(4);
+      expect(results.length).toBe(3);
       nock.cleanAll();
       console.log.mockClear();
       done();
@@ -1490,7 +1490,7 @@ describe('Test payments functionality', () => {
     const expected = [
       ['hset', 'Pool1:payments:primary:generate', 'example1', 0],
       ['hset', 'Pool1:payments:primary:immature', 'example1', 12.5]];
-    poolPayments.handleUpdates(config, 'checks', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
+    poolPayments.handleUpdates(config, 'checks', 'primary', Date.now(), [rounds, workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
       done();
@@ -1513,7 +1513,7 @@ describe('Test payments functionality', () => {
       ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
       ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
       ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
-    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
+    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
       done();
@@ -1536,7 +1536,7 @@ describe('Test payments functionality', () => {
       ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
       ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
       ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
-    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
+    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
       done();
@@ -1562,7 +1562,7 @@ describe('Test payments functionality', () => {
       ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
       ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
       ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
-    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
+    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
       done();
@@ -1583,7 +1583,7 @@ describe('Test payments functionality', () => {
     const expected = [
       ['hset', 'Pool1:payments:primary:generate', 'example1', 12.5],
       ['hset', 'Pool1:payments:primary:immature', 'example1', 0]];
-    poolPayments.handleUpdates(config, 'checks', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
+    poolPayments.handleUpdates(config, 'checks', 'primary', Date.now(), [rounds, workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
       done();
@@ -1612,7 +1612,7 @@ describe('Test payments functionality', () => {
       ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 12.5],
       ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
       ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
-    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
+    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
       done();
@@ -1641,7 +1641,7 @@ describe('Test payments functionality', () => {
       ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 12.5],
       ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
       ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
-    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
+    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
       done();
@@ -1670,7 +1670,7 @@ describe('Test payments functionality', () => {
       ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 12.5],
       ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
       ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
-    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
+    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
       done();
@@ -1694,7 +1694,7 @@ describe('Test payments functionality', () => {
       ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
       ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
       ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
-    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
+    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
       done();
@@ -1720,7 +1720,7 @@ describe('Test payments functionality', () => {
       ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
       ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
       ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
-    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
+    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
       done();
@@ -1745,7 +1745,7 @@ describe('Test payments functionality', () => {
       ['hincrbyfloat', 'Pool1:payments:primary:counts', 'total', 0],
       ['hset', 'Pool1:payments:primary:counts', 'last', 1637878085886],
       ['hset', 'Pool1:payments:primary:counts', 'next', 1637885285886]];
-    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, [], workers], (error, results) => {
+    poolPayments.handleUpdates(config, 'payments', 'primary', Date.now(), [rounds, workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
       done();
@@ -1767,32 +1767,7 @@ describe('Test payments functionality', () => {
     const expected = [
       ['hset', 'Pool1:payments:auxiliary:generate', 'example1', 0],
       ['hset', 'Pool1:payments:auxiliary:immature', 'example1', 12.5]];
-    poolPayments.handleUpdates(config, 'checks', 'auxiliary', Date.now(), [rounds, [], workers], (error, results) => {
-      expect(results).toStrictEqual(expected);
-      console.log.mockClear();
-      done();
-    });
-  });
-
-  test('Test final updates given pipeline end [13]', (done) => {
-    MockDate.set(1637878085886);
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Pool1'].auxiliary = { payments: {} };
-    poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].auxiliary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].auxiliary.payments.processingFee = parseFloat(0.0004);
-    const config = poolPayments.poolConfigs['Pool1'];
-    const rounds = [{ category: 'immature', hash: 'hash', serialized: 'serialized', confirmations: 40 }];
-    const confirmed = [{ height: 10, serialized: 'serialized1' }, { height: 15, serialized: 'serialized2' }];
-    const workers = { 'example1': { immature: 1250000000 }};
-    const expected = [
-      ['hset', 'Pool1:payments:auxiliary:generate', 'example1', 0],
-      ['hset', 'Pool1:payments:auxiliary:immature', 'example1', 12.5],
-      ['srem', 'Pool1:blocks:auxiliary:confirmed', 'serialized1'],
-      ['srem', 'Pool1:blocks:auxiliary:confirmed', 'serialized2']];
-    poolPayments.handleUpdates(config, 'checks', 'auxiliary', Date.now(), [rounds, confirmed, workers], (error, results) => {
+    poolPayments.handleUpdates(config, 'checks', 'auxiliary', Date.now(), [rounds, workers], (error, results) => {
       expect(results).toStrictEqual(expected);
       console.log.mockClear();
       done();

@@ -26,6 +26,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
 
   // Current Statistics Intervals
+  _this.blocksInterval = _this.poolConfig.statistics.blocksInterval || 20;
   _this.hashrateInterval = _this.poolConfig.statistics.hashrateInterval || 20;
   _this.historicalInterval = _this.poolConfig.statistics.historicalInterval || 1800;
   _this.refreshInterval = _this.poolConfig.statistics.refreshInterval || 20;
@@ -34,7 +35,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   // Current Statistics Windows
   _this.hashrateWindow = _this.poolConfig.statistics.hashrateWindow || 300;
   _this.historicalWindow = _this.poolConfig.statistics.historicalWindow || 86400;
-  _this.paymentsWindow = _this.poolConfig.statistics.paymentsWindow || 604800;
 
   // Calculate Historical Information
   this.calculateHistoricalInfo = function(results, blockType) {
@@ -64,6 +64,22 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     // Handle Historical Updates
     commands.push(['zadd', `${ _this.pool }:statistics:${ blockType }:historical`, dateNow / 1000 | 0, JSON.stringify(output)]);
     return commands;
+  };
+
+  // Handle Blocks Information in Redis
+  this.handleBlocksInfo = function(blockType, callback, handler) {
+    const commands = [];
+    const blocksLookups = [
+      ['smembers', `${ _this.pool }:blocks:${ blockType }:confirmed`]];
+    _this.executeCommands(blocksLookups, (results) => {
+      const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time);
+      if (blocks.length > 100) {
+        blocks.slice(0, blocks.length - 100).forEach((block) => {
+          commands.push(['srem', `${ _this.pool }:blocks:${ blockType }:confirmed`, block]);
+        });
+      }
+      callback(commands);
+    }, handler);
   };
 
   // Handle Hashrate Information in Redis
@@ -108,11 +124,19 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Handle Payments Information in Redis
-  this.handlePaymentsInfo = function(blockType, callback) {
+  this.handlePaymentsInfo = function(blockType, callback, handler) {
     const commands = [];
-    const windowPayments = (((Date.now() / 1000) - _this.paymentsWindow) | 0).toString();
-    commands.push(['zremrangebyscore', `${ _this.pool }:payments:${ blockType }:records`, 0, `(${ windowPayments }`]);
-    callback(commands);
+    const paymentsLookups = [
+      ['zrangebyscore', `${ _this.pool }:payments:${ blockType }:records`, '-inf', '+inf']];
+    _this.executeCommands(paymentsLookups, (results) => {
+      const records = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time);
+      if (records.length > 100) {
+        records.slice(0, records.length - 100).forEach((record) => {
+          commands.push(['zrem', `${ _this.pool }:payments:${ blockType }:records`, record]);
+        });
+      }
+      callback(commands);
+    }, handler);
   };
 
   // Execute Redis Commands
@@ -131,6 +155,17 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   // Start Interval Initialization
   /* istanbul ignore next */
   this.handleIntervals = function(daemon, blockType) {
+
+    // Handle Blocks Info Interval
+    setInterval(() => {
+      _this.handleBlocksInfo(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating blocks statistics for ${ blockType } configuration.`);
+          }
+        }, () => {});
+      }, () => {});
+    }, _this.blocksInterval * 1000);
 
     // Handle Hashrate Data Interval
     setInterval(() => {

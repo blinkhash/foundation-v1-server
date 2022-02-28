@@ -344,15 +344,6 @@ const PoolPayments = function (logger, client) {
         };
       });
 
-      // Managed Confirmed Rounds
-      const confirmed = results[1].map((r) => {
-        const details = JSON.parse(r);
-        return {
-          height: details.height,
-          serialized: r
-        };
-      });
-
       // Check for Block Duplicates
       let duplicateFound = false;
       rounds = rounds.sort((a, b) => a.height - b.height);
@@ -364,15 +355,11 @@ const PoolPayments = function (logger, client) {
         }
       });
 
-      // Check for Blocks to Delete
-      const blocksToKeep = confirmed.sort((a, b) => b.height - a.height).slice(0, 100);
-      const blocksToDelete = confirmed.filter(value => !blocksToKeep.includes(value));
-
       // Handle Duplicate Blocks
       if (duplicateFound) {
         _this.handleDuplicates(daemon, rounds, pool, blockType, callback);
       } else {
-        callback(null, [rounds, blocksToDelete]);
+        callback(null, [rounds]);
       }
     });
   };
@@ -401,7 +388,7 @@ const PoolPayments = function (logger, client) {
       });
 
       // Return Workers as Callback
-      callback(null, [data[0], data[1], workers]);
+      callback(null, [data[0], workers]);
     });
   };
 
@@ -487,7 +474,7 @@ const PoolPayments = function (logger, client) {
       });
 
       // Return Rounds as Callback
-      callback(null, [rounds, data[1], data[2]]);
+      callback(null, [rounds, data[1]]);
     });
   };
 
@@ -560,7 +547,7 @@ const PoolPayments = function (logger, client) {
       });
 
       // Return Share Data as Callback
-      callback(null, [data[0], data[1], data[2], times, solo, shared]);
+      callback(null, [data[0], data[1], times, solo, shared]);
     });
   };
 
@@ -582,7 +569,7 @@ const PoolPayments = function (logger, client) {
     });
 
     // Add to Total Owed from Unpaid
-    Object.keys(data[2]).forEach((worker) => {
+    Object.keys(data[1]).forEach((worker) => {
       totalOwed += worker.balance || 0;
     });
 
@@ -602,14 +589,14 @@ const PoolPayments = function (logger, client) {
       }
 
       // Return Payment Data as Callback
-      callback(null, [rounds, data[1], data[2], data[3], data[4], data[5]]);
+      callback(null, [rounds, data[1], data[2], data[3], data[4]]);
     });
   };
 
   // Calculate Scores Given Times/Shares
   this.handleRewards = function(config, category, blockType, data, callback) {
 
-    let workers = data[2];
+    let workers = data[1];
     const rounds = data[0];
     const pool = config.name;
 
@@ -617,9 +604,9 @@ const PoolPayments = function (logger, client) {
     rounds.forEach((round, i) => {
 
       let maxTime = 0;
-      const times = data[3][i];
-      const solo = data[4][i];
-      const shared = data[5][i];
+      const times = data[2][i];
+      const solo = data[3][i];
+      const shared = data[4][i];
 
       // Check if Shares Exist in Round
       if (Object.keys(solo).length <= 0 && Object.keys(shared).length <= 0) {
@@ -661,7 +648,7 @@ const PoolPayments = function (logger, client) {
     });
 
     // Return Updated Rounds/Workers as Callback
-    callback(null, [rounds, data[1], workers]);
+    callback(null, [rounds, workers]);
   };
 
   // Send Payments if Applicable
@@ -673,7 +660,7 @@ const PoolPayments = function (logger, client) {
     const dateNow = Date.now();
 
     const rounds = data[0];
-    const workers = data[2];
+    const workers = data[1];
     const pool = config.name;
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
 
@@ -697,7 +684,7 @@ const PoolPayments = function (logger, client) {
 
     // Check if No Workers/Rounds
     if (Object.keys(amounts).length === 0) {
-      callback(null, [rounds, data[1], workers]);
+      callback(null, [rounds, workers]);
       return;
     }
 
@@ -741,7 +728,7 @@ const PoolPayments = function (logger, client) {
         // Update Redis Database with Payment Record
         logger.special('Payments', pool, `Sent ${ totalSent } ${ processingConfig.coin.symbol } to ${ Object.keys(amounts).length } workers, txid: ${ transaction }`);
         commands.push(['zadd', `${ pool }:payments:${ blockType }:records`, dateNow / 1000 | 0, JSON.stringify(payments)]);
-        callback(null, [rounds, data[1], workers, commands]);
+        callback(null, [rounds, workers, commands]);
         return;
 
       // Invalid/No Transaction ID
@@ -758,12 +745,10 @@ const PoolPayments = function (logger, client) {
   this.handleUpdates = function(config, category, blockType, interval, data, callback) {
 
     let totalPaid = 0;
-    let commands = data[3] || [];
+    let commands = data[2] || [];
 
     const rounds = data[0];
-    const confirmed = data[1];
-    const workers = data[2];
-
+    const workers = data[1];
     const pool = config.name;
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
 
@@ -834,11 +819,6 @@ const PoolPayments = function (logger, client) {
         }
         break;
       }
-    });
-
-    // Update Expired Confirmed Blocks
-    confirmed.forEach((block) => {
-      commands.push(['srem', `${ pool }:blocks:${ blockType }:confirmed`, block.serialized]);
     });
 
     // Update Miscellaneous Statistics

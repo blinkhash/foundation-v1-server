@@ -59,13 +59,13 @@ config.p2p.port = 8333;
 
 // Statistics Configuration
 config.statistics = {};
+config.statistics.blocksInterval = 20; // s;
 config.statistics.hashrateInterval = 20; // s;
 config.statistics.historicalInterval = 1800; // s;
 config.statistics.refreshInterval = 20; // s;
 config.statistics.paymentsInterval = 20; // s;
 config.statistics.hashrateWindow = 300; // s;
 config.statistics.historicalWindow = 86400; // s;
-config.statistics.paymentsWindow = 604800; // s;
 
 // Settings Configuration
 config.settings = {};
