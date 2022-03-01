@@ -1328,9 +1328,12 @@ describe('Test payments functionality', () => {
     poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
+    const expected = [
+      ["zadd", "Pool1:payments:primary:records", 1637878085, "{\"time\":1637878085886,\"paid\":117.12181095,\"miners\":3,\"transaction\":\"transactionID\"}"]];
     poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
       expect(error).toBe(null);
       expect(results.length).toBe(3);
+      expect(results[2]).toStrictEqual(expected);
       nock.cleanAll();
       console.log.mockClear();
       done();

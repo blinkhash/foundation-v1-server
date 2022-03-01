@@ -722,6 +722,7 @@ const PoolPayments = function (logger, client) {
         const payments = {
           time: currentDate,
           paid: totalSent,
+          miners: Object.keys(amounts).length,
           transaction: transaction,
         };
 
