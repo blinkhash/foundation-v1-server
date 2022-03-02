@@ -358,8 +358,8 @@ describe('Test API functionality', () => {
     const expected = {
       'auxiliary': {'shared': [], 'solo': []},
       'primary': {
-        'shared': [{'effort': null, 'hashrate': 1546188226.56, 'miner': 'worker2', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 31, 'work': 108}],
-        'solo': [{'effort': null, 'hashrate': 916259689.8133334, 'miner': 'worker1', 'shares': {'invalid': 1, 'stale': 1, 'valid': 2}, 'times': 43, 'work': 64}]}};
+        'shared': [{'time': 0, 'effort': null, 'hashrate': 1546188226.56, 'miner': 'worker2', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 31, 'work': 108}],
+        'solo': [{'time': 0, 'effort': null, 'hashrate': 916259689.8133334, 'miner': 'worker1', 'shares': {'invalid': 1, 'stale': 1, 'valid': 2}, 'times': 43, 'work': 64}]}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -475,7 +475,7 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     const expected = {
       'auxiliary': {'shared': [], 'solo': []},
-      'primary': {'shared': [{'effort': null, 'hashrate': 1546188226.56, 'miner': 'worker2', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 31, 'work': 108}, {'effort': null, 'hashrate': 114532461.22666667, 'miner': 'worker3', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 50, 'work': 8}], 'solo': [{'effort': null, 'hashrate': 916259689.8133334, 'miner': 'worker1', 'shares': {'invalid': 1, 'stale': 1, 'valid': 2}, 'times': 43, 'work': 64}]}};
+      'primary': {'shared': [{'time': 0, 'effort': null, 'hashrate': 1546188226.56, 'miner': 'worker2', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 31, 'work': 108}, {'time': 0, 'effort': null, 'hashrate': 114532461.22666667, 'miner': 'worker3', 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 50, 'work': 8}], 'solo': [{'time': 0, 'effort': null, 'hashrate': 916259689.8133334, 'miner': 'worker1', 'shares': {'invalid': 1, 'stale': 1, 'valid': 2}, 'times': 43, 'work': 64}]}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -900,7 +900,7 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     const expected = {
       'auxiliary': {'shared': [], 'solo': []},
-      'primary': {'shared': [{'effort': null, 'hashrate': 916259689.8133334, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20, 'work': 64, 'worker': 'worker2.w1'}, {'effort': null, 'hashrate': 629928536.7466667, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 31, 'work': 44, 'worker': 'worker2.w2'}], 'solo': [{'effort': null, 'hashrate': 916259689.8133334, 'shares': {'invalid': 1, 'stale': 1, 'valid': 2}, 'times': 43, 'work': 64, 'worker': 'worker1'}]}};
+      'primary': {'shared': [{'time': 0, 'effort': null, 'hashrate': 916259689.8133334, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20, 'work': 64, 'worker': 'worker2.w1'}, {'time': 0, 'effort': null, 'hashrate': 629928536.7466667, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 31, 'work': 44, 'worker': 'worker2.w2'}], 'solo': [{'time': 0, 'effort': null, 'hashrate': 916259689.8133334, 'shares': {'invalid': 1, 'stale': 1, 'valid': 2}, 'times': 43, 'work': 64, 'worker': 'worker1'}]}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -1012,7 +1012,7 @@ describe('Test API functionality', () => {
     const response = mockResponse();
     const expected = {
       'auxiliary': {'shared': [], 'solo': []},
-      'primary': {'shared': [{'effort': null, 'hashrate': 916259689.8133334, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20, 'work': 64, 'worker': 'worker2.w1'}, {'effort': null, 'hashrate': 629928536.7466667, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 31, 'work': 44, 'worker': 'worker2.w2'}, {'effort': null, 'hashrate': 0, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 50, 'work': 8, 'worker': 'worker3'}], 'solo': [{'effort': null, 'hashrate': 916259689.8133334, 'shares': {'invalid': 1, 'stale': 1, 'valid': 2}, 'times': 43, 'work': 64, 'worker': 'worker1'}]}};
+      'primary': {'shared': [{'time': 0, 'effort': null, 'hashrate': 916259689.8133334, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 20, 'work': 64, 'worker': 'worker2.w1'}, {'time': 0, 'effort': null, 'hashrate': 629928536.7466667, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 31, 'work': 44, 'worker': 'worker2.w2'}, {'time': 0, 'effort': null, 'hashrate': 0, 'shares': {'invalid': 0, 'stale': 0, 'valid': 0}, 'times': 50, 'work': 8, 'worker': 'worker3'}], 'solo': [{'time': 0, 'effort': null, 'hashrate': 916259689.8133334, 'shares': {'invalid': 1, 'stale': 1, 'valid': 2}, 'times': 43, 'work': 64, 'worker': 'worker1'}]}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
