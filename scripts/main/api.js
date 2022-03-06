@@ -4,6 +4,7 @@
  *
  */
 
+const PoolDatabase = require('./database');
 const utils = require('./utils');
 const Algorithms = require('foundation-stratum').algorithms;
 
@@ -13,9 +14,12 @@ const Algorithms = require('foundation-stratum').algorithms;
 const PoolApi = function (client, poolConfigs, portalConfig) {
 
   const _this = this;
+  const database = new PoolDatabase(portalConfig);
+
   this.client = client;
   this.poolConfigs = poolConfigs;
   this.portalConfig = portalConfig;
+  this.sequelizePayments = database.connectSequelize('payments_table');
   this.headers = {
     'Access-Control-Allow-Headers' : 'Content-Type, Access-Control-Allow-Headers, Access-Control-Allow-Origin, Access-Control-Allow-Methods',
     'Access-Control-Allow-Origin': '*',
@@ -348,6 +352,25 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
         auxiliary: utils.processPayments(results[1]),
       });
     }, callback);
+  };
+
+  // API Endpoint for /payments/[miner]
+  this.handlePaymentsMinerRecords = function(pool, miner, callback) {
+    _this.sequelizePayments
+      .findAll({
+        raw: true,
+        attributes: ['block_type', 'time', 'paid', 'transaction', 'miner'],
+        where: {
+          pool: pool,
+          miner: miner,
+        }
+      })
+      .then((data) => {
+        callback(200, {
+          primary: utils.processMinerPayments(data, 'primary'),
+          auxiliary: utils.processMinerPayments(data, 'auxiliary'),
+        });
+      });
   };
 
   // API Endpoint for /payments/paid
@@ -845,6 +868,9 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       break;
     case (endpoint === 'payments' && method === 'records'):
       _this.handlePaymentsRecords(pool, (code, message) => callback(code, message));
+      break;
+    case (endpoint === 'payments' && method.length >= 1):
+      _this.handlePaymentsMinerRecords(pool, method, (code, message) => callback(code, message));
       break;
     case (endpoint === 'payments' && method === ''):
       _this.handlePayments(pool, (code, message) => callback(code, message));

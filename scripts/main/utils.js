@@ -268,6 +268,25 @@ exports.processLuck = function(pending, confirmed) {
   return output;
 };
 
+// Process Miner Payments for API Endpoints
+exports.processMinerPayments = function(payments, blockType) {
+  output = [];
+  if(payments) {
+    payments = payments.filter((payment) => payment.block_type === blockType);
+    payments.forEach((payment) => {
+      const outputValue = {
+        miner: payment.miner,
+        paid: payment.paid,
+        transaction: payment.transaction,
+        time: payment.time,
+      };
+      output.push(outputValue);
+    })
+  };
+
+  return output;
+}
+
 // Process Miners for API Endpoints
 exports.processMiners = function(shares, hashrate, multiplier, hashrateWindow, active) {
   const miners = {};

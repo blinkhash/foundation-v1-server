@@ -13,15 +13,15 @@ const md5 = require('blueimp-md5');
 // Main Shares Function
 const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
-  const database = new PoolDatabase(portalConfig);
   const _this = this;
+  const database = new PoolDatabase(portalConfig);
   process.setMaxListeners(0);
 
   this.pool = poolConfig.name;
   this.client = client;
-  this.sequelizeShares = database.connectSequelize('shares_table');
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;
+  this.sequelizeShares = database.connectSequelize('shares_table');
   this.forkId = process.env.forkId;
 
   const logSystem = 'Pool';
@@ -187,17 +187,16 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Save Share Data to Historic Database
     _this.sequelizeShares  
       .create({
-        time: dateNow,  // for testing purposes ATM
+        pool: _this.pool,
         block_type: blockType,
-        worker: worker,
+        identifier: hashrateShare.identifier,
+        time: hashrateShare.time,  // for testing purposes ATM
+        work: hashrateShare.work,
+        worker: hashrateShare.worker,
+        miner_type: minerType,
+        share_type: shareType,
         ip_hash: md5(ip), // will ask for user IP to confirm settings (min. payment)
         ip_hint: ip.split('.')[3], // will give this as hint to user
-        identifier: identifier,
-        effort: difficulty,
-        solo: isSoloMining,
-        valid: shareType == 'valid' ? true : false,
-        stale: shareType == 'stale' ? true : false,
-        invalid: shareType == 'invalid' ? true : false,
       });
     
     return commands;

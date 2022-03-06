@@ -10,8 +10,8 @@ module.exports = function( sequelize, DataTypes ) {
   /** Create the schema */
   return sequelize.define(
     'shares', {
-      time: {
-        type: DataTypes.BIGINT,
+      pool: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
       block_type: {
@@ -19,6 +19,22 @@ module.exports = function( sequelize, DataTypes ) {
         allowNull: false,
       },
       worker: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },  
+      work: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+      },
+      share_type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      miner_type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      identifier: {
         type: DataTypes.STRING,
         allowNull: false,
       },
@@ -30,29 +46,9 @@ module.exports = function( sequelize, DataTypes ) {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      identifier: {
-        type: DataTypes.STRING,
+      time: {
+        type: DataTypes.BIGINT,
         allowNull: false,
-      },
-      effort: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-      },
-      solo: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-      },
-      valid: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-      },
-      stale: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-      },
-      invalid: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-      }
+      }      
     });
 };

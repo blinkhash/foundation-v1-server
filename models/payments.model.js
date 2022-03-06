@@ -10,6 +10,14 @@ module.exports = function( sequelize, DataTypes ) {
   /** Create the schema */
   return sequelize.define(
     'payments', {
+      pool: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      block_type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       time: {
         type: DataTypes.BIGINT,
         allowNull: false,

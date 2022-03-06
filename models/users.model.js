@@ -10,6 +10,10 @@ module.exports = function( sequelize, DataTypes ) {
   /** Create the schema */
   return sequelize.define(
     'users', {
+      pool: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,

@@ -733,10 +733,12 @@ const PoolPayments = function (logger, client, portalConfig) {
         for (const [address, amount] of Object.entries(amounts)) {
           _this.sequelizePayments  
             .create({
-              time: currentDate,
+              pool: pool,
+              block_type: blockType,
+              miner: address,
               paid: amount,
               transaction: transaction,
-              miner: address,
+              time: currentDate,
             });
         };
 
