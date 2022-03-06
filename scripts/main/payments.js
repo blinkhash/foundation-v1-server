@@ -6,21 +6,24 @@
 
 const fs = require('fs');
 const async = require('async');
+const PoolDatabase = require('./database');
 const utils = require('./utils');
 const Stratum = require('foundation-stratum');
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Payments Function
-const PoolPayments = function (logger, client) {
+const PoolPayments = function (logger, client, portalConfig) {
 
   const _this = this;
+  const database = new PoolDatabase(portalConfig);
   process.setMaxListeners(0);
 
   this.pools = [];
   this.client = client;
   this.poolConfigs = JSON.parse(process.env.poolConfigs);
   this.portalConfig = JSON.parse(process.env.portalConfig);
+  this.sequelizePayments = database.connectSequelize('payments_table');
   this.forkId = process.env.forkId;
 
   // Check for Enabled Configs
@@ -724,6 +727,17 @@ const PoolPayments = function (logger, client) {
           paid: totalSent,
           miners: Object.keys(amounts).length,
           transaction: transaction,
+        };
+
+        // Update Sequelize with Miner Payment Records
+        for (const [address, amount] of Object.entries(amounts)) {
+          _this.sequelizePayments  
+            .create({
+              time: currentDate,
+              paid: amount,
+              transaction: transaction,
+              miner: address,
+            });
         };
 
         // Update Redis Database with Payment Record

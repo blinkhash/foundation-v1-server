@@ -38,7 +38,7 @@ const PoolThreads = function(logger, client, portalConfig) {
     if (cluster.isWorker) {
       switch (process.env.workerType) {
       case 'payments':
-        new PoolPayments(logger, _this.client).setupPayments(() => {});
+        new PoolPayments(logger, _this.client, _this.portalConfig).setupPayments(() => {});
         break;
       case 'server':
         new PoolServer(logger, _this.client).setupServer(() => {});

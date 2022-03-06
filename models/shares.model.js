@@ -14,7 +14,19 @@ module.exports = function( sequelize, DataTypes ) {
         type: DataTypes.BIGINT,
         allowNull: false,
       },
+      block_type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       worker: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      ip_hash: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      ip_hint: {
         type: DataTypes.STRING,
         allowNull: false,
       },
@@ -24,6 +36,10 @@ module.exports = function( sequelize, DataTypes ) {
       },
       effort: {
         type: DataTypes.FLOAT,
+        allowNull: false,
+      },
+      solo: {
+        type: DataTypes.BOOLEAN,
         allowNull: false,
       },
       valid: {

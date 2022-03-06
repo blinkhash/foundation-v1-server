@@ -25,6 +25,14 @@ config.tls.ca = '';
 config.tls.key = '';
 config.tls.cert = '';
 
+// Postgres Configuration
+portalConfig.postgresql = {};
+portalConfig.postgresql.port = 5432;
+portalConfig.postgresql.host = '127.0.0.1';
+portalConfig.postgresql.user = '';
+portalConfig.postgresql.password = '';
+portalConfig.postgresql.database = '';
+
 // Redis Configuration
 config.redis = {};
 config.redis.host = '127.0.0.1';

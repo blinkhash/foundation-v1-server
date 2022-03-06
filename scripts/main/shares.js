@@ -6,6 +6,7 @@
 
 const utils = require('./utils');
 const PoolDatabase = require('./database');
+const md5 = require('blueimp-md5');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -19,7 +20,6 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   this.pool = poolConfig.name;
   this.client = client;
   this.sequelizeShares = database.connectSequelize('shares_table');
-  this.sequelizeUsers = database.connectSequelize('users_table');
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;
   this.forkId = process.env.forkId;
@@ -108,6 +108,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
     const minerType = isSoloMining ? 'solo' : 'shared';
     const identifier = shareData.identifier || '';
+    const ip = shareData.ip.split(':')[3];
 
     const worker = ['share', 'primary'].includes(blockType) ? shareData.addrPrimary : shareData.addrAuxiliary;
     const blockDifficulty = ['share', 'primary'].includes(blockType) ? shareData.blockDiffPrimary : shareData.blockDiffAuxiliary;
@@ -186,15 +187,19 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Save Share Data to Historic Database
     _this.sequelizeShares  
       .create({
-        time: dateNow,
+        time: dateNow,  // for testing purposes ATM
+        block_type: blockType,
         worker: worker,
+        ip_hash: md5(ip), // will ask for user IP to confirm settings (min. payment)
+        ip_hint: ip.split('.')[3], // will give this as hint to user
         identifier: identifier,
         effort: difficulty,
+        solo: isSoloMining,
         valid: shareType == 'valid' ? true : false,
         stale: shareType == 'stale' ? true : false,
         invalid: shareType == 'invalid' ? true : false,
       });
-      
+    
     return commands;
   };
 

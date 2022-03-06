@@ -70,13 +70,6 @@ const PoolDatabase = function(portalConfig) {
   // Create Sequelize Connection
   /* istanbul ignore next */
   this.connectSequelize = function(table) {
-    //temp vars
-    portalConfig.postgresql = {};
-    portalConfig.postgresql.port = 5432;
-    portalConfig.postgresql.host = 'localhost';
-    portalConfig.postgresql.user = 'pooldb';
-    portalConfig.postgresql.password = 'lopata';
-    portalConfig.postgresql.database = 'foundation';
 
     // Build Connection Options
     const database = _this.portalConfig.postgresql.database;

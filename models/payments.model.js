@@ -10,14 +10,21 @@ module.exports = function( sequelize, DataTypes ) {
   /** Create the schema */
   return sequelize.define(
     'payments', {
-      address: {
-        type: DataTypes.STRING
-      },
       time: {
-        type: DataTypes.INTEGER
+        type: DataTypes.BIGINT,
+        allowNull: false,
       },
-      payment: {
-        type: DataTypes.STRING
+      paid: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+      },
+      transaction: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      miner: {
+        type: DataTypes.STRING,
+        allowNull: false,
       }
     });
 };
