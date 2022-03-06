@@ -6,8 +6,6 @@
  */
 
 module.exports = function( sequelize, DataTypes ) {
-
-  /** Create the schema */
   return sequelize.define(
     'shares', {
       pool: {
