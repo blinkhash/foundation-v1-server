@@ -80,8 +80,10 @@ const PoolDatabase = function(portalConfig) {
     connectionOptions.host = _this.portalConfig.postgresql.host;
     connectionOptions.port = _this.portalConfig.postgresql.port;
     connectionOptions.dialect = 'postgres';
+    connectionOptions.logging = false;
 
     const sequelize = new Sequelize(database, username, password, connectionOptions);
+
 
     const Shares = SharesModel(sequelize, Sequelize);
     const Payments = PaymentsModel(sequelize, Sequelize);
