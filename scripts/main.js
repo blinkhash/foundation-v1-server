@@ -7,7 +7,6 @@
 const path = require('path');
 
 const PoolDatabase = require('./main/database');
-const SequelizeDatabase = require('./main/sequelize');
 const PoolLoader = require('./main/loader');
 const PoolLogger = require('./main/logger');
 const PoolThreads = require('./main/threads');
@@ -26,7 +25,6 @@ try {
 
 const logger = new PoolLogger(config);
 const database = new PoolDatabase(config);
-const sequelize = new SequelizeDatabase(config);
 const loader = new PoolLoader(logger, config);
 
 // Check for Valid TLS Files
@@ -44,4 +42,4 @@ client.on('error', () => {
 
 // Start Pool Server
 database.checkRedisClient(client);
-new PoolThreads(logger, client, sequelize, config).setupThreads();
+new PoolThreads(logger, client, config).setupThreads();

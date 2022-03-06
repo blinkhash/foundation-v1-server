@@ -5,17 +5,21 @@
  */
 
 const utils = require('./utils');
+const PoolDatabase = require('./database');
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Shares Function
 const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
+  const database = new PoolDatabase(portalConfig);
   const _this = this;
   process.setMaxListeners(0);
 
   this.pool = poolConfig.name;
   this.client = client;
+  this.sequelizeShares = database.connectSequelize('shares_table');
+  this.sequelizeUsers = database.connectSequelize('users_table');
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;
   this.forkId = process.env.forkId;
@@ -179,6 +183,18 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'invalid', 1]);
     }
 
+    // Save Share Data to Historic Database
+    _this.sequelizeShares  
+      .create({
+        time: dateNow,
+        worker: worker,
+        identifier: identifier,
+        effort: difficulty,
+        valid: shareType == 'valid' ? true : false,
+        stale: shareType == 'stale' ? true : false,
+        invalid: shareType == 'invalid' ? true : false,
+      });
+      
     return commands;
   };
 

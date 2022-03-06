@@ -5,13 +5,12 @@
  */
 
 const Sequelize = require('sequelize');
-const ShareModel = require('../../models/shares.model');
+const ShareModel = require('../../models/share.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Database Function
-const SequelizeDatabase = function(portalConfig) {
-
+const portalConfig = {};
   //temp vars
   portalConfig.postgresql = {};
   portalConfig.postgresql.port = 5432;
@@ -25,7 +24,7 @@ const SequelizeDatabase = function(portalConfig) {
 
   // Connect to Redis Client
   /* istanbul ignore next */
-  this.buildSequelizeClient = function() {
+  //this.buildSequelizeClient = function() {
     // Build Connection Options
     const database = _this.portalConfig.postgresql.database;
     const username = _this.portalConfig.postgresql.user;
@@ -36,22 +35,34 @@ const SequelizeDatabase = function(portalConfig) {
     connectionOptions.port = _this.portalConfig.postgresql.port;
     connectionOptions.dialect = 'postgres';
 
-    return new Sequelize(database, username, password, connectionOptions);
-  };
+    const sequelize = new Sequelize(database, username, password, connectionOptions);
+  //};
 
-  this.sequelizeShares = function(sequelize) {
-    const Shares = ShareModel(sequelize, Sequelize);
+  const Share = ShareModel(sequelize, Sequelize);
 
-    sequelize.sync({ force: false })
-      .catch((err) => {
-        console.log(err)
-      })
-      .then(() => {
-        console.log('\nDatabase table is created!')
-      });
+  sequelize.sync({ force: false })
+    .catch((err) => {
+      console.log(err)
+    })
+    .then(() => {
+      console.log('\nDatabase table is created!')
+    });
+
+//   this.Shares = function(sequelize) {
+//     const Shares = SharesModel(sequelize, Sequelize);
+
+//     sequelize.sync({ force: false })
+//       .catch((err) => {
+//         console.log(err)
+//       })
+//       .then(() => {
+//         console.log('\nDatabase table is created!')
+//       });
     
-      return Shares;
-  };
-};
+//       return Shares;
+//   };
+// };
 
-module.exports = SequelizeDatabase;
+module.exports = {
+  Share
+};
