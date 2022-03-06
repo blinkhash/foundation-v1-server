@@ -286,6 +286,9 @@ exports.processMiners = function(shares, hashrate, multiplier, hashrateWindow, a
       if (details.worker && workValue > 0) {
         if (!active || (active && hashrateValue > 0)) {
           if (address in miners) {
+            if (details.time >= miners[address].time) {
+              miners[address].time = details.time;
+            }
             if (details.solo) {
               miners[address].effort += effortValue || 0;
             }
@@ -298,6 +301,7 @@ exports.processMiners = function(shares, hashrate, multiplier, hashrateWindow, a
             miners[address].work += workValue;
           } else {
             miners[address] = {
+              time: details.time,
               miner: address,
               effort: details.solo ? effortValue : null,
               hashrate: (multiplier * hashrateValue) / hashrateWindow,
@@ -449,6 +453,7 @@ exports.processWorkers = function(shares, hashrate, multiplier, hashrateWindow, 
       if (details.worker && workValue > 0) {
         if (!active || (active && hashrateValue > 0)) {
           workers[entry] = {
+            time: details.time,
             worker: entry,
             effort: details.solo ? effortValue : null,
             hashrate: (multiplier * hashrateValue) / hashrateWindow,
