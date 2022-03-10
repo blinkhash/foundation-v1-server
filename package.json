@@ -48,7 +48,7 @@
   "dependencies": {
     "apicache": "^1.6.3",
     "async": "2.6.3",
-    "body-parser": "1.19.1",
+    "body-parser": "1.19.2",
     "colors": "1.4.0",
     "compression": "*",
     "cors": "^2.8.5",
