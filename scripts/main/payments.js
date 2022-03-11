@@ -23,16 +23,6 @@ const PoolPayments = function (logger, client) {
   this.portalConfig = JSON.parse(process.env.portalConfig);
   this.forkId = process.env.forkId;
 
-  // Check for Enabled Configs
-  this.checkEnabled = function() {
-    Object.keys(_this.poolConfigs).forEach((pool) => {
-      const poolConfig = _this.poolConfigs[pool];
-      if (poolConfig.primary.payments && poolConfig.primary.payments.enabled) {
-        _this.pools.push(pool);
-      }
-    });
-  };
-
   // Check for Deletable Shares
   this.checkShares = function(rounds, round) {
     let shareFlag = true;
@@ -88,7 +78,7 @@ const PoolPayments = function (logger, client) {
         return;
       }
       try {
-        const data = result.response.toString().split('.')[1];
+        const data = result.data.split('result":')[1].split(',')[0].split('.')[1];
         const magnitude = parseInt(`10${ new Array(data.length).join('0') }`);
         const minSatoshis = parseInt(processingConfig.payments.minPayment * magnitude);
         const coinPrecision = magnitude.toString().length - 1;
@@ -909,14 +899,16 @@ const PoolPayments = function (logger, client) {
     }, processingConfig.payments.checkInterval * 1000);
 
     // Handle Main Payment Functionality
-    const paymentInterval = setInterval(() => {
-      _this.processPayments(daemon, config, 'payments', blockType, Date.now(), (error) => {
-        if (error) {
-          clearInterval(paymentInterval);
-          throw new Error(error);
-        }
-      });
-    }, processingConfig.payments.paymentInterval * 1000);
+    if (processingConfig.payments.enabled) {
+      const paymentInterval = setInterval(() => {
+        _this.processPayments(daemon, config, 'payments', blockType, Date.now(), (error) => {
+          if (error) {
+            clearInterval(paymentInterval);
+            throw new Error(error);
+          }
+        });
+      }, processingConfig.payments.paymentInterval * 1000);
+    }
 
     // Start Payment Functionality with Initial Check
     setTimeout(() => {
@@ -1046,8 +1038,7 @@ const PoolPayments = function (logger, client) {
   // Start Worker Capabilities
   /* istanbul ignore next */
   this.setupPayments = function(callback) {
-    _this.checkEnabled();
-    async.filter(_this.pools, _this.handlePayments, (error, results) => {
+    async.filter(Object.keys(_this.poolConfigs), _this.handlePayments, (error, results) => {
       _this.outputPaymentInfo(results);
       callback();
     });
