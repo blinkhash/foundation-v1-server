@@ -67,22 +67,8 @@ describe('Test payments functionality', () => {
   test('Test initialization of payments', () => {
     const poolPayments = new PoolPayments(logger, client);
     expect(typeof poolPayments.portalConfig).toBe('object');
-    expect(typeof poolPayments.checkEnabled).toBe('function');
+    expect(typeof poolPayments.handleManagement).toBe('function');
     expect(typeof poolPayments.handleIntervals).toBe('function');
-  });
-
-  test('Test checking for enabled configurations [1]', () => {
-    const poolPayments = new PoolPayments(logger, client);
-    poolPayments.checkEnabled();
-    expect(poolPayments.pools.length).toBe(1);
-    expect(poolPayments.pools[0]).toBe('Pool1');
-  });
-
-  test('Test checking for enabled configurations [2]', () => {
-    const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Pool1'].primary.payments.enabled = false;
-    poolPayments.checkEnabled();
-    expect(poolPayments.pools.length).toBe(0);
   });
 
   test('Test round shares if deleteable [1]', () => {
