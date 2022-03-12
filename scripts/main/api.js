@@ -439,13 +439,13 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
       callback(200, {
         primary: {
           round: parseFloat(height),
-          shares: utils.processShares(results[0]),
           times: utils.processTimes(results[0]),
+          work: utils.processShares(results[0]),
         },
         auxiliary: {
           round: parseFloat(height),
-          shares: utils.processShares(results[1]),
           times: utils.processTimes(results[1]),
+          work: utils.processShares(results[1]),
         }
       });
     }, callback);
@@ -462,8 +462,8 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
           _this.executeCommands(commands, (results) => {
             combined.push({
               round: parseFloat(height),
-              shares: utils.processShares(results[0]),
-              times: utils.processTimes(results[0])
+              times: utils.processTimes(results[0]),
+              work: utils.processShares(results[0]),
             });
             if (idx === rounds.length - 1) {
               resolve(combined);

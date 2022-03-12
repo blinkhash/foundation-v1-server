@@ -741,8 +741,8 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:auxiliary:round-180:shares', 'worker3', JSON.stringify({ time: 0, work: 8, times: 50, worker: 'worker3' })]];
     const response = mockResponse();
     const expected = {
-      'auxiliary': {'round': 180, 'shares': {'worker3': 8}, 'times': {'worker3': 50}},
-      'primary': {'round': 180, 'shares': {'worker2': 108}, 'times': {'worker2': 31}}};
+      'auxiliary': {'round': 180, 'work': {'worker3': 8}, 'times': {'worker3': 50}},
+      'primary': {'round': 180, 'work': {'worker2': 108}, 'times': {'worker2': 31}}};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
@@ -769,8 +769,8 @@ describe('Test API functionality', () => {
       ['hset', 'Pool1:rounds:auxiliary:round-181:shares', 'worker3', JSON.stringify({ time: 0, work: 100, times: 105, worker: 'worker3' })]];
     const response = mockResponse();
     const expected = {
-      'auxiliary': [{'round': 180, 'shares': {'worker3': 8}, 'times': {'worker3': 50}}, {'round': 181, 'shares': {'worker3': 100}, 'times': {'worker3': 105}}],
-      'primary': [{'round': 180, 'shares': {'worker2': 108}, 'times': {'worker2': 31}}, {'round': 181, 'shares': {'worker2': 118}, 'times': {'worker2': 50}}]};
+      'auxiliary': [{'round': 180, 'work': {'worker3': 8}, 'times': {'worker3': 50}}, {'round': 181, 'work': {'worker3': 100}, 'times': {'worker3': 105}}],
+      'primary': [{'round': 180, 'work': {'worker2': 108}, 'times': {'worker2': 31}}, {'round': 181, 'work': {'worker2': 118}, 'times': {'worker2': 50}}]};
     response.on('end', (payload) => {
       const processed = JSON.parse(payload);
       expect(processed.statusCode).toBe(200);
