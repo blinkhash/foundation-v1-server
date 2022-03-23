@@ -62,63 +62,77 @@ describe('Test shares functionality', () => {
     MockDate.set(1637878085886);
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const lastShare = { time: 1637877700000, times: 10000 };
-    expect(poolShares.handleTimes(lastShare)).toBe(10385.886);
+    expect(poolShares.handleTimes(lastShare, "valid")).toBe(10385.886);
   });
 
   test('Test times command handling [2]', () => {
     MockDate.set(1637878085886);
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const lastShare = { time: 1637878084000, times: 10000 };
-    expect(poolShares.handleTimes(lastShare)).toBe(10001.886);
+    expect(poolShares.handleTimes(lastShare, "valid")).toBe(10001.886);
   });
 
   test('Test times command handling [3]', () => {
     MockDate.set(1637878085886);
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const lastShare = { time: 1637078085886, times: 10000 };
-    expect(poolShares.handleTimes(lastShare)).toBe(10000);
+    expect(poolShares.handleTimes(lastShare, "valid")).toBe(10000);
+  });
+
+  test('Test times command handling [4]', () => {
+    MockDate.set(1637878085886);
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const lastShare = { time: 1637877700000, times: 10000 };
+    expect(poolShares.handleTimes(lastShare, "invalid")).toBe(10000);
   });
 
   test('Test effort command handling [1]', () => {
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const shareData = { difficulty: 1 };
     const shares = { 'example': '{"time":1637348736715,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true,"round":"361aae45"}'};
-    expect(poolShares.handleEffort(shares, 'test', shareData, 100, false)).toBe(1);
+    expect(poolShares.handleEffort(shares, 'test', shareData, "valid", 100, false)).toBe(1);
   });
 
   test('Test effort command handling [2]', () => {
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const shareData = { difficulty: 50 };
     const shares = { 'example': '{"time":1637348736715,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true,"round":"361aae45"}'};
-    expect(poolShares.handleEffort(shares, 'test', shareData, 100, false)).toBe(50);
+    expect(poolShares.handleEffort(shares, 'test', shareData, "valid", 100, false)).toBe(50);
   });
 
   test('Test effort command handling [3]', () => {
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const shareData = { difficulty: 50 };
     const shares = { 'example': '{"time":1637348736715,"work":10,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'};
-    expect(poolShares.handleEffort(shares, 'test', shareData, 100, true)).toBe(50);
+    expect(poolShares.handleEffort(shares, 'test', shareData, "valid", 100, true)).toBe(50);
   });
 
   test('Test effort command handling [4]', () => {
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const shareData = { difficulty: 50 };
     const shares = { 'example': '{"time":1637348736715,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true,"round":"361aae45"}'};
-    expect(poolShares.handleEffort(shares, 'example', shareData, 100, true)).toBe(51);
+    expect(poolShares.handleEffort(shares, 'example', shareData, "valid", 100, true)).toBe(51);
   });
 
   test('Test effort command handling [5]', () => {
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const shareData = { difficulty: 50 };
     const shares = { 'example': '{"time":1637348736715,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'};
-    expect(poolShares.handleEffort(shares, 'test', shareData, 100, false)).toBe(51);
+    expect(poolShares.handleEffort(shares, 'test', shareData, "valid", 100, false)).toBe(51);
   });
 
   test('Test effort command handling [5]', () => {
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const shareData = { difficulty: 50 };
     const shares = { 'example': '{"time":1637348736715,"work":"blah","effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'};
-    expect(poolShares.handleEffort(shares, 'test', shareData, 100, false)).toBe(50);
+    expect(poolShares.handleEffort(shares, 'test', shareData, "valid", 100, false)).toBe(50);
+  });
+
+  test('Test effort command handling [6]', () => {
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const shareData = { difficulty: 50 };
+    const shares = { 'example': '{"time":1637348736715,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'};
+    expect(poolShares.handleEffort(shares, 'test', shareData, "invalid", 100, false)).toBe(1);
   });
 
   test('Test types command handling [1]', () => {
@@ -195,8 +209,9 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","solo":false,"times":0,"types":{"valid":0,"invalid":1,"stale":0},"work":-1,"worker":"example"}'],
-      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'invalid', 1]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":0,"identifier":"master","solo":false,"times":0,"types":{"valid":0,"invalid":1,"stale":0},"work":-1,"worker":"example"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'invalid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":0,"identifier":"master","solo":false,"times":0,"types":{"valid":0,"invalid":1,"stale":0},"work":0,"worker":"example"}']];
     const commands = poolShares.buildSharesCommands(results, shareData, 'invalid', true, false);
     expect(commands).toStrictEqual(expected);
   });
@@ -341,8 +356,9 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":1},"work":-1,"worker":"example"}'],
-      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'stale', 1]];
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":0,"identifier":"","solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":1},"work":-1,"worker":"example"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'stale', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":0,"identifier":"","solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":1},"work":0,"worker":"example"}']];
     const commands = poolShares.buildSharesCommands(results, shareData, 'stale', true, false);
     expect(commands).toStrictEqual(expected);
   });

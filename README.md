@@ -6,7 +6,7 @@
 [![Downloads](https://img.shields.io/npm/dm/foundation-server.svg)](https://www.npmjs.com/package/foundation-server)
 [![Version](https://img.shields.io/npm/v/foundation-server.svg)](https://www.npmjs.com/package/foundation-server)
 [![Known Vulnerabilities](https://snyk.io/test/npm/foundation-server/badge.svg)](https://snyk.io/test/npm/foundation-server)
-[![Discord](https://img.shields.io/discord/738590795384356904)](https://discord.gg/8xtHZFKJQY)
+[![Discord](https://img.shields.io/discord/738590795384356904)](https://discord.gg/rNjez6VgNF)
 
 This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining platform written entirely in Node.JS. Its main features include a stratum poolserver and reward/payment/share processor. The website functionality has been removed in lieu of a client that will be developed in a separate repository.
 
@@ -14,7 +14,7 @@ For help with getting started, you can check out the documentation for the platf
 
 #### Need Support?
 
-If you need help with a code-related matter, the first place to look is our [Discord](https://discord.gg/8xtHZFKJQY), where the developers will be available to answer any questions. However, please do not come to me with issues regarding setup. Use Google and the existing documentation for that.
+If you need help with a code-related matter, the first place to look is our [Discord](https://discord.gg/rNjez6VgNF), where the developers will be available to answer any questions. However, please do not come to me with issues regarding setup. Use Google and the existing documentation for that.
 
 ---
 

@@ -50,7 +50,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   });
 
   // Handle Times Updates
-  this.handleTimes = function(lastShare) {
+  this.handleTimes = function(lastShare, shareType) {
 
     const dateNow = Date.now();
     const lastTime = lastShare.time || dateNow;
@@ -58,7 +58,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Check for Continous Primary Mining
     let times = lastShare.times || 0;
     const timeChange = utils.roundTo(Math.max(dateNow - lastTime, 0) / 1000, 4);
-    if (timeChange < 900) {
+    if ((timeChange < 900) && (shareType === "valid")) {
       times = times + timeChange;
     }
 
@@ -66,7 +66,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Handle Effort Updates
-  this.handleEffort = function(shares, worker, shareData, blockDifficulty, isSoloMining) {
+  this.handleEffort = function(shares, worker, shareData, shareType, blockDifficulty, isSoloMining) {
 
     // Calculate Work Sum from Shared/Solo Mining
     let difficulties = 0;
@@ -81,7 +81,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     });
 
     // Calculate Effort for Shared/Solo Mining
-    return (difficulties + shareData.difficulty) / blockDifficulty * 100;
+    const effort = shareType === "valid" ? (difficulties + shareData.difficulty) : difficulties;
+    return effort / blockDifficulty * 100;
   };
 
   // Handle Type Updates
@@ -118,10 +119,11 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Establish Last Share Data for Miner
     const lastShare = JSON.parse(shares[worker] || '{}');
 
-    // Calculate Times/Effort Data
-    const times = _this.handleTimes(lastShare);
-    const effort = _this.handleEffort(shares, worker, shareData, blockDifficulty, isSoloMining);
+    // Calculate Updated Share Data
+    const times = _this.handleTimes(lastShare, shareType);
+    const effort = _this.handleEffort(shares, worker, shareData, shareType, blockDifficulty, isSoloMining);
     const types = _this.handleTypes(lastShare, shareType);
+    const work = shareType === "valid" ? difficulty + (lastShare.work || 0) : (lastShare.work || 0);
 
     // Build Output Share
     const outputShare = {
@@ -132,7 +134,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       solo: isSoloMining,
       times: times,
       types: types,
-      work: difficulty + (lastShare.work || 0),
+      work: work,
       worker: worker,
     };
 
@@ -172,11 +174,13 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     } else if (shareType === 'stale') {
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateShare)]);
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'stale', 1]);
+      commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
 
     // Handle Invalid Shares Submitted
     } else {
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateShare)]);
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'invalid', 1]);
+      commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
     }
 
     return commands;
@@ -205,7 +209,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Establish Last Share Data for Miner
     const lastShare = JSON.parse(shares[worker] || '{}');
-    const luck = _this.handleEffort(shares, worker, shareData, blockDifficulty, isSoloMining);
+    const luck = _this.handleEffort(shares, worker, shareData, shareType, blockDifficulty, isSoloMining);
 
     // Build Output Block
     const outputBlock = {
