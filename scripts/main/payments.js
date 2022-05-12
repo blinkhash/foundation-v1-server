@@ -793,12 +793,14 @@ const PoolPayments = function (logger, client) {
       switch (round.category) {
       case 'kicked':
       case 'orphan':
-        commands.push(['smove', `${ pool }:blocks:${ blockType }:pending`, `${ pool }:blocks:${ blockType }:kicked`, round.serialized]);
-        if (round.delete) {
-          _this.handleOrphans(round, pool, blockType, (error, results) => {
-            commands = commands.concat(results);
-            commands = commands.concat(deleteCurrent(round, pool, blockType));
-          });
+        if (category === 'payments') {
+          commands.push(['smove', `${ pool }:blocks:${ blockType }:pending`, `${ pool }:blocks:${ blockType }:kicked`, round.serialized]);
+          if (round.delete) {
+            _this.handleOrphans(round, pool, blockType, (error, results) => {
+              commands = commands.concat(results);
+              commands = commands.concat(deleteCurrent(round, pool, blockType));
+            });
+          }
         }
         break;
       case 'immature':
