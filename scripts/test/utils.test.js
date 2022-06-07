@@ -229,7 +229,7 @@ describe('Test utility functionality', () => {
 
   test('Test implemented countProcessForks [2]', () => {
     const config = { 'clustering': { 'enabled': true, 'forks': 'auto' }};
-    expect(utils.countProcessForks(config)).toBe(os.cpus().length);
+    expect(utils.countProcessForks(config)).toBe(4);
   });
 
   test('Test implemented countProcessForks [3]', () => {

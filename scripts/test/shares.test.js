@@ -180,9 +180,9 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
       ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 7.277845022124848e-7]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
@@ -209,9 +209,9 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":0,"identifier":"master","solo":false,"times":0,"types":{"valid":0,"invalid":1,"stale":0},"work":-1,"worker":"example"}'],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":0,"identifier":"master","round":1972211,"solo":false,"times":0,"types":{"valid":0,"invalid":1,"stale":0},"work":-1,"worker":"example"}'],
       ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'invalid', 1],
-      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":0,"identifier":"master","solo":false,"times":0,"types":{"valid":0,"invalid":1,"stale":0},"work":0,"worker":"example"}']];
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":0,"identifier":"master","round":1972211,"solo":false,"times":0,"types":{"valid":0,"invalid":1,"stale":0},"work":0,"worker":"example"}']];
     const commands = poolShares.buildSharesCommands(results, shareData, 'invalid', true, false);
     expect(commands).toStrictEqual(expected);
   });
@@ -238,13 +238,13 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
       ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 7.277845022124848e-7],
-      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
       ['hincrby', 'Pool1:rounds:auxiliary:current:shared:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:auxiliary:current:shared:shares', 'example2', '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['hset', 'Pool1:rounds:auxiliary:current:shared:shares', 'example2', '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
       ['hset', 'Pool1:rounds:auxiliary:current:shared:counts', 'effort', 28.57142857142857]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
@@ -253,8 +253,7 @@ describe('Test shares functionality', () => {
   test('Test share command handling [4]', () => {
     MockDate.set(1637878085886);
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    poolShares.roundValue = '361aae45';
-    const results = [{}, {}, { 'example': '{"time":1637348736715,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true,"round":"361aae45"}'}, {}];
+    const results = [{}, {}, { 'example': '{"time":1637348736715,"work":1,"effort":7.277845022124848e-7,"worker":"example","round":1972211,"solo":true,"round":"361aae45"}'}, {}];
     const shareData = {
       'job': '4',
       'ip': '::1',
@@ -271,8 +270,8 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","round":"361aae45","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
-      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'example', '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","round":"361aae45","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":2,"worker":"example"}']];
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","round":1972211,"solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'example', '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","round":1972211,"solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":2,"worker":"example"}']];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, true);
     expect(commands).toStrictEqual(expected);
   });
@@ -281,7 +280,7 @@ describe('Test shares functionality', () => {
     MockDate.set(1637878085886);
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     poolShares.roundValue = '361aae45';
-    const results = [{ 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
+    const results = [{ 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","round":1972211,"solo":false,"round":"361aae45"}'}];
     const shareData = {
       'job': '4',
       'ip': '::1',
@@ -298,45 +297,15 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","round":"361aae45","solo":false,"times":80,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","round":1972211,"solo":false,"times":80,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
       ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","round":"361aae45","solo":false,"times":80,"types":{"valid":1,"invalid":0,"stale":0},"work":2,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","round":1972211,"solo":false,"times":80,"types":{"valid":1,"invalid":0,"stale":0},"work":2,"worker":"example"}'],
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 0.0000014555690044249697]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
   });
 
   test('Test share command handling [6]', () => {
-    MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    poolShares.roundValue = 'aaaaaaaa';
-    poolShares.prevRoundValue = '361aae45';
-    const results = [{ 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
-    const shareData = {
-      'job': '4',
-      'ip': '::1',
-      'port': 3002,
-      'addrPrimary': 'example',
-      'addrAuxiliary': null,
-      'blockDiffPrimary': 137403310.58987552,
-      'blockType': 'share',
-      'difficulty': 1,
-      'hash': null,
-      'hashInvalid': null,
-      'height': 1972211,
-      'reward': 10006839,
-      'shareDiff': '2.35170820',
-    };
-    const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":"aaaaaaaa","solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
-      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":"aaaaaaaa","solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
-      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 0.0000014555690044249697]];
-    const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
-    expect(commands).toStrictEqual(expected);
-  });
-
-  test('Test share command handling [7]', () => {
     MockDate.set(1637878085886);
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const results = [{}, {}, {}, {}];
@@ -356,49 +325,18 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":0,"identifier":"","solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":1},"work":-1,"worker":"example"}'],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":0,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":1},"work":-1,"worker":"example"}'],
       ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'stale', 1],
-      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":0,"identifier":"","solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":1},"work":0,"worker":"example"}']];
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":0,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":1},"work":0,"worker":"example"}']];
     const commands = poolShares.buildSharesCommands(results, shareData, 'stale', true, false);
     expect(commands).toStrictEqual(expected);
   });
 
-  test('Test share command handling [8]', () => {
-    MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    poolShares.roundValue = 'aaaaaaaa';
-    poolShares.prevRoundValue = '361aae45';
-    const results = [{ 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
-    const shareData = {
-      'job': '4',
-      'ip': '::1',
-      'port': 3002,
-      'addrPrimary': 'example',
-      'addrAuxiliary': null,
-      'blockDiffPrimary': 137403310.58987552,
-      'blockType': 'share',
-      'difficulty': 1,
-      'hash': null,
-      'hashInvalid': null,
-      'identifier': 'master',
-      'height': 1972211,
-      'reward': 10006839,
-      'shareDiff': '2.35170820',
-    };
-    const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","round":"aaaaaaaa","solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
-      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","round":"aaaaaaaa","solo":false,"times":0,"types":{"valid":0,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
-      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 0.0000014555690044249697]];
-    const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
-    expect(commands).toStrictEqual(expected);
-  });
-
-  test('Test share command handling [9]', () => {
+  test('Test share command handling [7]', () => {
     MockDate.set(1637878085886);
     poolConfigCopy.auxiliary = { enabled: 'true' };
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    const results = [{}, { 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
+    const results = [{}, { 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","round":1972211,"solo":false,"round":"361aae45"}'}];
     const shareData = {
       'job': '4',
       'ip': '::1',
@@ -416,14 +354,77 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
       ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 7.277845022124848e-7],
-      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":57.14285714285714,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":57.14285714285714,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
       ['hincrby', 'Pool1:rounds:auxiliary:current:shared:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:auxiliary:current:shared:shares', 'example2', '{"time":1637878085886,"effort":57.14285714285714,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['hset', 'Pool1:rounds:auxiliary:current:shared:shares', 'example2', '{"time":1637878085886,"effort":57.14285714285714,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
       ['hset', 'Pool1:rounds:auxiliary:current:shared:counts', 'effort', 57.14285714285714]];
+    const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
+    expect(commands).toStrictEqual(expected);
+  });
+
+  test('Test share command handling [8]', () => {
+    MockDate.set(1637878085886);
+    poolConfigCopy.auxiliary = { enabled: 'true' };
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const results = [];
+    const shareData = {
+      'job': '4',
+      'ip': '::1',
+      'port': 3002,
+      'addrPrimary': 'example1',
+      'addrAuxiliary': 'example2',
+      'blockDiffPrimary': 137403310.58987552,
+      'blockDiffAuxiliary': 3.5,
+      'blockType': 'auxiliary',
+      'difficulty': 1,
+      'hash': null,
+      'hashInvalid': null,
+      'height': 1972211,
+      'reward': 10006839,
+      'shareDiff': '2.35170820',
+    };
+    const expected = [
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 7.277845022124848e-7],
+      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['hincrby', 'Pool1:rounds:auxiliary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:auxiliary:current:shared:shares', 'example2', '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['hset', 'Pool1:rounds:auxiliary:current:shared:counts', 'effort', 28.57142857142857]];
+    const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
+    expect(commands).toStrictEqual(expected);
+  });
+
+  test('Test share command handling [9]', () => {
+    MockDate.set(1637878085886);
+    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const results = [];
+    const shareData = {
+      'job': '4',
+      'ip': '::1',
+      'port': 3002,
+      'addrPrimary': 'example',
+      'addrAuxiliary': null,
+      'blockDiffPrimary': 137403310.58987552,
+      'blockType': 'share',
+      'difficulty': 1,
+      'hash': null,
+      'hashInvalid': null,
+      'identifier': 'master',
+      'height': 1972211,
+      'reward': 10006839,
+      'shareDiff': '2.35170820',
+    };
+    const expected = [
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 7.277845022124848e-7]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
   });
@@ -432,7 +433,7 @@ describe('Test shares functionality', () => {
     MockDate.set(1637878085886);
     poolConfigCopy.auxiliary = { enabled: 'true' };
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    const results = [];
+    const results = [{}, {}, {}, { 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","round":1972211,"solo":true,"round":"361aae45"}'}];
     const shareData = {
       'job': '4',
       'ip': '::1',
@@ -450,112 +451,48 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
-      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
-      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 7.277845022124848e-7],
-      ['zadd', 'Pool1:rounds:auxiliary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
-      ['hincrby', 'Pool1:rounds:auxiliary:current:shared:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:auxiliary:current:shared:shares', 'example2', '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
-      ['hset', 'Pool1:rounds:auxiliary:current:shared:counts', 'effort', 28.57142857142857]];
-    const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":1972211,"solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":1972211,"solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","round":1972211,"solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['hset', 'Pool1:rounds:auxiliary:current:solo:shares', 'example2', '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","round":1972211,"solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}']];
+    const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, true);
     expect(commands).toStrictEqual(expected);
   });
 
   test('Test share command handling [11]', () => {
     MockDate.set(1637878085886);
+    poolConfigCopy.auxiliary = { enabled: 'true' };
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
     const results = [];
     const shareData = {
       'job': '4',
       'ip': '::1',
       'port': 3002,
-      'addrPrimary': 'example',
-      'addrAuxiliary': null,
+      'addrPrimary': 'example1',
+      'addrAuxiliary': 'example2',
       'blockDiffPrimary': 137403310.58987552,
-      'blockType': 'share',
+      'blockDiffAuxiliary': 3.5,
+      'blockType': 'auxiliary',
       'difficulty': 1,
       'hash': null,
       'hashInvalid': null,
-      'identifier': 'master',
       'height': 1972211,
       'reward': 10006839,
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
-      ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"master","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
-      ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 7.277845022124848e-7]];
-    const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
+      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":1972211,"solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":1972211,"solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
+      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","round":1972211,"solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
+      ['hset', 'Pool1:rounds:auxiliary:current:solo:shares', 'example2', '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","round":1972211,"solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}']];
+    const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, true);
     expect(commands).toStrictEqual(expected);
   });
 
   test('Test share command handling [12]', () => {
     MockDate.set(1637878085886);
-    poolConfigCopy.auxiliary = { enabled: 'true' };
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    const results = [{}, {}, {}, { 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true,"round":"361aae45"}'}];
-    const shareData = {
-      'job': '4',
-      'ip': '::1',
-      'port': 3002,
-      'addrPrimary': 'example1',
-      'addrAuxiliary': 'example2',
-      'blockDiffPrimary': 137403310.58987552,
-      'blockDiffAuxiliary': 3.5,
-      'blockType': 'auxiliary',
-      'difficulty': 1,
-      'hash': null,
-      'hashInvalid': null,
-      'height': 1972211,
-      'reward': 10006839,
-      'shareDiff': '2.35170820',
-    };
-    const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
-      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
-      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
-      ['hset', 'Pool1:rounds:auxiliary:current:solo:shares', 'example2', '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}']];
-    const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, true);
-    expect(commands).toStrictEqual(expected);
-  });
-
-  test('Test share command handling [13]', () => {
-    MockDate.set(1637878085886);
-    poolConfigCopy.auxiliary = { enabled: 'true' };
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    const results = [];
-    const shareData = {
-      'job': '4',
-      'ip': '::1',
-      'port': 3002,
-      'addrPrimary': 'example1',
-      'addrAuxiliary': 'example2',
-      'blockDiffPrimary': 137403310.58987552,
-      'blockDiffAuxiliary': 3.5,
-      'blockType': 'auxiliary',
-      'difficulty': 1,
-      'hash': null,
-      'hashInvalid': null,
-      'height': 1972211,
-      'reward': 10006839,
-      'shareDiff': '2.35170820',
-    };
-    const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
-      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'example1', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example1"}'],
-      ['zadd', 'Pool1:rounds:auxiliary:current:solo:hashrate', 1637878085, '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}'],
-      ['hset', 'Pool1:rounds:auxiliary:current:solo:shares', 'example2', '{"time":1637878085886,"effort":28.57142857142857,"identifier":"","solo":true,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example2"}']];
-    const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, true);
-    expect(commands).toStrictEqual(expected);
-  });
-
-  test('Test share command handling [14]', () => {
-    MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    poolShares.roundValue = '361aae45';
-    const results = [{ 'example': '{"time":1637878005886,"work":15,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"orphan"}'}];
+    const results = [{ 'example': '{"time":1637878005886,"work":15,"effort":7.277845022124848e-7,"worker":"example","round":1972211,"solo":false,"round":"orphan"}'}];
     const shareData = {
       'job': '4',
       'ip': '::1',
@@ -572,9 +509,9 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":0.000011644552035399757,"identifier":"","round":"361aae45","solo":false,"times":80,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":0.000011644552035399757,"identifier":"","round":1972211,"solo":false,"times":80,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
       ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":0.000011644552035399757,"identifier":"","round":"361aae45","solo":false,"times":80,"types":{"valid":1,"invalid":0,"stale":0},"work":16,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":0.000011644552035399757,"identifier":"","round":1972211,"solo":false,"times":80,"types":{"valid":1,"invalid":0,"stale":0},"work":16,"worker":"example"}'],
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 0.000011644552035399757]];
     const commands = poolShares.buildSharesCommands(results, shareData, 'valid', false, false);
     expect(commands).toStrictEqual(expected);
@@ -600,7 +537,7 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":7.277845022124848e-7,"worker":"example","solo":false}'],
+      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":7.277845022124848e-7,"worker":"example","solo":false,"round":1972211}'],
       ['hincrby', 'Pool1:blocks:primary:counts', 'valid', 1],
       ['rename', 'Pool1:rounds:primary:current:shared:counts', 'Pool1:rounds:primary:round-1972211:counts'],
       ['rename', 'Pool1:rounds:primary:current:shared:shares', 'Pool1:rounds:primary:round-1972211:shares']];
@@ -701,7 +638,7 @@ describe('Test shares functionality', () => {
       'shareDiff': '4',
     };
     const expected = [
-      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":32,"luck":87.5,"worker":"example","solo":false}'],
+      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":32,"luck":87.5,"worker":"example","solo":false,"round":1972211}'],
       ['hincrby', 'Pool1:blocks:primary:counts', 'valid', 1],
       ['rename', 'Pool1:rounds:primary:current:shared:counts', 'Pool1:rounds:primary:round-1972211:counts'],
       ['rename', 'Pool1:rounds:primary:current:shared:shares', 'Pool1:rounds:primary:round-1972211:shares']];
@@ -712,7 +649,7 @@ describe('Test shares functionality', () => {
   test('Test block command handling [6]', () => {
     MockDate.set(1637878085886);
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    const results = [{}, {}, { 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true}'}, {}];
+    const results = [{}, {}, { 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","round":1972211,"solo":true}'}, {}];
     const shareData = {
       'job': '4',
       'ip': '::1',
@@ -729,10 +666,10 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":0.0000014555690044249697,"worker":"example","solo":true}'],
+      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":0.0000014555690044249697,"worker":"example","solo":true,"round":1972211}'],
       ['hincrby', 'Pool1:blocks:primary:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:primary:round-1972211:shares', 'example', '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","solo":true,"work":2,"worker":"example"}'],
-      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'example', '{"time":1637878085886,"effort":0,"identifier":"","solo":true,"times":0,"types":{"valid":0,"invalid":0,"stale":0},"work":1,"worker":"example"}']];
+      ['hset', 'Pool1:rounds:primary:round-1972211:shares', 'example', '{"time":1637878085886,"effort":0.0000014555690044249697,"identifier":"","round":1972211,"solo":true,"work":2,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:solo:shares', 'example', '{"time":1637878085886,"effort":0,"identifier":"","round":1972211,"solo":true,"times":0,"types":{"valid":0,"invalid":0,"stale":0},"work":1,"worker":"example"}']];
     const commands = poolShares.calculateBlocks(results, shareData, 'valid', true, true);
     expect(commands).toStrictEqual(expected);
   });
@@ -757,9 +694,9 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":7.277845022124848e-7,"worker":"example","solo":true}'],
+      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":7.277845022124848e-7,"worker":"example","solo":true,"round":1972211}'],
       ['hincrby', 'Pool1:blocks:primary:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:primary:round-1972211:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":true,"work":1,"worker":"example"}']];
+      ['hset', 'Pool1:rounds:primary:round-1972211:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":1972211,"solo":true,"work":1,"worker":"example"}']];
     const commands = poolShares.calculateBlocks(results, shareData, 'valid', true, true);
     expect(commands).toStrictEqual(expected);
   });
@@ -784,7 +721,7 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":7.277845022124848e-7,"worker":"example","solo":false}'],
+      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":7.277845022124848e-7,"worker":"example","solo":false,"round":1972211}'],
       ['hincrby', 'Pool1:blocks:primary:counts', 'valid', 1],
       ['rename', 'Pool1:rounds:primary:current:shared:counts', 'Pool1:rounds:primary:round-1972211:counts'],
       ['rename', 'Pool1:rounds:primary:current:shared:shares', 'Pool1:rounds:primary:round-1972211:shares']];
@@ -822,7 +759,7 @@ describe('Test shares functionality', () => {
     MockDate.set(1637878085886);
     poolConfigCopy.auxiliary = { enabled: 'true' };
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    const results = [{}, { 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true}'}, {}, {}];
+    const results = [{}, { 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","round":1972211,"solo":true}'}, {}, {}];
     const shareData = {
       'job': '4',
       'ip': '::1',
@@ -840,7 +777,7 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['sadd', 'Pool1:blocks:auxiliary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":3.5,"luck":28.57142857142857,"worker":"example2","solo":false}'],
+      ['sadd', 'Pool1:blocks:auxiliary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":3.5,"luck":28.57142857142857,"worker":"example2","solo":false,"round":1972211}'],
       ['hincrby', 'Pool1:blocks:auxiliary:counts', 'valid', 1],
       ['rename', 'Pool1:rounds:auxiliary:current:shared:counts', 'Pool1:rounds:auxiliary:round-1972211:counts'],
       ['rename', 'Pool1:rounds:auxiliary:current:shared:shares', 'Pool1:rounds:auxiliary:round-1972211:shares']];
@@ -870,7 +807,7 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['sadd', 'Pool1:blocks:auxiliary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":3.5,"luck":28.57142857142857,"worker":"example2","solo":false}'],
+      ['sadd', 'Pool1:blocks:auxiliary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":3.5,"luck":28.57142857142857,"worker":"example2","solo":false,"round":1972211}'],
       ['hincrby', 'Pool1:blocks:auxiliary:counts', 'valid', 1],
       ['rename', 'Pool1:rounds:auxiliary:current:shared:counts', 'Pool1:rounds:auxiliary:round-1972211:counts'],
       ['rename', 'Pool1:rounds:auxiliary:current:shared:shares', 'Pool1:rounds:auxiliary:round-1972211:shares']];
@@ -881,7 +818,7 @@ describe('Test shares functionality', () => {
   test('Test block command handling [12]', () => {
     MockDate.set(1637878085886);
     const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
-    const results = [{}, {}, { 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true}'}, {}];
+    const results = [{}, {}, { 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","round":1972211,"solo":true}'}, {}];
     const shareData = {
       'job': '4',
       'ip': '::1',
@@ -898,9 +835,9 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":7.277845022124848e-7,"worker":null,"solo":true}'],
+      ['sadd', 'Pool1:blocks:primary:pending', '{"time":1637878085886,"height":1972211,"hash":null,"reward":10006839,"identifier":"","difficulty":137403310.58987552,"luck":7.277845022124848e-7,"worker":null,"solo":true,"round":1972211}'],
       ['hincrby', 'Pool1:blocks:primary:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:primary:round-1972211:shares', null, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":true,"work":1,"worker":null}']];
+      ['hset', 'Pool1:rounds:primary:round-1972211:shares', null, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":1972211,"solo":true,"work":1,"worker":null}']];
     const commands = poolShares.calculateBlocks(results, shareData, 'valid', true, true);
     expect(commands).toStrictEqual(expected);
   });
@@ -925,9 +862,9 @@ describe('Test shares functionality', () => {
       'shareDiff': '2.35170820',
     };
     const expected = [
-      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['zadd', 'Pool1:rounds:primary:current:shared:hashrate', 1637878085, '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
       ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
-      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
+      ['hset', 'Pool1:rounds:primary:current:shared:shares', 'example', '{"time":1637878085886,"effort":7.277845022124848e-7,"identifier":"","round":1972211,"solo":false,"times":0,"types":{"valid":1,"invalid":0,"stale":0},"work":1,"worker":"example"}'],
       ['hset', 'Pool1:rounds:primary:current:shared:counts', 'effort', 7.277845022124848e-7]];
     const commands = poolShares.buildCommands(results, shareData, 'valid', false, () => {
       return done();
