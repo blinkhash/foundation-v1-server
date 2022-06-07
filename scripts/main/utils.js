@@ -122,7 +122,7 @@ exports.countProcessForks = function(portalConfig) {
   if (!portalConfig.clustering || !portalConfig.clustering.enabled) {
     return 1;
   } else if (portalConfig.clustering.forks === 'auto') {
-    return os.cpus().length;
+    return os.cpus().length >= 4 ? 4 : os.cpus().length;
   } else if (!portalConfig.clustering.forks || isNaN(portalConfig.clustering.forks)) {
     return 1;
   }
