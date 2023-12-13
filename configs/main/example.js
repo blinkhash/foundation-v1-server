@@ -4,9 +4,8 @@
  *
  */
 
+// Miscellaneous Configuration
 const config = {};
-
-// Server Identifier
 config.identifier = '';
 
 // Logger Configuration
