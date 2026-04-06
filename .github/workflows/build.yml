@@ -8,10 +8,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04.04
     strategy:
       matrix:
-        node-version: [24.x]
+        node-version: [20.x]
     steps:
       - uses: actions/checkout@v2
       - name: Test Node.js ${{ matrix.node-version }}
@@ -28,7 +28,7 @@ jobs:
       - name: Save Coverage Checks
         uses: actions/setup-node@v1
         with:
-          node-version: 24.x
+          node-version: 20.x
       - run: sudo apt-get install build-essential libsodium-dev libboost-system-dev
       - run: npm install && npm install -g codecov
       - run: npm run test && codecov
