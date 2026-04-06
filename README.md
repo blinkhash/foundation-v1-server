@@ -22,7 +22,7 @@ cd foundation-server && npm install
 
 [change configurations here]
 
-npm run start-v2
+npm run start
 
 #### Need Support?
 
