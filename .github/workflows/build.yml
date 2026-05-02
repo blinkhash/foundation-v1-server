@@ -32,7 +32,12 @@ jobs:
         with:
           node-version: 20.x
       - run: sudo apt-get update && sudo apt-get install -y build-essential libsodium-dev libboost-system-dev
-      - run: npm install && npm install -g codecov
+      - run: npm install
         env:
           CXXFLAGS: "-std=c++17"
-      - run: npm run test && codecov
+      - run: npm run test
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
