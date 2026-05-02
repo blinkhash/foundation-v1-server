@@ -33,6 +33,7 @@ jobs:
           node-version: 20.x
       - run: sudo apt-get update && sudo apt-get install -y build-essential libsodium-dev libboost-system-dev
       - run: npm install
+      - run: ./safe_refactor.sh
         env:
           CXXFLAGS: "-std=c++17"
       - run: npm run test
