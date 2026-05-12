@@ -8,27 +8,37 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: [12.x, 13.x, 14.x, 15.x]
+        node-version: [20.x]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Test Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - run: sudo apt-get install build-essential libsodium-dev libboost-system-dev
+      - run: sudo apt-get update && sudo apt-get install -y build-essential libsodium-dev libboost-system-dev
       - run: npm install
+        env:
+          CXXFLAGS: "-std=c++17"
       - run: npm test
   coverage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Save Coverage Checks
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
-          node-version: 12.16
-      - run: sudo apt-get install build-essential libsodium-dev libboost-system-dev
-      - run: npm install && npm install -g codecov
-      - run: npm run test && codecov
+          node-version: 20.x
+      - run: sudo apt-get update && sudo apt-get install -y build-essential libsodium-dev libboost-system-dev
+      - run: npm install
+      - run: ./safe_refactor.sh
+        env:
+          CXXFLAGS: "-std=c++17"
+      - run: npm run test
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}

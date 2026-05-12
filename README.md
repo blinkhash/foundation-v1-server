@@ -12,6 +12,18 @@ This portal is an extremely efficient, highly scalable, all-in-one, easy to setu
 
 For help with getting started, you can check out the documentation for the platform at https://blinkhash.com/docs. Sample configuration files for individual coins are also located at https://github.com/blinkhash/foundation-configurations.
 
+Install guide:
+
+sudo apt-get install build-essential libsodium-dev libboost-system-dev
+
+git clone https://github.com/BlackPeter13/foundation-v1-server.git foundation-server
+
+cd foundation-server && npm install
+
+[change configurations here]
+
+npm run start
+
 #### Need Support?
 
 If you need help with a code-related matter, the first place to look is our [Discord](https://discord.gg/rNjez6VgNF), where the developers will be available to answer any questions. However, please do not come to me with issues regarding setup. Use Google and the existing documentation for that.
